@@ -27,12 +27,17 @@ https://github.com/VOTRE_USERNAME/mini-flask-import-profitability.git
 
 ### 3️⃣ Connecter votre Projet Local à GitHub
 
-Exécutez ces commandes dans votre terminal (remplacez `VOTRE_USERNAME` et `VOTRE_REPO` par vos valeurs) :
+**⚠️ IMPORTANT :** Remplacez `VOTRE_USERNAME` et `VOTRE_REPO` par vos **VRAIES valeurs** !
+
+Exécutez ces commandes dans votre terminal :
 
 ```bash
 cd /Users/dantawi/Documents/mini_flask_import_profitability
 
-# Ajouter le remote GitHub
+# Si vous avez déjà un remote incorrect, supprimez-le d'abord
+git remote remove origin
+
+# Ajouter le remote GitHub avec VOTRE vraie URL
 git remote add origin https://github.com/VOTRE_USERNAME/VOTRE_REPO.git
 
 # Vérifier que c'est bien configuré
@@ -43,11 +48,15 @@ git push -u origin main
 ```
 
 **Exemple concret :**
+Si votre username GitHub est `dantawi` et votre repository `mini-flask-import-profitability` :
 ```bash
+git remote remove origin
 git remote add origin https://github.com/dantawi/mini-flask-import-profitability.git
 git remote -v
 git push -u origin main
 ```
+
+**⚠️ Ne copiez-pas littéralement "VOTRE_USERNAME" - remplacez-le par votre vrai username GitHub !**
 
 ### 4️⃣ Vérifier
 
