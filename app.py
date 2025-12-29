@@ -4390,6 +4390,60 @@ def uploaded_file(filename):
     """Route pour servir les fichiers uploadés"""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/init', methods=['GET'])
+def init_database():
+    """Initialise la base de données avec les tables et l'utilisateur admin (pour Render)"""
+    from models import User, Role
+    from werkzeug.security import generate_password_hash
+    
+    try:
+        # Créer toutes les tables
+        db.create_all()
+        
+        # Créer le rôle admin
+        admin_role = Role.query.filter_by(code='admin').first()
+        if not admin_role:
+            admin_role = Role(
+                name='Administrateur',
+                code='admin',
+                permissions={"all": ["*"]},
+                description='Accès complet à toutes les fonctionnalités'
+            )
+            db.session.add(admin_role)
+            db.session.commit()
+        
+        # Créer l'utilisateur admin
+        admin_user = User.query.filter_by(username='admin').first()
+        if not admin_user:
+            admin_user = User(
+                username='admin',
+                email='admin@importprofit.pro',
+                password_hash=generate_password_hash('admin123'),
+                full_name='Administrateur',
+                role_id=admin_role.id,
+                is_active=True
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+            return """
+            <h1>✅ Base de données initialisée!</h1>
+            <p><strong>Identifiants de connexion:</strong></p>
+            <ul>
+                <li>Username: <code>admin</code></li>
+                <li>Password: <code>admin123</code></li>
+            </ul>
+            <p>⚠️ <strong>IMPORTANT:</strong> Changez le mot de passe après la première connexion!</p>
+            <p><a href="/auth/login">Se connecter</a></p>
+            """
+        else:
+            return """
+            <h1>ℹ️ Base de données déjà initialisée</h1>
+            <p>L'utilisateur admin existe déjà.</p>
+            <p><a href="/auth/login">Se connecter</a></p>
+            """
+    except Exception as e:
+        return f"<h1>❌ Erreur lors de l'initialisation</h1><p>{str(e)}</p>", 500
+
 if __name__ == '__main__':
     print("🚀 IMPORT PROFIT PRO - VERSION NETTOYÉE ET MODERNE")
     print("=" * 60)
