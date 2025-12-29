@@ -12,8 +12,10 @@ git remote set-url origin https://ghp_... @github.com/...
 **PAS D'ESPACE** entre le token et `@github.com` :
 
 ```bash
-git remote set-url origin https://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@github.com/nimbagn/import-profit-pro.git
+git remote set-url origin https://VOTRE_TOKEN@github.com/nimbagn/import-profit-pro.git
 ```
+
+**⚠️ Remplacez `VOTRE_TOKEN` par votre vrai Personal Access Token**
 
 ## 📤 Puis Poussez
 
