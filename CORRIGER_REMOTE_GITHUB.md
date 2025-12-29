@@ -95,3 +95,7 @@ Après le push, allez sur votre repository GitHub. Vous devriez voir tous vos fi
 
 **Une fois connecté, vous pourrez déployer sur Render ! 🚀**
 
+FLASK_ENV=production
+FLASK_DEBUG=0
+SECRET_KEY=GgEzNZE2CcSvPKk0DK9FXOJW6zmwYSbZsraUE6n030w
+DATABASE_URL=<collez l'Internal Database URL>

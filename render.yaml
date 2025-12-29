@@ -1,0 +1,21 @@
+# Configuration Render pour déploiement automatique
+services:
+  - type: web
+    name: import-profit-pro
+    env: python
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 wsgi:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: 0
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+databases:
+  - name: import-profit-db
+    databaseName: madargn
+    user: madargn_user
+    plan: free
+

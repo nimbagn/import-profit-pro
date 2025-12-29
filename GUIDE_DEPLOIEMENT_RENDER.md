@@ -125,7 +125,7 @@ Avant de créer le service, configurez les variables d'environnement :
 ```
 FLASK_ENV=production
 FLASK_DEBUG=0
-SECRET_KEY=<collez la clé générée à l'étape 1.3>
+SECRET_KEY=GgEzNZE2CcSvPKk0DK9FXOJW6zmwYSbZsraUE6n030w
 ```
 
 #### Configuration Base de Données :
@@ -385,3 +385,7 @@ Avant de considérer le déploiement terminé :
 
 **🎉 Félicitations ! Votre application est maintenant en ligne sur Render !**
 
+FLASK_ENV=production
+FLASK_DEBUG=0
+SECRET_KEY=GgEzNZE2CcSvPKk0DK9FXOJW6zmwYSbZsraUE6n030w
+DATABASE_URL=postgresql://madargn_user:MZLbNLbtHYJcsSaBlz3loO99ZlGIAor9@dpg-d59ao91r0fns73fmi85g-a.virginia-postgres.render.com/madargn
