@@ -52,35 +52,36 @@ python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ---
 
-## 🗄️ Étape 3 : Créer une Base de Données MySQL
+## 🗄️ Étape 3 : Créer une Base de Données PostgreSQL
 
-### Option A : Base de données MySQL sur Render (Recommandé)
+**Note importante :** Render propose PostgreSQL gratuitement, pas MySQL. Votre application supporte maintenant les deux !
+
+### Option A : Base de données PostgreSQL sur Render (Recommandé)
 
 1. Dans le dashboard Render, cliquez sur **"New +"**
-2. Sélectionnez **"MySQL"**
+2. Sélectionnez **"PostgreSQL"**
 3. Configurez :
    - **Name** : `import-profit-db` (ou votre nom)
-   - **Database** : `madargn` (ou votre nom de DB)
-   - **User** : Laissez par défaut ou choisissez
+   - **Database** : Laissez par défaut (généralement le même que le nom)
    - **Region** : Choisissez la région la plus proche
    - **Plan** : Free (pour commencer)
 4. Cliquez sur **"Create Database"**
 5. **⚠️ IMPORTANT :** Notez les informations de connexion qui s'affichent :
-   - **Internal Database URL** : `mysql://user:password@host:port/database`
-   - **External Hostname** : Pour connexions externes
-   - **Port** : Généralement 3306
+   - **Internal Database URL** : `postgresql://user:password@host:port/database`
+     - C'est cette URL que vous utiliserez dans `DATABASE_URL`
+     - Elle commence par `postgresql://` - c'est normal !
+   - **External Hostname** : Pour connexions externes (si nécessaire)
+   - **Port** : Généralement 5432 (PostgreSQL)
    - **Database** : Le nom de votre base
    - **User** : Votre utilisateur
    - **Password** : Le mot de passe généré
 
-### Option B : Utiliser une Base de Données Externe
+### Option B : Utiliser une Base de Données MySQL Externe
 
-Si vous avez déjà une base MySQL ailleurs, notez simplement :
-- Host
-- Port
-- Database name
-- Username
-- Password
+Si vous préférez utiliser MySQL (externe à Render), vous pouvez :
+- Utiliser un service MySQL externe (comme PlanetScale, Aiven, etc.)
+- Configurer les variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- L'application utilisera MySQL au lieu de PostgreSQL
 
 ---
 
@@ -127,14 +128,15 @@ FLASK_DEBUG=0
 SECRET_KEY=<collez la clé générée à l'étape 1.3>
 ```
 
-#### Configuration MySQL :
+#### Configuration Base de Données :
 
-**Si vous utilisez MySQL sur Render :**
+**Si vous utilisez PostgreSQL sur Render (recommandé) :**
 ```
 DATABASE_URL=<collez l'Internal Database URL de l'étape 3>
 ```
+L'URL commence par `postgresql://` - l'application la convertira automatiquement.
 
-**OU si vous préférez utiliser les variables séparées :**
+**OU si vous utilisez MySQL externe :**
 ```
 DB_HOST=<le hostname de votre base MySQL>
 DB_PORT=3306
@@ -171,13 +173,15 @@ URL_SCHEME=https
 FLASK_ENV=production
 FLASK_DEBUG=0
 SECRET_KEY=abc123xyz789...votre_cle_secrete_ici
-DATABASE_URL=mysql://user:password@dpg-xxxxx-a.oregon-postgres.render.com:3306/madargn
+DATABASE_URL=postgresql://user:password@dpg-xxxxx-a.oregon-postgres.render.com:5432/madargn
 DB_POOL_SIZE=5
 DB_MAX_OVERFLOW=10
 CACHE_TYPE=simple
 MAX_CONTENT_MB=25
 URL_SCHEME=https
 ```
+
+**Note :** L'URL PostgreSQL commence par `postgresql://` et utilise le port 5432 (pas 3306 comme MySQL).
 
 ---
 
@@ -271,9 +275,11 @@ Pour les valeurs sensibles (mots de passe, clés API), utilisez les **"Secret Fi
 
 **Solution :**
 - Vérifiez que `DATABASE_URL` ou les variables `DB_*` sont correctes
-- Si vous utilisez MySQL sur Render, utilisez l'**Internal Database URL** (pas l'externe)
+- Si vous utilisez PostgreSQL sur Render, utilisez l'**Internal Database URL** (pas l'externe)
+- L'URL doit commencer par `postgresql://` pour PostgreSQL
 - Vérifiez que la base de données est bien créée et active
 - Vérifiez que le mot de passe ne contient pas de caractères spéciaux non encodés
+- Assurez-vous que `psycopg2-binary` est dans `requirements.txt` (déjà ajouté)
 
 ### Problème : Erreur 500 Internal Server Error
 

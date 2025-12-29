@@ -21,11 +21,11 @@
 
 ---
 
-## 🗄️ Base de Données MySQL
+## 🗄️ Base de Données PostgreSQL
 
-- [ ] Base de données MySQL créée sur Render
+- [ ] Base de données PostgreSQL créée sur Render (New + → PostgreSQL)
 - [ ] Informations de connexion notées :
-  - [ ] Internal Database URL (ou DB_HOST, DB_PORT, etc.)
+  - [ ] Internal Database URL (commence par `postgresql://`)
   - [ ] Database name
   - [ ] Username
   - [ ] Password
@@ -55,8 +55,9 @@ Toutes ces variables doivent être configurées dans Render :
 - [ ] `SECRET_KEY=<votre_clé_générée>`
 
 ### Base de Données (choisir une option)
-- [ ] Option A : `DATABASE_URL=<internal_database_url>`
-- [ ] Option B : Variables séparées :
+- [ ] Option A (Recommandé - PostgreSQL sur Render) : `DATABASE_URL=<internal_database_url>`
+  - L'URL commence par `postgresql://` - c'est normal !
+- [ ] Option B (MySQL externe) : Variables séparées :
   - [ ] `DB_HOST=<hostname>`
   - [ ] `DB_PORT=3306`
   - [ ] `DB_NAME=madargn`

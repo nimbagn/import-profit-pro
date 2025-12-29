@@ -23,9 +23,15 @@ DB_PASSWORD_RAW = env("DB_PASSWORD", "Z@291721Gn@")
 DB_PASSWORD = quote_plus(DB_PASSWORD_RAW) if DB_PASSWORD_RAW else ""
 
 # DATABASE_URL > DB_* > fallback SQLite
+# Supporte MySQL, PostgreSQL et SQLite
 _database_url = env("DATABASE_URL")
 if _database_url:
-    SQLALCHEMY_DATABASE_URI = _database_url
+    # Render fournit DATABASE_URL pour PostgreSQL (postgresql://...)
+    # Convertir postgresql:// en postgresql+psycopg2:// si nécessaire
+    if _database_url.startswith("postgresql://") and "psycopg2" not in _database_url:
+        SQLALCHEMY_DATABASE_URI = _database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    else:
+        SQLALCHEMY_DATABASE_URI = _database_url
 elif DB_NAME:  # MySQL
     auth = f"{DB_USER}:{DB_PASSWORD}@" if DB_PASSWORD_RAW else f"{DB_USER}@"
     SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{auth}{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
@@ -34,8 +40,9 @@ else:  # Fallback SQLite
 
 def engine_options_for(uri: str) -> dict:
     is_mysql = uri.startswith("mysql+pymysql://")
+    is_postgresql = uri.startswith("postgresql://") or uri.startswith("postgresql+psycopg2://")
     opts = {"pool_pre_ping": True}
-    if is_mysql:
+    if is_mysql or is_postgresql:
         opts.update({
             "pool_size": int(env("DB_POOL_SIZE", "5")),
             "max_overflow": int(env("DB_MAX_OVERFLOW", "10")),

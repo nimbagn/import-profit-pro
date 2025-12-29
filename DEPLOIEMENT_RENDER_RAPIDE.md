@@ -21,13 +21,15 @@ git push
 ### 2️⃣ Créer la Base de Données (2 min)
 
 1. Allez sur https://render.com → Créez un compte
-2. **New +** → **MySQL**
+2. **New +** → **PostgreSQL** (Render propose PostgreSQL gratuitement)
 3. Configurez :
    - Name : `import-profit-db`
-   - Database : `madargn`
+   - Database : `madargn` (ou laissez par défaut)
    - Plan : **Free**
 4. Cliquez **Create Database**
-5. **⚠️ COPIEZ l'Internal Database URL** (format : `mysql://user:pass@host:port/db`)
+5. **⚠️ COPIEZ l'Internal Database URL** (format : `postgresql://user:pass@host:port/db`)
+   - Render fournit automatiquement cette URL
+   - Elle commence par `postgresql://`
 
 ### 3️⃣ Créer le Web Service (3 min)
 
@@ -47,8 +49,10 @@ Dans la section **Environment Variables**, ajoutez :
 FLASK_ENV=production
 FLASK_DEBUG=0
 SECRET_KEY=<collez la clé de l'étape 1>
-DATABASE_URL=<collez l'URL de l'étape 2>
+DATABASE_URL=<collez l'Internal Database URL de l'étape 2>
 ```
+
+**Note :** L'URL commence par `postgresql://` - c'est normal ! L'application la convertira automatiquement.
 
 ### 5️⃣ Déployer (1 min)
 
