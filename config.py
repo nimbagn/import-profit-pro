@@ -50,6 +50,9 @@ def engine_options_for(uri: str) -> dict:
         })
     return opts
 
+# Options du moteur SQLAlchemy (exportable)
+SQLALCHEMY_ENGINE_OPTIONS = engine_options_for(SQLALCHEMY_DATABASE_URI)
+
 class Config:
     SECRET_KEY = env("SECRET_KEY", "import_profit_pro_2024")
     DEBUG = env("FLASK_DEBUG", "1") == "1"
