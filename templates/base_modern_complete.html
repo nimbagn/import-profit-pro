@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Système de Gestion Import Profit{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS personnalisé - Style Hapag-Lloyd -->
+    <link href="{{ url_for('static', filename='css/hapag_lloyd_style.css') }}" rel="stylesheet">
+    <!-- CSS Thèmes personnalisables -->
+    <link href="{{ url_for('static', filename='css/themes.css') }}" rel="stylesheet">
+    <!-- CSS Animations UX -->
+    <link href="{{ url_for('static', filename='css/ux/animations.css') }}" rel="stylesheet">
+    <!-- CSS Responsive Global -->
+    <link href="{{ url_for('static', filename='css/responsive.css') }}" rel="stylesheet">
+    <!-- CSS Responsive Enhanced -->
+    <link href="{{ url_for('static', filename='css/responsive_enhanced.css') }}" rel="stylesheet">
+    <!-- CSS Responsive Promotion -->
+    {% if request.endpoint and 'promotion' in request.endpoint %}
+    <link href="{{ url_for('static', filename='css/promotion_responsive.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/promotion_ergonomic.css') }}" rel="stylesheet">
+    {% endif %}
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- CSRF Token Meta Tag -->
+    {% if csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% endif %}
+    
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+        
+        /* Layout avec sidebar */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar vertical à gauche - Style Hapag-Lloyd */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--hl-blue) 0%, var(--hl-blue-dark) 100%);
+            border-right: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .sidebar-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: var(--white);
+        }
+        
+        .sidebar-header h4 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .sidebar-menu {
+            padding: var(--space-md) 0;
+        }
+        
+        .menu-item {
+            display: block;
+            padding: var(--space-md) var(--space-lg);
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-left-color: var(--hl-orange);
+        }
+        
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--white);
+            border-left-color: var(--hl-orange);
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: var(--space-sm);
+            text-align: center;
+        }
+        
+        .menu-group {
+            margin-top: var(--space-md);
+        }
+        
+        .menu-group-title {
+            padding: var(--space-md) var(--space-lg);
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition-fast);
+            border-left: 3px solid transparent;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .menu-group-title:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-left-color: var(--hl-orange);
+        }
+        
+        .menu-group-title.expanded {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--white);
+            border-left-color: var(--hl-orange);
+        }
+        
+        .menu-group-title i.fa-chevron-down {
+            font-size: 0.75rem;
+            transition: transform 0.3s ease;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .menu-group-title.expanded i.fa-chevron-down {
+            transform: rotate(180deg);
+            color: var(--hl-orange);
+        }
+        
+        .menu-group-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        
+        .menu-group-content.expanded {
+            max-height: 2000px;
+            opacity: 1;
+            transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+        }
+        
+        .menu-subitem {
+            display: block;
+            padding: var(--space-sm) var(--space-lg) var(--space-sm) calc(var(--space-lg) + 20px + var(--space-sm));
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition-fast);
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .menu-subitem:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--white);
+            border-left-color: var(--hl-orange);
+            padding-left: calc(var(--space-lg) + 20px + var(--space-sm) + 4px);
+        }
+        
+        .menu-subitem.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--white);
+            border-left-color: var(--hl-orange);
+            font-weight: 600;
+        }
+        
+        .menu-subitem i {
+            width: 16px;
+            margin-right: var(--space-xs);
+        }
+        
+        /* Header en haut - Style Hapag-Lloyd */
+        .top-header {
+            height: 70px;
+            background: var(--white);
+            border-bottom: 2px solid var(--hl-blue);
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-xl);
+            box-shadow: 0 2px 8px rgba(0, 56, 101, 0.1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        /* Contenu principal - Style Hapag-Lloyd */
+            .main-content {
+            margin-left: 280px;
+            margin-top: 70px;
+            padding: var(--space-2xl) var(--space-xl);
+            min-height: calc(100vh - 70px);
+            background: var(--bg-secondary);
+            width: calc(100% - 280px);
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Wrapper pour centrer le contenu - Style Hapag-Lloyd */
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+                width: 100%;
+        }
+
+        /* Menu mobile toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--white);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Overlay pour fermer le menu mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            backdrop-filter: blur(4px);
+        }
+        
+        .sidebar-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Overlay pour fermer le menu mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar vertical à gauche -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="menu-toggle" id="menuToggle" aria-label="Fermer le menu">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h4>
+                    <i class="fas fa-chart-line me-2"></i>
+                    Import Profit Pro
+                </h4>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="{{ url_for('index') }}" class="menu-item {% if request.endpoint and request.endpoint == 'index' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                    Accueil
+                    </a>
+                
+                <a href="{{ url_for('search.search_page') }}" class="menu-item {% if request.endpoint == 'search.search_page' %}active{% endif %}">
+                    <i class="fas fa-search"></i>
+                    Recherche Globale
+                </a>
+
+                {% if has_permission(current_user, 'promotion.read') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and 'promotion' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Équipe de Promotion</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and 'promotion' in request.endpoint %}expanded{% endif %}">
+                        <a href="{{ url_for('promotion.workflow') }}" class="menu-subitem {% if request.endpoint and 'promotion.workflow' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-sitemap"></i>
+                            Workflow ⚡
+                        </a>
+                        <a href="{{ url_for('promotion.dashboard') }}" class="menu-subitem {% if request.endpoint == 'promotion.dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard
+                        </a>
+                        <a href="{{ url_for('promotion.supervisor_stock') }}" class="menu-subitem {% if request.endpoint and 'promotion.supervisor_stock' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-warehouse"></i>
+                            Stock Superviseur
+                        </a>
+                        <a href="{{ url_for('promotion.teams_list') }}" class="menu-subitem {% if request.endpoint and 'promotion.teams' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-users"></i>
+                            Équipes
+                        </a>
+                        {% if has_permission(current_user, 'promotion.write') %}
+                        <a href="{{ url_for('promotion.teams_list') }}#approvisionnement" class="menu-subitem">
+                            <i class="fas fa-truck-loading"></i>
+                            Approvisionner ⚡
+                        </a>
+                        <a href="{{ url_for('promotion.daily_closure') }}" class="menu-subitem {% if request.endpoint and 'promotion.daily_closure' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-calendar-check"></i>
+                            Clôture Quotidienne
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('promotion.members_list') }}" class="menu-subitem {% if request.endpoint and 'promotion.members' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-user-friends"></i>
+                            Membres
+                        </a>
+                        <a href="{{ url_for('promotion.gammes_list') }}" class="menu-subitem {% if request.endpoint and 'promotion.gammes' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-box"></i>
+                            Gammes
+                        </a>
+                        <a href="{{ url_for('promotion.sales_list') }}" class="menu-subitem {% if request.endpoint and 'promotion.sales' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-shopping-cart"></i>
+                            Ventes
+                        </a>
+                        <a href="{{ url_for('promotion.quick_entry') }}" class="menu-subitem {% if request.endpoint and 'promotion.quick_entry' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-bolt"></i>
+                            Saisie Rapide ⚡
+                        </a>
+                        <a href="{{ url_for('promotion.returns_list') }}" class="menu-subitem {% if request.endpoint and 'promotion.returns' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-undo"></i>
+                            Retours
+                        </a>
+                        <a href="{{ url_for('promotion.map_view') }}" class="menu-subitem {% if request.endpoint and 'promotion.map' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Cartographie
+                    </a>
+                </div>
+                </div>
+                {% endif %}
+
+                {% if has_permission(current_user, 'simulations.read') %}
+                <a href="{{ url_for('simulations_list') }}" class="menu-item {% if request.endpoint == 'simulations_list' %}active{% endif %}">
+                        <i class="fas fa-calculator"></i>
+                    Simulations
+                </a>
+                {% endif %}
+                
+                {% if has_permission(current_user, 'forecast.read') or has_permission(current_user, 'orders.read') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and ('forecast' in request.endpoint or 'orders' in request.endpoint) %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Prévisions & Ventes</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and ('forecast' in request.endpoint or 'orders' in request.endpoint) %}expanded{% endif %}">
+                        {% if has_permission(current_user, 'forecast.read') %}
+                        <a href="{{ url_for('forecast_dashboard') }}" class="menu-subitem {% if request.endpoint == 'forecast_dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard
+                        </a>
+                        {% if has_permission(current_user, 'forecast.create') %}
+                        <a href="{{ url_for('forecast_quick_entry') }}" class="menu-subitem {% if request.endpoint == 'forecast_quick_entry' %}active{% endif %}">
+                            <i class="fas fa-table"></i>
+                            Saisie Rapide
+                        </a>
+                        <a href="{{ url_for('forecast_new') }}" class="menu-subitem {% if request.endpoint == 'forecast_new' %}active{% endif %}">
+                            <i class="fas fa-plus"></i>
+                            Nouvelle Prévision
+                        </a>
+                        <a href="{{ url_for('forecast_import') }}" class="menu-subitem {% if request.endpoint == 'forecast_import' %}active{% endif %}">
+                            <i class="fas fa-upload"></i>
+                            Import Excel/CSV
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('forecast_summary') }}" class="menu-subitem {% if request.endpoint == 'forecast_summary' %}active{% endif %}">
+                            <i class="fas fa-chart-bar"></i>
+                            Récapitulatif Centralisé
+                        </a>
+                        <a href="{{ url_for('forecast_list') }}" class="menu-subitem {% if request.endpoint == 'forecast_list' %}active{% endif %}">
+                            <i class="fas fa-list"></i>
+                            Liste des Prévisions
+                        </a>
+                        <a href="{{ url_for('forecast_performance') }}" class="menu-subitem {% if request.endpoint == 'forecast_performance' %}active{% endif %}">
+                            <i class="fas fa-chart-pie"></i>
+                            Performance
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'orders.read') %}
+                        <a href="{{ url_for('orders.orders_list') }}" class="menu-subitem {% if request.endpoint and 'orders' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-shopping-cart"></i>
+                            Commandes Commerciales
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if has_permission(current_user, 'analytics.read') %}
+                <a href="{{ url_for('analytics.dashboard') }}" class="menu-item {% if request.endpoint == 'analytics.dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i>
+                    Tableaux de Bord Analytiques
+                </a>
+                {% endif %}
+                
+                {% if has_permission(current_user, 'stock_items.read') %}
+                <a href="{{ url_for('articles_list') }}" class="menu-item {% if request.endpoint == 'articles_list' %}active{% endif %}">
+                        <i class="fas fa-box"></i>
+                    Articles
+                </a>
+                
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and 'price_lists' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Fiches de Prix</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and 'price_lists' in request.endpoint %}expanded{% endif %}">
+                        <a href="{{ url_for('price_lists.lists') }}" class="menu-subitem {% if request.endpoint == 'price_lists.lists' %}active{% endif %}">
+                            <i class="fas fa-list"></i>
+                            Liste des Fiches
+                        </a>
+                        {% if has_permission(current_user, 'stock_items.create') %}
+                        <a href="{{ url_for('price_lists.new') }}" class="menu-subitem {% if request.endpoint == 'price_lists.new' %}active{% endif %}">
+                            <i class="fas fa-plus"></i>
+                            Nouvelle Fiche
+                        </a>
+                        {% endif %}
+                </div>
+        </div>
+                {% endif %}
+
+                {% if has_permission(current_user, 'regions.read') or has_permission(current_user, 'depots.read') or has_permission(current_user, 'vehicles.read') or has_permission(current_user, 'families.read') or has_permission(current_user, 'stock_items.read') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and 'referentiels' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Référentiels</span>
+                            <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and 'referentiels' in request.endpoint %}expanded{% endif %}">
+                        {% if has_permission(current_user, 'regions.read') %}
+                        <a href="{{ url_for('referentiels.regions_list') }}" class="menu-subitem {% if request.endpoint == 'referentiels.regions_list' %}active{% endif %}">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Régions
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'depots.read') %}
+                        <a href="{{ url_for('referentiels.depots_list') }}" class="menu-subitem {% if request.endpoint == 'referentiels.depots_list' %}active{% endif %}">
+                            <i class="fas fa-warehouse"></i>
+                            Dépôts
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'vehicles.read') %}
+                        <a href="{{ url_for('referentiels.vehicles_list') }}" class="menu-subitem {% if request.endpoint == 'referentiels.vehicles_list' %}active{% endif %}">
+                            <i class="fas fa-car"></i>
+                            Véhicules
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'families.read') %}
+                        <a href="{{ url_for('referentiels.families_list') }}" class="menu-subitem {% if request.endpoint == 'referentiels.families_list' %}active{% endif %}">
+                            <i class="fas fa-layer-group"></i>
+                            Familles
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'stock_items.read') %}
+                        <a href="{{ url_for('referentiels.stock_items_list') }}" class="menu-subitem {% if request.endpoint == 'referentiels.stock_items_list' %}active{% endif %}">
+                            <i class="fas fa-boxes"></i>
+                            Articles de Stock
+                        </a>
+                        {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if has_permission(current_user, 'stocks.read') or has_permission(current_user, 'movements.read') or (current_user.role and current_user.role.code == 'warehouse') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and ('stocks' in request.endpoint or 'movements' in request.endpoint) %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Stocks</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and ('stocks' in request.endpoint or 'movements' in request.endpoint) %}expanded{% endif %}">
+                        {% if has_permission(current_user, 'stocks.read') or (current_user.role and current_user.role.code == 'warehouse') %}
+                        <a href="{{ url_for('stocks.stock_summary') }}" class="menu-subitem {% if request.endpoint == 'stocks.stock_summary' %}active{% endif %}">
+                            <i class="fas fa-chart-bar"></i>
+                            Récapitulatif Stock
+                        </a>
+                        {% if has_permission(current_user, 'stock_loading.read') or (current_user.role and current_user.role.code == 'warehouse') %}
+                        <a href="{{ url_for('stocks.warehouse_dashboard') }}" class="menu-subitem {% if request.endpoint == 'stocks.warehouse_dashboard' or request.endpoint == 'stocks.loading_summary_detail' %}active{% endif %}">
+                            <i class="fas fa-warehouse"></i>
+                            Dashboard Magasinier
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('stocks.stock_history') }}" class="menu-subitem {% if request.endpoint == 'stocks.stock_history' %}active{% endif %}">
+                            <i class="fas fa-history"></i>
+                            Historique Mouvements
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'movements.read') %}
+                        <a href="{{ url_for('stocks.movements_list') }}" class="menu-subitem {% if request.endpoint == 'stocks.movements_list' %}active{% endif %}">
+                                <i class="fas fa-exchange-alt"></i>
+                            Mouvements
+                        </a>
+                        <a href="{{ url_for('stocks.receptions_list') }}" class="menu-subitem {% if request.endpoint == 'stocks.receptions_list' %}active{% endif %}">
+                            <i class="fas fa-truck-loading"></i>
+                            Réceptions
+                        </a>
+                        <a href="{{ url_for('stocks.outgoings_list') }}" class="menu-subitem {% if request.endpoint == 'stocks.outgoings_list' %}active{% endif %}">
+                            <i class="fas fa-arrow-up"></i>
+                            Sorties (Ventes)
+                        </a>
+                        <a href="{{ url_for('stocks.returns_list') }}" class="menu-subitem {% if request.endpoint == 'stocks.returns_list' %}active{% endif %}">
+                            <i class="fas fa-arrow-down"></i>
+                            Retours
+                        </a>
+                        {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if has_permission(current_user, 'inventory.read') %}
+                <a href="{{ url_for('inventaires.sessions_list') }}" class="menu-item {% if request.endpoint and request.endpoint == 'inventaires.sessions_list' %}active{% endif %}">
+                    <i class="fas fa-clipboard-check"></i>
+                    Inventaires
+                </a>
+                {% endif %}
+                
+                {% if has_permission(current_user, 'vehicles.read') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and 'flotte' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Flotte</span>
+                        <i class="fas fa-chevron-down"></i>
+                </div>
+                    <div class="menu-group-content {% if request.endpoint and 'flotte' in request.endpoint %}expanded{% endif %}">
+                        <a href="{{ url_for('flotte.dashboard') }}" class="menu-subitem {% if request.endpoint == 'flotte.dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard Flotte
+                        </a>
+                        <a href="{{ url_for('referentiels.vehicles_list') }}" class="menu-subitem {% if request.endpoint == 'referentiels.vehicles_list' %}active{% endif %}">
+                            <i class="fas fa-list"></i>
+                            Liste des Véhicules
+                        </a>
+                        <a href="{{ url_for('flotte.operations_guide') }}" class="menu-subitem {% if request.endpoint == 'flotte.operations_guide' %}active{% endif %}">
+                            <i class="fas fa-book"></i>
+                            Guide des Opérations
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if has_permission(current_user, 'chat.read') %}
+                <a href="{{ url_for('chat.rooms_list') }}" class="menu-item menu-item-chat {% if request.endpoint and 'chat' in request.endpoint %}active{% endif %}" style="background: linear-gradient(135deg, rgba(0, 61, 130, 0.1) 0%, rgba(0, 82, 165, 0.1) 100%); border-left: 4px solid #003d82; font-weight: 600; position: relative;">
+                    <i class="fas fa-comments" style="color: #003d82;"></i>
+                    Messages
+                    <span class="chat-menu-badge" id="chatMenuBadge" style="display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); animation: pulse 2s infinite;"></span>
+                </a>
+                {% endif %}
+            </nav>
+        </aside>
+        
+        <!-- Header en haut -->
+        <header class="top-header">
+            <button class="menu-toggle mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+            
+                    <div class="user-menu">
+                {% if current_user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-link text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>
+                        {{ current_user.username }}
+                        {% if current_user.role %}
+                        <span class="badge-hl badge-hl-primary" style="margin-left: 0.5rem; font-size: 0.7rem;">
+                            {{ current_user.role.name }}
+                        </span>
+                        {% endif %}
+                        </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                            <i class="fas fa-user-circle me-2"></i>
+                            Mon Profil
+                        </a></li>
+                        {% if has_permission(current_user, 'users.read') %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.users_list') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Gestion Utilisateurs
+                        </a></li>
+                        {% endif %}
+                        {% if has_permission(current_user, 'roles.read') %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.roles_list') }}">
+                            <i class="fas fa-user-shield me-2"></i>
+                            Rôles & Permissions
+                        </a></li>
+                        {% endif %}
+                        {% if has_permission(current_user, 'users.read') or has_permission(current_user, 'roles.read') %}
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{{ url_for('themes.settings') }}">
+                            <i class="fas fa-palette me-2"></i>
+                            Apparence
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="fas fa-cog me-2"></i>
+                            Paramètres
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            Déconnexion
+                        </a></li>
+                    </ul>
+                            </div>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn-hl btn-hl-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Connexion
+                </a>
+                    {% endif %}
+                </div>
+            </header>
+
+        <!-- Contenu principal -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+            </main>
+        </div>
+                    
+    <!-- Footer -->
+    <footer class="footer-hl" style="margin-left: 280px;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>
+                        <i class="fas fa-chart-line"></i>
+                        Import Profit Pro
+                    </h5>
+                    <p style="color: rgba(255, 255, 255, 0.8);">Système complet de gestion de la rentabilité des importations avec prévisions avancées et analyses de performance.</p>
+    </div>
+                <div class="col-md-4">
+                    <h5>
+                        <i class="fas fa-cogs"></i>
+                        Fonctionnalités
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('simulations_list') }}">Simulations de Rentabilité</a></li>
+                        <li><a href="{{ url_for('forecast_dashboard') }}">Prévisions & Ventes</a></li>
+                        <li><a href="{{ url_for('articles_list') }}">Gestion des Articles</a></li>
+                        <li><a href="{{ url_for('forecast_performance') }}">Analyses de Performance</a></li>
+                    </ul>
+                    </div>
+                <div class="col-md-4">
+                    <h5>
+                        <i class="fas fa-life-ring"></i>
+                        Support
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Support Technique</a></li>
+                        <li><a href="#">Formation</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Import Profit Pro. Tous droits réservés. Système de gestion moderne et interactif.</p>
+        </div>
+    </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Scripts personnalisés -->
+    <script>
+        // Injection automatique du token CSRF dans tous les formulaires POST
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer le token CSRF depuis la meta tag
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                const csrfToken = csrfMeta.getAttribute('content');
+                
+                // Ajouter le token à tous les formulaires POST qui n'ont pas déjà le token
+                const forms = document.querySelectorAll('form[method="POST"], form[method="post"]');
+                forms.forEach(function(form) {
+                    // Vérifier si le formulaire a déjà un champ csrf_token
+                    const existingToken = form.querySelector('input[name="csrf_token"]');
+                    if (!existingToken && csrfToken) {
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrf_token';
+                        csrfInput.value = csrfToken;
+                        form.insertBefore(csrfInput, form.firstChild);
+                    }
+                });
+                
+                // Intercepter les soumissions AJAX pour ajouter le token
+                const originalFetch = window.fetch;
+                window.fetch = function(url, options = {}) {
+                    if (options.method && options.method.toUpperCase() === 'POST') {
+                        if (!options.headers) {
+                            options.headers = {};
+                        }
+                        // Si c'est un formulaire, ajouter le token dans le body
+                        if (options.body && typeof options.body === 'string' && !options.body.includes('csrf_token')) {
+                            if (options.body) {
+                                options.body += '&csrf_token=' + encodeURIComponent(csrfToken);
+                            }
+                        }
+                        // Pour JSON, ajouter dans les headers
+                        if (options.headers['Content-Type'] && options.headers['Content-Type'].includes('application/json')) {
+                            if (options.body) {
+                                try {
+                                    const jsonBody = JSON.parse(options.body);
+                                    jsonBody.csrf_token = csrfToken;
+                                    options.body = JSON.stringify(jsonBody);
+                                } catch (e) {
+                                    // Si ce n'est pas du JSON valide, ignorer
+                                }
+                            }
+                        }
+                    }
+                    return originalFetch.apply(this, arguments);
+                };
+            }
+        });
+    </script>
+    <script>
+        // Gestionnaire d'erreur global pour ignorer les erreurs des extensions de navigateur
+        window.addEventListener('error', function(event) {
+            // Ignorer les erreurs JSON-RPC des extensions de navigateur
+            if (event.message && (
+                event.message.includes('JSON-RPC') ||
+                event.message.includes('Internal JSON-RPC error') ||
+                event.message.includes('inject.js') ||
+                event.message.includes('content.namada.js') ||
+                event.message.includes('chrome-extension://') ||
+                event.message.includes('moz-extension://')
+            )) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        }, true);
+        
+        // Gestionnaire pour les promesses rejetées non gérées (erreurs JSON-RPC)
+        window.addEventListener('unhandledrejection', function(event) {
+            const reason = event.reason;
+            const message = reason?.message || reason?.toString() || '';
+            
+            // Ignorer les erreurs JSON-RPC des extensions
+            if (message.includes('JSON-RPC') || 
+                message.includes('Internal JSON-RPC error') ||
+                (reason?.code === -32603)) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        });
+        
+        // Gestion du menu mobile responsive
+        document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const headerMenuToggle = document.querySelector('.top-header .menu-toggle');
+            
+            function openSidebar() {
+                if (sidebar) {
+                    sidebar.classList.add('mobile-open');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.add('active');
+                }
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeSidebar() {
+                if (sidebar) {
+                    sidebar.classList.remove('mobile-open');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('active');
+                }
+                document.body.style.overflow = '';
+            }
+            
+            function toggleSidebar() {
+                if (sidebar && sidebar.classList.contains('mobile-open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            }
+            
+            // Événements pour le toggle
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleSidebar();
+                });
+            }
+            
+            if (headerMenuToggle) {
+                headerMenuToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleSidebar();
+                });
+            }
+            
+            // Fermer le menu en cliquant sur l'overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+            
+            // Fermer le menu en cliquant sur un lien du menu
+            const menuLinks = document.querySelectorAll('.sidebar-menu a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+        if (window.innerWidth <= 1024) {
+                        closeSidebar();
+                    }
+                });
+            });
+            
+            // Fermer le menu avec la touche Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar && sidebar.classList.contains('mobile-open')) {
+                    closeSidebar();
+                }
+            });
+            
+            // Gérer le redimensionnement de la fenêtre
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth > 1024) {
+                        closeSidebar();
+                    }
+                }, 250);
+            });
+        });
+        
+        // Fonction globale pour compatibilité
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar && sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            } else {
+                if (sidebar) sidebar.classList.add('mobile-open');
+                if (sidebarOverlay) sidebarOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // Animation des éléments au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, observerOptions);
+
+        // Observer tous les éléments avec la classe 'animate-on-scroll'
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.animate-on-scroll');
+            elements.forEach(el => observer.observe(el));
+        });
+        
+        // Gestion des notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+                setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Gestion des formulaires
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Traitement...';
+                    }
+                });
+                });
+            });
+
+        // Fonction pour toggle les groupes de menus (style Hapag-Lloyd)
+        function toggleMenuGroup(element) {
+            const menuGroup = element.closest('.menu-group');
+            const menuContent = menuGroup.querySelector('.menu-group-content');
+            const isExpanded = element.classList.contains('expanded');
+            
+            if (isExpanded) {
+                element.classList.remove('expanded');
+                menuContent.classList.remove('expanded');
+            } else {
+                element.classList.add('expanded');
+                menuContent.classList.add('expanded');
+            }
+        }
+    </script>
+    
+    {% if has_permission(current_user, 'chat.read') %}
+    <script>
+    // Mettre à jour le badge de messages non lus dans le menu
+    let chatBadgeUpdateInterval = null;
+    let chatBadgeUpdateDelay = 60000; // Commence à 60 secondes
+    let chatBadgeErrorCount = 0;
+    let chatBadgeIsUpdating = false;
+    
+    async function updateChatMenuBadge() {
+      // Éviter les appels simultanés
+      if (chatBadgeIsUpdating) {
+        return;
+      }
+      
+      // Ne pas mettre à jour si on est sur une page de chat (SSE gère déjà)
+      if (window.location.pathname.startsWith('/chat/')) {
+        return;
+      }
+      
+      chatBadgeIsUpdating = true;
+      
+      try {
+        const response = await fetch('/chat/api/rooms');
+        
+        if (response.status === 429) {
+          // Trop de requêtes - augmenter le délai et arrêter temporairement
+          chatBadgeErrorCount++;
+          chatBadgeUpdateDelay = Math.min(chatBadgeUpdateDelay * 2, 300000); // Max 5 minutes
+          
+          // Arrêter l'intervalle actuel
+          if (chatBadgeUpdateInterval) {
+            clearInterval(chatBadgeUpdateInterval);
+            chatBadgeUpdateInterval = null;
+          }
+          
+          // Redémarrer avec le nouveau délai après un délai d'attente
+          setTimeout(() => {
+            if (chatBadgeErrorCount < 5) { // Réessayer après 5 erreurs max
+              chatBadgeUpdateInterval = setInterval(updateChatMenuBadge, chatBadgeUpdateDelay);
+            }
+          }, chatBadgeUpdateDelay);
+          
+          console.warn(`Rate limit atteint pour le badge chat. Délai augmenté à ${chatBadgeUpdateDelay/1000}s`);
+          chatBadgeIsUpdating = false;
+          return;
+        }
+        
+        if (response.ok) {
+          const data = await response.json();
+          let totalUnread = 0;
+          
+          if (data.rooms) {
+            data.rooms.forEach(room => {
+              totalUnread += room.unread_count || 0;
+            });
+          }
+          
+          const menuBadge = document.getElementById('chatMenuBadge');
+          if (menuBadge) {
+            if (totalUnread > 0) {
+              menuBadge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+              menuBadge.style.display = 'block';
+            } else {
+              menuBadge.style.display = 'none';
+            }
+          }
+          
+          // Réinitialiser le délai en cas de succès
+          if (chatBadgeErrorCount > 0) {
+            chatBadgeErrorCount = 0;
+            chatBadgeUpdateDelay = 60000; // Retour à 60 secondes
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du badge:', error);
+        chatBadgeErrorCount++;
+      } finally {
+        chatBadgeIsUpdating = false;
+      }
+    }
+    
+    // Mettre à jour le badge au chargement (une seule fois)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        // Attendre 2 secondes avant la première mise à jour pour éviter les conflits
+        setTimeout(updateChatMenuBadge, 2000);
+      });
+    } else {
+      setTimeout(updateChatMenuBadge, 2000);
+    }
+    
+    // Mettre à jour toutes les 60 secondes (au lieu de 30)
+    chatBadgeUpdateInterval = setInterval(updateChatMenuBadge, chatBadgeUpdateDelay);
+    
+    // Notifications navigateur
+    let notificationPermission = null;
+    
+    async function requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        notificationPermission = await Notification.requestPermission();
+      } else if ('Notification' in window) {
+        notificationPermission = Notification.permission;
+      }
+    }
+    
+    // Demander la permission au chargement
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', requestNotificationPermission);
+    } else {
+      requestNotificationPermission();
+    }
+    
+    // Fonction pour afficher une notification
+    function showChatNotification(title, body, icon = null) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+          body: body,
+          icon: icon || '/static/favicon.ico',
+          badge: '/static/favicon.ico',
+          tag: 'chat-message',
+          requireInteraction: false
+        });
+        
+        // Fermer automatiquement après 5 secondes
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+        
+        // Action au clic
+        notification.onclick = function() {
+          window.focus();
+          this.close();
+        };
+      }
+    }
+    
+    // Écouter les nouveaux messages via SSE (si on est sur une page de chat)
+    if (typeof ChatSSE !== 'undefined' && window.location.pathname.startsWith('/chat/')) {
+      // Les notifications seront gérées par le SSE existant
+      // On peut ajouter un callback dans ChatSSE pour déclencher les notifications
+    }
+    </script>
+    {% endif %}
+    
+    <!-- Script pour charger les préférences de thème -->
+    {% if current_user.is_authenticated %}
+    <script src="{{ url_for('static', filename='js/themes.js') }}"></script>
+    <script>
+        // Charger les préférences au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof loadPreferences === 'function') {
+                loadPreferences();
+            }
+        });
+    </script>
+    {% endif %}
+
+    <!-- Scripts UX (animations, drag & drop) -->
+    <script src="{{ url_for('static', filename='js/ux/animations.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

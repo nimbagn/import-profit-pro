@@ -1,0 +1,523 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Fiche de Prix {{ price_list.name }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .card-hl {
+    margin: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .info-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xs);
+    font-weight: 600;
+  }
+  
+  .info-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .table-hl {
+    width: 100%;
+    margin-top: var(--space-xl);
+  }
+  
+  .table-hl th {
+    background: var(--bg-tertiary);
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .table-hl td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .table-hl tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .price-value {
+    font-weight: 700;
+    color: var(--color-primary);
+    text-align: right;
+  }
+  
+  .price-empty {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  
+  .freebies-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    background: rgba(0, 56, 101, 0.1);
+    color: var(--color-primary);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: var(--space-xs) var(--space-xs) var(--space-xs) 0;
+  }
+  
+  .page-header-actions {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+  }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .status-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+  }
+  
+  .status-upcoming {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--hl-blue);
+  }
+  
+  .status-expired {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+  }
+  
+  .status-inactive {
+    background: rgba(107, 114, 128, 0.1);
+    color: var(--text-muted);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .card-hl {
+      margin: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+      display: block;
+    }
+    
+    .page-header-actions {
+      flex-direction: column;
+    }
+    
+    .page-header-actions .btn-hl {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="card-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: var(--space-md);">
+        <div>
+          <h1 class="page-title-hl">
+            <i class="fas fa-tags me-2"></i>
+            {{ price_list.name }}
+          </h1>
+          {% if price_list.description %}
+          <p style="color: var(--text-secondary); margin: var(--space-sm) 0 0 0;">
+            {{ price_list.description }}
+          </p>
+          {% endif %}
+        </div>
+        <span class="badge-status status-{{ price_list.status }}">
+          {% if price_list.status == 'active' %}
+          Active
+          {% elif price_list.status == 'upcoming' %}
+          À venir
+          {% elif price_list.status == 'expired' %}
+          Expirée
+          {% else %}
+          Inactive
+          {% endif %}
+        </span>
+      </div>
+      
+      <div class="page-header-actions">
+        <a href="{{ url_for('price_lists.edit', price_list_id=price_list.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-edit me-2"></i>
+          Modifier
+        </a>
+        <form method="POST" action="{{ url_for('price_lists.delete', price_list_id=price_list.id) }}" 
+              style="display: inline;" 
+              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette fiche de prix ?');">
+          <button type="submit" class="btn-hl" style="background: var(--color-danger); color: var(--white); border-color: var(--color-danger);">
+            <i class="fas fa-trash me-2"></i>
+            Supprimer
+          </button>
+        </form>
+        <a href="{{ url_for('price_lists.lists') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>
+          Retour à la liste
+        </a>
+      </div>
+    </div>
+    
+    <!-- Informations générales -->
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Date de début</div>
+        <div class="info-value">{{ price_list.start_date.strftime('%d/%m/%Y') }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Date de fin</div>
+        <div class="info-value">
+          {% if price_list.end_date %}
+          {{ price_list.end_date.strftime('%d/%m/%Y') }}
+          {% else %}
+          <span style="color: var(--text-muted);">Sans fin</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Nombre d'articles</div>
+        <div class="info-value">{{ items|length }}</div>
+      </div>
+      {% if price_list.created_by %}
+      <div class="info-item">
+        <div class="info-label">Créé par</div>
+        <div class="info-value">{{ price_list.created_by.full_name or price_list.created_by.username }}</div>
+      </div>
+      {% endif %}
+      <div class="info-item">
+        <div class="info-label">Date de création</div>
+        <div class="info-value">{{ price_list.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+      </div>
+    </div>
+    
+    <!-- Filtres et recherche dynamiques -->
+    {% if items %}
+    <div style="margin-top: var(--space-2xl); margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <h3 style="color: var(--color-primary); margin: 0;">
+          <i class="fas fa-box me-2"></i>
+          Articles et Prix ({{ items|length }})
+        </h3>
+        
+        <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; align-items: center;">
+          <!-- Recherche -->
+          <div style="position: relative;">
+            <input type="text" id="searchInput" placeholder="Rechercher un article..." 
+                   style="padding: var(--space-sm) var(--space-md) var(--space-sm) 2.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); width: 250px;"
+                   onkeyup="filterArticles()">
+            <i class="fas fa-search" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+          </div>
+          
+          <!-- Filtre par catégorie -->
+          <select id="categoryFilter" onchange="filterArticles()" 
+                  style="padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--text-primary);">
+            <option value="">Toutes les catégories</option>
+            {% for category in categories %}
+            <option value="{{ category.name }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+          
+          <!-- Bouton pour afficher/masquer les catégories -->
+          <button type="button" onclick="toggleCategoryView()" class="btn-hl btn-hl-outline" style="white-space: nowrap;">
+            <i class="fas fa-layer-group me-2"></i>
+            <span id="viewModeText">Vue par catégorie</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Vue par catégorie (par défaut) -->
+    <div id="categoryView">
+      {% for category_name, category_items in items_by_category.items() %}
+      <div class="category-section" data-category="{{ category_name }}" style="margin-bottom: var(--space-2xl);">
+        <div style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%); color: var(--white); padding: var(--space-md) var(--space-lg); border-radius: var(--radius-md) var(--radius-md) 0 0; margin-bottom: 0;">
+          <h4 style="margin: 0; display: flex; align-items: center; justify-content: space-between;">
+            <span>
+              <i class="fas fa-folder me-2"></i>
+              {{ category_name }}
+              <span style="opacity: 0.8; font-size: 0.875rem; margin-left: var(--space-sm);">({{ category_items|length }} article{{ 's' if category_items|length > 1 else '' }})</span>
+            </span>
+            <button type="button" onclick="toggleCategory('{{ category_name }}')" 
+                    style="background: rgba(255,255,255,0.2); border: none; color: var(--white); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-md); cursor: pointer;">
+              <i class="fas fa-chevron-down" id="icon-{{ category_name|replace(' ', '-') }}"></i>
+            </button>
+          </h4>
+        </div>
+        
+        <div class="category-content" id="content-{{ category_name|replace(' ', '-') }}" style="display: block;">
+          <div style="overflow-x: auto; border: 1px solid var(--gray-200); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md);">
+            <table class="table-hl" style="margin: 0;">
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th style="text-align: right;">Prix Grossiste (GNF)</th>
+                  <th style="text-align: right;">Prix Détaillant (GNF)</th>
+                  <th>Gratuités</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in category_items %}
+                <tr class="article-row" data-category="{{ category_name }}" data-article-name="{{ item.article.name|lower }}">
+                  <td>
+                    <strong>{{ item.article.name }}</strong>
+                    {% if item.article.sku %}
+                    <br>
+                    <small style="color: var(--text-muted);">SKU: {{ item.article.sku }}</small>
+                    {% endif %}
+                  </td>
+                  <td class="price-value">
+                    {% if item.wholesale_price %}
+                    {{ "{:,.0f}".format(item.wholesale_price) }}
+                    {% else %}
+                    <span class="price-empty">-</span>
+                    {% endif %}
+                  </td>
+                  <td class="price-value">
+                    {% if item.retail_price %}
+                    {{ "{:,.0f}".format(item.retail_price) }}
+                    {% else %}
+                    <span class="price-empty">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if item.freebies %}
+                    {% for freebie in item.parse_freebies() %}
+                    <span class="freebies-badge">{{ freebie['quantity'] }}+{{ freebie['free'] }}</span>
+                    {% endfor %}
+                    {% else %}
+                    <span class="price-empty">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if item.notes %}
+                    <small style="color: var(--text-secondary);">{{ item.notes }}</small>
+                    {% else %}
+                    <span class="price-empty">-</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <!-- Vue liste simple (alternative) -->
+    <div id="listView" style="display: none;">
+      <div style="overflow-x: auto;">
+        <table class="table-hl">
+          <thead>
+            <tr>
+              <th>Catégorie</th>
+              <th>Article</th>
+              <th style="text-align: right;">Prix Grossiste (GNF)</th>
+              <th style="text-align: right;">Prix Détaillant (GNF)</th>
+              <th>Gratuités</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr class="article-row" data-category="{{ item.article.category.name if item.article.category else 'Sans catégorie' }}" data-article-name="{{ item.article.name|lower }}">
+              <td>
+                <span class="badge-hl badge-hl-info">
+                  {{ item.article.category.name if item.article.category else 'Sans catégorie' }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ item.article.name }}</strong>
+                {% if item.article.sku %}
+                <br>
+                <small style="color: var(--text-muted);">SKU: {{ item.article.sku }}</small>
+                {% endif %}
+              </td>
+              <td class="price-value">
+                {% if item.wholesale_price %}
+                {{ "{:,.0f}".format(item.wholesale_price) }}
+                {% else %}
+                <span class="price-empty">-</span>
+                {% endif %}
+              </td>
+              <td class="price-value">
+                {% if item.retail_price %}
+                {{ "{:,.0f}".format(item.retail_price) }}
+                {% else %}
+                <span class="price-empty">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if item.freebies %}
+                {% for freebie in item.parse_freebies() %}
+                <span class="freebies-badge">{{ freebie['quantity'] }}+{{ freebie['free'] }}</span>
+                {% endfor %}
+                {% else %}
+                <span class="price-empty">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if item.notes %}
+                <small style="color: var(--text-secondary);">{{ item.notes }}</small>
+                {% else %}
+                <span class="price-empty">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: var(--space-3xl);">
+      <i class="fas fa-box-open" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-lg);"></i>
+      <h3 style="color: var(--text-secondary); margin-bottom: var(--space-md);">Aucun article dans cette fiche</h3>
+      <p style="color: var(--text-muted);">
+        Modifiez la fiche pour ajouter des articles et leurs prix.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentView = 'category'; // 'category' ou 'list'
+  
+  // Filtrer les articles par recherche et catégorie
+  function filterArticles() {
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+    const rows = document.querySelectorAll('.article-row');
+    
+    rows.forEach(row => {
+      const articleName = row.getAttribute('data-article-name') || '';
+      const category = row.getAttribute('data-category') || '';
+      
+      const matchesSearch = articleName.includes(searchTerm);
+      const matchesCategory = !categoryFilter || category === categoryFilter;
+      
+      if (matchesSearch && matchesCategory) {
+        row.style.display = '';
+        // Afficher la section catégorie si elle contient des résultats
+        const categorySection = row.closest('.category-section');
+        if (categorySection) {
+          categorySection.style.display = '';
+        }
+      } else {
+        row.style.display = 'none';
+        // Masquer la section catégorie si elle n'a plus de résultats visibles
+        const categorySection = row.closest('.category-section');
+        if (categorySection) {
+          const visibleRows = categorySection.querySelectorAll('.article-row:not([style*="display: none"])');
+          if (visibleRows.length === 0) {
+            categorySection.style.display = 'none';
+          }
+        }
+      }
+    });
+  }
+  
+  // Basculer entre vue par catégorie et vue liste
+  function toggleCategoryView() {
+    currentView = currentView === 'category' ? 'list' : 'category';
+    const categoryView = document.getElementById('categoryView');
+    const listView = document.getElementById('listView');
+    const viewModeText = document.getElementById('viewModeText');
+    
+    if (!categoryView || !listView || !viewModeText) return;
+    
+    if (currentView === 'category') {
+      categoryView.style.display = 'block';
+      listView.style.display = 'none';
+      viewModeText.textContent = 'Vue liste';
+    } else {
+      categoryView.style.display = 'none';
+      listView.style.display = 'block';
+      viewModeText.textContent = 'Vue par catégorie';
+    }
+    
+    // Réappliquer les filtres
+    filterArticles();
+  }
+  
+  // Afficher/masquer une catégorie
+  function toggleCategory(categoryName) {
+    const safeName = categoryName.replace(/ /g, '-');
+    const content = document.getElementById('content-' + safeName);
+    const icon = document.getElementById('icon-' + safeName);
+    
+    if (!content || !icon) return;
+    
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      icon.classList.remove('fa-chevron-down');
+      icon.classList.add('fa-chevron-up');
+    } else {
+      content.style.display = 'none';
+      icon.classList.remove('fa-chevron-up');
+      icon.classList.add('fa-chevron-down');
+    }
+  }
+</script>
+{% endblock %}
+

@@ -1,0 +1,261 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Récapitulatif Prévisions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .commercial-section {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .commercial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid var(--color-primary);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .commercial-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .stat-card {
+    background: var(--bg-tertiary);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .table-hl {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table-hl thead {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .table-hl th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  
+  .table-hl td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 0.875rem;
+  }
+  
+  .table-hl tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .badge {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .badge-draft { background: var(--gray-200); color: var(--text-primary); }
+  .badge-active { background: #28a745; color: var(--white); }
+  .badge-completed { background: #17a2b8; color: var(--white); }
+  .badge-archived { background: var(--gray-400); color: var(--white); }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .commercial-section {
+      margin: 0 var(--space-md) var(--space-md) var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+      padding: var(--space-md);
+    }
+    
+    .commercial-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .commercial-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-chart-line me-2"></i>
+      Récapitulatif Centralisé des Prévisions
+    </h1>
+    <p style="color: var(--text-secondary); margin-top: var(--space-sm);">
+      Vue d'ensemble de toutes les prévisions groupées par commercial
+    </p>
+  </div>
+
+  {% if by_commercial %}
+    {% for commercial, data in by_commercial.items() %}
+    <div class="commercial-section">
+      <div class="commercial-header">
+        <div>
+          <h2 style="color: var(--color-primary); margin: 0;">
+            <i class="fas fa-user-tie me-2"></i>{{ commercial }}
+          </h2>
+          <p style="color: var(--text-secondary); margin-top: var(--space-xs); margin: 0;">
+            {{ data.forecasts|length }} prévision{{ 's' if data.forecasts|length > 1 else '' }}
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs);">
+            Taux de Réalisation Global
+          </div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">
+            {% if data.total_forecast > 0 %}
+              {{ "%.1f"|format((data.total_realized / data.total_forecast * 100)|float) }}%
+            {% else %}
+              0%
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <div class="commercial-stats">
+        <div class="stat-card">
+          <div class="stat-value">{{ "{:,.0f}".format(data.total_forecast|default(0))|replace(',', ' ') }}</div>
+          <div class="stat-label">Total Prévision</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ "{:,.0f}".format(data.total_realized|default(0))|replace(',', ' ') }}</div>
+          <div class="stat-label">Total Réalisé</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">
+            {{ "{:,.0f}".format((data.total_forecast - data.total_realized)|default(0))|replace(',', ' ') }}
+          </div>
+          <div class="stat-label">Écart</div>
+        </div>
+      </div>
+      
+      <div class="table-container">
+        <table class="table-hl">
+          <thead>
+            <tr>
+              <th>Nom de la Prévision</th>
+              <th>Période</th>
+              <th>Statut</th>
+              <th>Prévision</th>
+              <th>Réalisé</th>
+              <th>% Réalisation</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for forecast in data.forecasts %}
+            <tr>
+              <td><strong>{{ forecast.name }}</strong></td>
+              <td>
+                {{ forecast.start_date.strftime('%d/%m/%Y') }} - 
+                {{ forecast.end_date.strftime('%d/%m/%Y') }}
+              </td>
+              <td>
+                <span class="badge badge-{{ forecast.status }}">
+                  {% if forecast.status == 'draft' %}Brouillon
+                  {% elif forecast.status == 'active' %}Active
+                  {% elif forecast.status == 'completed' %}Terminée
+                  {% else %}Archivée
+                  {% endif %}
+                </span>
+              </td>
+              <td>{{ "{:,.0f}".format(forecast.total_forecast_value|default(0))|replace(',', ' ') }}</td>
+              <td>{{ "{:,.0f}".format(forecast.total_realized_value|default(0))|replace(',', ' ') }}</td>
+              <td>
+                {% if forecast.total_forecast_value > 0 %}
+                  <strong style="color: {% if (forecast.total_realized_value / forecast.total_forecast_value * 100) >= 50 %}var(--color-success){% else %}var(--color-danger){% endif %};">
+                    {{ "%.1f"|format((forecast.total_realized_value / forecast.total_forecast_value * 100)|float) }}%
+                  </strong>
+                {% else %}
+                  0%
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('forecast_detail', id=forecast.id) }}" class="btn-hl btn-hl-sm" style="padding: var(--space-xs) var(--space-sm);">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="commercial-section" style="text-align: center; padding: var(--space-3xl);">
+      <i class="fas fa-inbox" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-lg); opacity: 0.3;"></i>
+      <p style="color: var(--text-secondary); font-size: 1.125rem;">
+        Aucune prévision enregistrée
+      </p>
+      <a href="{{ url_for('forecast_new') }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-lg);">
+        <i class="fas fa-plus me-2"></i>Créer une Prévision
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+

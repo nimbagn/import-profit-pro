@@ -1,0 +1,734 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Workflow Promotion - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 2rem !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+    background: #f8f9fa;
+  }
+  
+  .workflow-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 70px);
+    padding: 2rem;
+    background: #f8f9fa;
+  }
+  
+  .workflow-header {
+    background: linear-gradient(135deg, #003865 0%, #005a9f 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .workflow-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    margin-bottom: 1rem;
+  }
+  
+  .workflow-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: var(--space-sm);
+  }
+  
+  @media (max-width: 1400px) {
+    .workflow-steps {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (max-width: 900px) {
+    .workflow-steps {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .workflow-step {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  @media (min-width: 1400px) {
+    .workflow-step {
+      min-width: 200px;
+    }
+  }
+  
+  .workflow-step:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .workflow-step::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  
+  .workflow-step.step-1::before {
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+  }
+  
+  .workflow-step.step-2::before {
+    background: linear-gradient(90deg, #2196F3, #1976D2);
+  }
+  
+  .workflow-step.step-3::before {
+    background: linear-gradient(90deg, #FF9800, #F57C00);
+  }
+  
+  .workflow-step.step-4::before {
+    background: linear-gradient(90deg, #9C27B0, #7B1FA2);
+  }
+  
+  .workflow-step.step-5::before {
+    background: linear-gradient(90deg, #F44336, #D32F2F);
+  }
+  
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--space-md);
+  }
+  
+  .step-1 .step-number {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+  }
+  
+  .step-2 .step-number {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+  }
+  
+  .step-3 .step-number {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+  }
+  
+  .step-4 .step-number {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+  }
+  
+  .step-5 .step-number {
+    background: linear-gradient(135deg, #F44336, #D32F2F);
+  }
+  
+  .step-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .step-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  .workflow-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xl);
+    margin-bottom: var(--space-xl);
+  }
+  
+  @media (min-width: 1400px) {
+    .workflow-content {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  @media (max-width: 1200px) {
+    .workflow-content {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .workflow-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 0 auto 1.5rem auto;
+    max-width: 1400px;
+    transition: all 0.3s ease;
+  }
+  
+  .workflow-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-sm);
+    transition: var(--transition-normal);
+  }
+  
+  .member-item:hover {
+    background: var(--gray-50);
+    border-color: var(--color-primary);
+  }
+  
+  .member-info {
+    flex: 1;
+  }
+  
+  .member-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .member-stock {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+  
+  .member-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .status-au-point {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+  }
+  
+  .status-en-mission {
+    background: rgba(255, 152, 0, 0.1);
+    color: #FF9800;
+  }
+  
+  .status-retour {
+    background: rgba(156, 39, 176, 0.1);
+    color: #9C27B0;
+  }
+  
+  .distribution-form {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  
+  .distribution-form select,
+  .distribution-form input {
+    flex: 1;
+    padding: var(--space-sm);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+  }
+  
+  .stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+  }
+  
+  .stat-box {
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .workflow-content {
+      grid-template-columns: 1fr;
+    }
+    
+    .workflow-steps {
+      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .workflow-step {
+      width: 100%;
+      max-width: 100%;
+      min-width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workflow-container">
+  <div class="workflow-header">
+    <h1 class="workflow-title">
+      <i class="fas fa-sitemap me-2"></i>
+      Workflow Équipe de Promotion
+    </h1>
+    <p style="color: var(--text-secondary); font-size: 1.1rem;">
+      Processus quotidien de distribution et suivi des ventes
+    </p>
+  </div>
+
+  <!-- Étapes du Workflow -->
+  <div class="workflow-steps">
+    <div class="workflow-step step-1">
+      <div class="step-number">1</div>
+      <div class="step-title">Point de Rencontre</div>
+      <div class="step-description">
+        Le matin, l'équipe se réunit à un point de rencontre fixé par le superviseur
+      </div>
+    </div>
+    
+    <div class="workflow-step step-2">
+      <div class="step-number">2</div>
+      <div class="step-title">Distribution des Gammes</div>
+      <div class="step-description">
+        Le superviseur distribue les gammes selon le besoin ou le potentiel de vente de chaque agent
+      </div>
+    </div>
+    
+    <div class="workflow-step step-3">
+      <div class="step-number">3</div>
+      <div class="step-title">Départ en Mission</div>
+      <div class="step-description">
+        Chaque agent se dirige dans sa zone de choix où se trouvent ses clients
+      </div>
+    </div>
+    
+    <div class="workflow-step step-4">
+      <div class="step-number">4</div>
+      <div class="step-title">Retour des Agents</div>
+      <div class="step-description">
+        Le superviseur attend le retour de chaque agent pour faire le décompte
+      </div>
+    </div>
+    
+    <div class="workflow-step step-5">
+      <div class="step-number">5</div>
+      <div class="step-title">Décompte Final</div>
+      <div class="step-description">
+        Calcul des ventes nettes : <strong>Enlèvements - Retours</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu Principal -->
+  <div class="workflow-content">
+    <!-- Étape 1 : Point de Rencontre -->
+    <div class="workflow-card">
+      <h2 class="card-title">
+        <i class="fas fa-map-marker-alt" style="color: #4CAF50;"></i>
+        Étape 1 : Point de Rencontre
+      </h2>
+      
+      {% if teams %}
+      <div style="max-height: 300px; overflow-y: auto;">
+        {% for team in teams %}
+        <div class="member-item">
+          <div class="member-info">
+            <div class="member-name">
+              <i class="fas fa-users me-2"></i>{{ team.name }}
+            </div>
+            <div class="member-stock">
+              {% if team.region %}
+              <i class="fas fa-map me-1"></i>Région: {{ team.region }}
+              {% endif %}
+              {% if team.team_leader %}
+              | <i class="fas fa-user-tie me-1"></i>Responsable: {{ team.team_leader.full_name or team.team_leader.username }}
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <span class="member-status status-au-point">
+              <i class="fas fa-check-circle"></i> Actif
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">
+        Aucune équipe active
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Étape 2 : Distribution des Gammes -->
+    <div class="workflow-card">
+      <h2 class="card-title">
+        <i class="fas fa-box-open" style="color: var(--color-primary);"></i>
+        Étape 2 : Distribution des Gammes
+      </h2>
+      
+      <form method="POST" action="{{ url_for('promotion.workflow_distribute') }}" class="distribution-form" style="flex-direction: column; gap: var(--space-md);">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+          <select name="member_id" id="member_select" required style="width: 100%; padding: var(--space-sm); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Sélectionner un agent</option>
+            {% for member_data in members %}
+            <option value="{{ member_data.member.id }}" data-stock='{{ member_data.stock|tojson }}'>
+              {{ member_data.member.full_name }}
+              {% if member_data.member.team %}
+              - {{ member_data.member.team.name }}
+              {% endif %}
+              (Stock: {{ member_data.total_stock }})
+            </option>
+            {% endfor %}
+          </select>
+          
+          <select name="gamme_id" id="gamme_select" required style="width: 100%; padding: var(--space-sm); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Sélectionner une gamme</option>
+            {% for gamme in gammes %}
+            <option value="{{ gamme.id }}" data-gamme-name="{{ gamme.name }}">
+              {{ gamme.name }} ({{ "{:,.0f}".format(gamme.selling_price_gnf|default(0))|replace(',', ' ') }} GNF)
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div id="stock_info" style="padding: var(--space-sm); background: var(--gray-100); border-radius: var(--radius-md); display: none;">
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+            <div>
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Stock de l'agent:</strong> <span id="member_stock_text">-</span>
+            </div>
+            <div>
+              <i class="fas fa-boxes me-2"></i>
+              <strong>Stock de l'équipe:</strong> <span id="team_stock_text">-</span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: var(--space-sm); align-items: center;">
+          <input type="number" name="quantity" id="quantity_input" min="1" placeholder="Quantité" required style="flex: 1; padding: var(--space-sm); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+          <button type="submit" class="btn-hl btn-hl-primary" style="white-space: nowrap;">
+            <i class="fas fa-hand-holding me-2"></i>Distribuer
+          </button>
+        </div>
+      </form>
+      
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const memberSelect = document.getElementById('member_select');
+          const gammeSelect = document.getElementById('gamme_select');
+          const stockInfo = document.getElementById('stock_info');
+          const memberStockText = document.getElementById('member_stock_text');
+          const teamStockText = document.getElementById('team_stock_text');
+          const quantityInput = document.getElementById('quantity_input');
+          
+          // Données des stocks des équipes
+          const teamsStock = {{ teams_stock|tojson }};
+          
+          // Extraire l'ID de l'équipe depuis l'option du membre
+          function getTeamIdFromMemberOption(option) {
+            const text = option.text;
+            // Chercher l'ID de l'équipe dans les données des membres
+            {% for member_data in members %}
+            if (option.value == '{{ member_data.member.id }}') {
+              return {{ member_data.member.team_id|default('null') }};
+            }
+            {% endfor %}
+            return null;
+          }
+          
+          function updateStockInfo() {
+            const memberOption = memberSelect.options[memberSelect.selectedIndex];
+            const gammeId = gammeSelect.value;
+            
+            if (memberOption.value && gammeId) {
+              try {
+                // Stock du membre
+                const stock = JSON.parse(memberOption.getAttribute('data-stock'));
+                const currentMemberStock = stock[gammeId] || 0;
+                
+                // Stock de l'équipe
+                const teamId = getTeamIdFromMemberOption(memberOption);
+                let currentTeamStock = 0;
+                if (teamId && teamsStock[teamId]) {
+                  currentTeamStock = teamsStock[teamId][gammeId] || 0;
+                }
+                
+                const gammeName = gammeSelect.options[gammeSelect.selectedIndex].getAttribute('data-gamme-name') || 
+                                 gammeSelect.options[gammeSelect.selectedIndex].text.split(' (')[0];
+                
+                stockInfo.style.display = 'block';
+                memberStockText.innerHTML = `<span style="color: var(--color-primary); font-weight: bold;">${currentMemberStock} unité(s)</span>`;
+                teamStockText.innerHTML = `<span style="color: ${currentTeamStock > 0 ? 'var(--color-success)' : 'var(--color-danger)'}; font-weight: bold;">${currentTeamStock} unité(s)</span>`;
+                
+                // Avertissement si le stock de l'équipe est insuffisant
+                if (currentTeamStock === 0) {
+                  stockInfo.style.background = '#fff3cd';
+                  stockInfo.style.border = '1px solid #ffc107';
+                } else {
+                  stockInfo.style.background = 'var(--gray-100)';
+                  stockInfo.style.border = 'none';
+                }
+              } catch (e) {
+                console.error('Erreur lors de la mise à jour du stock:', e);
+                stockInfo.style.display = 'none';
+              }
+            } else {
+              stockInfo.style.display = 'none';
+            }
+          }
+          
+          memberSelect.addEventListener('change', updateStockInfo);
+          gammeSelect.addEventListener('change', updateStockInfo);
+        });
+      </script>
+      
+      <style>
+        @media (max-width: 768px) {
+          .distribution-form > div:first-child {
+            grid-template-columns: 1fr !important;
+          }
+          .distribution-form > div:last-child {
+            flex-direction: column !important;
+          }
+        }
+      </style>
+    </div>
+
+    <!-- Étape 3 : Départ en Mission -->
+    <div class="workflow-card">
+      <h2 class="card-title">
+        <i class="fas fa-walking" style="color: #FF9800;"></i>
+        Étape 3 : Départ en Mission
+      </h2>
+      
+      {% if members %}
+      <div style="max-height: 400px; overflow-y: auto;">
+        {% for member_data in members %}
+        {% if member_data.total_stock > 0 %}
+        <div class="member-item">
+          <div class="member-info">
+            <div class="member-name">
+              <i class="fas fa-user-circle me-2"></i>{{ member_data.member.full_name }}
+              {% if member_data.member.team %}
+              <small class="text-muted">({{ member_data.member.team.name }})</small>
+              {% endif %}
+            </div>
+            <div class="member-stock">
+              <i class="fas fa-box me-1"></i>Stock: <strong>{{ member_data.total_stock }}</strong> unité(s)
+            </div>
+          </div>
+          <div>
+            <span class="member-status status-en-mission">
+              <i class="fas fa-walking"></i> En mission
+            </span>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% if not members|selectattr('total_stock', 'gt', 0)|list %}
+      <p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">
+        <i class="fas fa-info-circle me-2"></i>Aucun agent en mission actuellement
+      </p>
+      {% endif %}
+      {% else %}
+      <p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">
+        Aucun membre actif
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Étape 4 : Retour des Agents -->
+    <div class="workflow-card">
+      <h2 class="card-title">
+        <i class="fas fa-undo" style="color: #9C27B0;"></i>
+        Étape 4 : Retour des Agents
+      </h2>
+      
+      <div style="margin-bottom: var(--space-md);">
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          <i class="fas fa-info-circle me-2"></i>
+          Les agents reviennent au point de rencontre pour le décompte
+        </p>
+      </div>
+      
+      <div style="text-align: center; margin-top: var(--space-lg);">
+        <a href="{{ url_for('promotion.quick_entry') }}" class="btn-hl btn-hl-primary me-2">
+          <i class="fas fa-bolt me-2"></i>Saisie Rapide des Retours
+        </a>
+        <a href="{{ url_for('promotion.returns_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-list me-2"></i>Voir les Retours
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Étape 5 : Décompte Final -->
+  <div class="workflow-card" style="margin-top: var(--space-xl);">
+    <h2 class="card-title">
+      <i class="fas fa-calculator" style="color: #F44336;"></i>
+      Étape 5 : Décompte Final
+    </h2>
+    
+    {% if members %}
+    <div style="overflow-x: auto;">
+      <div class="table-responsive" style="margin-top: 1rem;">
+        <table class="table table-promo">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Équipe</th>
+            <th>Enlèvements</th>
+            <th>Retours</th>
+            <th>Ventes Nettes</th>
+            <th>Stock Actuel</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member_data in members %}
+          <tr>
+            <td><strong>{{ member_data.member.full_name }}</strong></td>
+            <td>
+              {% if member_data.member.team %}
+              <span class="badge badge-promo" style="background: #6c757d; color: white;">{{ member_data.member.team.name }}</span>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-promo badge-promo-primary">{{ member_data.enlevements or 0 }}</span>
+            </td>
+            <td>
+              <span class="badge badge-promo badge-promo-warning">{{ member_data.retours or 0 }}</span>
+            </td>
+            <td>
+              <strong style="color: {% if member_data.ventes_net > 0 %}var(--color-success){% else %}var(--text-secondary){% endif %};">
+                {{ member_data.ventes_net }}
+              </strong>
+            </td>
+            <td>
+              <span class="badge badge-promo badge-promo-info">{{ member_data.total_stock }}</span>
+            </td>
+            <td>
+              <span class="member-status {% if member_data.total_stock > 0 %}status-en-mission{% else %}status-au-point{% endif %}">
+                {% if member_data.total_stock > 0 %}
+                <i class="fas fa-walking"></i> En mission
+                {% else %}
+                <i class="fas fa-map-marker-alt"></i> Au point
+                {% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">
+      Aucun membre actif
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Statistiques du Jour -->
+  <div class="stats-summary">
+    <div class="stat-box">
+      <div class="stat-value" style="color: var(--color-primary);">{{ enlevements_today }}</div>
+      <div class="stat-label">Enlèvements Aujourd'hui</div>
+    </div>
+    
+    <div class="stat-box">
+      <div class="stat-value" style="color: var(--color-warning);">{{ retours_today }}</div>
+      <div class="stat-label">Retours Aujourd'hui</div>
+    </div>
+    
+    <div class="stat-box" style="background: linear-gradient(135deg, var(--color-primary), var(--color-success)); color: white;">
+      <div class="stat-value" style="color: white;">{{ ventes_net_today }}</div>
+      <div class="stat-label" style="color: rgba(255,255,255,0.9);">Ventes Nettes (Enlèvements - Retours)</div>
+    </div>
+  </div>
+
+  <!-- Actions Rapides -->
+  <div style="text-align: center; margin-top: var(--space-xl);">
+    <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-primary me-2">
+      <i class="fas fa-shopping-cart me-2"></i>Voir toutes les ventes
+    </a>
+    <a href="{{ url_for('promotion.quick_entry') }}" class="btn-hl btn-hl-success me-2">
+      <i class="fas fa-bolt me-2"></i>Saisie Rapide
+    </a>
+    <a href="{{ url_for('promotion.dashboard') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-chart-line me-2"></i>Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
+

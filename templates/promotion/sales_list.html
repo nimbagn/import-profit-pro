@@ -1,0 +1,361 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Ventes Promotion - Import Profit Pro{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const gammeSelect = document.getElementById('gamme_id');
+    const sellingPriceInput = document.getElementById('selling_price_gnf');
+    const commissionInput = document.getElementById('commission_per_unit_gnf');
+    
+    if (gammeSelect) {
+      gammeSelect.addEventListener('change', function() {
+        const gammeId = this.value;
+        if (gammeId) {
+          fetch(`/promotion/api/gamme/${gammeId}/info`)
+            .then(response => response.json())
+            .then(data => {
+              if (sellingPriceInput) sellingPriceInput.value = data.selling_price_gnf;
+              if (commissionInput) commissionInput.value = data.commission_per_unit_gnf;
+            });
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-shopping-cart icon-promo"></i>
+        Ventes de Promotion
+      </h1>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('promotion.quick_entry') }}" class="btn btn-promo btn-promo-success">
+          <i class="fas fa-bolt me-2"></i>Saisie Rapide ⚡
+        </a>
+        <a href="{{ url_for('promotion.sale_new') }}" class="btn btn-promo btn-promo-primary">
+          <i class="fas fa-plus me-2"></i>Nouvelle Vente
+        </a>
+        <a href="{{ url_for('promotion.sales_export_excel', search=search, team_id=team_id, member_id=member_id, gamme_id=gamme_id, transaction_type=transaction_type, date_from=date_from, date_to=date_to) }}" 
+           class="btn btn-promo" style="background: #28a745; color: white;">
+          <i class="fas fa-file-excel me-2"></i>Exporter Excel
+        </a>
+        <a href="{{ url_for('promotion.sales_export_pdf', search=search, team_id=team_id, member_id=member_id, gamme_id=gamme_id, transaction_type=transaction_type, date_from=date_from, date_to=date_to) }}" 
+           class="btn btn-promo" style="background: #dc3545; color: white;">
+          <i class="fas fa-file-pdf me-2"></i>Exporter PDF
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid section-spacing">
+    <!-- Résultat Net (le plus important) -->
+    <div class="stat-card-promo" style="grid-column: span 2; background: linear-gradient(135deg, #003865 0%, #005a9f 100%); color: white;">
+      <div class="stat-card-promo-value" style="color: white; font-size: 2.5em; font-weight: bold;">{{ "{:,.0f}".format(stats.resultat_net|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label" style="color: rgba(255,255,255,0.9); font-size: 1.1em; font-weight: 600;">Résultat Net (CA Net - Commissions Nettes)</div>
+    </div>
+    
+    <!-- CA Net -->
+    <div class="stat-card-promo" style="background: rgba(0, 56, 101, 0.1);">
+      <div class="stat-card-promo-value" style="color: #003865; font-size: 1.8em;">{{ "{:,.0f}".format(stats.ca_net|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label">CA Net (Enlèvements - Retours)</div>
+      <i class="fas fa-chart-line stat-card-promo-icon" style="color: #003865;"></i>
+    </div>
+    
+    <!-- Commissions Nettes -->
+    <div class="stat-card-promo" style="background: rgba(16, 185, 129, 0.1);">
+      <div class="stat-card-promo-value" style="color: #10b981; font-size: 1.8em;">{{ "{:,.0f}".format(stats.commission_nette|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label">Commissions Nettes (Enlèvements - Retours)</div>
+      <i class="fas fa-dollar-sign stat-card-promo-icon" style="color: #10b981;"></i>
+    </div>
+    
+    <!-- Détails -->
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value">{{ stats.total_sales }}</div>
+      <div class="stat-card-promo-label">Total Opérations</div>
+      <i class="fas fa-list stat-card-promo-icon"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #10b981;">{{ stats.total_enlevements }}</div>
+      <div class="stat-card-promo-label">Enlèvements</div>
+      <i class="fas fa-arrow-up stat-card-promo-icon" style="color: #10b981;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #ef4444;">{{ stats.total_retours }}</div>
+      <div class="stat-card-promo-label">Retours</div>
+      <i class="fas fa-arrow-down stat-card-promo-icon" style="color: #ef4444;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #005a9f;">{{ stats.quantity_enlevements - stats.quantity_retours }}</div>
+      <div class="stat-card-promo-label">Quantité Nette</div>
+      <i class="fas fa-balance-scale stat-card-promo-icon" style="color: #005a9f;"></i>
+    </div>
+    
+    <!-- Détails CA -->
+    <div class="stat-card-promo" style="background: rgba(16, 185, 129, 0.05);">
+      <div class="stat-card-promo-value" style="color: #10b981; font-size: 0.9em;">{{ "{:,.0f}".format(stats.revenue_enlevements|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label" style="font-size: 0.85em;">CA Enlèvements</div>
+    </div>
+    <div class="stat-card-promo" style="background: rgba(239, 68, 68, 0.05);">
+      <div class="stat-card-promo-value" style="color: #ef4444; font-size: 0.9em;">{{ "{:,.0f}".format(stats.revenue_retours|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label" style="font-size: 0.85em;">CA Retours</div>
+    </div>
+    
+    <!-- Détails Commissions -->
+    <div class="stat-card-promo" style="background: rgba(16, 185, 129, 0.05);">
+      <div class="stat-card-promo-value" style="color: #10b981; font-size: 0.9em;">{{ "{:,.0f}".format(stats.commission_enlevements|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label" style="font-size: 0.85em;">Commissions Enlèvements</div>
+    </div>
+    <div class="stat-card-promo" style="background: rgba(239, 68, 68, 0.05);">
+      <div class="stat-card-promo-value" style="color: #ef4444; font-size: 0.9em;">{{ "{:,.0f}".format(stats.commission_retours|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label" style="font-size: 0.85em;">Commissions Retours</div>
+    </div>
+  </div>
+
+  <!-- Filtres Avancés -->
+  <div class="card-promo section-spacing">
+    <div class="card-promo-header">
+      <i class="fas fa-filter me-2"></i>
+      Filtres de Recherche
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="toggleFilters()">
+        <i class="fas fa-chevron-down" id="filter-icon"></i>
+      </button>
+    </div>
+    <div id="filters-content" style="display: block;">
+      <div style="padding: 1.5rem;">
+        <form method="GET" class="row g-3">
+          <!-- Recherche -->
+          <div class="col-md-3">
+            <label class="form-label"><i class="fas fa-search me-1"></i>Recherche</label>
+            <input type="text" name="search" class="form-control" placeholder="Nom, référence..." value="{{ search }}">
+          </div>
+          
+          <!-- Date de début -->
+          <div class="col-md-2">
+            <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Date début</label>
+            <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+          </div>
+          
+          <!-- Date de fin -->
+          <div class="col-md-2">
+            <label class="form-label"><i class="fas fa-calendar-check me-1"></i>Date fin</label>
+            <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+          </div>
+          
+          <!-- Équipe -->
+          <div class="col-md-2">
+            <label class="form-label"><i class="fas fa-users me-1"></i>Équipe</label>
+            <select name="team_id" class="form-select">
+              <option value="">Toutes</option>
+              {% for team in teams %}
+              <option value="{{ team.id }}" {% if team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Membre -->
+          <div class="col-md-3">
+            <label class="form-label"><i class="fas fa-user me-1"></i>Membre</label>
+            <select name="member_id" class="form-select">
+              <option value="">Tous</option>
+              {% for member in members %}
+              <option value="{{ member.id }}" {% if member_id == member.id %}selected{% endif %}>{{ member.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Gamme -->
+          <div class="col-md-2">
+            <label class="form-label"><i class="fas fa-box me-1"></i>Gamme</label>
+            <select name="gamme_id" class="form-select">
+              <option value="">Toutes</option>
+              {% for gamme in gammes %}
+              <option value="{{ gamme.id }}" {% if gamme_id == gamme.id %}selected{% endif %}>{{ gamme.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Type de transaction -->
+          <div class="col-md-2">
+            <label class="form-label"><i class="fas fa-exchange-alt me-1"></i>Type</label>
+            <select name="transaction_type" class="form-select">
+              <option value="">Tous</option>
+              <option value="enlevement" {% if transaction_type == 'enlevement' %}selected{% endif %}>Enlèvement</option>
+              <option value="retour" {% if transaction_type == 'retour' %}selected{% endif %}>Retour</option>
+            </select>
+          </div>
+          
+          <!-- Boutons d'action -->
+          <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-promo btn-promo-primary flex-fill">
+              <i class="fas fa-filter me-2"></i>Appliquer
+            </button>
+            <a href="{{ url_for('promotion.sales_list') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+              <i class="fas fa-redo me-2"></i>Réinitialiser
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+  function toggleFilters() {
+    const content = document.getElementById('filters-content');
+    const icon = document.getElementById('filter-icon');
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      icon.classList.remove('fa-chevron-down');
+      icon.classList.add('fa-chevron-up');
+    } else {
+      content.style.display = 'none';
+      icon.classList.remove('fa-chevron-up');
+      icon.classList.add('fa-chevron-down');
+    }
+  }
+  </script>
+        <div class="col-md-2">
+          <div class="row g-2">
+            <div class="col-6">
+              <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="De">
+            </div>
+            <div class="col-6">
+              <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="À">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+          <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-redo me-2"></i>Réinitialiser
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des ventes -->
+  <div class="card-promo">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Ventes
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Réf.</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Membre</th>
+              <th>Équipe</th>
+              <th>Gamme</th>
+              <th>Quantité</th>
+              <th>Montant Total</th>
+              <th>Commission</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in sales %}
+            <tr>
+              <td><code>{{ sale.reference if sale.reference else '-' }}</code></td>
+              <td>{{ sale.sale_date.strftime('%d/%m/%Y') }}</td>
+              <td>
+                {% set transaction_type = sale.transaction_type if sale.transaction_type else 'enlevement' %}
+                {% if transaction_type == 'enlevement' %}
+                <span class="badge badge-promo badge-promo-success">Enlèvement</span>
+                {% elif transaction_type == 'retour' %}
+                <span class="badge badge-promo badge-promo-warning">Retour</span>
+                {% else %}
+                <span class="badge badge-promo" style="background: #6c757d; color: white;">-</span>
+                {% endif %}
+              </td>
+              <td><strong>{{ sale.member.full_name }}</strong></td>
+              <td>{{ sale.member.team.name if sale.member.team else '-' }}</td>
+              <td><strong>{{ sale.gamme.name }}</strong></td>
+              <td><span class="badge badge-promo badge-promo-info">{{ sale.quantity }}</span></td>
+              <td><strong class="data-highlight">{{ "{:,.0f}".format(sale.total_amount_gnf|default(0))|replace(',', ' ') }} GNF</strong></td>
+              <td><strong class="data-positive">{{ "{:,.0f}".format(sale.commission_gnf|default(0))|replace(',', ' ') }} GNF</strong></td>
+              <td>
+                {% if has_permission(current_user, 'promotion.write') %}
+                <a href="{{ url_for('promotion.sale_edit', id=sale.id) }}" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="11" class="text-center text-muted">Aucune vente trouvée</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      {% if pagination and pagination.pages > 1 %}
+      <div class="card-promo-footer" style="padding: 1rem 1.5rem; border-top: 1px solid #e0e0e0;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div class="pagination-info">
+            <small class="text-muted">
+              Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+              {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+              sur {{ pagination.total }} ventes
+            </small>
+          </div>
+          <nav>
+            <ul class="pagination mb-0">
+              <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('promotion.sales_list', page=pagination.prev_num, search=search, team_id=team_id, member_id=member_id, gamme_id=gamme_id, transaction_type=transaction_type, date_from=date_from, date_to=date_to) if pagination.has_prev else '#' }}">
+                  <i class="fas fa-chevron-left"></i>
+                </a>
+              </li>
+              {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                  {% if page_num == pagination.page %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ page_num }}</span>
+                    </li>
+                  {% else %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ url_for('promotion.sales_list', page=page_num, search=search, team_id=team_id, member_id=member_id, gamme_id=gamme_id, transaction_type=transaction_type, date_from=date_from, date_to=date_to) }}">{{ page_num }}</a>
+                    </li>
+                  {% endif %}
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('promotion.sales_list', page=pagination.next_num, search=search, team_id=team_id, member_id=member_id, gamme_id=gamme_id, transaction_type=transaction_type, date_from=date_from, date_to=date_to) if pagination.has_next else '#' }}">
+                  <i class="fas fa-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <div>
+            <select name="per_page" class="form-select form-select-sm" onchange="window.location.href='{{ url_for('promotion.sales_list', search=search, team_id=team_id, member_id=member_id, gamme_id=gamme_id, transaction_type=transaction_type, date_from=date_from, date_to=date_to) }}&per_page=' + this.value">
+              <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25/page</option>
+              <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50/page</option>
+              <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100/page</option>
+              <option value="200" {% if pagination.per_page == 200 %}selected{% endif %}>200/page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

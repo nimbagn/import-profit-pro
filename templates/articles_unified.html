@@ -1,0 +1,464 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Articles - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .filters-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: var(--space-lg);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .article-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+  }
+  
+  .article-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+  
+  .article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .article-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .article-sku {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-family: monospace;
+  }
+  
+  .article-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .stat-item {
+    text-align: center;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .article-details {
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+    font-size: 0.9rem;
+  }
+
+  .detail-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .detail-value {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .article-actions {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .stats-grid,
+    .card-hl,
+    .articles-grid {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .articles-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .article-stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .filters-section {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-box me-2"></i>
+      Articles
+      </h1>
+    <a href="{{ url_for('article_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+          Nouvel Article
+        </a>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_articles|default(articles|length) }}</div>
+      <div class="stat-card-hl-label">Total Articles</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ categories|length }}</div>
+      <div class="stat-card-hl-label">Catégories</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ "{:,.0f}".format(avg_price|default(0)) }} {{ base_currency|default('GNF') }}</div>
+      <div class="stat-card-hl-label">Prix Moyen</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ "{:,.0f}".format(total_value|default(0)) }} {{ base_currency|default('GNF') }}</div>
+      <div class="stat-card-hl-label">Valeur Totale</div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card-hl" style="margin-bottom: var(--space-xl);">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+        Filtres et Recherche
+    </h3>
+    <form method="GET" action="{{ url_for('articles_list') }}" id="filterForm">
+      <div class="filters-section">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-hl-label">Devise de base</label>
+          <select name="base_currency" id="baseCurrency" class="form-hl-select" onchange="this.form.submit()">
+            <option value="GNF" {% if base_currency == 'GNF' %}selected{% endif %}>GNF - Franc Guinéen</option>
+            <option value="USD" {% if base_currency == 'USD' %}selected{% endif %}>USD - Dollar US</option>
+            <option value="EUR" {% if base_currency == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+            <option value="XOF" {% if base_currency == 'XOF' %}selected{% endif %}>XOF - Franc CFA</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-hl-label">Recherche</label>
+          <input type="text" 
+                 name="search" 
+                 id="searchInput" 
+                 class="form-hl-input" 
+                 placeholder="Nom ou ID..." 
+                 value="{{ search }}">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-hl-label">Catégorie</label>
+          <select name="category" id="categoryFilter" class="form-hl-select">
+            <option value="">Toutes les catégories</option>
+            {% for category in categories %}
+            <option value="{{ category.name }}" {% if category_filter == category.name %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-hl-label">Prix min</label>
+          <input type="number" 
+                 name="price_min" 
+                 id="priceMinFilter" 
+                 class="form-hl-input" 
+                 placeholder="Prix minimum..." 
+                 step="0.01"
+                 value="{{ price_min if price_min else '' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-hl-label">Prix max</label>
+          <input type="number" 
+                 name="price_max" 
+                 id="priceMaxFilter" 
+                 class="form-hl-input" 
+                 placeholder="Prix maximum..." 
+                 step="0.01"
+                 value="{{ price_max if price_max else '' }}">
+        </div>
+      </div>
+      <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md);">
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        {% if search or category_filter or price_min or price_max %}
+        <a href="{{ url_for('articles_list', base_currency=base_currency) }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-times me-2"></i>Effacer filtres
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste des articles -->
+  {% if articles %}
+  <div class="articles-grid" id="articlesGrid">
+    {% if pagination and search %}
+    <div style="grid-column: 1 / -1; margin-bottom: var(--space-md); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md);">
+      <strong>{{ pagination.total }} résultat{{ 's' if pagination.total > 1 else '' }} trouvé{{ 's' if pagination.total > 1 else '' }}</strong>
+    </div>
+    {% endif %}
+    {% for article in articles %}
+    <div class="article-card card-hl">
+      <div class="article-header">
+        <div>
+          <h3 class="article-title">{{ article.name }}</h3>
+          <p class="article-sku">ID: {{ article.id }}</p>
+        </div>
+        {% if article.category %}
+        <span class="badge-hl badge-hl-info">{{ article.category.name }}</span>
+        {% endif %}
+      </div>
+      
+      <div class="article-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ "{:,.0f}".format(article.purchase_price|default(0)|float) }}</div>
+          <div class="stat-label">Prix Achat</div>
+          </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ article.purchase_currency|default('USD') }}</div>
+          <div class="stat-label">Devise</div>
+          </div>
+        </div>
+        
+      <div class="article-details">
+        <div class="detail-row">
+          <span class="detail-label">Poids:</span>
+          <span class="detail-value">{{ "{:.2f}".format(article.unit_weight_kg|default(0)|float) }} kg</span>
+          </div>
+        {% if article.created_at %}
+        <div class="detail-row">
+          <span class="detail-label">Créé le:</span>
+          <span class="detail-value">{{ article.created_at.strftime('%d/%m/%Y') }}</span>
+        </div>
+        {% endif %}
+        <div class="detail-row">
+          <span class="detail-label">Statut:</span>
+          <span class="detail-value">
+            <span class="badge-hl {% if article.is_active %}badge-hl-success{% else %}badge-hl-danger{% endif %}">
+              {{ 'Actif' if article.is_active else 'Inactif' }}
+            </span>
+          </span>
+        </div>
+      </div>
+      
+      <div class="article-actions">
+        <a href="{{ url_for('article_detail', id=article.id) if article.id else '#' }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-eye me-2"></i>
+          Voir
+        </a>
+        <a href="{{ url_for('article_edit', id=article.id) if article.id else url_for('article_new') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-edit me-2"></i>
+          Modifier
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  
+  {% if pagination and pagination.pages > 1 %}
+  <div class="card-hl" style="margin-top: var(--space-xl);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md); padding: var(--space-lg);">
+      <div style="color: var(--text-muted); font-size: 0.9rem;">
+        Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+        {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+        sur {{ pagination.total }} article{{ 's' if pagination.total > 1 else '' }}
+      </div>
+      <nav>
+        <ul class="pagination mb-0" style="display: flex; gap: var(--space-xs); list-style: none; padding: 0; margin: 0;">
+          <li>
+            <a href="{{ url_for('articles_list', page=pagination.prev_num, search=search, category=category_filter, price_min=price_min, price_max=price_max, base_currency=base_currency) if pagination.has_prev else '#' }}" 
+               class="btn-hl btn-hl-outline {% if not pagination.has_prev %}disabled{% endif %}" 
+               style="{% if not pagination.has_prev %}opacity: 0.5; pointer-events: none;{% endif %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+              {% if page_num == pagination.page %}
+                <li>
+                  <span class="btn-hl btn-hl-primary" style="cursor: default;">{{ page_num }}</span>
+                </li>
+              {% else %}
+                <li>
+                  <a href="{{ url_for('articles_list', page=page_num, search=search, category=category_filter, price_min=price_min, price_max=price_max, base_currency=base_currency) }}" 
+                     class="btn-hl btn-hl-outline">{{ page_num }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li>
+                <span class="btn-hl btn-hl-outline" style="cursor: default;">…</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+          <li>
+            <a href="{{ url_for('articles_list', page=pagination.next_num, search=search, category=category_filter, price_min=price_min, price_max=price_max, base_currency=base_currency) if pagination.has_next else '#' }}" 
+               class="btn-hl btn-hl-outline {% if not pagination.has_next %}disabled{% endif %}" 
+               style="{% if not pagination.has_next %}opacity: 0.5; pointer-events: none;{% endif %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div>
+        <select name="per_page" 
+                class="form-hl-select" 
+                onchange="window.location.href='{{ url_for('articles_list', search=search, category=category_filter, price_min=price_min, price_max=price_max, base_currency=base_currency) }}?per_page=' + this.value"
+                style="min-width: 120px;">
+          <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25/page</option>
+          <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50/page</option>
+          <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100/page</option>
+          <option value="200" {% if pagination.per_page == 200 %}selected{% endif %}>200/page</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-boxes" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">
+      {% if search or category_filter or price_min or price_max %}
+        Aucun article trouvé
+      {% else %}
+        Aucun article
+      {% endif %}
+    </h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      {% if search or category_filter or price_min or price_max %}
+        Aucun article ne correspond à vos critères de recherche.
+      {% else %}
+        Commencez par créer votre premier article ou importez une liste existante.
+      {% endif %}
+    </p>
+    {% if search or category_filter or price_min or price_max %}
+    <a href="{{ url_for('articles_list') }}" class="btn-hl btn-hl-outline" style="margin-right: var(--space-sm);">
+      <i class="fas fa-arrow-left me-2"></i>Voir tous les articles
+    </a>
+    {% endif %}
+    <a href="{{ url_for('article_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+        Créer un Article
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+<script>
+// Le filtrage est maintenant géré côté serveur via le formulaire
+// Ce script peut être utilisé pour des améliorations futures (filtrage en temps réel, etc.)
+document.addEventListener('DOMContentLoaded', function() {
+  // Optionnel : Ajouter un délai pour la recherche en temps réel si nécessaire
+  // const searchInput = document.getElementById('searchInput');
+  // let searchTimeout;
+  // searchInput.addEventListener('input', function() {
+  //   clearTimeout(searchTimeout);
+  //   searchTimeout = setTimeout(() => {
+  //     document.getElementById('filterForm').submit();
+  //   }, 500);
+  // });
+});
+</script>
+{% endblock %}

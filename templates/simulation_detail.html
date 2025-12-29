@@ -1,0 +1,415 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Détails Simulation #{{ simulation.id }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+  }
+  
+  .page-title-hl {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+  }
+  
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .info-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .table-hl {
+    overflow-x: auto;
+  }
+  
+  .table-hl table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table-hl th {
+    background: var(--bg-secondary);
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--gray-200);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .table-hl td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-primary);
+  }
+  
+  .table-hl tr:hover {
+    background: var(--bg-secondary);
+  }
+  
+  .badge-hl {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .badge-hl-success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+  
+  .badge-hl-warning {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+  }
+  
+  .btn-hl {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-normal);
+    border: none;
+    cursor: pointer;
+  }
+  
+  .btn-hl-primary {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .btn-hl-primary:hover {
+    background: var(--hl-blue-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .btn-hl-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+  }
+  
+  .btn-hl-outline:hover {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .actions-bar {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--gray-200);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- En-tête -->
+  <div class="page-header-hl">
+    <div>
+      <h1 class="page-title-hl">
+        <i class="fas fa-calculator me-2"></i>
+        Simulation #{{ simulation.id }}
+      </h1>
+      <p style="color: var(--text-muted); margin-top: var(--space-xs);">
+        {% if simulation.created_at %}
+          Créée le {{ simulation.created_at.strftime('%d/%m/%Y à %H:%M') }}
+        {% else %}
+          Date de création inconnue
+        {% endif %}
+      </p>
+    </div>
+    <span class="badge-hl {% if simulation.is_completed %}badge-hl-success{% else %}badge-hl-warning{% endif %}">
+      {% if simulation.is_completed %}Terminée{% else %}En cours{% endif %}
+    </span>
+  </div>
+
+  <!-- Informations générales -->
+  <div class="card-hl">
+    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-lg);">
+      <i class="fas fa-info-circle me-2"></i>
+      Informations Générales
+    </h2>
+    
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Taux USD</div>
+        <div class="info-value">{{ "{:,.0f}".format(simulation.rate_usd|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Taux EUR</div>
+        <div class="info-value">{{ "{:,.0f}".format(simulation.rate_eur|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      
+      {% if simulation.rate_xof %}
+      <div class="info-item">
+        <div class="info-label">Taux XOF</div>
+        <div class="info-value">{{ "{:,.4f}".format(simulation.rate_xof|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      {% endif %}
+      
+      <div class="info-item">
+        <div class="info-label">Capacité Camion</div>
+        <div class="info-value">{{ "{:,.2f}".format(simulation.truck_capacity_tons|default(0))|replace(',', ' ') }} tonnes</div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Base de Distribution</div>
+        <div class="info-value">{{ simulation.basis|default('value')|title }}</div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Douanes</div>
+        <div class="info-value">{{ "{:,.0f}".format(simulation.customs_gnf|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Manutention</div>
+        <div class="info-value">{{ "{:,.0f}".format(simulation.handling_gnf|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Transport Fixe</div>
+        <div class="info-value">{{ "{:,.0f}".format(simulation.transport_fixed_gnf|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      
+      {% if simulation.transport_per_kg_gnf %}
+      <div class="info-item">
+        <div class="info-label">Transport par kg</div>
+        <div class="info-value">{{ "{:,.4f}".format(simulation.transport_per_kg_gnf|default(0))|replace(',', ' ') }} GNF/kg</div>
+      </div>
+      {% endif %}
+      
+      {% if simulation.others_gnf %}
+      <div class="info-item">
+        <div class="info-label">Autres Coûts</div>
+        <div class="info-value">{{ "{:,.0f}".format(simulation.others_gnf|default(0))|replace(',', ' ') }} GNF</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Articles de la simulation -->
+  <div class="card-hl">
+    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-lg);">
+      <i class="fas fa-boxes me-2"></i>
+      Articles ({{ items|length }})
+    </h2>
+    
+    {% if items %}
+    <div class="table-hl">
+      <table>
+        <thead>
+          <tr>
+            <th>Article</th>
+            <th>Quantité</th>
+            <th>Prix d'Achat</th>
+            <th>Prix d'Achat (GNF)</th>
+            <th>Coûts Logistiques/Unité</th>
+            <th><strong>Prix de Revient/Unité</strong></th>
+            <th>Prix de Vente/Unité</th>
+            <th>Marge/Unité</th>
+            <th>Marge %</th>
+            <th>Poids Total (kg)</th>
+            <th>Valeur Totale Vente (GNF)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item_data in items_with_cost %}
+          {% set item = item_data.item %}
+          <tr>
+            <td>
+              <strong>{{ item.article.name if item.article else 'Article inconnu' }}</strong>
+              {% if item.article and item.article.category %}
+                <br><small style="color: var(--text-muted);">{{ item.article.category.name }}</small>
+              {% endif %}
+            </td>
+            <td>{{ "{:,.0f}".format(item.quantity|default(0))|replace(',', ' ') }}</td>
+            <td>
+              {{ "{:,.2f}".format(item.purchase_price|default(0))|replace(',', ' ') }} 
+              {{ item.purchase_currency|default('USD') }}
+            </td>
+            <td>{{ "{:,.0f}".format(item_data.purchase_price_gnf|default(0))|replace(',', ' ') }}</td>
+            <td>{{ "{:,.0f}".format(item_data.logistics_per_unit|default(0))|replace(',', ' ') }}</td>
+            <td style="background: rgba(0, 56, 101, 0.1); font-weight: 700; color: var(--color-primary);">
+              <strong>{{ "{:,.0f}".format(item_data.cost_price_per_unit|default(0))|replace(',', ' ') }}</strong>
+            </td>
+            <td><strong>{{ "{:,.0f}".format(item_data.selling_price|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="color: {% if item_data.margin >= 0 %}#22c55e{% else %}#ef4444{% endif %}; font-weight: 600;">
+              {{ "{:,.0f}".format(item_data.margin|default(0))|replace(',', ' ') }}
+            </td>
+            <td style="color: {% if item_data.margin_pct >= 0 %}#22c55e{% else %}#ef4444{% endif %}; font-weight: 600;">
+              {{ "{:,.1f}".format(item_data.margin_pct|default(0))|replace(',', ' ') }}%
+            </td>
+            <td>{{ "{:,.2f}".format((item.quantity|default(0) * item.unit_weight_kg|default(0)))|replace(',', ' ') }}</td>
+            <td><strong>{{ "{:,.0f}".format((item.quantity|default(0) * item.selling_price_gnf|default(0)))|replace(',', ' ') }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr style="background: var(--bg-secondary); font-weight: 700;">
+            <td colspan="2"><strong>Total</strong></td>
+            <td colspan="2">
+              <strong>Valeur Achat: {{ "{:,.0f}".format(total_purchase_value|default(0))|replace(',', ' ') }} GNF</strong>
+            </td>
+            <td>
+              <strong>Coûts Logistiques: {{ "{:,.0f}".format(total_logistics_costs|default(0))|replace(',', ' ') }} GNF</strong>
+            </td>
+            <td style="background: rgba(0, 56, 101, 0.2);">
+              <strong>
+                {% set total_cost = [] %}
+                {% for item_data in items_with_cost %}
+                  {% set _ = total_cost.append(item_data.total_cost|default(0)) %}
+                {% endfor %}
+                Prix de Revient Total: {{ "{:,.0f}".format(total_cost|sum|default(0))|replace(',', ' ') }} GNF
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {% set total_selling = [] %}
+                {% for item_data in items_with_cost %}
+                  {% set _ = total_selling.append((item_data.item.quantity|default(0) * item_data.selling_price|default(0))) %}
+                {% endfor %}
+                Vente Totale: {{ "{:,.0f}".format(total_selling|sum|default(0))|replace(',', ' ') }} GNF
+              </strong>
+            </td>
+            <td style="color: {% if (total_selling|sum|default(0) - total_cost|sum|default(0)) >= 0 %}#22c55e{% else %}#ef4444{% endif %};">
+              <strong>
+                Marge Totale: {{ "{:,.0f}".format((total_selling|sum|default(0) - total_cost|sum|default(0)))|replace(',', ' ') }} GNF
+              </strong>
+            </td>
+            <td style="color: {% if (total_selling|sum|default(0) - total_cost|sum|default(0)) >= 0 %}#22c55e{% else %}#ef4444{% endif %};">
+              <strong>
+                {% set total_margin_pct = ((total_selling|sum|default(0) - total_cost|sum|default(0)) / total_cost|sum|default(1) * 100) if total_cost|sum|default(0) > 0 else 0 %}
+                {{ "{:,.1f}".format(total_margin_pct)|replace(',', ' ') }}%
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {% set total_weight = [] %}
+                {% for item in items %}
+                  {% set _ = total_weight.append(item.quantity|default(0) * item.unit_weight_kg|default(0)) %}
+                {% endfor %}
+                {{ "{:,.2f}".format(total_weight|sum|default(0))|replace(',', ' ') }} kg
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {% set total_value = [] %}
+                {% for item_data in items_with_cost %}
+                  {% set _ = total_value.append((item_data.item.quantity|default(0) * item_data.selling_price|default(0))) %}
+                {% endfor %}
+                {{ "{:,.0f}".format(total_value|sum|default(0))|replace(',', ' ') }} GNF
+              </strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: var(--space-3xl); color: var(--text-muted);">
+      <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+      <p>Aucun article dans cette simulation.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Actions -->
+  <div class="card-hl">
+    <div class="actions-bar">
+      <div class="header-actions">
+        <a href="{{ url_for('simulations_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>
+          Retour
+        </a>
+        <a href="{{ url_for('simulation_edit', id=simulation.id) }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-edit me-2"></i>
+          Modifier
+        </a>
+        <a href="{{ url_for('simulation_preview', id=simulation.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-eye me-2"></i>
+          Prévisualiser
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,155 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Mon Profil - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .card-body-hl {
+    padding: var(--space-xl);
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-xl);
+  }
+  
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+  }
+  
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .info-value {
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  
+  .badge-role {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+  
+  .role-admin { background: var(--color-danger); color: var(--white); }
+  .role-supervisor { background: var(--color-warning); color: var(--white); }
+  .role-warehouse { background: var(--color-success); color: var(--white); }
+  .role-commercial { background: var(--color-info); color: var(--white); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-user-circle me-2"></i>
+      Mon Profil
+    </h1>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('auth.profile_edit') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-edit me-2"></i>Modifier mon profil
+      </a>
+    </div>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">Informations Personnelles</h3>
+    </div>
+    <div class="card-body-hl">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Nom d'utilisateur</div>
+          <div class="info-value">{{ user.username }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Email</div>
+          <div class="info-value">{{ user.email }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Nom complet</div>
+          <div class="info-value">{{ user.full_name or '-' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Téléphone</div>
+          <div class="info-value">{{ user.phone or '-' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Rôle</div>
+          <div class="info-value">
+            <span class="badge-role role-{{ user.role.code if user.role else 'none' }}">
+              {{ user.role.name if user.role else 'Sans rôle' }}
+            </span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Dernière connexion</div>
+          <div class="info-value">
+            {% if user.last_login %}
+              {{ user.last_login.strftime('%d/%m/%Y à %H:%M') }}
+            {% else %}
+              Jamais connecté
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">Actions</h3>
+    </div>
+    <div class="card-body-hl">
+      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap;">
+        <a href="{{ url_for('auth.profile_edit') }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-edit me-2"></i>Modifier mon profil
+        </a>
+        <a href="{{ url_for('auth.profile_change_password') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-key me-2"></i>Changer mon mot de passe
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

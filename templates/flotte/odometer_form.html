@@ -1,0 +1,98 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Nouveau Relevé Odomètre - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-container {
+    max-width: 600px;
+    margin: var(--space-2xl) auto;
+    padding: 0 var(--space-lg);
+  }
+  
+  .info-box {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    margin-bottom: var(--space-lg);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Nouveau Relevé Odomètre
+      </h1>
+    </div>
+    
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      <strong>Véhicule:</strong> {{ vehicle.plate_number }}
+    </p>
+    
+    {% if last_km %}
+    <div class="info-box">
+      <strong style="color: var(--text-primary);">Dernier kilométrage enregistré:</strong>
+      <span style="color: var(--color-primary); font-weight: 700; font-size: 1.25rem;">{{ last_km }} km</span>
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="reading_date" class="form-hl-label">
+          Date <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="date" id="reading_date" name="reading_date" class="form-hl-input" required>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="odometer_km" class="form-hl-label">
+          Kilométrage <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="number" id="odometer_km" name="odometer_km" class="form-hl-input" required min="0" placeholder="Ex: 50000">
+        {% if last_km %}
+        <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: var(--space-xs);">
+          Le kilométrage doit être supérieur ou égal à {{ last_km }} km
+        </div>
+        {% endif %}
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="source" class="form-hl-label">Source</label>
+        <select id="source" name="source" class="form-hl-select">
+          <option value="manual">Manuel</option>
+          <option value="gps">GPS</option>
+          <option value="system">Système</option>
+        </select>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="notes" class="form-hl-label">Notes</label>
+        <textarea id="notes" name="notes" class="form-hl-input" rows="3"></textarea>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('flotte.vehicle_odometer', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

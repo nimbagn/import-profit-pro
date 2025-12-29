@@ -1,0 +1,204 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Maintenances {{ vehicle.plate_number }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+  }
+  
+  .alert-box {
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--color-warning);
+    color: var(--color-warning);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-tools me-2"></i>
+      Maintenances - {{ vehicle.plate_number }}
+    </h1>
+    <a href="{{ url_for('flotte.maintenance_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>Planifier une Maintenance
+    </a>
+  </div>
+
+  {% if current_km %}
+  <div class="card-hl" style="margin-bottom: var(--space-lg); padding: var(--space-md); background: var(--bg-tertiary);">
+    <strong style="color: var(--text-primary);">Kilométrage actuel:</strong>
+    <span style="color: var(--color-primary); font-weight: 700; font-size: 1.25rem;">{{ current_km }} km</span>
+  </div>
+  {% endif %}
+
+  {% if stats %}
+  <div class="card-hl" style="margin-bottom: var(--space-lg);">
+    <div style="display: flex; gap: var(--space-lg); flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 150px;">
+        <div style="color: var(--color-primary); font-weight: 700; font-size: 1.5rem;">{{ stats.total }}</div>
+        <div style="color: var(--text-secondary);">Total</div>
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <div style="color: var(--color-warning); font-weight: 700; font-size: 1.5rem;">{{ stats.planned }}</div>
+        <div style="color: var(--text-secondary);">Planifiées</div>
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <div style="color: var(--color-success); font-weight: 700; font-size: 1.5rem;">{{ stats.completed }}</div>
+        <div style="color: var(--text-secondary);">Réalisées</div>
+      </div>
+      {% if stats.due > 0 %}
+      <div style="flex: 1; min-width: 150px;">
+        <div style="color: var(--color-danger); font-weight: 700; font-size: 1.5rem;">{{ stats.due }}</div>
+        <div style="color: var(--text-secondary);">Dues</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if due_maintenances %}
+  <div class="alert-box">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>{{ due_maintenances|length }} maintenance(s) due(s)</strong>
+  </div>
+  {% endif %}
+
+  {% if maintenances %}
+  <div class="card-hl" style="margin-bottom: var(--space-md);">
+    <div style="padding: var(--space-md); border-bottom: 1px solid var(--border-color);">
+      <select name="status_filter" class="form-select" onchange="window.location.href='{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id) }}?status=' + this.value" style="max-width: 200px; padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <option value="">Tous les statuts</option>
+        <option value="planned" {% if status_filter == 'planned' %}selected{% endif %}>Planifiées</option>
+        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Réalisées</option>
+        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Annulées</option>
+      </select>
+    </div>
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Date Planifiée</th>
+            <th>Km Cible</th>
+            <th>Date Réalisée</th>
+            <th>Coût (GNF)</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for maint in maintenances %}
+          <tr>
+            <td><strong>{{ maint.maintenance_type }}</strong></td>
+            <td>{{ maint.planned_date.strftime('%d/%m/%Y') if maint.planned_date else '-' }}</td>
+            <td>
+              {% if maint.due_at_km %}
+                {{ maint.due_at_km }} km
+                {% if current_km and maint.due_at_km <= current_km %}
+                  <span class="badge-hl badge-hl-warning" style="margin-left: var(--space-xs);">⚠️ Due</span>
+                {% endif %}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ maint.completed_date.strftime('%d/%m/%Y') if maint.completed_date else '-' }}</td>
+            <td>{{ "{:,.0f}".format(maint.cost_gnf) if maint.cost_gnf else '-' }} GNF</td>
+            <td>
+              <span class="badge-hl {% if maint.status == 'completed' %}badge-hl-success{% elif maint.status == 'planned' %}badge-hl-warning{% else %}badge-hl-danger{% endif %}">
+                {{ maint.status|title }}
+              </span>
+            </td>
+            <td>
+              {% if maint.status == 'planned' %}
+              <form method="POST" action="{{ url_for('flotte.maintenance_complete', vehicle_id=vehicle.id, maint_id=maint.id) }}" style="display: inline;">
+                <button type="submit" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Marquer comme réalisée">
+                  <i class="fas fa-check"></i>
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if pagination and pagination.pages > 1 %}
+    <div style="padding: var(--space-md); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+      <div style="color: var(--text-secondary); font-size: 0.9rem;">
+        Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+        {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+        sur {{ pagination.total }} maintenance(s)
+      </div>
+      <nav>
+        <ul style="display: flex; list-style: none; gap: var(--space-xs); margin: 0; padding: 0;">
+          <li>
+            <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id, page=pagination.prev_num, status=status_filter) if pagination.has_prev else '#' }}" 
+               class="btn-hl btn-hl-outline" 
+               style="padding: var(--space-xs) var(--space-sm); {% if not pagination.has_prev %}opacity: 0.5; pointer-events: none;{% endif %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+              {% if page_num == pagination.page %}
+                <li>
+                  <span class="btn-hl btn-hl-primary" style="padding: var(--space-xs) var(--space-sm);">{{ page_num }}</span>
+                </li>
+              {% else %}
+                <li>
+                  <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id, page=page_num, status=status_filter) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);">{{ page_num }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li>
+                <span style="padding: var(--space-xs) var(--space-sm); color: var(--text-muted);">…</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+          <li>
+            <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id, page=pagination.next_num, status=status_filter) if pagination.has_next else '#' }}" 
+               class="btn-hl btn-hl-outline" 
+               style="padding: var(--space-xs) var(--space-sm); {% if not pagination.has_next %}opacity: 0.5; pointer-events: none;{% endif %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div>
+        <select name="per_page" class="form-select form-select-sm" onchange="window.location.href='{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id, status=status_filter) }}?per_page=' + this.value" style="padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <option value="10" {% if pagination.per_page == 10 %}selected{% endif %}>10/page</option>
+          <option value="20" {% if pagination.per_page == 20 %}selected{% endif %}>20/page</option>
+          <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50/page</option>
+          <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100/page</option>
+        </select>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-tools" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune maintenance</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par planifier une maintenance</p>
+    <a href="{{ url_for('flotte.maintenance_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>Planifier une Maintenance
+    </a>
+  </div>
+  {% endif %}
+
+  <div style="margin-top: var(--space-xl);">
+    <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour aux Véhicules
+    </a>
+  </div>
+</div>
+{% endblock %}

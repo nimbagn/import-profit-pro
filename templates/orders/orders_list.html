@@ -1,0 +1,784 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Commandes Commerciales - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: #f5f7fa;
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0;
+    padding: 32px 40px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .page-title-hl {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .page-title-hl i {
+    color: #3b82f6;
+    font-size: 24px;
+  }
+  
+  .card-hl {
+    margin: 24px 40px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .card-hl h3 {
+    padding: 20px 24px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafbfc;
+  }
+  
+  .filters-section {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-hl-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  
+  .form-hl-input,
+  .form-hl-select {
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-hl-input:focus,
+  .form-hl-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .badge-status {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .badge-draft { 
+    background: #f3f4f6; 
+    color: #6b7280; 
+  }
+  .badge-pending { 
+    background: #fef3c7; 
+    color: #92400e; 
+  }
+  .badge-validated { 
+    background: #d1fae5; 
+    color: #065f46; 
+  }
+  .badge-rejected { 
+    background: #fee2e2; 
+    color: #991b1b; 
+  }
+  .badge-completed { 
+    background: #dbeafe; 
+    color: #1e40af; 
+  }
+  
+  .table-hl {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table-hl thead {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .table-hl th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  
+  .table-hl tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.15s;
+  }
+  
+  .table-hl tbody tr:hover {
+    background: #f9fafb;
+  }
+  
+  .table-hl td {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #374151;
+    vertical-align: middle;
+  }
+  
+  .table-hl td strong {
+    font-weight: 600;
+    color: #111827;
+  }
+  
+  .table-hl td small {
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  
+  .btn-hl {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .btn-hl-primary {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  .btn-hl-primary:hover {
+    background: #2563eb;
+  }
+  
+  .btn-hl-secondary {
+    background: white;
+    color: #374151;
+    border-color: #d1d5db;
+  }
+  
+  .btn-hl-secondary:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+  
+  .btn-hl-outline {
+    background: white;
+    color: #6b7280;
+    border-color: #d1d5db;
+    padding: 6px 12px;
+  }
+  
+  .btn-hl-outline:hover {
+    background: #f9fafb;
+    color: #374151;
+    border-color: #9ca3af;
+  }
+  
+  .region-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 24px;
+  }
+  
+  .region-stat-card {
+    padding: 20px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: box-shadow 0.2s;
+  }
+  
+  .region-stat-card:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  
+  .region-stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  .region-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+  
+  .region-stat-label {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-bottom: 12px;
+  }
+  
+  .region-stat-details {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+  }
+  
+  /* Tablette */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl {
+      padding: 24px 20px;
+    }
+    
+    .card-hl {
+      margin: 20px;
+    }
+    
+    .filters-section {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .table-hl {
+      font-size: 13px;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: 12px 16px;
+    }
+  }
+  
+  /* Mobile */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding-top: 70px !important;
+    }
+    
+    .page-header-hl {
+      padding: 20px 16px;
+    }
+    
+    .page-title-hl {
+      font-size: 24px;
+    }
+    
+    .card-hl {
+      margin: 16px;
+      border-radius: 8px;
+    }
+    
+    .card-hl h3 {
+      padding: 16px;
+      font-size: 15px;
+    }
+    
+    .filters-section {
+      grid-template-columns: 1fr;
+      padding: 16px;
+      gap: 16px;
+    }
+    
+    .form-group {
+      width: 100%;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .region-stats {
+      grid-template-columns: 1fr;
+      padding: 16px;
+      gap: 12px;
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+      display: block;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-hl thead {
+      display: none;
+    }
+    
+    .table-hl tbody {
+      display: block;
+    }
+    
+    .table-hl tr {
+      display: block;
+      margin-bottom: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      padding: 12px;
+    }
+    
+    .table-hl td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border: none;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .table-hl td:last-child {
+      border-bottom: none;
+    }
+    
+    .table-hl td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    
+    .table-hl td:first-child::before {
+      content: 'Référence';
+    }
+    
+    .table-hl td:nth-child(2)::before {
+      content: 'Date';
+    }
+    
+    .table-hl td:nth-child(3)::before {
+      content: 'Région';
+    }
+    
+    .table-hl td:nth-child(4)::before {
+      content: 'Commercial';
+    }
+    
+    .table-hl td:nth-child(5)::before {
+      content: 'Clients';
+    }
+    
+    .table-hl td:nth-child(6)::before {
+      content: 'Statut';
+    }
+    
+    .table-hl td:nth-child(7)::before {
+      content: 'Validée par';
+    }
+    
+    .table-hl td:nth-child(8)::before {
+      content: 'Actions';
+    }
+  }
+  
+  /* Petit mobile */
+  @media (max-width: 480px) {
+    .page-header-hl {
+      padding: 16px 12px;
+    }
+    
+    .page-title-hl {
+      font-size: 20px;
+    }
+    
+    .card-hl {
+      margin: 12px;
+    }
+    
+    .card-hl h3 {
+      padding: 12px;
+      font-size: 14px;
+    }
+    
+    .filters-section {
+      padding: 12px;
+    }
+    
+    .form-hl-input,
+    .form-hl-select {
+      font-size: 16px; /* Évite le zoom sur iOS */
+    }
+    
+    .table-hl td {
+      font-size: 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    
+    .table-hl td::before {
+      margin-bottom: 4px;
+    }
+    
+    .badge-status {
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+    
+    .region-stat-value {
+      font-size: 20px;
+    }
+  }
+  
+  /* Très petit mobile */
+  @media (max-width: 360px) {
+    .page-title-hl {
+      font-size: 18px;
+    }
+    
+    .card-hl {
+      margin: 8px;
+    }
+    
+    .table-hl td {
+      font-size: 13px;
+    }
+  }
+  
+  /* Orientation paysage sur mobile */
+  @media (max-width: 768px) and (orientation: landscape) {
+    .page-header-hl {
+      padding: 16px 20px;
+    }
+    
+    .card-hl {
+      margin: 12px 20px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-shopping-cart me-2"></i>
+      {% if current_user.role and current_user.role.code == 'commercial' %}
+      Mes Commandes
+      {% else %}
+      Commandes Commerciales
+      {% endif %}
+    </h1>
+    {% if current_user.role and current_user.role.code == 'commercial' %}
+    <p style="color: var(--text-muted); margin-top: var(--space-xs); font-size: 0.9rem;">
+      <i class="fas fa-info-circle me-2"></i>
+      Vous voyez uniquement vos commandes dans cette session
+      {% if current_user.region %}
+      <span style="margin-left: var(--space-md);">
+        <i class="fas fa-map-marker-alt me-1"></i>
+        <strong>Région:</strong> {{ current_user.region.name }}
+      </span>
+      {% endif %}
+    </p>
+    {% elif current_user.role and current_user.role.code == 'warehouse' %}
+    <p style="color: var(--text-muted); margin-top: var(--space-xs); font-size: 0.9rem;">
+      <i class="fas fa-info-circle me-2"></i>
+      <strong>Magasinier :</strong> Vous voyez uniquement les commandes <strong>validées</strong> pour lesquelles vous pouvez générer des bons de sortie.
+    </p>
+    {% elif current_user.region %}
+    <p style="color: var(--text-muted); margin-top: var(--space-xs); font-size: 0.9rem;">
+      <i class="fas fa-map-marker-alt me-2"></i>
+      <strong>Région:</strong> {{ current_user.region.name }} - Vous voyez les commandes de votre région
+    </p>
+    {% endif %}
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+      {% if has_permission(current_user, 'orders.create') %}
+      <a href="{{ url_for('orders.order_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>Nouvelle Commande
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card-hl">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+      Filtres et Recherche
+    </h3>
+    <form method="GET" action="{{ url_for('orders.orders_list') }}" class="filters-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <div class="form-group">
+        <label class="form-hl-label">Recherche</label>
+        <input type="text" name="search" value="{{ search_query or '' }}" class="form-hl-input" placeholder="Référence, notes...">
+      </div>
+      {% if current_user.role and current_user.role.code != 'warehouse' %}
+      <div class="form-group">
+        <label class="form-hl-label">Statut</label>
+        <select name="status" class="form-hl-select">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Tous les statuts</option>
+          <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Brouillon</option>
+          <option value="pending_validation" {% if status_filter == 'pending_validation' %}selected{% endif %}>En attente</option>
+          <option value="validated" {% if status_filter == 'validated' %}selected{% endif %}>Validée</option>
+          <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejetée</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Complétée</option>
+        </select>
+      </div>
+      {% else %}
+      <div class="form-group">
+        <label class="form-hl-label">Statut</label>
+        <input type="text" value="Validées uniquement" class="form-hl-input" disabled style="background: #f3f4f6; cursor: not-allowed;">
+        <small style="color: var(--text-muted); font-size: 0.75rem;">Vous ne voyez que les commandes validées</small>
+      </div>
+      {% endif %}
+      {% if current_user.role and current_user.role.code != 'warehouse' %}
+        {% if regions|length > 0 %}
+        <div class="form-group">
+          <label class="form-hl-label">Région</label>
+          <select name="region_id" class="form-hl-select">
+            <option value="">Toutes les régions</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if region_filter == region.id %}selected{% endif %}>{{ region.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        {% if commercials %}
+        <div class="form-group">
+          <label class="form-hl-label">Commercial</label>
+          <select name="commercial_id" class="form-hl-select">
+            <option value="">Tous les commerciaux</option>
+            {% for commercial in commercials %}
+            <option value="{{ commercial.id }}" {% if commercial_filter == commercial.id %}selected{% endif %}>{{ commercial.full_name or commercial.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      {% endif %}
+      <div class="form-group" style="display: flex; gap: var(--space-sm); align-items: flex-end;">
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        <a href="{{ url_for('orders.orders_list') }}" class="btn-hl btn-hl-secondary">
+          <i class="fas fa-times me-2"></i>Réinitialiser
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {% if orders and orders.items %}
+  {% if regions|length > 1 %}
+  <div class="card-hl">
+    <h3>
+      <i class="fas fa-chart-pie" style="margin-right: 8px;"></i>
+      Répartition par région
+    </h3>
+    <div class="region-stats">
+      {% for region in regions %}
+      {% set region_orders = orders.items|selectattr('region_id', 'equalto', region.id)|list %}
+      {% set region_orders_count = region_orders|length %}
+      {% set region_validated = region_orders|selectattr('status', 'equalto', 'validated')|list|length %}
+      {% set region_pending = region_orders|selectattr('status', 'equalto', 'pending_validation')|list|length %}
+      <div class="region-stat-card">
+        <div class="region-stat-header">
+          <i class="fas fa-map-marker-alt" style="color: #3b82f6;"></i>
+          <span>{{ region.name }}</span>
+        </div>
+        <div class="region-stat-value">{{ region_orders_count }}</div>
+        <div class="region-stat-label">commande{{ 's' if region_orders_count != 1 else '' }}</div>
+        {% if region_orders_count > 0 %}
+        <div class="region-stat-details">
+          {% if region_validated > 0 %}
+          <span style="color: #059669;">
+            <i class="fas fa-check-circle"></i> {{ region_validated }}
+          </span>
+          {% endif %}
+          {% if region_pending > 0 %}
+          <span style="color: #d97706;">
+            <i class="fas fa-clock"></i> {{ region_pending }}
+          </span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  
+  <div class="card-hl">
+    <table class="table-hl">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Date</th>
+          <th>Région</th>
+          <th>Commercial</th>
+          <th>Clients</th>
+          <th>Statut</th>
+          <th>Validée par</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders.items %}
+        <tr>
+          <td data-label="Référence">
+            <strong>{{ order.reference }}</strong>
+            {% if order.status == 'draft' %}
+            <br><small>
+              <i class="fas fa-edit"></i> Brouillon
+            </small>
+            {% endif %}
+          </td>
+          <td data-label="Date">
+            {{ order.order_date.strftime('%d/%m/%Y') if order.order_date else '-' }}
+            {% if order.order_date %}
+            <br><small>
+              {{ order.order_date.strftime('%H:%M') }}
+            </small>
+            {% endif %}
+          </td>
+          <td data-label="Région">
+            {% if order.region %}
+            <span class="badge-status" style="background: #eff6ff; color: #1e40af; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fas fa-map-marker-alt"></i>{{ order.region.name }}
+            </span>
+            {% else %}
+            <span style="color: #9ca3af;">-</span>
+            {% endif %}
+          </td>
+          <td data-label="Commercial">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i class="fas fa-user-tie" style="color: #6b7280; font-size: 12px;"></i>
+              <span>{{ order.commercial.full_name or order.commercial.username if order.commercial else '-' }}</span>
+            </div>
+          </td>
+          <td data-label="Clients">
+            <strong style="color: #111827;">{{ order.clients|length }}</strong>
+            <span style="color: #9ca3af; font-size: 13px;"> client{{ 's' if order.clients|length != 1 else '' }}</span>
+          </td>
+          <td data-label="Statut">
+            {% if order.status == 'draft' %}
+            <span class="badge-status badge-draft">Brouillon</span>
+            {% elif order.status == 'pending_validation' %}
+            <span class="badge-status badge-pending">En attente</span>
+            {% elif order.status == 'validated' %}
+            <span class="badge-status badge-validated">Validée</span>
+            {% elif order.status == 'rejected' %}
+            <span class="badge-status badge-rejected">Rejetée</span>
+            {% elif order.status == 'completed' %}
+            <span class="badge-status badge-completed">Complétée</span>
+            {% endif %}
+          </td>
+          <td data-label="Validée par">
+            {% if order.validator %}
+            <span style="font-size: 14px;">{{ order.validator.full_name or order.validator.username }}</span>
+            {% if order.validated_at %}
+            <br><small>{{ order.validated_at.strftime('%d/%m/%Y %H:%M') }}</small>
+            {% endif %}
+            {% else %}
+            <span style="color: #9ca3af;">-</span>
+            {% endif %}
+          </td>
+          <td data-label="Actions">
+            <a href="{{ url_for('orders.order_detail', id=order.id) }}" class="btn-hl btn-hl-outline">
+              <i class="fas fa-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if orders.pages > 1 %}
+    <div style="padding: 20px 24px; border-top: 1px solid #f3f4f6; display: flex; justify-content: center; align-items: center; gap: 12px;">
+      {% if orders.has_prev %}
+      <a href="{{ url_for('orders.orders_list', page=orders.prev_num, status=status_filter, commercial_id=commercial_filter, search=search_query, region_id=region_filter) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-chevron-left"></i> Précédent
+      </a>
+      {% endif %}
+      
+      <span style="font-size: 14px; color: #6b7280; padding: 0 16px;">
+        Page {{ orders.page }} sur {{ orders.pages }}
+      </span>
+      
+      {% if orders.has_next %}
+      <a href="{{ url_for('orders.orders_list', page=orders.next_num, status=status_filter, commercial_id=commercial_filter, search=search_query, region_id=region_filter) }}" class="btn-hl btn-hl-outline">
+        Suivant <i class="fas fa-chevron-right"></i>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-hl">
+    <div style="text-align: center; padding: 60px 24px; color: #6b7280;">
+      <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 16px; opacity: 0.2; color: #9ca3af;"></i>
+      {% if current_user.role and current_user.role.code == 'warehouse' %}
+      <p style="font-size: 16px; margin-bottom: 8px; color: #374151; font-weight: 600;">Aucune commande validée trouvée</p>
+      <p style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
+        <i class="fas fa-info-circle me-2"></i>
+        Vous ne voyez que les commandes <strong>validées</strong> par l'administrateur ou un superviseur.<br>
+        Les commandes en attente de validation ne sont pas visibles ici.
+      </p>
+      {% else %}
+      <p style="font-size: 16px; margin-bottom: 24px; color: #374151;">Aucune commande trouvée</p>
+      {% if has_permission(current_user, 'orders.create') %}
+      <a href="{{ url_for('orders.order_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus"></i> Créer une commande
+      </a>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

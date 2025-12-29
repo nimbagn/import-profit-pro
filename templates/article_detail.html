@@ -1,0 +1,524 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détails Article - {{ article.name }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    margin: 0;
+  }
+
+  .hero-section-detail {
+    background: linear-gradient(135deg, #003865 0%, #005a9e 50%, #0077c2 100%);
+    padding: var(--space-3xl) var(--space-xl);
+    margin: 0;
+    width: 100%;
+    color: var(--text-white);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .hero-section-detail::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  .hero-content-detail {
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-lg);
+  }
+
+  .hero-title-detail {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: var(--space-md);
+    line-height: 1.1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .hero-subtitle-detail {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .content-section {
+    max-width: 1400px;
+    margin: calc(var(--space-2xl) * -1) auto var(--space-2xl) auto;
+    width: calc(100% - 2 * var(--space-xl));
+    position: relative;
+    z-index: 10;
+    animation: slideUp 0.6s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card-detail {
+    background: var(--white);
+    border: none;
+    border-radius: var(--radius-xl);
+    padding: var(--space-3xl);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: var(--space-xl);
+    position: relative;
+  }
+
+  .card-detail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #003865, #005a9e, #0077c2);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid #f0f4f8;
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .card-title i {
+    color: #003865;
+    font-size: 1.5rem;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .info-item {
+    padding: var(--space-lg);
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+  }
+
+  .info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #003865;
+  }
+
+  .info-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .info-label i {
+    font-size: 0.75rem;
+    color: #003865;
+  }
+
+  .info-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  .info-value-small {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .badge-status {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-status.active {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .badge-status.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .badge-category {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #003865, #005a9e);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .btn-action {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    text-decoration: none;
+  }
+
+  .btn-action.primary {
+    background: linear-gradient(135deg, #003865 0%, #005a9e 100%);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(0, 56, 101, 0.3);
+  }
+
+  .btn-action.secondary {
+    background: var(--white);
+    color: #003865;
+    border: 2px solid #e2e8f0;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 56, 101, 0.4);
+  }
+
+  .btn-action.secondary:hover {
+    border-color: #003865;
+    background: #f8fafc;
+  }
+
+  .metadata-section {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 2px solid #f0f4f8;
+  }
+
+  .metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+  }
+
+  .metadata-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .metadata-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .metadata-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .hero-section-detail {
+      padding: var(--space-xl) var(--space-md);
+    }
+    
+    .hero-title-detail {
+      font-size: 1.75rem;
+    }
+    
+    .content-section {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .hero-content-detail {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .hero-actions {
+      width: 100%;
+    }
+    
+    .hero-actions .btn-action {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- Hero Section -->
+  <div class="hero-section-detail">
+    <div class="hero-content-detail">
+      <div>
+        <h1 class="hero-title-detail">
+          📦 {{ article.name }}
+        </h1>
+        <p class="hero-subtitle-detail">
+          {% if article.category %}
+            <span class="badge-category">{{ article.category.name }}</span>
+          {% endif %}
+          {% if article.is_active %}
+            <span class="badge-status active" style="margin-left: var(--space-sm);">Actif</span>
+          {% else %}
+            <span class="badge-status inactive" style="margin-left: var(--space-sm);">Inactif</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="hero-actions">
+        <a href="{{ url_for('article_edit', id=article.id) }}" class="btn-action primary">
+          <i class="fas fa-edit"></i>
+          Modifier
+        </a>
+        <a href="{{ url_for('articles_list') }}" class="btn-action secondary">
+          <i class="fas fa-arrow-left"></i>
+          Retour
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="content-section">
+    <!-- Image du Produit -->
+    {% if article.image_path %}
+    <div class="card-detail">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-image"></i>
+          Image du Produit
+        </div>
+      </div>
+      <div style="text-align: center; padding: var(--space-xl);">
+        <img src="{{ url_for('uploaded_file', filename=article.image_path) }}" 
+             alt="{{ article.name }}" 
+             style="max-width: 100%; max-height: 500px; border-radius: var(--radius-lg); box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Informations Principales -->
+    <div class="card-detail">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-info-circle"></i>
+          Informations Principales
+        </div>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-tag"></i>
+            Nom de l'article
+          </div>
+          <div class="info-value">{{ article.name }}</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-folder"></i>
+            Catégorie
+          </div>
+          <div class="info-value-small">
+            {% if article.category %}
+              {{ article.category.name }}
+            {% else %}
+              <span style="color: #94a3b8; font-style: italic;">Aucune catégorie</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-hashtag"></i>
+            ID Article
+          </div>
+          <div class="info-value-small">#{{ article.id }}</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-toggle-on"></i>
+            Statut
+          </div>
+          <div>
+            {% if article.is_active %}
+              <span class="badge-status active">Actif</span>
+            {% else %}
+              <span class="badge-status inactive">Inactif</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informations Financières -->
+    <div class="card-detail">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-dollar-sign"></i>
+          Informations Financières
+        </div>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-shopping-cart"></i>
+            Prix d'achat
+          </div>
+          <div class="info-value">
+            {{ "{:,.2f}".format(article.purchase_price|float) }} {{ article.purchase_currency }}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-weight"></i>
+            Poids unitaire
+          </div>
+          <div class="info-value">
+            {{ "{:.2f}".format(article.unit_weight_kg|float) }} kg
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <i class="fas fa-calculator"></i>
+            Prix par kg
+          </div>
+          <div class="info-value">
+            {% if article.unit_weight_kg and article.unit_weight_kg > 0 %}
+              {{ "{:,.2f}".format((article.purchase_price / article.unit_weight_kg)|float) }} {{ article.purchase_currency }}/kg
+            {% else %}
+              <span style="color: #94a3b8; font-style: italic;">N/A</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="card-detail">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-clock"></i>
+          Métadonnées
+        </div>
+      </div>
+      <div class="metadata-section">
+        <div class="metadata-grid">
+          <div class="metadata-item">
+            <div class="metadata-label">Date de création</div>
+            <div class="metadata-value">
+              {% if article.created_at %}
+                {{ article.created_at.strftime('%d/%m/%Y à %H:%M') }}
+              {% else %}
+                <span style="color: #94a3b8;">Non disponible</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="metadata-item">
+            <div class="metadata-label">Dernière modification</div>
+            <div class="metadata-value">
+              {% if article.updated_at %}
+                {{ article.updated_at.strftime('%d/%m/%Y à %H:%M') }}
+              {% else %}
+                <span style="color: #94a3b8;">Jamais modifié</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

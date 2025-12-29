@@ -1,0 +1,148 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Odomètre {{ vehicle.plate_number }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-tachometer-alt me-2"></i>
+      Odomètre - {{ vehicle.plate_number }}
+    </h1>
+    <a href="{{ url_for('flotte.odometer_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>Nouveau Relevé
+    </a>
+  </div>
+
+  {% if odometers %}
+  <div class="stats-grid" style="margin-bottom: var(--space-xl);">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ current_km or 0 }} km</div>
+      <div class="stat-card-hl-label">Kilométrage Actuel</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_km }} km</div>
+      <div class="stat-card-hl-label">Total Parcouru</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_readings or odometers|length }}</div>
+      <div class="stat-card-hl-label">Relevés</div>
+    </div>
+  </div>
+
+  <div class="card-hl">
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Kilométrage</th>
+            <th>Variation</th>
+            <th>Source</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for odo in odometers %}
+          <tr>
+            <td>{{ odo.reading_date.strftime('%d/%m/%Y') if odo.reading_date else '-' }}</td>
+            <td><strong>{{ odo.odometer_km }} km</strong></td>
+            <td>
+              {% if not loop.last %}
+                {% set prev_km = odometers[loop.index0 + 1].odometer_km %}
+                {% set diff = odo.odometer_km - prev_km %}
+                <span style="color: var(--text-secondary);">+{{ diff }} km</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge-hl badge-hl-info">{{ odo.source|title }}</span>
+            </td>
+            <td>{{ odo.notes or '-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if pagination and pagination.pages > 1 %}
+    <div style="padding: var(--space-md); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+      <div style="color: var(--text-secondary); font-size: 0.9rem;">
+        Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+        {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+        sur {{ pagination.total }} relevé(s)
+      </div>
+      <nav>
+        <ul style="display: flex; list-style: none; gap: var(--space-xs); margin: 0; padding: 0;">
+          <li>
+            <a href="{{ url_for('flotte.vehicle_odometer', vehicle_id=vehicle.id, page=pagination.prev_num) if pagination.has_prev else '#' }}" 
+               class="btn-hl btn-hl-outline" 
+               style="padding: var(--space-xs) var(--space-sm); {% if not pagination.has_prev %}opacity: 0.5; pointer-events: none;{% endif %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+              {% if page_num == pagination.page %}
+                <li>
+                  <span class="btn-hl btn-hl-primary" style="padding: var(--space-xs) var(--space-sm);">{{ page_num }}</span>
+                </li>
+              {% else %}
+                <li>
+                  <a href="{{ url_for('flotte.vehicle_odometer', vehicle_id=vehicle.id, page=page_num) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);">{{ page_num }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li>
+                <span style="padding: var(--space-xs) var(--space-sm); color: var(--text-muted);">…</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+          <li>
+            <a href="{{ url_for('flotte.vehicle_odometer', vehicle_id=vehicle.id, page=pagination.next_num) if pagination.has_next else '#' }}" 
+               class="btn-hl btn-hl-outline" 
+               style="padding: var(--space-xs) var(--space-sm); {% if not pagination.has_next %}opacity: 0.5; pointer-events: none;{% endif %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div>
+        <select name="per_page" class="form-select form-select-sm" onchange="window.location.href='{{ url_for('flotte.vehicle_odometer', vehicle_id=vehicle.id) }}?per_page=' + this.value" style="padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <option value="15" {% if pagination.per_page == 15 %}selected{% endif %}>15/page</option>
+          <option value="30" {% if pagination.per_page == 30 %}selected{% endif %}>30/page</option>
+          <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50/page</option>
+          <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100/page</option>
+        </select>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-tachometer-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun relevé</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par enregistrer le premier relevé odomètre</p>
+    <a href="{{ url_for('flotte.odometer_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>Nouveau Relevé
+    </a>
+  </div>
+  {% endif %}
+
+  <div style="margin-top: var(--space-xl);">
+    <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour aux Véhicules
+    </a>
+  </div>
+</div>
+{% endblock %}

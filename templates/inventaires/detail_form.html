@@ -1,0 +1,422 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Ajouter Détail Inventaire - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+  .form-container {
+    max-width: 800px;
+    margin: var(--space-2xl) auto;
+    padding: 0 var(--space-lg);
+  }
+  
+  .help-text {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: var(--space-xs);
+  }
+  
+  .system-quantity-info {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    margin-bottom: var(--space-lg);
+    display: none;
+  }
+  
+  .system-quantity-info.show {
+    display: block;
+  }
+  
+  .system-quantity-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .system-quantity-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  /* Style Select2 pour correspondre au thème */
+  .select2-container--bootstrap-5 .select2-selection {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    min-height: 38px;
+  }
+  
+  .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 12px;
+  }
+  
+  .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+  }
+  
+  /* Styles pour les boutons radio de méthode */
+  input[type="radio"][name="counting_method"] {
+    cursor: pointer;
+  }
+  
+  input[type="radio"][name="counting_method"]:checked + span {
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+  
+  label:has(input[type="radio"][name="counting_method"]:checked) {
+    border-color: var(--color-primary) !important;
+    background-color: var(--bg-secondary) !important;
+  }
+  
+  label:has(input[type="radio"][name="counting_method"]:hover) {
+    border-color: var(--color-primary);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-plus me-2"></i>
+        {{ 'Modifier' if detail else 'Ajouter' }} un Détail d'Inventaire
+      </h1>
+    </div>
+    
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      <strong>Session:</strong> {{ session.depot.name if session.depot else 'N/A' }} - {{ session.session_date.strftime('%d/%m/%Y') if session.session_date else '' }}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="detailForm" {% if detail %}data-stock-item-id="{{ detail.stock_item_id }}" data-is-edit="true"{% else %}data-is-edit="false"{% endif %}>
+      {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {% endif %}
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="stock_item_id" class="form-hl-label">
+          Article <span style="color: var(--color-danger);">*</span>
+        </label>
+        <select id="stock_item_id" name="stock_item_id" class="form-hl-select" required {% if detail %}disabled{% endif %}>
+          <option value="">Sélectionner un article</option>
+          {% for item in stock_items %}
+          <option value="{{ item.id }}" data-sku="{{ item.sku }}" {% if detail and detail.stock_item_id == item.id %}selected{% endif %}>{{ item.sku }} - {{ item.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="help-text">Tapez pour rechercher un article par SKU ou nom</div>
+        {% if detail %}<input type="hidden" name="stock_item_id" value="{{ detail.stock_item_id }}">{% endif %}
+      </div>
+      
+      <!-- Affichage de la quantité système -->
+      <div class="system-quantity-info" id="systemQuantityInfo">
+        <div class="system-quantity-label">Quantité Système (Stock actuel dans le dépôt)</div>
+        <div class="system-quantity-value" id="systemQuantityValue">-</div>
+      </div>
+      
+      <!-- Sélection de la méthode de comptage -->
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label class="form-hl-label">
+          Méthode de comptage <span style="color: var(--color-danger);">*</span>
+        </label>
+        <div style="display: flex; gap: var(--space-lg); margin-top: var(--space-sm);">
+          <label style="display: flex; align-items: center; cursor: pointer; padding: var(--space-md); border: 2px solid var(--gray-300); border-radius: var(--radius-md); flex: 1; transition: all 0.2s;">
+            <input type="radio" name="counting_method" value="quantity" id="method_quantity" style="margin-right: var(--space-sm);" {% if not detail or not detail.pile_dimensions %}checked{% endif %}>
+            <span>Quantité Comptée</span>
+          </label>
+          <label style="display: flex; align-items: center; cursor: pointer; padding: var(--space-md); border: 2px solid var(--gray-300); border-radius: var(--radius-md); flex: 1; transition: all 0.2s;">
+            <input type="radio" name="counting_method" value="piles" id="method_piles" style="margin-right: var(--space-sm);" {% if detail and detail.pile_dimensions %}checked{% endif %}>
+            <span>Dimensions Piles</span>
+          </label>
+        </div>
+        <div class="help-text">Choisissez la méthode de comptage à utiliser</div>
+      </div>
+      
+      <!-- Champ Quantité Comptée -->
+      <div class="form-group" id="quantityGroup" style="margin-bottom: var(--space-lg);">
+        <label for="counted_quantity" class="form-hl-label">
+          Quantité Comptée <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="number" step="0.001" id="counted_quantity" name="counted_quantity" class="form-hl-input" min="0" value="{{ detail.counted_quantity if detail and not detail.pile_dimensions else '' }}">
+        <div class="help-text">Quantité directement saisie</div>
+      </div>
+      
+      <!-- Champ Dimensions Piles -->
+      <div class="form-group" id="pilesGroup" style="margin-bottom: var(--space-lg); display: none;">
+        <label for="pile_dimensions" class="form-hl-label">
+          Dimensions Piles <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="text" id="pile_dimensions" name="pile_dimensions" class="form-hl-input" placeholder="Ex: 2x5+3x4 ou 2*5+3*4" value="{{ detail.pile_dimensions if detail and detail.pile_dimensions else '' }}" autocomplete="off" spellcheck="false">
+        <div class="help-text">Format: NxM+NxM+... ou N*M+N*M+... (ex: 2x5+3x4 = 22 unités ou 2*5+3*4 = 22 unités)</div>
+        <div id="pilesPreview" style="margin-top: var(--space-sm); padding: var(--space-sm); background: var(--bg-tertiary); border-radius: var(--radius-sm); display: none;">
+          <strong>Total calculé:</strong> <span id="pilesTotal">0</span> unités
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="reason" class="form-hl-label">Raison de l'écart (si applicable)</label>
+        <textarea id="reason" name="reason" class="form-hl-input" rows="3" placeholder="Expliquer la raison de l'écart si différent de 0">{{ detail.reason if detail else '' }}</textarea>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('inventaires.session_detail', id=session.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>{{ 'Modifier' if detail else 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery (requis pour Select2) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const stockItemSelect = document.getElementById('stock_item_id');
+  const systemQuantityInfo = document.getElementById('systemQuantityInfo');
+  const systemQuantityValue = document.getElementById('systemQuantityValue');
+  const countedQuantityInput = document.getElementById('counted_quantity');
+  const pileDimensionsInput = document.getElementById('pile_dimensions');
+  const form = document.getElementById('detailForm');
+  const methodQuantity = document.getElementById('method_quantity');
+  const methodPiles = document.getElementById('method_piles');
+  const quantityGroup = document.getElementById('quantityGroup');
+  const pilesGroup = document.getElementById('pilesGroup');
+  const pilesPreview = document.getElementById('pilesPreview');
+  const pilesTotal = document.getElementById('pilesTotal');
+  
+  // Initialiser Select2 pour le select d'articles (uniquement en mode création)
+  var isEditMode = form.getAttribute('data-is-edit') === 'true';
+  if (!isEditMode) {
+    $(stockItemSelect).select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Rechercher un article par SKU ou nom...',
+      allowClear: true,
+      language: {
+        noResults: function() {
+          return "Aucun article trouvé";
+        },
+        searching: function() {
+          return "Recherche en cours...";
+        }
+      },
+      width: '100%'
+    });
+  }
+  
+  // Fonction pour charger la quantité système depuis le serveur via API
+  function loadSystemQuantity(stockItemId) {
+    if (!stockItemId) {
+      systemQuantityInfo.classList.remove('show');
+      return;
+    }
+    
+    // Afficher un indicateur de chargement
+    systemQuantityValue.textContent = 'Chargement...';
+    systemQuantityInfo.classList.add('show');
+    
+    // Charger via AJAX
+    fetch(`/inventory/api/depot-stock?depot_id={{ session.depot_id }}&stock_item_id=${stockItemId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erreur réseau');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.quantity !== undefined) {
+          systemQuantityValue.textContent = parseFloat(data.quantity).toFixed(2);
+          systemQuantityInfo.classList.add('show');
+          
+          // Si aucune quantité n'est saisie, pré-remplir avec la quantité système
+          if (!countedQuantityInput.value && parseFloat(data.quantity) > 0) {
+            countedQuantityInput.value = parseFloat(data.quantity).toFixed(2);
+          }
+        } else {
+          systemQuantityValue.textContent = '0.00';
+          systemQuantityInfo.classList.add('show');
+        }
+      })
+      .catch(error => {
+        console.error('Erreur lors du chargement de la quantité système:', error);
+        systemQuantityValue.textContent = 'N/A';
+        systemQuantityInfo.classList.add('show');
+      });
+  }
+  
+  // Écouter les changements de sélection d'article (compatible avec Select2)
+  $(stockItemSelect).on('change', function() {
+    const selectedItemId = $(this).val();
+    loadSystemQuantity(selectedItemId);
+  });
+  
+  // Fonction pour calculer le total des dimensions de piles
+  function calculatePilesTotal(pileDimensions) {
+    if (!pileDimensions || !pileDimensions.trim()) {
+      return 0;
+    }
+    
+    try {
+      // Format: NxM+NxM+... ou N*M+N*M+...
+      const parts = pileDimensions.split('+');
+      let total = 0;
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (trimmed) {
+          // Accepter 'x' ou '*' comme séparateur
+          let separator = 'x';
+          if (trimmed.includes('*')) {
+            separator = '*';
+          } else if (trimmed.includes('x')) {
+            separator = 'x';
+          } else if (trimmed.includes('X')) {
+            separator = 'X';
+          }
+          
+          const [n, m] = trimmed.split(separator).map(num => parseInt(num.trim()));
+          if (!isNaN(n) && !isNaN(m)) {
+            total += n * m;
+          }
+        }
+      }
+      return total;
+    } catch (e) {
+      return 0;
+    }
+  }
+  
+  // Gérer le basculement entre les méthodes
+  function updateMethodDisplay() {
+    if (methodQuantity.checked) {
+      quantityGroup.style.display = 'block';
+      pilesGroup.style.display = 'none';
+      countedQuantityInput.setAttribute('required', 'required');
+      pileDimensionsInput.removeAttribute('required');
+      // Mettre à jour le style des radio buttons
+      methodQuantity.closest('label').style.borderColor = 'var(--color-primary)';
+      methodQuantity.closest('label').style.backgroundColor = 'var(--bg-secondary)';
+      methodPiles.closest('label').style.borderColor = 'var(--gray-300)';
+      methodPiles.closest('label').style.backgroundColor = 'transparent';
+    } else if (methodPiles.checked) {
+      quantityGroup.style.display = 'none';
+      pilesGroup.style.display = 'block';
+      countedQuantityInput.removeAttribute('required');
+      pileDimensionsInput.setAttribute('required', 'required');
+      // Mettre à jour le style des radio buttons
+      methodPiles.closest('label').style.borderColor = 'var(--color-primary)';
+      methodPiles.closest('label').style.backgroundColor = 'var(--bg-secondary)';
+      methodQuantity.closest('label').style.borderColor = 'var(--gray-300)';
+      methodQuantity.closest('label').style.backgroundColor = 'transparent';
+      // Focus sur le champ dimensions piles quand il devient visible
+      setTimeout(function() {
+        pileDimensionsInput.focus();
+      }, 100);
+    }
+  }
+  
+  // Écouter les changements de méthode
+  methodQuantity.addEventListener('change', updateMethodDisplay);
+  methodPiles.addEventListener('change', updateMethodDisplay);
+  
+  // Initialiser l'affichage
+  updateMethodDisplay();
+  
+  // Autoriser explicitement tous les caractères nécessaires, y compris *
+  // Le champ accepte : chiffres (0-9), x, X, *, +, espace
+  // Pas de restriction - le champ accepte tous les caractères nécessaires
+  
+  // Calculer automatiquement la quantité si des dimensions de pile sont saisies
+  pileDimensionsInput.addEventListener('input', function() {
+    const pileDimensions = this.value.trim();
+    const total = calculatePilesTotal(pileDimensions);
+    
+    if (pileDimensions && total > 0) {
+      pilesTotal.textContent = total;
+      pilesPreview.style.display = 'block';
+    } else {
+      pilesPreview.style.display = 'none';
+    }
+  });
+  
+  // Validation côté client
+  // Initialiser stockItemId selon le contexte (modification ou création)
+  var initialStockItemId = form.getAttribute('data-stock-item-id');
+  
+  form.addEventListener('submit', function(e) {
+    var stockItemId;
+    if (initialStockItemId) {
+      stockItemId = initialStockItemId;
+    } else {
+      stockItemId = (stockItemSelect && stockItemSelect.value) ? stockItemSelect.value : "";
+    }
+    
+    if (!stockItemId || stockItemId === "None" || stockItemId === "") {
+      e.preventDefault();
+      alert('Veuillez sélectionner un article');
+      return false;
+    }
+    
+    // Valider selon la méthode choisie
+    if (methodQuantity.checked) {
+      const countedQuantity = parseFloat(countedQuantityInput.value);
+      if (isNaN(countedQuantity) || countedQuantity < 0) {
+        e.preventDefault();
+        alert('La quantité doit être un nombre positif');
+        return false;
+      }
+    } else if (methodPiles.checked) {
+      const pileDimensions = pileDimensionsInput.value.trim();
+      if (!pileDimensions) {
+        e.preventDefault();
+        alert('Veuillez saisir les dimensions des piles');
+        return false;
+      }
+      
+      // Format basique: NxM+NxM+... ou N*M+N*M+...
+      const pilePattern = /^(\d+[x*]\d+)(\+\d+[x*]\d+)*$/i;
+      if (!pilePattern.test(pileDimensions)) {
+        e.preventDefault();
+        alert('Format de dimensions de pile invalide. Utilisez le format: NxM+NxM+... ou N*M+N*M+... (ex: 2x5+3x4 ou 2*5+3*4)');
+        return false;
+      }
+      
+      // Calculer et mettre à jour la quantité comptée avec le total des piles
+      const total = calculatePilesTotal(pileDimensions);
+      if (total <= 0) {
+        e.preventDefault();
+        alert('Les dimensions de piles doivent donner un total supérieur à 0');
+        return false;
+      }
+      
+      // Mettre à jour le champ hidden pour envoyer la quantité calculée
+      countedQuantityInput.value = total;
+    }
+  });
+  
+  // Charger la quantité système si un article est déjà sélectionné (cas modification)
+  if (initialStockItemId) {
+    loadSystemQuantity(parseInt(initialStockItemId, 10));
+  }
+});
+</script>
+{% endblock %}

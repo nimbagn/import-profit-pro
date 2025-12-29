@@ -1,0 +1,1633 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if is_edit %}Modifier la Commande {{ order.reference }}{% else %}Nouvelle Commande{% endif %} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Layout principal harmonisé */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+    min-height: calc(100vh - 70px);
+    background: var(--bg-primary);
+    transition: margin-left 0.3s ease;
+  }
+  
+  .form-container {
+    max-width: 1400px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  /* Responsive - Desktop moyen */
+  @media (max-width: 1600px) {
+    .main-content {
+      margin-left: 260px !important;
+    }
+  }
+  
+  /* Responsive - Tablettes paysage */
+  @media (max-width: 1200px) {
+    .main-content {
+      margin-left: 240px !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-lg);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .page-header-hl {
+    border-bottom: 2px solid var(--gray-200);
+    padding-bottom: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .page-title-hl {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .page-title-hl i {
+    color: var(--color-primary);
+    font-size: 1.5rem;
+  }
+  
+  /* Section recherche d'articles - MODERNISÉE */
+  .search-section {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-light) 100%);
+    padding: var(--space-2xl);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-xl);
+    border: none;
+    box-shadow: 0 8px 32px rgba(0, 56, 101, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .search-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  
+  .search-section label {
+    display: block;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--space-md);
+    font-size: 1.125rem;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .search-input-wrapper {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .search-input-wrapper input {
+    width: 100%;
+    padding: var(--space-lg) var(--space-xl);
+    padding-left: 55px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-input-wrapper i {
+    position: absolute;
+    left: var(--space-lg);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    z-index: 3;
+  }
+  
+  .search-input-wrapper input:focus {
+    outline: none;
+    border-color: white;
+    background: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  #searchResults {
+    position: absolute;
+    top: calc(100% + var(--space-sm));
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-xs);
+    max-height: 500px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+    display: none;
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .search-result-item {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .search-result-item:hover {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    transform: translateX(4px);
+    border-left: 4px solid var(--color-primary);
+  }
+  
+  .search-result-item:last-child {
+    border-bottom: none;
+  }
+  
+  .search-result-info {
+    flex: 1;
+  }
+  
+  .search-result-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .search-result-details {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  
+  .search-result-price {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 1.125rem;
+    white-space: nowrap;
+  }
+  
+  .search-result-add {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-light) 100%);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+  
+  .search-result-add:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 56, 101, 0.3);
+  }
+  
+  .search-result-add i {
+    font-size: 1rem;
+  }
+  
+  .added-items-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: var(--space-md);
+    backdrop-filter: blur(10px);
+  }
+  
+  /* Tableau clients - Optimisé pour écran paysage */
+  .clients-table-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    margin: var(--space-lg) auto 0 auto;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    box-sizing: border-box;
+  }
+  
+  .clients-table-container::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .clients-table-container::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+  }
+  
+  .clients-table-container::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--radius-md);
+  }
+  
+  .clients-table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--hl-blue-dark);
+  }
+  
+  .clients-table {
+    width: 100%;
+    min-width: 1200px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+    table-layout: auto;
+    display: table;
+  }
+  
+  /* Centrer le tableau sur grands écrans */
+  @media (min-width: 1400px) {
+    .clients-table-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .clients-table {
+      margin: 0;
+      width: auto;
+      min-width: 1200px;
+    }
+  }
+  
+  /* Sur écrans moyens et petits */
+  @media (max-width: 1399px) {
+    .clients-table-container {
+      display: block;
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+    }
+    
+    .clients-table {
+      margin: 0;
+      width: 100%;
+      min-width: 1200px;
+    }
+  }
+  
+  .clients-table thead {
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .clients-table th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--gray-300);
+    border-right: 1px solid var(--gray-200);
+    color: var(--text-primary);
+  }
+  
+  .clients-table th:first-child {
+    min-width: 220px;
+    background: var(--bg-tertiary);
+    font-weight: 700;
+  }
+  
+  .clients-table th.client-col {
+    min-width: 280px;
+    max-width: 320px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-light) 100%);
+    color: white;
+    text-align: center;
+    vertical-align: top;
+    position: relative;
+  }
+  
+  .clients-table td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    border-right: 1px solid var(--gray-200);
+    vertical-align: top;
+    background: var(--white);
+  }
+  
+  .clients-table td:first-child {
+    font-weight: 600;
+    background: var(--bg-tertiary);
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+  }
+  
+  .clients-table tbody tr:hover td {
+    background: var(--bg-secondary);
+  }
+  
+  .clients-table tbody tr:hover td:first-child {
+    background: var(--bg-tertiary);
+  }
+  
+  /* En-tête client */
+  .client-header {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-sm);
+    backdrop-filter: blur(10px);
+  }
+  
+  .client-header h4 {
+    margin: 0 0 var(--space-xs) 0;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .client-info {
+    margin-top: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .client-info input,
+  .client-info select,
+  .client-info textarea {
+    width: 100%;
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+  
+  .client-info input:focus,
+  .client-info select:focus,
+  .client-info textarea:focus {
+    outline: none;
+    border-color: var(--hl-orange);
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+    background: var(--white);
+  }
+  
+  .client-info input::placeholder,
+  .client-info textarea::placeholder {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+  
+  .client-total {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm);
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: white;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Liste d'articles par client */
+  .items-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .items-list input {
+    width: 100%;
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+  
+  .items-list input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+  
+  .line-total {
+    margin-top: var(--space-xs);
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    padding: var(--space-xs);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  
+  /* Boutons */
+  .btn-remove-client {
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+  }
+  
+  .btn-remove-client:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.05);
+  }
+  
+  /* Total de la commande */
+  #orderTotal {
+    margin-top: var(--space-xl);
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-light) 100%);
+    color: white;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-lg);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  
+  /* Section titre clients */
+  .section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .section-title h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .section-title h3 i {
+    color: var(--color-primary);
+  }
+  
+  /* Actions du formulaire */
+  .form-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 2px solid var(--gray-200);
+  }
+  
+  /* Responsive - Tablettes paysage */
+  @media (max-width: 1400px) {
+    .form-container {
+      padding: 0 var(--space-lg);
+    }
+    
+    .clients-table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0;
+    }
+    
+    .clients-table {
+      min-width: 1000px;
+      width: 100%;
+    }
+    
+    .clients-table th.client-col {
+      min-width: 250px;
+    }
+  }
+  
+  /* Responsive - Tablettes portrait */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      margin-top: 60px !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-lg);
+      border-radius: var(--radius-lg);
+    }
+    
+    .page-title-hl {
+      font-size: 1.5rem;
+      justify-content: center;
+      text-align: center;
+    }
+    
+    .section-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+    
+    .section-title .btn-hl {
+      width: 100%;
+    }
+    
+    .clients-table-container {
+      margin-left: calc(-1 * var(--space-md));
+      margin-right: calc(-1 * var(--space-md));
+      width: calc(100% + 2 * var(--space-md));
+      border-radius: 0;
+    }
+    
+    .clients-table {
+      min-width: 900px;
+    }
+    
+    .clients-table th.client-col {
+      min-width: 240px;
+    }
+    
+    .client-info input,
+    .client-info select,
+    .client-info textarea {
+      font-size: 0.85rem;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .form-group {
+      grid-column: span 1 !important;
+    }
+  }
+  
+  /* Responsive - Mobile */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-md);
+      border-radius: 0;
+      margin: 0;
+    }
+    
+    .page-title-hl {
+      font-size: 1.25rem;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding-bottom: var(--space-sm);
+      text-align: center;
+    }
+    
+    .page-title-hl i {
+      font-size: 1.25rem;
+    }
+    
+    .search-section {
+      padding: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    
+    .search-section label {
+      font-size: 0.875rem;
+    }
+    
+    .section-title h3 {
+      font-size: 1.125rem;
+    }
+    
+    .clients-table-container {
+      margin-left: calc(-1 * var(--space-sm));
+      margin-right: calc(-1 * var(--space-sm));
+      width: calc(100% + 2 * var(--space-sm));
+      border-left: none;
+      border-right: none;
+    }
+    
+    .clients-table {
+      min-width: 800px;
+    }
+    
+    .clients-table th {
+      padding: var(--space-sm);
+      font-size: 0.75rem;
+    }
+    
+    .clients-table th.client-col {
+      min-width: 220px;
+    }
+    
+    .clients-table td {
+      padding: var(--space-sm);
+    }
+    
+    .client-header {
+      padding: var(--space-sm);
+    }
+    
+    .client-header h4 {
+      font-size: 0.9rem;
+    }
+    
+    .client-info {
+      gap: var(--space-xs);
+    }
+    
+    .client-info input,
+    .client-info select,
+    .client-info textarea {
+      font-size: 0.8rem;
+      padding: var(--space-xs);
+    }
+    
+    .items-list input {
+      font-size: 0.8rem;
+      padding: var(--space-xs);
+    }
+    
+    .line-total {
+      font-size: 0.75rem;
+      padding: var(--space-xs);
+    }
+    
+    .client-total {
+      font-size: 0.85rem;
+      padding: var(--space-xs);
+    }
+    
+    .form-actions {
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+      padding-top: var(--space-md);
+    }
+    
+    .form-actions .btn-hl {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    #orderTotal {
+      font-size: 1.125rem;
+      padding: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+    
+    .info-badge {
+      font-size: 0.8rem;
+      padding: var(--space-xs) var(--space-sm);
+    }
+  }
+  
+  /* Responsive - Très petits écrans */
+  @media (max-width: 480px) {
+    .form-container {
+      padding: 0 var(--space-sm);
+    }
+    
+    .form-hl {
+      padding: var(--space-sm);
+    }
+    
+    .page-title-hl {
+      font-size: 1.125rem;
+      justify-content: center;
+      text-align: center;
+    }
+    
+    .search-section {
+      padding: var(--space-sm);
+    }
+    
+    .clients-table-container {
+      margin-left: calc(-1 * var(--space-xs));
+      margin-right: calc(-1 * var(--space-xs));
+      width: calc(100% + 2 * var(--space-xs));
+    }
+    
+    .clients-table {
+      min-width: 750px;
+    }
+    
+    .clients-table th,
+    .clients-table td {
+      padding: var(--space-xs);
+      font-size: 0.75rem;
+    }
+    
+    .clients-table th.client-col {
+      min-width: 200px;
+    }
+    
+    .client-header h4 {
+      font-size: 0.85rem;
+    }
+    
+    .client-info input,
+    .client-info select,
+    .client-info textarea {
+      font-size: 0.75rem;
+      padding: 6px;
+    }
+    
+    .items-list input {
+      font-size: 0.75rem;
+      padding: 6px;
+    }
+    
+    .line-total {
+      font-size: 0.7rem;
+    }
+    
+    .client-total {
+      font-size: 0.8rem;
+    }
+    
+    #orderTotal {
+      font-size: 1rem;
+      padding: var(--space-sm);
+    }
+    
+    .btn-remove-client {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+    }
+  }
+  
+  /* Amélioration du scroll horizontal sur mobile */
+  @media (max-width: 1024px) {
+    .clients-table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    
+    .clients-table-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .clients-table-container::-webkit-scrollbar-thumb {
+      background: var(--color-primary);
+      border-radius: 3px;
+    }
+  }
+  
+  /* Amélioration visuelle des inputs */
+  .form-hl-input {
+    width: 100%;
+    padding: var(--space-md);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-hl-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(0, 56, 101, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  .form-hl-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 0.9375rem;
+  }
+  
+  /* Badge d'information */
+  .info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-sm);
+  }
+  
+  .info-badge i {
+    color: var(--color-primary);
+  }
+  
+  /* Ajustements pour le form-row responsive */
+  .form-group-notes {
+    grid-column: span 1;
+  }
+  
+  @media (min-width: 769px) {
+    .form-group-notes {
+      grid-column: span 2;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .form-group-notes {
+      grid-column: span 1;
+    }
+  }
+  
+  /* Amélioration de l'affichage sur petits écrans */
+  @media (max-width: 1024px) {
+    .client-header h4 {
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+    
+    .btn-remove-client {
+      flex-shrink: 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl">
+      <h1 class="page-title-hl">
+        <i class="fas fa-shopping-cart me-2"></i>
+        {% if is_edit %}Modifier la Commande {{ order.reference }}{% else %}Nouvelle Commande Commerciale{% endif %}
+      </h1>
+      <p style="color: var(--text-secondary); margin-top: var(--space-sm);">
+        Créez une commande commerciale avec plusieurs clients. Chaque client peut commander plusieurs articles avec des quantités différentes.
+      </p>
+      
+      <!-- Guide visuel d'utilisation -->
+      <div style="background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); padding: var(--space-lg); border-radius: var(--radius-md); margin-top: var(--space-md); border-left: 4px solid var(--color-primary);">
+        <h4 style="color: var(--color-primary); margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs);">
+          <i class="fas fa-info-circle"></i>
+          Comment ça fonctionne ?
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md); margin-top: var(--space-sm);">
+          <div style="background: var(--white); padding: var(--space-sm); border-radius: var(--radius-sm);">
+            <strong style="color: var(--color-primary);">1️⃣ Ajouter des Clients</strong>
+            <p style="margin: var(--space-xs) 0 0 0; font-size: 0.875rem; color: var(--text-secondary);">
+              Cliquez sur "Ajouter un Client" pour créer une colonne. Remplissez les informations (nom, téléphone, adresse, paiement). Maximum 10 clients par commande.
+            </p>
+          </div>
+          <div style="background: var(--white); padding: var(--space-sm); border-radius: var(--radius-sm);">
+            <strong style="color: var(--color-primary);">2️⃣ Ajouter des Articles</strong>
+            <p style="margin: var(--space-xs) 0 0 0; font-size: 0.875rem; color: var(--text-secondary);">
+              Recherchez un article dans la barre de recherche et cliquez dessus. Une ligne est créée dans le tableau. Répétez pour chaque article.
+            </p>
+          </div>
+          <div style="background: var(--white); padding: var(--space-sm); border-radius: var(--radius-sm);">
+            <strong style="color: var(--color-primary);">3️⃣ Remplir les Quantités</strong>
+            <p style="margin: var(--space-xs) 0 0 0; font-size: 0.875rem; color: var(--text-secondary);">
+              Pour chaque intersection Article × Client, entrez la quantité si le client commande cet article. Laissez vide ou 0 sinon. Les totaux se calculent automatiquement.
+            </p>
+          </div>
+        </div>
+        <div style="margin-top: var(--space-md); padding: var(--space-sm); background: rgba(255, 255, 255, 0.5); border-radius: var(--radius-sm);">
+          <strong style="color: var(--text-primary);">💡 Exemple :</strong>
+          <p style="margin: var(--space-xs) 0 0 0; font-size: 0.875rem; color: var(--text-secondary);">
+            Si vous avez <strong>10 clients</strong> et <strong>10 articles</strong>, vous aurez un tableau de 10 lignes (articles) × 10 colonnes (clients). 
+            Chaque client peut commander des articles différents avec des quantités différentes. 
+            Le total de chaque client et le total global sont calculés automatiquement.
+          </p>
+        </div>
+      </div>
+    </div>
+      
+      <form method="POST" action="{% if is_edit %}{{ url_for('orders.order_edit', id=order.id) }}{% else %}{{ url_for('orders.order_new') }}{% endif %}" id="orderForm">
+        {% if csrf_token %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {% endif %}
+        
+        <!-- Informations générales -->
+        <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-lg); margin-bottom: var(--space-xl);">
+          <div class="form-group">
+            <label class="form-hl-label">
+              <i class="fas fa-calendar-alt me-2"></i>
+              Date de commande
+            </label>
+            <input type="date" name="order_date" value="{% if is_edit %}{{ order.order_date.strftime('%Y-%m-%d') }}{% else %}{{ today }}{% endif %}" class="form-hl-input" required>
+          </div>
+          <div class="form-group form-group-notes">
+            <label class="form-hl-label">
+              <i class="fas fa-sticky-note me-2"></i>
+              Notes générales
+            </label>
+            <textarea name="notes" class="form-hl-input" rows="3" placeholder="Notes optionnelles sur la commande..."></textarea>
+          </div>
+        </div>
+        
+        <!-- Section recherche d'articles - MODERNISÉE -->
+        <div class="search-section" id="searchSection">
+          <label>
+            <i class="fas fa-search me-2"></i>
+            Rechercher et ajouter un article
+          </label>
+          <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="itemSearch" placeholder="🔍 Tapez le nom ou SKU de l'article pour rechercher..." autocomplete="off">
+            <div id="searchResults"></div>
+          </div>
+          <div class="added-items-badge" id="addedItemsBadge" style="display: none;">
+            <i class="fas fa-check-circle"></i>
+            <span id="addedItemsCount">0</span> article(s) ajouté(s)
+          </div>
+          <div style="margin-top: var(--space-md); padding: var(--space-sm); background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); backdrop-filter: blur(10px);">
+            <small style="color: white; font-size: 0.875rem; display: flex; align-items: center; gap: var(--space-xs);">
+              <i class="fas fa-info-circle"></i>
+              Les prix sont pré-remplis automatiquement depuis la fiche de prix active
+            </small>
+          </div>
+        </div>
+        
+        <!-- Section clients et articles -->
+        <div class="section-title">
+          <h3>
+            <i class="fas fa-users"></i>
+            Clients et Articles
+          </h3>
+          <button type="button" class="btn-hl btn-hl-primary" onclick="addClientColumn()">
+            <i class="fas fa-plus me-2"></i>Ajouter un Client
+          </button>
+        </div>
+        
+        <div class="clients-table-container" style="width: 100%; overflow-x: auto;">
+          <table class="clients-table" id="clientsTable" style="margin: 0 auto;">
+            <thead>
+              <tr>
+                <th>
+                  <i class="fas fa-box me-2"></i>
+                  Articles
+                </th>
+                <th class="client-col" colspan="10">
+                  <div style="text-align: center; padding: var(--space-sm);">
+                    <i class="fas fa-users me-2"></i>
+                    Clients de la commande
+                  </div>
+                </th>
+              </tr>
+              <tr id="clientHeadersRow">
+                <th>Nom / SKU</th>
+                <!-- Les en-têtes de clients seront ajoutés dynamiquement -->
+              </tr>
+            </thead>
+            <tbody id="itemsBody">
+              <!-- Les lignes d'articles seront ajoutées dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Actions du formulaire -->
+        <div class="form-actions">
+          <a href="{{ url_for('orders.orders_list') }}" class="btn-hl btn-hl-secondary">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer et Soumettre à Validation
+          </button>
+        </div>
+      </form>
+  </div>
+</div>
+
+<script>
+// Sécuriser la conversion JSON
+let stockItems = [];
+try {
+  {% if stock_items %}
+  stockItems = {{ stock_items|tojson|safe }};
+  if (!Array.isArray(stockItems)) {
+    console.warn('stockItems n\'est pas un tableau, conversion...');
+    stockItems = [];
+  }
+  {% else %}
+  stockItems = [];
+  {% endif %}
+} catch (e) {
+  console.error('❌ Erreur lors du chargement des articles:', e);
+  stockItems = [];
+}
+
+let clientCount = 0;
+let itemCount = 0;
+
+console.log('Stock items loaded:', stockItems.length);
+
+// Ajouter une colonne client
+function addClientColumn() {
+  if (clientCount >= 10) {
+    alert('Maximum 10 clients par commande');
+    return;
+  }
+  
+  const clientId = clientCount++;
+  const headersRow = document.getElementById('clientHeadersRow');
+  const itemsBody = document.getElementById('itemsBody');
+  
+  // Ajouter l'en-tête client
+  const headerCell = document.createElement('th');
+  headerCell.className = 'client-col';
+  headerCell.innerHTML = `
+    <div class="client-header">
+      <h4>
+        <span><i class="fas fa-user me-2"></i>Client ${clientId + 1}</span>
+        <button type="button" class="btn-remove-client" onclick="removeClientColumn(${clientId})" title="Supprimer ce client">
+          <i class="fas fa-times"></i>
+        </button>
+      </h4>
+    </div>
+    <div class="client-info">
+      <input type="text" name="client_${clientId}_name" placeholder="Nom du client *" required>
+      <input type="text" name="client_${clientId}_phone" placeholder="Téléphone">
+      <textarea name="client_${clientId}_address" placeholder="Adresse complète" rows="2"></textarea>
+      <select name="client_${clientId}_payment_type" onchange="togglePaymentDueDate(${clientId}, this.value); calculateClientTotal(${clientId}); calculateOrderTotal();">
+        <option value="cash">💵 Comptant</option>
+        <option value="credit">📅 Crédit</option>
+      </select>
+      <input type="date" name="client_${clientId}_payment_due_date" placeholder="Échéance (si crédit)" 
+             id="client_${clientId}_payment_due_date" style="display: none;">
+      <textarea name="client_${clientId}_comments" placeholder="Commentaires (échéance, conditions, observations...)" rows="2"></textarea>
+      <textarea name="client_${clientId}_notes" placeholder="Notes générales" rows="2"></textarea>
+      <div class="client-total">
+        Total: 0 GNF
+      </div>
+    </div>
+  `;
+  headersRow.appendChild(headerCell);
+  
+  // Ajouter une cellule pour chaque article existant
+  const itemRows = itemsBody.querySelectorAll('tr');
+  itemRows.forEach((row) => {
+    const rowItem = stockItems.find(i => i.id == parseInt(row.dataset.itemId));
+    const defaultPrice = rowItem ? (rowItem.default_price || '') : '';
+    const cell = document.createElement('td');
+    const itemIndex = Array.from(itemsBody.querySelectorAll('tr')).indexOf(row);
+    cell.innerHTML = `
+      <div class="items-list">
+        <input type="number" name="client_${clientId}_item_${itemIndex}_qty" 
+               placeholder="Qté" min="0" step="0.01" 
+               class="item-qty"
+               data-client="${clientId}" 
+               data-item="${itemIndex}"
+               onchange="calculateLineTotal(${clientId}, ${itemIndex}); calculateClientTotal(${clientId}); calculateOrderTotal()">
+        <input type="number" name="client_${clientId}_item_${itemIndex}_price" 
+               placeholder="Prix unit. (GNF)" min="0" step="0.01" 
+               class="item-price"
+               data-client="${clientId}" 
+               data-item="${itemIndex}"
+               value="${defaultPrice}"
+               onchange="calculateLineTotal(${clientId}, ${itemIndex}); calculateClientTotal(${clientId}); calculateOrderTotal()">
+        <div class="line-total" data-client="${clientId}" data-item="${itemIndex}">
+          Total: 0 GNF
+        </div>
+        <input type="hidden" name="client_${clientId}_item_${itemIndex}_id" value="${row.dataset.itemId}">
+      </div>
+    `;
+    row.appendChild(cell);
+  });
+  
+  // Calculer les totaux après ajout du client
+  setTimeout(() => {
+    calculateClientTotal(clientId);
+    calculateOrderTotal();
+  }, 100);
+}
+
+// Afficher/masquer le champ échéance selon le type de paiement
+function togglePaymentDueDate(clientId, paymentType) {
+  const dueDateInput = document.getElementById(`client_${clientId}_payment_due_date`);
+  if (dueDateInput) {
+    if (paymentType === 'credit') {
+      dueDateInput.style.display = 'block';
+      dueDateInput.required = true;
+    } else {
+      dueDateInput.style.display = 'none';
+      dueDateInput.required = false;
+      dueDateInput.value = '';
+    }
+  }
+}
+
+// Supprimer une colonne client
+function removeClientColumn(clientId) {
+  if (confirm('Supprimer ce client et tous ses articles ?')) {
+    const headersRow = document.getElementById('clientHeadersRow');
+    const itemsBody = document.getElementById('itemsBody');
+    
+    // Supprimer l'en-tête
+    const headers = headersRow.querySelectorAll('th.client-col');
+    if (headers[clientId]) {
+      headers[clientId].remove();
+    }
+    
+    // Supprimer les cellules correspondantes
+    itemsBody.querySelectorAll('tr').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells[clientId]) {
+        cells[clientId].remove();
+      }
+    });
+    
+    // Recalculer les totaux
+    calculateOrderTotal();
+  }
+}
+
+// Ajouter une ligne d'article
+function addItemRow(item) {
+  const itemsBody = document.getElementById('itemsBody');
+  const row = document.createElement('tr');
+  row.dataset.itemId = item.id;
+  
+  // Colonne article - MODERNISÉE
+  const itemCell = document.createElement('td');
+  itemCell.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-sm); background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); border-radius: var(--radius-md); border-left: 4px solid var(--color-primary);">
+      <div style="display: flex; align-items: start; justify-content: space-between; gap: var(--space-xs);">
+        <div style="flex: 1;">
+          <strong style="color: var(--text-primary); font-size: 0.95rem; display: block; margin-bottom: var(--space-xs);">${item.name}</strong>
+          <small style="color: var(--text-muted); font-size: 0.8rem; display: flex; align-items: center; gap: var(--space-xs);">
+            <i class="fas fa-barcode" style="color: var(--color-primary);"></i>
+            <span>${item.sku || 'N/A'}</span>
+            ${item.default_price ? `<span style="margin-left: var(--space-sm); color: var(--color-primary); font-weight: 600;">• ${item.default_price.toLocaleString('fr-FR')} GNF</span>` : ''}
+          </small>
+        </div>
+        <button type="button" class="btn-remove-client" onclick="removeItemRow(this)" style="flex-shrink: 0; padding: var(--space-xs); min-width: auto; background: rgba(239, 68, 68, 0.9);" title="Supprimer cet article">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  row.appendChild(itemCell);
+  
+  // Colonnes clients existants
+  const clientHeaders = document.getElementById('clientHeadersRow').querySelectorAll('th.client-col');
+  const defaultPrice = item.default_price || '';
+  clientHeaders.forEach((header, index) => {
+    const cell = document.createElement('td');
+    cell.innerHTML = `
+      <div class="items-list">
+        <input type="number" name="client_${index}_item_${itemCount}_qty" 
+               placeholder="Qté" min="0" step="0.01" 
+               class="item-qty" 
+               data-client="${index}" 
+               data-item="${itemCount}"
+               onchange="calculateLineTotal(${index}, ${itemCount}); calculateClientTotal(${index}); calculateOrderTotal()">
+        <input type="number" name="client_${index}_item_${itemCount}_price" 
+               placeholder="Prix unit. (GNF)" min="0" step="0.01" 
+               class="item-price"
+               data-client="${index}" 
+               data-item="${itemCount}"
+               value="${defaultPrice}"
+               onchange="calculateLineTotal(${index}, ${itemCount}); calculateClientTotal(${index}); calculateOrderTotal()">
+        <div class="line-total" data-client="${index}" data-item="${itemCount}">
+          Total: 0 GNF
+        </div>
+        <input type="hidden" name="client_${index}_item_${itemCount}_id" value="${item.id}">
+      </div>
+    `;
+    row.appendChild(cell);
+  });
+  
+  itemsBody.appendChild(row);
+  itemCount++;
+  
+  // Animation d'ajout
+  row.style.opacity = '0';
+  row.style.transform = 'translateY(-10px)';
+  setTimeout(() => {
+    row.style.transition = 'all 0.3s ease';
+    row.style.opacity = '1';
+    row.style.transform = 'translateY(0)';
+  }, 10);
+  
+  // Recalculer les totaux
+  setTimeout(() => {
+    calculateOrderTotal();
+    updateAddedItemsBadge();
+  }, 100);
+}
+
+// Mettre à jour le badge d'articles ajoutés
+function updateAddedItemsBadge() {
+  const itemsCount = document.getElementById('itemsBody').querySelectorAll('tr').length;
+  const badge = document.getElementById('addedItemsBadge');
+  const countSpan = document.getElementById('addedItemsCount');
+  
+  if (badge && countSpan) {
+    countSpan.textContent = itemsCount;
+    if (itemsCount > 0) {
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// Supprimer une ligne d'article
+function removeItemRow(button) {
+  if (confirm('Supprimer cet article de la commande ?')) {
+    const row = button.closest('tr');
+    row.style.transition = 'all 0.3s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-20px)';
+    setTimeout(() => {
+      row.remove();
+      calculateOrderTotal();
+      updateAddedItemsBadge();
+    }, 300);
+  }
+}
+
+// Recherche d'articles
+function searchItems(query) {
+  const resultsDiv = document.getElementById('searchResults');
+  
+  if (!query || query.length < 2) {
+    resultsDiv.style.display = 'none';
+    return;
+  }
+  
+  const filtered = stockItems.filter(item => 
+    item.name.toLowerCase().includes(query.toLowerCase()) ||
+    (item.sku && item.sku.toLowerCase().includes(query.toLowerCase()))
+  );
+  
+  resultsDiv.innerHTML = '';
+  
+  if (filtered.length === 0) {
+    resultsDiv.innerHTML = `
+      <div style="padding: var(--space-2xl); color: var(--text-muted); text-align: center;">
+        <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+        <p style="font-weight: 600; margin-bottom: var(--space-xs);">Aucun article trouvé</p>
+        <p style="font-size: 0.875rem;">Essayez avec un autre terme de recherche</p>
+      </div>
+    `;
+    resultsDiv.style.display = 'block';
+    return;
+  }
+  
+  filtered.slice(0, 10).forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'search-result-item';
+    div.dataset.itemIndex = index;
+    
+    // Stocker l'item dans un attribut data pour y accéder facilement
+    div.dataset.itemId = item.id;
+    div.dataset.itemName = item.name;
+    div.dataset.itemSku = item.sku || '';
+    div.dataset.itemPrice = item.default_price || '';
+    
+    div.onclick = function() { 
+      const itemData = {
+        id: parseInt(this.dataset.itemId),
+        name: this.dataset.itemName,
+        sku: this.dataset.itemSku,
+        default_price: this.dataset.itemPrice ? parseFloat(this.dataset.itemPrice) : null
+      };
+      addItemRow(itemData);
+      document.getElementById('itemSearch').value = '';
+      resultsDiv.style.display = 'none';
+      updateAddedItemsBadge();
+    };
+    
+    const priceDisplay = item.default_price 
+      ? `<span class="search-result-price">${item.default_price.toLocaleString('fr-FR')} GNF</span>`
+      : '<span style="color: var(--text-muted); font-size: 0.875rem;">Prix non défini</span>';
+    
+    div.innerHTML = `
+      <div class="search-result-info">
+        <div class="search-result-name">${item.name}</div>
+        <div class="search-result-details">
+          <span><i class="fas fa-barcode me-1"></i>${item.sku || 'N/A'}</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-md);">
+        ${priceDisplay}
+        <button type="button" class="search-result-add" onclick="event.stopPropagation(); const itemData = {id: ${item.id}, name: '${item.name.replace(/'/g, "\\'")}', sku: '${(item.sku || '').replace(/'/g, "\\'")}', default_price: ${item.default_price || 'null'}}; addItemRow(itemData); document.getElementById('itemSearch').value = ''; document.getElementById('searchResults').style.display = 'none'; updateAddedItemsBadge();">
+          <i class="fas fa-plus"></i>
+          Ajouter
+        </button>
+      </div>
+    `;
+    resultsDiv.appendChild(div);
+  });
+  
+  resultsDiv.style.display = 'block';
+}
+
+// Calculer le total d'une ligne (quantité × prix)
+function calculateLineTotal(clientId, itemIndex) {
+  const qtyInput = document.querySelector(`input[name="client_${clientId}_item_${itemIndex}_qty"]`);
+  const priceInput = document.querySelector(`input[name="client_${clientId}_item_${itemIndex}_price"]`);
+  const totalDiv = document.querySelector(`.line-total[data-client="${clientId}"][data-item="${itemIndex}"]`);
+  
+  if (qtyInput && priceInput && totalDiv) {
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const total = qty * price;
+    totalDiv.textContent = `Total: ${total.toLocaleString('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0})} GNF`;
+    
+    // Mettre à jour le total du client et de la commande
+    calculateClientTotal(clientId);
+    calculateOrderTotal();
+  }
+}
+
+// Calculer le total d'un client
+function calculateClientTotal(clientId) {
+  const clientHeaders = document.querySelectorAll('th.client-col');
+  const clientHeader = clientHeaders[clientId];
+  if (!clientHeader) return;
+  
+  let clientTotal = 0;
+  const qtyInputs = document.querySelectorAll(`input[name^="client_${clientId}_item_"][name$="_qty"]`);
+  
+  qtyInputs.forEach(qtyInput => {
+    const name = qtyInput.name;
+    const match = name.match(/item_(\d+)_qty/);
+    if (match) {
+      const itemIndex = match[1];
+      const priceInput = document.querySelector(`input[name="client_${clientId}_item_${itemIndex}_price"]`);
+      
+      if (priceInput) {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        clientTotal += qty * price;
+      }
+    }
+  });
+  
+  // Afficher le total dans l'en-tête du client
+  let totalDiv = clientHeader.querySelector('.client-total');
+  if (!totalDiv) {
+    totalDiv = document.createElement('div');
+    totalDiv.className = 'client-total';
+    const clientInfo = clientHeader.querySelector('.client-info');
+    if (clientInfo) {
+      clientInfo.appendChild(totalDiv);
+    }
+  }
+  totalDiv.textContent = `Total: ${clientTotal.toLocaleString('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0})} GNF`;
+}
+
+// Calculer le total de la commande
+function calculateOrderTotal() {
+  let orderTotal = 0;
+  const clientHeaders = document.querySelectorAll('th.client-col');
+  
+  clientHeaders.forEach((header, index) => {
+    const clientId = index;
+    const qtyInputs = document.querySelectorAll(`input[name^="client_${clientId}_item_"][name$="_qty"]`);
+    
+    qtyInputs.forEach(qtyInput => {
+      const name = qtyInput.name;
+      const match = name.match(/item_(\d+)_qty/);
+      if (match) {
+        const itemIndex = match[1];
+        const priceInput = document.querySelector(`input[name="client_${clientId}_item_${itemIndex}_price"]`);
+        
+        if (priceInput) {
+          const qty = parseFloat(qtyInput.value) || 0;
+          const price = parseFloat(priceInput.value) || 0;
+          orderTotal += qty * price;
+        }
+      }
+    });
+  });
+  
+  // Afficher le total de la commande
+  let orderTotalDiv = document.getElementById('orderTotal');
+  if (!orderTotalDiv) {
+    orderTotalDiv = document.createElement('div');
+    orderTotalDiv.id = 'orderTotal';
+    const form = document.getElementById('orderForm');
+    const actionsDiv = form.querySelector('.form-actions');
+    if (actionsDiv) {
+      actionsDiv.insertAdjacentElement('beforebegin', orderTotalDiv);
+    } else {
+      document.querySelector('.clients-table-container').insertAdjacentElement('afterend', orderTotalDiv);
+    }
+  }
+  orderTotalDiv.innerHTML = `
+    <i class="fas fa-calculator me-2"></i>
+    <span>Total de la commande: <strong>${orderTotal.toLocaleString('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0})} GNF</strong></span>
+  `;
+}
+
+// Fermer les résultats de recherche en cliquant ailleurs
+document.addEventListener('click', function(e) {
+  const searchSection = document.getElementById('searchSection');
+  const searchResults = document.getElementById('searchResults');
+  if (searchSection && searchResults && !searchSection.contains(e.target)) {
+    searchResults.style.display = 'none';
+  }
+});
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  {% if is_edit and order %}
+  // Mode édition : charger les données existantes
+  const orderData = {
+    clients: [
+      {% for client in order.clients %}
+      {
+        name: {{ client.client_name|tojson|safe }},
+        phone: {{ (client.client_phone or '')|tojson|safe }},
+        address: {{ (client.client_address or '')|tojson|safe }},
+        payment_type: {{ client.payment_type|tojson|safe }},
+        payment_due_date: {{ (client.payment_due_date.strftime('%Y-%m-%d') if client.payment_due_date else '')|tojson|safe }},
+        notes: {{ (client.notes or '')|tojson|safe }},
+        comments: {{ (client.comments or '')|tojson|safe }},
+        items: [
+          {% for item in client.items %}
+          {
+            id: {{ item.stock_item_id }},
+            quantity: {{ item.quantity }},
+            price: {{ item.unit_price_gnf }},
+            notes: {{ (item.notes or '')|tojson|safe }}
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  };
+  
+  // Charger les clients et articles
+  orderData.clients.forEach((clientData, clientIndex) => {
+    // Ajouter une colonne client
+    addClientColumn();
+    const clientId = clientIndex;
+    
+    // Remplir les informations du client
+    const clientHeader = document.querySelectorAll('th.client-col')[clientId];
+    if (clientHeader) {
+      const nameInput = clientHeader.querySelector('input[name$="_name"]');
+      const phoneInput = clientHeader.querySelector('input[name$="_phone"]');
+      const addressTextarea = clientHeader.querySelector('textarea[name$="_address"]');
+      const paymentSelect = clientHeader.querySelector('select[name$="_payment_type"]');
+      const dueDateInput = clientHeader.querySelector('input[name$="_payment_due_date"]');
+      const notesTextarea = clientHeader.querySelector('textarea[name$="_notes"]');
+      const commentsTextarea = clientHeader.querySelector('textarea[name$="_comments"]');
+      
+      if (nameInput) nameInput.value = clientData.name;
+      if (phoneInput) phoneInput.value = clientData.phone;
+      if (addressTextarea) addressTextarea.value = clientData.address;
+      if (paymentSelect) {
+        paymentSelect.value = clientData.payment_type;
+        togglePaymentDueDate(clientId, clientData.payment_type);
+      }
+      if (dueDateInput && clientData.payment_due_date) {
+        dueDateInput.value = clientData.payment_due_date;
+      }
+      if (notesTextarea) notesTextarea.value = clientData.notes;
+      if (commentsTextarea) commentsTextarea.value = clientData.comments;
+    }
+    
+    // Ajouter les articles pour ce client
+    const itemsBody = document.getElementById('itemsBody');
+    let currentItemIndex = itemsBody ? itemsBody.querySelectorAll('tr').length : 0;
+    
+    clientData.items.forEach((itemData) => {
+      const stockItem = stockItems.find(i => i.id === itemData.id);
+      if (stockItem) {
+        addItemRow(stockItem);
+        const rows = itemsBody.querySelectorAll('tr');
+        const lastRow = rows[rows.length - 1];
+        if (lastRow) {
+          const itemIndex = currentItemIndex;
+          const qtyInput = lastRow.querySelector(`input[name="client_${clientId}_item_${itemIndex}_qty"]`);
+          const priceInput = lastRow.querySelector(`input[name="client_${clientId}_item_${itemIndex}_price"]`);
+          if (qtyInput) qtyInput.value = itemData.quantity;
+          if (priceInput) priceInput.value = itemData.price;
+          calculateLineTotal(clientId, itemIndex);
+          currentItemIndex++;
+        }
+      }
+    });
+  });
+  {% else %}
+  // Mode création : ajouter un client par défaut
+  addClientColumn();
+  {% endif %}
+  
+  // Calculer les totaux initiaux
+  setTimeout(() => {
+    calculateOrderTotal();
+    updateAddedItemsBadge();
+  }, 100);
+  
+  // Gestion de la recherche
+  const searchInput = document.getElementById('itemSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      searchItems(this.value);
+    });
+  }
+});
+</script>
+{% endblock %}

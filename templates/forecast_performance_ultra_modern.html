@@ -1,0 +1,668 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Performance des Prévisions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-lg);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stat-card-hl {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #0056b3 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    color: var(--white);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stat-card-hl::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+  
+  .stat-card-hl:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .stat-card-hl-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .stat-card-hl-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .stat-card-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+  
+  .stat-card-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .stat-card-info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  }
+  
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .chart-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .chart-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .chart-card h3 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-lg);
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .chart-container {
+    position: relative;
+    height: 350px;
+    margin-top: var(--space-md);
+  }
+  
+  .chart-container-large {
+    height: 400px;
+  }
+  
+  .full-width-chart {
+    grid-column: 1 / -1;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .full-width-chart {
+      grid-column: 1;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .stats-grid,
+    .charts-grid {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+    }
+    
+    .stat-card-hl-value {
+      font-size: 2rem;
+    }
+    
+    .charts-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-lg);
+    }
+    
+    .chart-card {
+      padding: var(--space-lg);
+    }
+    
+    .chart-container {
+      height: 300px;
+    }
+    
+    .chart-container-large {
+      height: 350px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-chart-pie me-2"></i>
+      Performance des Prévisions
+    </h1>
+    <p style="color: var(--text-secondary); margin-top: var(--space-sm);">
+      Analyse détaillée de la performance des prévisions avec visualisations interactives
+    </p>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card-hl stat-card-success">
+      <div class="stat-card-hl-value" id="accuracyValue">{{ overall_accuracy }}%</div>
+      <div class="stat-card-hl-label">Précision Moyenne Globale</div>
+    </div>
+    <div class="stat-card-hl stat-card-info">
+      <div class="stat-card-hl-value" id="forecastCount">{{ forecasts|length }}</div>
+      <div class="stat-card-hl-label">Prévisions Analysées</div>
+    </div>
+    <div class="stat-card-hl stat-card-warning">
+      <div class="stat-card-hl-value" id="forecastValue">{{ "{:,.0f}".format(total_forecast_value)|replace(',', ' ') }}</div>
+      <div class="stat-card-hl-label">Valeur Prévisionnelle Totale (GNF)</div>
+    </div>
+    <div class="stat-card-hl stat-card-success">
+      <div class="stat-card-hl-value" id="realizedValue">{{ "{:,.0f}".format(total_realized_value)|replace(',', ' ') }}</div>
+      <div class="stat-card-hl-label">Valeur Réalisée Totale (GNF)</div>
+    </div>
+  </div>
+
+  <!-- Graphiques -->
+  <div class="charts-grid">
+    <!-- Évolution temporelle -->
+    <div class="chart-card full-width-chart">
+      <h3>
+        <i class="fas fa-chart-line"></i>
+        Évolution des Prévisions dans le Temps
+      </h3>
+      <div class="chart-container chart-container-large">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Comparaison Prévisions vs Réalisations -->
+    <div class="chart-card">
+      <h3>
+        <i class="fas fa-chart-bar"></i>
+        Comparaison Prévisions vs Réalisations
+      </h3>
+      <div class="chart-container">
+        <canvas id="comparisonChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Performance par Commercial -->
+    <div class="chart-card">
+      <h3>
+        <i class="fas fa-users"></i>
+        Performance par Commercial
+      </h3>
+      <div class="chart-container">
+        <canvas id="commercialChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Top 10 Prévisions -->
+    <div class="chart-card">
+      <h3>
+        <i class="fas fa-trophy"></i>
+        Top 10 Prévisions par Valeur
+      </h3>
+      <div class="chart-container">
+        <canvas id="topForecastsChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Répartition par Statut -->
+    <div class="chart-card">
+      <h3>
+        <i class="fas fa-chart-pie"></i>
+        Répartition par Statut
+      </h3>
+      <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Graphique de Précision -->
+    <div class="chart-card">
+      <h3>
+        <i class="fas fa-bullseye"></i>
+        Précision des Prévisions
+      </h3>
+      <div class="chart-container">
+        <canvas id="accuracyChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+{% block extra_js %}
+<script>
+  // Données depuis le backend
+  const timelineData = {{ timeline_data|tojson|default([]) }};
+  const commercialData = {{ commercial_data|tojson|default([]) }};
+  const topForecasts = [
+    {% for f in top_forecasts|default([]) %}
+    {
+      name: {{ f.name|tojson }},
+      forecast: {{ f.total_forecast_value|float }},
+      realized: {{ f.total_realized_value|float }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  const statusData = {{ status_data|tojson|default({}) }};
+
+  // Configuration globale Chart.js
+  Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = '#374151';
+  Chart.defaults.plugins.legend.display = true;
+  Chart.defaults.plugins.legend.position = 'top';
+
+  // Couleurs
+  const colors = {
+    primary: '#003865',
+    success: '#22c55e',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#3b82f6',
+    gradient1: ['#003865', '#0056b3'],
+    gradient2: ['#22c55e', '#16a34a'],
+    gradient3: ['#f59e0b', '#d97706']
+  };
+
+  // Vérifier si on a des données
+  if (timelineData.length === 0) {
+    document.querySelectorAll('.chart-container').forEach(container => {
+      container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);"><p><i class="fas fa-info-circle me-2"></i>Aucune donnée disponible</p></div>';
+    });
+  } else {
+    // 1. Graphique d'évolution temporelle
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    new Chart(timelineCtx, {
+      type: 'line',
+      data: {
+        labels: timelineData.map(d => d.date),
+      datasets: [
+        {
+          label: 'Prévisions',
+          data: timelineData.map(d => d.forecast),
+          borderColor: colors.primary,
+          backgroundColor: 'rgba(0, 56, 101, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        },
+        {
+          label: 'Réalisations',
+          data: timelineData.map(d => d.realized),
+          borderColor: colors.success,
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        },
+        {
+          label: 'Précision (%)',
+          data: timelineData.map(d => d.accuracy),
+          borderColor: colors.info,
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4,
+          yAxisID: 'y1',
+          pointRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Valeur (GNF)'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Précision (%)'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      }
+    }
+  });
+
+  // 2. Comparaison Prévisions vs Réalisations
+  const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+  new Chart(comparisonCtx, {
+    type: 'bar',
+    data: {
+      labels: timelineData.slice(-10).map(d => d.name.substring(0, 15) + '...'),
+      datasets: [
+        {
+          label: 'Prévisions',
+          data: timelineData.slice(-10).map(d => d.forecast),
+          backgroundColor: colors.primary,
+          borderRadius: 5
+        },
+        {
+          label: 'Réalisations',
+          data: timelineData.slice(-10).map(d => d.realized),
+          backgroundColor: colors.success,
+          borderRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Valeur (GNF)'
+          }
+        }
+      }
+    }
+  });
+
+  // 3. Performance par Commercial
+  const commercialCtx = document.getElementById('commercialChart').getContext('2d');
+  new Chart(commercialCtx, {
+    type: 'doughnut',
+    data: {
+      labels: commercialData.map(d => d.name),
+      datasets: [{
+        data: commercialData.map(d => d.realized),
+        backgroundColor: [
+          colors.primary,
+          colors.success,
+          colors.warning,
+          colors.info,
+          colors.danger,
+          '#8b5cf6',
+          '#ec4899',
+          '#14b8a6'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const data = commercialData[context.dataIndex];
+              return `${context.label}: ${data.realized.toLocaleString('fr-FR')} GNF (${data.accuracy}% précision)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 4. Top 10 Prévisions
+  const topForecastsCtx = document.getElementById('topForecastsChart').getContext('2d');
+  new Chart(topForecastsCtx, {
+    type: 'bar',
+    data: {
+      labels: topForecasts.map(f => f.name.length > 20 ? f.name.substring(0, 20) + '...' : f.name),
+      datasets: [
+        {
+          label: 'Prévisions',
+          data: topForecasts.map(f => f.forecast),
+          backgroundColor: colors.primary,
+          borderRadius: 5
+        },
+        {
+          label: 'Réalisations',
+          data: topForecasts.map(f => f.realized),
+          backgroundColor: colors.success,
+          borderRadius: 5
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Valeur (GNF)'
+          }
+        }
+      }
+    }
+  });
+
+  // 5. Répartition par Statut
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  const statusLabels = Object.keys(statusData);
+  const statusCounts = Object.values(statusData).map(s => s.count);
+  const statusColors = {
+    'active': colors.success,
+    'completed': colors.primary,
+    'draft': colors.warning,
+    'archived': '#6b7280'
+  };
+  
+  new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+      labels: statusLabels.map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+      datasets: [{
+        data: statusCounts,
+        backgroundColor: statusLabels.map(s => statusColors[s] || '#6b7280'),
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const status = statusLabels[context.dataIndex];
+              const data = statusData[status];
+              return `${context.label}: ${context.parsed} prévisions (${data.value.toLocaleString('fr-FR')} GNF)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 6. Graphique de Précision
+  const accuracyCtx = document.getElementById('accuracyChart').getContext('2d');
+  new Chart(accuracyCtx, {
+    type: 'bar',
+    data: {
+      labels: timelineData.map(d => d.name.substring(0, 15) + '...'),
+      datasets: [{
+        label: 'Précision (%)',
+        data: timelineData.map(d => d.accuracy),
+        backgroundColor: timelineData.map(d => {
+          if (d.accuracy >= 80) return colors.success;
+          if (d.accuracy >= 50) return colors.warning;
+          return colors.danger;
+        }),
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Précision (%)'
+          }
+        }
+      }
+    }
+  });
+  } // Fin du if timelineData.length > 0
+
+  // Animation des valeurs statistiques
+  function animateValue(element, start, end, duration) {
+    const startTime = performance.now();
+    const isFloat = end % 1 !== 0;
+    
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = start + (end - start) * progress;
+      
+      if (isFloat) {
+        element.textContent = current.toFixed(1) + '%';
+      } else {
+        element.textContent = Math.floor(current).toLocaleString('fr-FR');
+      }
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
+
+  // Lancer les animations au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+      animateValue(document.getElementById('accuracyValue'), 0, {{ overall_accuracy }}, 2000);
+      animateValue(document.getElementById('forecastCount'), 0, {{ forecasts|length }}, 1500);
+      animateValue(document.getElementById('forecastValue'), 0, {{ total_forecast_value }}, 2000);
+      animateValue(document.getElementById('realizedValue'), 0, {{ total_realized_value }}, 2000);
+    }, 500);
+  });
+</script>
+{% endblock %}
+{% endblock %}

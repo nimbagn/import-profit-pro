@@ -1,0 +1,195 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Modifier Utilisateur - {{ user.username }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .form-hl {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .form-group {
+    margin-bottom: var(--space-lg);
+  }
+  
+  .form-hl-label {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+    font-size: 0.9rem;
+  }
+  
+  .form-hl-input, .form-hl-select {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+  }
+  
+  .form-hl-input:focus, .form-hl-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+  
+  .form-check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  
+  .form-check-input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+  
+  .form-check-label {
+    cursor: pointer;
+    color: var(--text-primary);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-user-edit me-2"></i>
+        Modifier Utilisateur - {{ user.username }}
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="username" class="form-hl-label">
+            Nom d'utilisateur <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="text" id="username" name="username" class="form-hl-input" value="{{ user.username }}" required>
+        </div>
+        <div class="form-group">
+          <label for="email" class="form-hl-label">
+            Email <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="email" id="email" name="email" class="form-hl-input" value="{{ user.email }}" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="full_name" class="form-hl-label">Nom complet</label>
+          <input type="text" id="full_name" name="full_name" class="form-hl-input" value="{{ user.full_name or '' }}">
+        </div>
+        <div class="form-group">
+          <label for="phone" class="form-hl-label">Téléphone</label>
+          <input type="tel" id="phone" name="phone" class="form-hl-input" value="{{ user.phone or '' }}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="role_id" class="form-hl-label">
+            Rôle <span style="color: var(--color-danger);">*</span>
+            <a href="{{ url_for('auth.role_new') }}" target="_blank" style="margin-left: var(--space-sm); font-size: 0.85rem; color: var(--color-primary); text-decoration: none;">
+              <i class="fas fa-plus-circle"></i> Créer un nouveau rôle
+            </a>
+          </label>
+          <select id="role_id" name="role_id" class="form-hl-select" required>
+            <option value="">Sélectionner un rôle</option>
+            {% for role in roles %}
+            <option value="{{ role.id }}" {% if user.role_id == role.id %}selected{% endif %}>
+              {{ role.name }} ({{ role.code }})
+            </option>
+            {% endfor %}
+          </select>
+          <small style="display: block; margin-top: var(--space-xs); color: var(--text-secondary);">
+            <a href="{{ url_for('auth.roles_list') }}" style="color: var(--color-primary);">Gérer les rôles et permissions</a>
+          </small>
+        </div>
+        <div class="form-group">
+          <label for="region_id" class="form-hl-label">
+            Région
+            <a href="{{ url_for('referentiels.regions_list') }}" target="_blank" style="margin-left: var(--space-sm); font-size: 0.85rem; color: var(--color-primary); text-decoration: none;">
+              <i class="fas fa-plus-circle"></i> Créer une nouvelle région
+            </a>
+          </label>
+          <select id="region_id" name="region_id" class="form-hl-select">
+            <option value="">Aucune région (optionnel)</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if user.region_id == region.id %}selected{% endif %}>
+              {{ region.name }}{% if region.code %} ({{ region.code }}){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+          <small style="display: block; margin-top: var(--space-xs); color: var(--text-secondary);">
+            Sélectionnez la région d'affectation de l'utilisateur
+          </small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-hl-label">Statut</label>
+          <div class="form-check">
+            <input type="checkbox" id="is_active" name="is_active" class="form-check-input" {% if user.is_active %}checked{% endif %}>
+            <label for="is_active" class="form-check-label">Compte actif</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--space-3xl); text-align: right;">
+        <a href="{{ url_for('auth.user_detail', user_id=user.id) }}" class="btn-hl btn-hl-outline me-2">Annuler</a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>Enregistrer les modifications
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

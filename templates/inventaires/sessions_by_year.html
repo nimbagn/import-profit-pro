@@ -1,0 +1,249 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Sessions d'Inventaire par Année - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+  }
+  
+  .year-section {
+    margin-bottom: var(--space-2xl);
+  }
+  
+  .year-header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+  
+  .year-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .year-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .year-stat-card {
+    background: white;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--color-primary);
+  }
+  
+  .year-stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .year-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .sessions-table {
+    margin-top: var(--space-md);
+  }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .badge-draft {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .badge-in-progress {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  .badge-completed {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  .badge-validated {
+    background: #d1fae5;
+    color: #065f46;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-calendar-alt me-2"></i>
+      Sessions d'Inventaire par Année
+    </h1>
+    <div style="display: flex; gap: var(--space-md);">
+      <a href="{{ url_for('inventaires.sessions_list') }}" class="btn-hl btn-hl-secondary">
+        <i class="fas fa-list me-2"></i>
+        Vue Liste
+      </a>
+    </div>
+  </div>
+
+  {% if stats_by_year %}
+    {% for year_data in stats_by_year %}
+    <div class="year-section">
+      <div class="year-header">
+        <h2 class="year-title">
+          <i class="fas fa-calendar me-2"></i>
+          Année {{ year_data.year }}
+        </h2>
+        <div style="display: flex; gap: var(--space-sm);">
+          <a href="{{ url_for('inventaires.sessions_list', year=year_data.year) }}" class="btn-hl" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+            <i class="fas fa-filter me-2"></i>
+            Filtrer cette année
+          </a>
+        </div>
+      </div>
+
+      <!-- Statistiques de l'année -->
+      <div class="year-stats">
+        <div class="year-stat-card">
+          <div class="year-stat-label">Total Sessions</div>
+          <div class="year-stat-value">{{ year_data.total_sessions }}</div>
+        </div>
+        <div class="year-stat-card">
+          <div class="year-stat-label">Articles Inventoriés</div>
+          <div class="year-stat-value">{{ year_data.total_items }}</div>
+        </div>
+        <div class="year-stat-card">
+          <div class="year-stat-label">Écart Total</div>
+          <div class="year-stat-value" style="color: {% if year_data.total_variances < 0 %}#dc2626{% elif year_data.total_variances > 0 %}#059669{% else %}#6b7280{% endif %};">
+            {{ year_data.total_variances|format_number(2) }}
+          </div>
+        </div>
+        <div class="year-stat-card">
+          <div class="year-stat-label">Valeur Écart (GNF)</div>
+          <div class="year-stat-value" style="color: {% if year_data.total_value_variances < 0 %}#dc2626{% elif year_data.total_value_variances > 0 %}#059669{% else %}#6b7280{% endif %};">
+            {{ year_data.total_value_variances|format_number(0) }} GNF
+          </div>
+        </div>
+        <div class="year-stat-card">
+          <div class="year-stat-label">Taux de Précision</div>
+          <div class="year-stat-value" style="color: {% if year_data.precision_pct >= 95 %}#059669{% elif year_data.precision_pct >= 90 %}#f59e0b{% else %}#dc2626{% endif %};">
+            {{ "%.1f"|format(year_data.precision_pct) }}%
+          </div>
+        </div>
+        <div class="year-stat-card">
+          <div class="year-stat-label">Sessions Validées</div>
+          <div class="year-stat-value" style="color: #059669;">
+            {{ year_data.sessions_by_status.validated }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Détail des écarts -->
+      <div class="card-hl" style="margin-bottom: var(--space-md);">
+        <h3 style="color: var(--text-primary); margin-bottom: var(--space-md);">
+          <i class="fas fa-chart-bar me-2"></i>
+          Détail des Écarts
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+          <div style="padding: var(--space-md); background: #d1fae5; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.875rem; color: #065f46; margin-bottom: var(--space-xs);">Écarts Positifs</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #065f46;">{{ year_data.positive_count }}</div>
+          </div>
+          <div style="padding: var(--space-md); background: #fee2e2; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.875rem; color: #991b1b; margin-bottom: var(--space-xs);">Écarts Négatifs</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #991b1b;">{{ year_data.negative_count }}</div>
+          </div>
+          <div style="padding: var(--space-md); background: #e5e7eb; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.875rem; color: #374151; margin-bottom: var(--space-xs);">Écarts Nuls</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #374151;">{{ year_data.zero_count }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste des sessions de l'année -->
+      <div class="card-hl sessions-table">
+        <h3 style="color: var(--text-primary); margin-bottom: var(--space-md);">
+          <i class="fas fa-list me-2"></i>
+          Sessions de {{ year_data.year }} ({{ year_data.total_sessions }})
+        </h3>
+        <div class="table-hl">
+          <table style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Dépôt</th>
+                <th>Opérateur</th>
+                <th>Articles</th>
+                <th>Statut</th>
+                <th>Validé par</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for session in year_data.sessions %}
+              <tr>
+                <td>{{ session.session_date.strftime('%d/%m/%Y %H:%M') if session.session_date else '-' }}</td>
+                <td><strong>{{ session.depot.name if session.depot else '-' }}</strong></td>
+                <td>{{ session.operator.username if session.operator else '-' }}</td>
+                <td>
+                  <span class="badge-hl badge-hl-info">{{ session.details|length }} article(s)</span>
+                </td>
+                <td>
+                  <span class="badge-status badge-{{ session.status }}">
+                    {{ session.status|replace('_', ' ')|title }}
+                  </span>
+                </td>
+                <td>{{ session.validator.username if session.validator else '-' }}</td>
+                <td>
+                  <div style="display: flex; gap: var(--space-xs);">
+                    <a href="{{ url_for('inventaires.session_detail', id=session.id) }}" 
+                       class="btn-hl btn-hl-outline" 
+                       style="padding: var(--space-xs) var(--space-sm);" 
+                       title="Voir détails">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-calendar-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune session trouvée</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Aucune session d'inventaire n'a été trouvée dans le système</p>
+    <a href="{{ url_for('inventaires.session_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer une Session
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

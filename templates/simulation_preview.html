@@ -1,0 +1,421 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Simulation #{{ simulation.id }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+
+  .preview-header {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .preview-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .export-buttons {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .preview-content {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+
+  .info-section {
+    margin-bottom: var(--space-xl);
+  }
+
+  .info-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--color-primary);
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+  }
+
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-xs);
+  }
+
+  .info-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .table-preview {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-lg);
+  }
+
+  .table-preview thead {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+
+  .table-preview th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+  }
+
+  .table-preview td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: #212529;
+    background: #ffffff;
+  }
+
+  .table-preview tbody tr {
+    background: #ffffff;
+  }
+
+  .table-preview tbody tr:hover {
+    background: #f8f9fa;
+  }
+  
+  .table-preview tbody tr:hover td {
+    color: #212529;
+  }
+
+  .table-preview tfoot {
+    background: var(--bg-tertiary);
+    font-weight: 700;
+  }
+
+  .table-preview tfoot td {
+    border-top: 2px solid var(--color-primary);
+    padding: var(--space-md);
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+  }
+
+  .summary-card {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    color: var(--white);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .summary-card-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-bottom: var(--space-sm);
+  }
+
+  .summary-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  @media print {
+    .export-buttons {
+      display: none;
+    }
+    .preview-header {
+      page-break-after: avoid;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- En-tête avec boutons d'export -->
+  <div class="preview-header">
+    <div>
+      <h1 class="preview-title">
+        Simulation #{{ simulation.id }}
+      </h1>
+    </div>
+    <div class="export-buttons">
+      <div style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap;">
+        <select id="currency-select" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.9rem;">
+          <option value="GNF" selected>GNF</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="XOF">XOF</option>
+        </select>
+        <a href="#" id="export-pdf-btn" class="btn-hl btn-hl-primary" target="_blank" style="background: #dc3545;">
+          <i class="fas fa-file-pdf me-2"></i>
+          PDF
+        </a>
+        <a href="#" id="export-excel-btn" class="btn-hl btn-hl-primary" style="background: #28a745;">
+          <i class="fas fa-file-excel me-2"></i>
+          Excel
+        </a>
+      </div>
+      <a href="{{ url_for('simulation_detail', id=simulation.id) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour
+      </a>
+    </div>
+  </div>
+
+  <!-- Informations de la simulation -->
+  <div class="preview-content">
+    <div class="info-section">
+      <h3>Détails</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Simulation</div>
+          <div class="info-value">#{{ simulation.id }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Date</div>
+          <div class="info-value">
+            {% if simulation.created_at %}
+              {{ simulation.created_at.strftime('%d/%m/%Y %H:%M') }}
+            {% else %}
+              N/A
+            {% endif %}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">USD</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.rate_usd|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">EUR</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.rate_eur|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        {% if simulation.rate_xof %}
+        <div class="info-item">
+          <div class="info-label">XOF</div>
+          <div class="info-value">{{ "{:,.4f}".format(simulation.rate_xof|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        {% endif %}
+        <div class="info-item">
+          <div class="info-label">Camion</div>
+          <div class="info-value">{{ "{:,.2f}".format(simulation.truck_capacity_tons|default(0))|replace(',', ' ') }} t</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Répartition</div>
+          <div class="info-value">{{ simulation.basis|default('value')|title }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coûts -->
+    <div class="info-section">
+      <h3>Coûts</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Douane</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.customs_gnf|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Manutention</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.handling_gnf|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Autres Coûts</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.others_gnf|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Transport Fixe</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.transport_fixed_gnf|default(0))|replace(',', ' ') }} GNF</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Transport par kg</div>
+          <div class="info-value">{{ "{:,.0f}".format(simulation.transport_per_kg_gnf|default(0))|replace(',', ' ') }} GNF/kg</div>
+        </div>
+        <div class="info-item" style="background: linear-gradient(135deg, #0052a5 0%, #003d82 100%); color: white; border-radius: var(--radius-md);">
+          <div class="info-label" style="color: rgba(255,255,255,0.9);">Total</div>
+          <div class="info-value" style="color: white; font-size: 1.5rem;">
+            {{ "{:,.0f}".format(total_logistics|default(0))|replace(',', ' ') }} GNF
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau des articles -->
+    <div class="info-section">
+      <h3>Articles</h3>
+      {% if items %}
+      <table class="table-preview">
+        <thead>
+          <tr>
+            <th>Article</th>
+            <th>Qté</th>
+            <th>Achat</th>
+            <th>Coûts</th>
+            <th>Revient</th>
+            <th>Vente</th>
+            <th>Marge</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item_data in items %}
+          {% set item = item_data.item %}
+          {% set article_name = item.article.name if item.article else 'N/A' %}
+          <tr>
+            <td>{{ article_name }}</td>
+            <td>{{ "{:,.2f}".format(item.quantity|default(0))|replace(',', ' ') }}</td>
+            <td>{{ "{:,.0f}".format(item_data.purchase_price_gnf|default(0))|replace(',', ' ') }}</td>
+            <td>{{ "{:,.0f}".format(item_data.logistics_per_unit|default(0))|replace(',', ' ') }}</td>
+            <td><strong>{{ "{:,.0f}".format(item_data.cost_price_per_unit|default(0))|replace(',', ' ') }}</strong></td>
+            <td>{{ "{:,.0f}".format(item_data.selling_price|default(0))|replace(',', ' ') }}</td>
+            <td style="color: {% if item_data.margin >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+              {{ "{:,.0f}".format(item_data.margin|default(0))|replace(',', ' ') }}
+            </td>
+            <td style="color: {% if item_data.margin >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+              {{ "{:,.2f}".format(item_data.margin_pct|default(0))|replace(',', ' ') }}%
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><strong>TOTAL</strong></td>
+            <td><strong>{{ "{:,.0f}".format(total_purchase_value|default(0))|replace(',', ' ') }}</strong></td>
+            <td><strong>{{ "{:,.0f}".format(total_logistics|default(0))|replace(',', ' ') }}</strong></td>
+            <td><strong>{{ "{:,.0f}".format(total_cost|default(0))|replace(',', ' ') }}</strong></td>
+            <td><strong>{{ "{:,.0f}".format(total_selling_value|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="color: {% if total_margin >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+              <strong>{{ "{:,.0f}".format(total_margin|default(0))|replace(',', ' ') }}</strong>
+            </td>
+            <td style="color: {% if total_margin >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+              <strong>
+                {% if total_cost > 0 %}
+                  {{ "{:,.2f}".format((total_margin / total_cost * 100)|default(0))|replace(',', ' ') }}%
+                {% else %}
+                  0%
+                {% endif %}
+              </strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">
+        Aucun article
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Résumé financier -->
+    <div class="info-section">
+      <h3>Résumé</h3>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-card-label">Achat</div>
+          <div class="summary-card-value">{{ "{:,.0f}".format(total_purchase_value|default(0))|replace(',', ' ') }}</div>
+          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Coûts</div>
+          <div class="summary-card-value">{{ "{:,.0f}".format(total_logistics|default(0))|replace(',', ' ') }}</div>
+          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, #0052a5 0%, #003d82 100%);">
+          <div class="summary-card-label">Prix de revient</div>
+          <div class="summary-card-value">{{ "{:,.0f}".format(total_cost|default(0))|replace(',', ' ') }}</div>
+          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Vente</div>
+          <div class="summary-card-value">{{ "{:,.0f}".format(total_selling_value|default(0))|replace(',', ' ') }}</div>
+          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, {% if total_margin >= 0 %}#28a745{% else %}#dc3545{% endif %} 0%, {% if total_margin >= 0 %}#20c997{% else %}#c82333{% endif %} 100%);">
+          <div class="summary-card-label">Marge</div>
+          <div class="summary-card-value">{{ "{:,.0f}".format(total_margin|default(0))|replace(',', ' ') }}</div>
+          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Marge %</div>
+          <div class="summary-card-value">
+            {% if total_cost > 0 %}
+              {{ "{:.2f}".format((total_margin / total_cost * 100)|default(0)) }}%
+            {% else %}
+              0%
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const currencySelect = document.getElementById('currency-select');
+  const pdfBtn = document.getElementById('export-pdf-btn');
+  const excelBtn = document.getElementById('export-excel-btn');
+  const simulationId = {{ simulation.id }};
+  
+  function updateExportLinks() {
+    const currency = currencySelect.value;
+    pdfBtn.href = `{{ url_for('simulation_pdf', id=simulation.id) }}?currency=${currency}`;
+    excelBtn.href = `{{ url_for('simulation_excel', id=simulation.id) }}?currency=${currency}`;
+  }
+  
+  currencySelect.addEventListener('change', updateExportLinks);
+  updateExportLinks();
+});
+</script>
+{% endblock %}
+

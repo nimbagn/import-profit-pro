@@ -1,0 +1,275 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Nouveau Retour - Import Profit Pro{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const memberSelect = document.getElementById('member_id');
+  
+  if (memberSelect) {
+    memberSelect.addEventListener('change', function() {
+      const memberId = this.value;
+      if (memberId) {
+        // Recharger la page avec le member_id pour charger les stocks
+        window.location.href = '{{ url_for("promotion.return_new") }}?member_id=' + memberId;
+      }
+    });
+  }
+  
+  // Données des gammes disponibles
+  const gammes = [
+    {% for gamme in gammes %}
+    {
+      id: {{ gamme.id }},
+      name: "{{ gamme.name }}",
+      is_piece: {{ 'true' if gamme.is_piece else 'false' }},
+      unit_type: "{{ gamme.unit_type or '' }}",
+      selling_price_gnf: {{ gamme.selling_price_gnf|default(0) }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  
+  // Stocks actuels du membre (si disponible)
+  const memberStocks = {
+    {% if member_stocks %}
+    {% for gamme_id, stock in member_stocks.items() %}
+    {{ gamme_id }}: {{ stock }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+    {% endif %}
+  };
+  
+  const returnRowsBody = document.getElementById('returnRowsBody');
+  const addReturnRowBtn = document.getElementById('addReturnRowBtn');
+  let rowCounter = 0;
+  
+  // Fonction pour créer une nouvelle ligne
+  function createReturnRow() {
+    const row = document.createElement('tr');
+    row.id = `return_row_${rowCounter}`;
+    row.innerHTML = `
+      <td>
+        <select class="form-select gamme-select" name="gamme_id_${rowCounter}" required>
+          <option value="">-- Sélectionner --</option>
+          ${gammes.map(gamme => `
+            <option value="${gamme.id}" data-stock="${memberStocks[gamme.id] || 0}">
+              ${gamme.name}${gamme.is_piece ? ` (${gamme.unit_type || 'Pièce'})` : ''} - ${gamme.selling_price_gnf.toLocaleString('fr-FR')} GNF
+            </option>
+          `).join('')}
+        </select>
+      </td>
+      <td>
+        <input type="number" class="form-control quantity-input" name="quantity_${rowCounter}" 
+               min="1" step="1" required placeholder="Qty" value="1">
+      </td>
+      <td>
+        <span class="current-stock-display badge bg-info">-</span>
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-danger remove-row-btn" title="Supprimer">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    
+    returnRowsBody.appendChild(row);
+    
+    // Event listeners
+    const gammeSelect = row.querySelector('.gamme-select');
+    const quantityInput = row.querySelector('.quantity-input');
+    const stockDisplay = row.querySelector('.current-stock-display');
+    const removeBtn = row.querySelector('.remove-row-btn');
+    
+    // Mettre à jour le stock actuel quand on sélectionne une gamme
+    gammeSelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      const currentStock = selectedOption ? parseInt(selectedOption.getAttribute('data-stock') || 0) : 0;
+      stockDisplay.textContent = currentStock;
+      stockDisplay.className = `current-stock-display badge ${currentStock > 0 ? 'bg-info' : 'bg-secondary'}`;
+      
+      // Limiter la quantité au stock disponible
+      if (currentStock > 0) {
+        quantityInput.max = currentStock;
+      }
+    });
+    
+    // Supprimer la ligne
+    removeBtn.addEventListener('click', function() {
+      row.remove();
+      validateForm();
+    });
+    
+    // Validation
+    gammeSelect.addEventListener('change', validateForm);
+    quantityInput.addEventListener('input', validateForm);
+    
+    rowCounter++;
+    validateForm();
+  }
+  
+  // Validation du formulaire
+  function validateForm() {
+    const rows = returnRowsBody.querySelectorAll('tr');
+    const hasValidRows = Array.from(rows).some(row => {
+      const gammeSelect = row.querySelector('.gamme-select');
+      const quantityInput = row.querySelector('.quantity-input');
+      return gammeSelect.value && quantityInput.value && parseInt(quantityInput.value) > 0;
+    });
+    
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = !hasValidRows;
+    }
+  }
+  
+  // Ajouter une ligne
+  addReturnRowBtn.addEventListener('click', createReturnRow);
+  
+  // Validation à la soumission
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const rows = returnRowsBody.querySelectorAll('tr');
+    let hasAtLeastOneRow = false;
+    
+    rows.forEach(row => {
+      const gammeSelect = row.querySelector('.gamme-select');
+      const quantityInput = row.querySelector('.quantity-input');
+      
+      if (!gammeSelect.value || !quantityInput.value || parseInt(quantityInput.value) <= 0) {
+        row.remove();
+      } else {
+        hasAtLeastOneRow = true;
+      }
+    });
+    
+    if (!hasAtLeastOneRow) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins une gamme/pièce avec une quantité valide.');
+      return false;
+    }
+  });
+  
+  // Créer la première ligne par défaut
+  createReturnRow();
+});
+</script>
+<style>
+#returnRows table {
+  margin-bottom: 0;
+}
+
+#returnRows table thead th {
+  background-color: var(--gray-100, #f8f9fa);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+#returnRows table tbody tr:hover {
+  background-color: var(--gray-50, #fafafa);
+}
+
+.current-stock-display {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.remove-row-btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.gamme-select, .quantity-input {
+  font-size: 0.9rem;
+}
+
+#addReturnRowBtn {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-undo me-2"></i>
+      Nouveau Retour de Gamme
+    </h1>
+    <a href="{{ url_for('promotion.returns_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="member_id" class="form-label">Membre <span class="text-danger">*</span></label>
+            <select class="form-select" id="member_id" name="member_id" required>
+              <option value="">Sélectionner un membre</option>
+              {% for member in members %}
+              <option value="{{ member.id }}" {% if member_id == member.id %}selected{% endif %}>
+                {{ member.full_name }} ({{ member.team.name if member.team else 'Sans équipe' }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="return_date" class="form-label">Date du retour <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="return_date" name="return_date" value="{{ today.isoformat() if today else date.today().isoformat() }}" required>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label mb-0">Gammes / Pièces à Retourner <span class="text-danger">*</span></label>
+            <button type="button" class="btn btn-sm btn-success" id="addReturnRowBtn">
+              <i class="fas fa-plus me-1"></i>Ajouter une Ligne
+            </button>
+          </div>
+          
+          <div id="returnRows" class="table-responsive">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th style="width: 50%;">Gamme / Pièce</th>
+                  <th style="width: 20%;">Quantité</th>
+                  <th style="width: 20%;">Stock Actuel</th>
+                  <th style="width: 5%;"></th>
+                </tr>
+              </thead>
+              <tbody id="returnRowsBody">
+                <!-- Les lignes seront ajoutées dynamiquement ici -->
+              </tbody>
+            </table>
+          </div>
+          <small class="form-text text-muted">
+            Cliquez sur "Ajouter une Ligne" pour ajouter plusieurs gammes/pièces à retourner.
+          </small>
+        </div>
+
+        <div class="row">
+
+          <div class="col-12 mb-3">
+            <label for="reason" class="form-label">Raison du retour</label>
+            <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Expliquez la raison du retour..."></textarea>
+          </div>
+
+          <div class="col-12 mb-3">
+            <label for="notes" class="form-label">Notes supplémentaires</label>
+            <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Informations complémentaires..."></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{{ url_for('promotion.returns_list') }}" class="btn-hl btn-hl-outline">Annuler</a>
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer le Retour
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

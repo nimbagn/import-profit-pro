@@ -1,0 +1,184 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Ajouter du Stock au Superviseur - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <h1>
+          <i class="fas fa-plus-circle icon-promo"></i>
+          Ajouter du Stock au Superviseur
+        </h1>
+        <a href="{{ url_for('promotion.supervisor_stock') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+          <i class="fas fa-arrow-left me-2"></i>Retour au Stock
+        </a>
+      </div>
+    </div>
+
+    <div class="card-promo section-spacing">
+      <div class="card-promo-header">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Instructions</strong>
+      </div>
+      <div style="padding: 1.5rem;">
+        <p>Utilisez ce formulaire pour ajouter du stock au superviseur. Ce stock pourra ensuite être distribué aux équipes.</p>
+        <p class="text-muted mb-0"><small>Vous pouvez ajouter plusieurs types de gammes en une seule fois.</small></p>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('promotion.supervisor_stock_add') }}" id="stock-add-form" class="card-promo section-spacing">
+      <div class="card-promo-header">
+        <i class="fas fa-boxes me-2"></i>Approvisionnement du Superviseur
+      </div>
+      <div style="padding: 1.5rem;">
+        <!-- Référence -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <label for="reference" class="form-label">
+              <i class="fas fa-barcode me-2"></i>Référence de l'Approvisionnement
+            </label>
+            <input type="text" class="form-control" id="reference" name="reference" 
+                   value="{{ request.form.reference or '' }}" 
+                   placeholder="Laissé vide pour génération automatique (APP-YYYYMMDD-NNNN)">
+            <small class="form-text text-muted">
+              Si laissé vide, une référence unique sera générée automatiquement au format APP-YYYYMMDD-NNNN
+            </small>
+          </div>
+        </div>
+        
+        <!-- Date et heure -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="supply_date" class="form-label">
+              <i class="fas fa-calendar me-2"></i>Date d'Approvisionnement
+            </label>
+            <input type="date" class="form-control" id="supply_date" name="supply_date" 
+                   value="{{ request.form.supply_date or default_date }}" required>
+          </div>
+          <div class="col-md-6">
+            <label for="supply_time" class="form-label">
+              <i class="fas fa-clock me-2"></i>Heure
+            </label>
+            <input type="time" class="form-control" id="supply_time" name="supply_time" 
+                   value="{{ request.form.supply_time or default_time }}">
+          </div>
+        </div>
+
+        <!-- Liste des gammes à ajouter -->
+        <div class="mb-3">
+          <label class="form-label">
+            <i class="fas fa-list me-2"></i>Gammes à Ajouter
+          </label>
+          <div id="supplies-container">
+            <!-- Les lignes seront ajoutées dynamiquement -->
+          </div>
+          <button type="button" class="btn btn-promo btn-sm mt-2" id="add-supply-row-btn">
+            <i class="fas fa-plus me-2"></i>Ajouter une Gamme
+          </button>
+        </div>
+
+        <!-- Boutons -->
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-promo btn-promo-success">
+            <i class="fas fa-save me-2"></i>Enregistrer l'Approvisionnement
+          </button>
+          <a href="{{ url_for('promotion.supervisor_stock') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+        </div>
+      </div>
+    </form>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const suppliesContainer = document.getElementById('supplies-container');
+  const addRowBtn = document.getElementById('add-supply-row-btn');
+  let rowCounter = 0;
+  
+  const gammes = [
+    {% for gamme in gammes %}
+    {
+      id: {{ gamme.id }},
+      name: "{{ gamme.name }}",
+      is_piece: {{ 'true' if gamme.is_piece else 'false' }},
+      unit_type: "{{ gamme.unit_type or '' }}",
+      selling_price_gnf: {{ gamme.selling_price_gnf|default(0) }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  
+  function createSupplyRow() {
+    const row = document.createElement('div');
+    row.className = 'row mb-3 supply-row';
+    row.id = `supply_row_${rowCounter}`;
+    row.innerHTML = `
+      <div class="col-md-5">
+        <label class="form-label">Gamme</label>
+        <select class="form-select gamme-select" name="gamme_id_${rowCounter}" required>
+          <option value="">-- Sélectionner une gamme --</option>
+          ${gammes.map(gamme => `
+            <option value="${gamme.id}">
+              ${gamme.name}${gamme.is_piece ? ` (${gamme.unit_type || 'Pièce'})` : ''}
+            </option>
+          `).join('')}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Quantité</label>
+        <input type="number" class="form-control quantity-input" name="quantity_${rowCounter}" 
+               min="1" step="1" required placeholder="Quantité" value="1">
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button type="button" class="btn btn-sm btn-danger remove-row-btn w-100" title="Supprimer">
+          <i class="fas fa-trash me-1"></i>Supprimer
+        </button>
+      </div>
+    `;
+    
+    suppliesContainer.appendChild(row);
+    
+    // Event listener pour supprimer la ligne
+    const removeBtn = row.querySelector('.remove-row-btn');
+    removeBtn.addEventListener('click', function() {
+      row.remove();
+    });
+    
+    rowCounter++;
+  }
+  
+  // Ajouter la première ligne
+  createSupplyRow();
+  
+  // Event listener pour ajouter une nouvelle ligne
+  addRowBtn.addEventListener('click', function() {
+    createSupplyRow();
+  });
+  
+  // Validation du formulaire
+  const form = document.getElementById('stock-add-form');
+  form.addEventListener('submit', function(e) {
+    const rows = suppliesContainer.querySelectorAll('.supply-row');
+    let hasValidRow = false;
+    
+    rows.forEach(row => {
+      const gammeSelect = row.querySelector('.gamme-select');
+      const quantityInput = row.querySelector('.quantity-input');
+      
+      if (gammeSelect.value && quantityInput.value && parseInt(quantityInput.value) > 0) {
+        hasValidRow = true;
+      }
+    });
+    
+    if (!hasValidRow) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins une gamme avec une quantité valide.');
+      return false;
+    }
+  });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,102 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Situation de {{ member.full_name }} - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-chart-line icon-promo"></i>
+        Situation de {{ member.full_name }}
+      </h1>
+      <div class="d-flex gap-2 flex-wrap">
+        {% if has_permission(current_user, 'promotion.write') %}
+        <a href="{{ url_for('promotion.assign_member_stock', member_id=member.id) }}" class="btn btn-promo btn-promo-primary">
+          <i class="fas fa-plus-circle me-2"></i>Affecter des Quantités
+        </a>
+        {% endif %}
+        <a href="{{ url_for('promotion.member_stock_movements', member_id=member.id) }}" class="btn btn-promo btn-promo-info">
+          <i class="fas fa-history me-2"></i>Historique des Mouvements
+        </a>
+        <a href="{{ url_for('promotion.members_list') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+          <i class="fas fa-arrow-left me-2"></i>Retour à la Liste
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid section-spacing">
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #003865;">{{ total_enlevements or 0 }}</div>
+      <div class="stat-card-promo-label">Total Enlèvements</div>
+      <i class="fas fa-arrow-up stat-card-promo-icon" style="color: #003865;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #ef4444;">{{ (total_retours or 0) + (total_returns or 0) }}</div>
+      <div class="stat-card-promo-label">Total Retours</div>
+      <i class="fas fa-arrow-down stat-card-promo-icon" style="color: #ef4444;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #10b981;">{{ "{:,.0f}".format(total_commission|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-promo-label">Commission Totale</div>
+      <i class="fas fa-dollar-sign stat-card-promo-icon" style="color: #10b981;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #005a9f;">{{ stock_data|sum(attribute='quantity') or 0 }}</div>
+      <div class="stat-card-promo-label">Stock Actuel</div>
+      <i class="fas fa-boxes stat-card-promo-icon" style="color: #005a9f;"></i>
+    </div>
+  </div>
+
+  <div class="card-promo">
+    <div class="card-promo-header">
+      <i class="fas fa-boxes me-2"></i>Stock Actuel par Gamme
+    </div>
+    {% if stock_data %}
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Gamme</th>
+              <th>Type</th>
+              <th>Quantité en Stock</th>
+              <th>Prix de Vente</th>
+              <th>Valeur Totale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in stock_data %}
+            <tr>
+              <td><strong>{{ item.gamme.name }}</strong></td>
+              <td>
+                {% if item.gamme.is_piece %}
+                <span class="badge badge-promo badge-promo-info">{{ item.gamme.unit_type or 'Pièce' }}</span>
+                {% else %}
+                <span class="badge badge-promo" style="background: #6c757d; color: white;">Gamme</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-promo badge-promo-primary" style="font-size: 1.1em;">{{ item.quantity }}</span>
+              </td>
+              <td><strong class="data-highlight">{{ "{:,.0f}".format(item.gamme.selling_price_gnf|default(0))|replace(',', ' ') }} GNF</strong></td>
+              <td><strong class="data-positive">{{ "{:,.0f}".format((item.gamme.selling_price_gnf|default(0)) * (item.quantity|default(0)))|replace(',', ' ') }} GNF</strong></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center text-muted py-5" style="padding: 1.5rem;">
+        <i class="fas fa-box-open fa-3x mb-3"></i>
+        <p>Aucun stock enregistré pour ce membre.</p>
+        {% if has_permission(current_user, 'promotion.write') %}
+        <a href="{{ url_for('promotion.assign_member_stock', member_id=member.id) }}" class="btn btn-promo btn-promo-primary">
+          <i class="fas fa-plus-circle me-2"></i>Affecter des Quantités
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

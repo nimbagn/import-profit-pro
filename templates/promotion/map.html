@@ -1,0 +1,472 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Cartographie des Équipes - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  #map {
+    height: 600px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    z-index: 1;
+  }
+  
+  .map-controls {
+    background: var(--white);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-md);
+  }
+  
+  .location-marker {
+    cursor: pointer;
+  }
+  
+  .team-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+  }
+  
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: var(--shadow-xs);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-map-marked-alt me-2"></i>
+      Cartographie des Équipes de Promotion
+    </h1>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('promotion.dashboard') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>Retour
+      </a>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <button class="btn-hl btn-hl-primary" onclick="getCurrentLocation()">
+        <i class="fas fa-crosshairs me-2"></i>Enregistrer Ma Position
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Contrôles de la carte -->
+  <div class="map-controls">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label for="region-filter" class="form-label">Filtrer par Région</label>
+        <select class="form-select" id="region-filter" onchange="filterByRegion()">
+          <option value="">Toutes les régions</option>
+          {% for region in regions %}
+          <option value="{{ region }}">{{ region }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="team-filter" class="form-label">Filtrer par Équipe</label>
+        <select class="form-select" id="team-filter" onchange="filterByTeam()">
+          <option value="">Toutes les équipes</option>
+          {% for team in teams %}
+          <option value="{{ team.id }}">{{ team.name }}{% if team.region %} ({{ team.region }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="time-filter" class="form-label">Période</label>
+        <select class="form-select" id="time-filter" onchange="updateMap()">
+          <option value="1">Dernières 24h</option>
+          <option value="7" selected>7 derniers jours</option>
+          <option value="30">30 derniers jours</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">&nbsp;</label>
+        <button class="btn-hl btn-hl-primary w-100" onclick="updateMap()">
+          <i class="fas fa-sync me-2"></i>Actualiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte -->
+  <div id="map"></div>
+
+  <!-- Légende -->
+  <div class="team-legend" id="team-legend"></div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid" style="margin-top: var(--space-xl);">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" id="total-locations">0</div>
+      <div class="stat-card-hl-label">Positions Enregistrées</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" id="active-members">0</div>
+      <div class="stat-card-hl-label">Membres Actifs</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ teams|length }}</div>
+      <div class="stat-card-hl-label">Équipes</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ regions|length }}</div>
+      <div class="stat-card-hl-label">Régions</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pour enregistrer une position -->
+{% if has_permission(current_user, 'promotion.write') %}
+<div class="modal fade" id="locationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Enregistrer une Position</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="location-form">
+          <div class="mb-3">
+            <label for="location-member" class="form-label">Membre <span class="text-danger">*</span></label>
+            <select class="form-select" id="location-member" required>
+              <option value="">Sélectionner un membre...</option>
+              {% for team in teams %}
+                <optgroup label="{{ team.name }}{% if team.region %} ({{ team.region }}){% endif %}">
+                  {% for member in team.members %}
+                    {% if member.is_active %}
+                    <option value="{{ member.id }}">{{ member.full_name }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </optgroup>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="location-activity" class="form-label">Type d'Activité</label>
+            <select class="form-select" id="location-activity">
+              <option value="">Sélectionner...</option>
+              <option value="vente">Vente</option>
+              <option value="visite">Visite</option>
+              <option value="retour">Retour</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="location-notes" class="form-label">Notes</label>
+            <textarea class="form-control" id="location-notes" rows="3"></textarea>
+          </div>
+          <input type="hidden" id="location-lat">
+          <input type="hidden" id="location-lng">
+          <input type="hidden" id="location-address">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-hl btn-hl-outline" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn-hl btn-hl-primary" onclick="saveLocation()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map;
+let markers = [];
+let currentLocationMarker = null;
+const teamColors = [
+  '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+  '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80'
+];
+
+// Initialiser la carte
+document.addEventListener('DOMContentLoaded', function() {
+  // Centrer sur la Guinée (Conakry approximativement)
+  map = L.map('map').setView([9.9456, -13.5784], 7);
+  
+  // Ajouter les tuiles OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+  
+  // Charger les données initiales
+  updateMap();
+  updateLegend();
+  
+  // Mettre à jour les statistiques
+  updateStats();
+});
+
+// Fonction pour mettre à jour la carte
+async function updateMap() {
+  // Supprimer les marqueurs existants
+  markers.forEach(marker => map.removeLayer(marker));
+  markers = [];
+  
+  const timeFilter = document.getElementById('time-filter').value;
+  const teamFilter = document.getElementById('team-filter').value;
+  
+  // Charger les positions récentes
+  try {
+    let locations = [];
+    
+    if (teamFilter) {
+      // Charger les positions de l'équipe sélectionnée
+      const response = await fetch(`/promotion/api/teams/${teamFilter}/locations?days=${timeFilter}`);
+      const data = await response.json();
+      if (data.success) {
+        locations = data.locations;
+      }
+    } else {
+      // Charger toutes les positions de tous les membres
+      const teams = {{ teams_data|tojson }};
+      for (const team of teams) {
+        try {
+          const response = await fetch(`/promotion/api/teams/${team.id}/locations?days=${timeFilter}`);
+          const data = await response.json();
+          if (data.success) {
+            locations = locations.concat(data.locations);
+          }
+        } catch (e) {
+          console.error(`Erreur lors du chargement des positions de l'équipe ${team.id}:`, e);
+        }
+      }
+    }
+    
+    // Afficher les positions sur la carte
+    locations.forEach(loc => {
+      const marker = L.marker([loc.latitude, loc.longitude], {
+        icon: L.divIcon({
+          className: 'location-marker',
+          html: `<div style="background-color: ${getTeamColor(loc.member_id)}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [12, 12]
+        })
+      });
+      
+      const popupContent = `
+        <div style="min-width: 200px;">
+          <strong>${loc.member_name || 'Membre'}</strong><br>
+          ${loc.address ? `<small>${loc.address}</small><br>` : ''}
+          ${loc.activity_type ? `<span class="badge bg-info">${loc.activity_type}</span><br>` : ''}
+          <small class="text-muted">${new Date(loc.recorded_at).toLocaleString('fr-FR')}</small>
+          ${loc.notes ? `<br><small>${loc.notes}</small>` : ''}
+        </div>
+      `;
+      
+      marker.bindPopup(popupContent);
+      marker.addTo(map);
+      markers.push(marker);
+    });
+    
+    // Ajuster la vue pour afficher tous les marqueurs
+    if (locations.length > 0) {
+      const bounds = L.latLngBounds(locations.map(loc => [loc.latitude, loc.longitude]));
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+    
+    // Mettre à jour les statistiques
+    document.getElementById('total-locations').textContent = locations.length;
+    
+  } catch (error) {
+    console.error('Erreur lors du chargement des positions:', error);
+  }
+}
+
+// Fonction pour obtenir la couleur d'une équipe
+function getTeamColor(memberId) {
+  const teams = {{ teams_data|tojson }};
+  for (let i = 0; i < teams.length; i++) {
+    const team = teams[i];
+    if (team.members && team.members.some(m => m.id === memberId)) {
+      return teamColors[i % teamColors.length];
+    }
+  }
+  return teamColors[0];
+}
+
+// Fonction pour mettre à jour la légende
+function updateLegend() {
+  const legendDiv = document.getElementById('team-legend');
+  legendDiv.innerHTML = '';
+  
+  const teams = {{ teams_data|tojson }};
+  teams.forEach((team, index) => {
+    const legendItem = document.createElement('div');
+    legendItem.className = 'legend-item';
+    legendItem.innerHTML = `
+      <div class="legend-color" style="background-color: ${teamColors[index % teamColors.length]};"></div>
+      <span>${team.name}${team.region ? ` (${team.region})` : ''}</span>
+    `;
+    legendDiv.appendChild(legendItem);
+  });
+}
+
+// Fonction pour filtrer par région
+function filterByRegion() {
+  const region = document.getElementById('region-filter').value;
+  const teamSelect = document.getElementById('team-filter');
+  
+  // Filtrer les équipes par région
+  Array.from(teamSelect.options).forEach(option => {
+    if (option.value === '') {
+      option.style.display = 'block';
+    } else {
+      const team = {{ teams_data|tojson }}.find(t => t.id == option.value);
+      if (region === '' || (team && team.region === region)) {
+        option.style.display = 'block';
+      } else {
+        option.style.display = 'none';
+      }
+    }
+  });
+  
+  updateMap();
+}
+
+// Fonction pour filtrer par équipe
+function filterByTeam() {
+  updateMap();
+}
+
+// Fonction pour obtenir la position actuelle
+function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      // Centrer la carte sur la position
+      map.setView([lat, lng], 15);
+      
+      // Ajouter un marqueur temporaire
+      if (currentLocationMarker) {
+        map.removeLayer(currentLocationMarker);
+      }
+      
+      currentLocationMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'location-marker',
+          html: '<div style="background-color: #FF0000; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+          iconSize: [16, 16]
+        })
+      }).addTo(map);
+      
+      // Récupérer l'adresse (optionnel, via reverse geocoding)
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(response => response.json())
+        .then(data => {
+          const address = data.display_name || '';
+          document.getElementById('location-address').value = address;
+        })
+        .catch(() => {
+          document.getElementById('location-address').value = '';
+        });
+      
+      // Remplir le formulaire
+      document.getElementById('location-lat').value = lat;
+      document.getElementById('location-lng').value = lng;
+      
+      // Ouvrir le modal
+      const modal = new bootstrap.Modal(document.getElementById('locationModal'));
+      modal.show();
+    },
+    function(error) {
+      alert('Erreur lors de la récupération de la position: ' + error.message);
+    }
+  );
+}
+
+// Fonction pour enregistrer une position
+async function saveLocation() {
+  const memberId = document.getElementById('location-member').value;
+  const lat = document.getElementById('location-lat').value;
+  const lng = document.getElementById('location-lng').value;
+  const address = document.getElementById('location-address').value;
+  const activityType = document.getElementById('location-activity').value;
+  const notes = document.getElementById('location-notes').value;
+  
+  if (!memberId || !lat || !lng) {
+    alert('Veuillez remplir tous les champs obligatoires.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/promotion/api/locations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        member_id: parseInt(memberId),
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lng),
+        address: address,
+        activity_type: activityType,
+        notes: notes
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Position enregistrée avec succès!');
+      bootstrap.Modal.getInstance(document.getElementById('locationModal')).hide();
+      document.getElementById('location-form').reset();
+      updateMap();
+      updateStats();
+    } else {
+      alert('Erreur: ' + (data.error || 'Impossible d\'enregistrer la position'));
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de l\'enregistrement de la position.');
+  }
+}
+
+// Fonction pour mettre à jour les statistiques
+async function updateStats() {
+  try {
+    const teams = {{ teams_data|tojson }};
+    let totalMembers = 0;
+    teams.forEach(team => {
+      if (team.members) {
+        totalMembers += team.members.filter(m => m.is_active).length;
+      }
+    });
+    document.getElementById('active-members').textContent = totalMembers;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des statistiques:', error);
+  }
+}
+</script>
+{% endblock %}
+

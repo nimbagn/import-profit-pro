@@ -1,0 +1,427 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ title }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Responsive pour la page des mouvements de stock */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+  }
+  
+  .page-header-hl {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  @media (max-width: 768px) {
+    .page-header-hl {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .page-title-hl {
+      font-size: 1.5rem !important;
+      text-align: center;
+    }
+    
+    .page-header-hl > div {
+      width: 100%;
+    }
+    
+    .page-header-hl .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+  
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  @media (max-width: 768px) {
+    .table {
+      font-size: 0.85rem;
+    }
+    
+    .table th,
+    .table td {
+      padding: 0.5rem 0.25rem;
+      white-space: nowrap;
+    }
+    
+    .table th:nth-child(n+5),
+    .table td:nth-child(n+5) {
+      display: none;
+    }
+    
+    .table th:nth-child(1),
+    .table td:nth-child(1) {
+      min-width: 100px;
+    }
+    
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+      min-width: 120px;
+    }
+    
+    .table th:nth-child(3),
+    .table td:nth-child(3) {
+      min-width: 100px;
+    }
+    
+    .table th:nth-child(4),
+    .table td:nth-child(4) {
+      min-width: 80px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .table {
+      font-size: 0.75rem;
+    }
+    
+    .table th,
+    .table td {
+      padding: 0.375rem 0.125rem;
+    }
+    
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+    }
+    
+    .alert {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+    
+    .btn {
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+    }
+  }
+  
+  /* Amélioration de la visibilité sur mobile */
+  @media (max-width: 768px) {
+    .card-hl {
+      margin: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+      font-size: 1rem;
+    }
+    
+    .card-body-hl {
+      padding: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-history me-2"></i>
+      {{ title }}
+    </h1>
+    <div>
+      {% if entity_type == 'member' %}
+      <a href="{{ url_for('promotion.member_situation', member_id=entity_id) }}" class="btn-hl btn-hl-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Retour à la Situation
+      </a>
+      {% elif entity_type == 'team' %}
+      <a href="{{ url_for('promotion.team_detail', id=entity_id) }}" class="btn-hl btn-hl-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Retour aux Détails de l'Équipe
+      </a>
+      {% else %}
+      <a href="{{ url_for('promotion.supervisor_stock') }}" class="btn-hl btn-hl-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Retour au Stock
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h5 class="mb-0"><i class="fas fa-list me-2"></i>Historique des Mouvements</h5>
+    </div>
+    <div class="card-body-hl">
+      {% if not table_exists %}
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Table des mouvements non créée</strong><br>
+        La table <code>promotion_stock_movements</code> n'existe pas encore dans la base de données.
+        <br><br>
+        <strong>Pour activer l'historique des mouvements :</strong>
+        <div class="mt-3">
+          {% if has_permission(current_user, 'promotion.write') %}
+          <form method="POST" action="{{ url_for('promotion.create_stock_movements_table') }}" class="d-inline-block mb-3">
+            <button type="submit" class="btn btn-promo btn-promo-success" style="font-size: 1.1rem; padding: 0.75rem 1.5rem;">
+              <i class="fas fa-database me-2"></i><strong>Créer la table maintenant</strong>
+            </button>
+          </form>
+          <br>
+          {% else %}
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Vous n'avez pas les permissions nécessaires pour créer la table. Contactez un administrateur.
+          </div>
+          {% endif %}
+          <div class="mt-3">
+            <small class="text-muted">
+              <strong>Alternative :</strong> Exécutez manuellement le script SQL : <code>scripts/create_promotion_stock_movements.sql</code>
+              <br>
+              <strong>Note :</strong> Les mouvements précédents ne seront pas disponibles car ils n'ont pas été enregistrés. Seuls les nouveaux mouvements seront visibles après la création de la table.
+            </small>
+          </div>
+        </div>
+      </div>
+      {% elif movements %}
+      <div class="alert alert-warning mb-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Supprimer tous les mouvements</strong><br>
+        Vous pouvez supprimer tous les mouvements de stock pour recommencer à zéro.
+        <br><br>
+        <form method="POST" action="{{ url_for('promotion.clear_stock_movements') }}" style="display: inline;" 
+              onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les mouvements de stock ? Cette action est irréversible !');">
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash-alt me-2"></i>Supprimer tous les mouvements
+          </button>
+        </form>
+      </div>
+      <div class="table-responsive" style="margin: 0 auto; width: 100%;">
+        <table class="table table-hover" style="margin: 0 auto; width: 100%;">
+          <thead>
+            <tr>
+              <th>Date et Heure</th>
+              <th>Type de Mouvement</th>
+              <th>Gamme</th>
+              <th>Quantité</th>
+              <th>Solde Progressif</th>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Référence / Notes</th>
+              <th>Effectué par</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in movements %}
+            <tr>
+              <td>
+                <strong>{{ movement.movement_date.strftime('%d/%m/%Y') }}</strong><br>
+                <small class="text-muted">{{ movement.movement_date.strftime('%H:%M:%S') }}</small>
+              </td>
+              <td>
+                {% if movement.movement_type == 'approvisionnement' %}
+                <span class="badge bg-success">
+                  <i class="fas fa-arrow-down"></i> Approvisionnement
+                </span>
+                {% elif movement.movement_type == 'distribution' %}
+                <span class="badge bg-info">
+                  <i class="fas fa-arrow-right"></i> Distribution
+                </span>
+                {% elif movement.movement_type == 'enlevement' %}
+                <span class="badge bg-primary">
+                  <i class="fas fa-plus"></i> Enlèvement
+                </span>
+                {% elif movement.movement_type == 'retour' %}
+                <span class="badge bg-warning">
+                  <i class="fas fa-minus"></i> Retour
+                </span>
+                {% elif movement.movement_type == 'affectation' %}
+                <span class="badge bg-secondary">
+                  <i class="fas fa-hand-holding"></i> Affectation
+                </span>
+                {% elif movement.movement_type == 'reception' %}
+                <span class="badge bg-success">
+                  <i class="fas fa-truck"></i> Réception
+                </span>
+                {% else %}
+                <span class="badge bg-secondary">{{ movement.movement_type }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.gamme %}
+                <strong>{{ movement.gamme.name }}</strong>
+                {% else %}
+                <span class="text-muted">Gamme #{{ movement.gamme_id }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.quantity_change > 0 %}
+                <span class="text-success">
+                  <i class="fas fa-arrow-up"></i> +{{ movement.quantity_change }}
+                </span>
+                {% else %}
+                <span class="text-danger">
+                  <i class="fas fa-arrow-down"></i> {{ movement.quantity_change }}
+                </span>
+                {% endif %}
+                <br>
+                <small class="text-muted">Stock après: {{ movement.quantity }}</small>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <span class="badge {% if movement.progressive_balance >= 0 %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 1rem; padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-{% if movement.progressive_balance >= 0 %}check-circle{% else %}exclamation-circle{% endif %} me-1"></i>
+                    {{ movement.progressive_balance|default(0)|int }} unité(s)
+                  </span>
+                </div>
+                {% if movement.progressive_balance < 0 %}
+                <small class="text-danger mt-1 d-block">
+                  <i class="fas fa-exclamation-triangle me-1"></i>Stock négatif
+                </small>
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.from_supervisor_id %}
+                {% if movement.from_supervisor %}
+                <span class="badge bg-primary">Superviseur: {{ movement.from_supervisor.full_name }}</span>
+                {% else %}
+                <span class="badge bg-primary">Superviseur</span>
+                {% endif %}
+                {% elif movement.from_team_id %}
+                {% if movement.from_team %}
+                <span class="badge bg-info">{{ movement.from_team.name }}</span>
+                {% elif entity_type == 'team' and movement.from_team_id == entity_id %}
+                <span class="badge bg-success">Cette équipe</span>
+                {% else %}
+                <span class="badge bg-info">Équipe #{{ movement.from_team_id }}</span>
+                {% endif %}
+                {% elif movement.from_member_id %}
+                {% if movement.from_member %}
+                <span class="badge bg-secondary">Membre: {{ movement.from_member.full_name }}</span>
+                {% else %}
+                <span class="badge bg-secondary">Membre #{{ movement.from_member_id }}</span>
+                {% endif %}
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.to_supervisor_id %}
+                {% if movement.to_supervisor %}
+                <span class="badge bg-primary">Superviseur: {{ movement.to_supervisor.full_name }}</span>
+                {% else %}
+                <span class="badge bg-primary">Superviseur</span>
+                {% endif %}
+                {% elif movement.to_team_id %}
+                {% if movement.to_team %}
+                <span class="badge bg-info">{{ movement.to_team.name }}</span>
+                {% elif entity_type == 'team' and movement.to_team_id == entity_id %}
+                <span class="badge bg-success">Cette équipe</span>
+                {% else %}
+                <span class="badge bg-info">Équipe #{{ movement.to_team_id }}</span>
+                {% endif %}
+                {% elif movement.to_member_id %}
+                {% if movement.to_member %}
+                <span class="badge bg-secondary">Membre: {{ movement.to_member.full_name }}</span>
+                {% elif entity_type == 'member' and movement.to_member_id == entity_id %}
+                <span class="badge bg-success">Ce membre</span>
+                {% else %}
+                <span class="badge bg-secondary">Membre #{{ movement.to_member_id }}</span>
+                {% endif %}
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.sale %}
+                <a href="{{ url_for('promotion.sale_edit', id=movement.sale.id) }}" class="text-decoration-none">
+                  <span class="badge bg-primary">
+                    <i class="fas fa-shopping-cart me-1"></i>
+                    {% if movement.sale.reference %}
+                      {{ movement.sale.reference }}
+                    {% else %}
+                      Vente #{{ movement.sale.id }}
+                    {% endif %}
+                  </span>
+                </a>
+                {% if movement.sale.transaction_type %}
+                <br><small class="text-muted">
+                  Type: {{ 'Enlèvement' if movement.sale.transaction_type == 'enlevement' else 'Retour' }}
+                </small>
+                {% endif %}
+                {% elif movement.return_obj %}
+                <a href="{{ url_for('promotion.returns_list') }}" class="text-decoration-none">
+                  <span class="badge bg-warning">
+                    <i class="fas fa-undo me-1"></i> Retour #{{ movement.return_obj.id }}
+                  </span>
+                </a>
+                {% elif movement.notes %}
+                <span class="badge bg-info">
+                  <i class="fas fa-barcode me-1"></i>
+                  {{ movement.notes }}
+                </span>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.performed_by %}
+                <small>{{ movement.performed_by.full_name if movement.performed_by.full_name else movement.performed_by.email }}</small>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% elif table_exists and not movements %}
+      <div class="text-center text-muted py-5">
+        <i class="fas fa-history fa-3x mb-3"></i>
+        <p><strong>Aucun mouvement enregistré pour le moment.</strong></p>
+        <p class="text-muted mb-4">
+          Les mouvements seront enregistrés automatiquement lors des prochaines opérations :
+          <ul class="list-unstyled mt-3">
+            <li><i class="fas fa-check text-success me-2"></i>Ajout de stock au superviseur</li>
+            <li><i class="fas fa-check text-success me-2"></i>Approvisionnement des équipes</li>
+            <li><i class="fas fa-check text-success me-2"></i>Distribution aux membres</li>
+            <li><i class="fas fa-check text-success me-2"></i>Ventes (enlèvements)</li>
+            <li><i class="fas fa-check text-success me-2"></i>Retours</li>
+          </ul>
+        </p>
+        {% if has_permission(current_user, 'promotion.write') %}
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Reconstruire l'historique</strong><br>
+          Vous pouvez reconstruire l'historique des mouvements à partir des données existantes (ventes, retours, etc.).
+          <br><br>
+          <form method="POST" action="{{ url_for('promotion.rebuild_stock_movements') }}" style="display: inline;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-sync-alt me-2"></i>Reconstruire l'historique
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

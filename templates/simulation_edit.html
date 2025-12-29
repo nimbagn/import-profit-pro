@@ -1,0 +1,415 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Modifier Simulation #{{ simulation.id }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .simulation-edit-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+
+  .hero-section-ultra {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    padding: var(--space-3xl) var(--space-xl);
+    margin: 0 0 var(--space-2xl) 0;
+    width: 100%;
+    color: var(--text-white);
+  }
+
+  .hero-title-ultra {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: var(--space-md);
+    line-height: 1.1;
+  }
+
+  .form-section-ultra {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .section-header-ultra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title-ultra {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .form-grid-ultra {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .form-group-ultra {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .form-label-ultra {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .form-input-ultra {
+    padding: var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+  }
+
+  .form-input-ultra:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+
+  .form-select-ultra {
+    padding: var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+    cursor: pointer;
+  }
+
+  .form-select-ultra:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+
+  .help-text-ultra {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+  }
+
+  .form-actions-ultra {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--gray-200);
+    margin-top: var(--space-lg);
+  }
+
+  .btn-form-ultra {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 180px;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .btn-form-ultra.primary {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+
+  .btn-form-ultra.secondary {
+    background: var(--white);
+    color: var(--text-primary);
+    border: 1px solid var(--gray-300);
+  }
+
+  .btn-form-ultra:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .items-section {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .table-hl {
+    overflow-x: auto;
+    margin-top: var(--space-lg);
+  }
+
+  .table-hl table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-hl th {
+    background: var(--bg-secondary);
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--gray-200);
+    font-size: 0.875rem;
+  }
+
+  .table-hl td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-primary);
+  }
+
+  .table-hl tr:hover {
+    background: var(--bg-secondary);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="simulation-edit-container">
+  <!-- Hero Section -->
+  <div class="hero-section-ultra">
+    <div class="hero-content-ultra">
+      <h1 class="hero-title-ultra">
+        <i class="fas fa-edit me-2"></i>
+        Modifier Simulation #{{ simulation.id }}
+      </h1>
+      <p style="font-size: 1.1rem; opacity: 0.9;">
+        Modifiez les paramètres et les articles de votre simulation d'importation
+      </p>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-section-ultra">
+    <div class="section-header-ultra">
+      <div class="section-title-ultra">
+        <i class="fas fa-clipboard-list"></i>
+        Configuration de la Simulation
+      </div>
+    </div>
+
+    <form method="POST" class="form-grid-ultra">
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-dollar-sign"></i>
+          Taux USD (GNF) *
+        </label>
+        <input type="number" name="rate_usd" class="form-input-ultra" 
+               step="0.01" value="{{ simulation.rate_usd|default(8500) }}" required>
+        <div class="help-text-ultra">Taux de change USD vers GNF</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-euro-sign"></i>
+          Taux EUR (GNF) *
+        </label>
+        <input type="number" name="rate_eur" class="form-input-ultra" 
+               step="0.01" value="{{ simulation.rate_eur|default(9200) }}" required>
+        <div class="help-text-ultra">Taux de change EUR vers GNF</div>
+      </div>
+      
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-coins"></i>
+          Taux XOF (GNF)
+        </label>
+        <input type="number" name="rate_xof" class="form-input-ultra" 
+               step="0.01" value="{{ simulation.rate_xof|default(0) }}">
+        <div class="help-text-ultra">Taux de change XOF vers GNF</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-truck"></i>
+          Capacité camion (tonnes) *
+        </label>
+        <input type="number" name="truck_capacity_tons" class="form-input-ultra" 
+               step="0.1" value="{{ simulation.truck_capacity_tons|default(25) }}" required>
+        <div class="help-text-ultra">Capacité maximale du véhicule de transport</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-balance-scale"></i>
+          Base de distribution
+        </label>
+        <select name="basis" class="form-select-ultra">
+          <option value="value" {% if simulation.basis == 'value' %}selected{% endif %}>Par valeur</option>
+          <option value="weight" {% if simulation.basis == 'weight' %}selected{% endif %}>Par poids</option>
+        </select>
+        <div class="help-text-ultra">Méthode de répartition des coûts logistiques</div>
+      </div>
+
+      <div class="form-group-ultra" style="grid-column: 1 / -1;">
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-md);">
+          <i class="fas fa-file-invoice-dollar me-2"></i>
+          Coûts d'Importation
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md);">
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-file-invoice-dollar"></i>
+              Douane (GNF)
+            </label>
+            <input type="number" name="customs_gnf" class="form-input-ultra" 
+                   step="0.01" value="{{ simulation.customs_gnf|default(0) }}" min="0">
+            <div class="help-text-ultra">Coûts de douane</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-boxes"></i>
+              Manutention (GNF)
+            </label>
+            <input type="number" name="handling_gnf" class="form-input-ultra" 
+                   step="0.01" value="{{ simulation.handling_gnf|default(0) }}" min="0">
+            <div class="help-text-ultra">Coûts de manutention</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-truck-loading"></i>
+              Transport fixe (GNF)
+            </label>
+            <input type="number" name="transport_fixed_gnf" class="form-input-ultra" 
+                   step="0.01" value="{{ simulation.transport_fixed_gnf|default(0) }}" min="0">
+            <div class="help-text-ultra">Coût fixe de transport</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-weight"></i>
+              Transport par kg (GNF)
+            </label>
+            <input type="number" name="transport_per_kg_gnf" class="form-input-ultra" 
+                   step="0.0001" value="{{ simulation.transport_per_kg_gnf|default(0) }}" min="0">
+            <div class="help-text-ultra">Coût de transport par kilogramme</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-ellipsis-h"></i>
+              Autres coûts (GNF)
+            </label>
+            <input type="number" name="others_gnf" class="form-input-ultra" 
+                   step="0.01" value="{{ simulation.others_gnf|default(0) }}" min="0">
+            <div class="help-text-ultra">Autres coûts divers</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions-ultra">
+        <button type="submit" class="btn-form-ultra primary">
+          <i class="fas fa-save"></i>
+          Enregistrer les modifications
+        </button>
+        <a href="{{ url_for('simulation_detail', id=simulation.id) }}" class="btn-form-ultra secondary">
+          <i class="fas fa-times"></i>
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Articles Section -->
+  <div class="items-section">
+    <div class="section-header-ultra">
+      <div class="section-title-ultra">
+        <i class="fas fa-boxes"></i>
+        Articles de la Simulation ({{ items|length }})
+      </div>
+    </div>
+
+    {% if items %}
+    <div class="table-hl">
+      <table>
+        <thead>
+          <tr>
+            <th>Article</th>
+            <th>Quantité</th>
+            <th>Prix d'Achat</th>
+            <th>Prix de Vente (GNF)</th>
+            <th>Poids (kg)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>
+              <strong>{{ item.article.name if item.article else 'Article inconnu' }}</strong>
+              {% if item.article and item.article.category %}
+                <br><small style="color: var(--text-muted);">{{ item.article.category.name }}</small>
+              {% endif %}
+            </td>
+            <td>{{ "{:,.0f}".format(item.quantity|default(0))|replace(',', ' ') }}</td>
+            <td>
+              {{ "{:,.2f}".format(item.purchase_price|default(0))|replace(',', ' ') }} 
+              {{ item.purchase_currency|default('USD') }}
+            </td>
+            <td><strong>{{ "{:,.0f}".format(item.selling_price_gnf|default(0))|replace(',', ' ') }}</strong></td>
+            <td>{{ "{:,.2f}".format(item.unit_weight_kg|default(0))|replace(',', ' ') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: var(--space-lg); text-align: center;">
+      <p style="color: var(--text-muted);">
+        <i class="fas fa-info-circle me-2"></i>
+        Pour modifier les articles, supprimez cette simulation et créez-en une nouvelle.
+      </p>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: var(--space-3xl); color: var(--text-muted);">
+      <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+      <p>Aucun article dans cette simulation.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

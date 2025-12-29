@@ -1,0 +1,1099 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Messages - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .chat-container {
+    display: flex;
+    gap: var(--space-xl);
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  }
+  
+  .chat-main-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .chat-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, #003d82 0%, #0052a5 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 61, 130, 0.2);
+  }
+  
+  .chat-header h1 {
+    color: white;
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .chat-header .btn-hl-primary {
+    background: white;
+    color: #003d82;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+  }
+  
+  .chat-header .btn-hl-primary:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.4);
+  }
+  
+  .chat-rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: var(--space-xl);
+  }
+  
+  /* Tri et filtres améliorés */
+  .sort-controls {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+  }
+  
+  .sort-controls select {
+    min-width: 180px;
+  }
+  
+  .chat-room-card {
+    background: white;
+    border: 2px solid #e0e6ed;
+    border-radius: 16px;
+    padding: var(--space-xl);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  
+  .chat-room-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #003d82 0%, #0052a5 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  
+  .chat-room-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 61, 130, 0.15);
+    transform: translateY(-4px);
+    border-color: #003d82;
+  }
+  
+  .chat-room-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .chat-room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: var(--space-md);
+  }
+  
+  .chat-room-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #003d82;
+    margin: 0;
+    line-height: 1.3;
+  }
+  
+  .chat-room-badge {
+    background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    position: absolute;
+    top: var(--space-lg);
+    right: var(--space-lg);
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+  
+  .chat-room-preview {
+    color: #5a6c7d;
+    font-size: 0.95rem;
+    margin-top: var(--space-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.5;
+  }
+  
+  .chat-room-preview strong {
+    color: #003d82;
+    font-weight: 600;
+  }
+  
+  .chat-room-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid #e8ecf1;
+    font-size: 0.85rem;
+    color: #7a8a9a;
+  }
+  
+  .chat-room-meta .unread-indicator {
+    color: #ff4757;
+    font-weight: 700;
+    background: #fff5f5;
+    padding: 4px 12px;
+    border-radius: 12px;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: var(--space-3xl);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  .empty-state i {
+    font-size: 5rem;
+    color: #003d82;
+    opacity: 0.2;
+    margin-bottom: var(--space-lg);
+  }
+  
+  .empty-state h2 {
+    color: #003d82;
+    font-size: 1.5rem;
+    margin-bottom: var(--space-md);
+  }
+  
+  .empty-state p {
+    color: #5a6c7d;
+    font-size: 1.1rem;
+    margin-bottom: var(--space-xl);
+  }
+  
+  .badge-hl {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .badge-hl-info {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  .badge-hl-primary {
+    background: #003d82;
+    color: white;
+  }
+  
+  /* Sidebar Styles */
+  .sidebar-card {
+    background: white;
+    border-radius: 16px;
+    padding: var(--space-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e6ed;
+  }
+  
+  .sidebar-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid #e8ecf1;
+  }
+  
+  .sidebar-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #003d82;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .sidebar-card-title i {
+    color: #0052a5;
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .stat-item:last-child {
+    border-bottom: none;
+  }
+  
+  .stat-label {
+    color: #5a6c7d;
+    font-size: 0.9rem;
+  }
+  
+  .stat-value {
+    font-weight: 700;
+    color: #003d82;
+    font-size: 1.1rem;
+  }
+  
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .user-item:hover {
+    background: #f5f7fa;
+  }
+  
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #003d82 0%, #0052a5 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .user-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .user-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+  }
+  
+  .user-status {
+    font-size: 0.8rem;
+    color: #7a8a9a;
+  }
+  
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(16, 185, 129, 0.2);
+    animation: pulse-dot 2s infinite;
+  }
+  
+  @keyframes pulse-dot {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  
+  .quick-action-btn {
+    width: 100%;
+    padding: var(--space-md);
+    background: linear-gradient(135deg, #003d82 0%, #0052a5 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    text-decoration: none;
+  }
+  
+  .quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 61, 130, 0.3);
+  }
+  
+  .recent-conversation-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .recent-conversation-item:hover {
+    background: #f5f7fa;
+  }
+  
+  .recent-conversation-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  
+  .recent-conversation-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .recent-conversation-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .recent-conversation-time {
+    font-size: 0.75rem;
+    color: #7a8a9a;
+  }
+  
+  .search-box-sidebar {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 2px solid #e0e6ed;
+    border-radius: 24px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  
+  .search-box-sidebar:focus {
+    border-color: #003d82;
+    box-shadow: 0 0 0 3px rgba(0, 61, 130, 0.1);
+  }
+  
+  .empty-sidebar {
+    text-align: center;
+    padding: var(--space-lg);
+    color: #7a8a9a;
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+  <div class="chat-main-content">
+    <div class="chat-header">
+      <h1 class="page-title-hl">
+        <i class="fas fa-comments me-2"></i>
+        Messages
+        {% if total_unread and total_unread > 0 %}
+        <span style="background: #ff4757; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; margin-left: var(--space-sm);">
+          {{ total_unread }} non lu{{ 's' if total_unread > 1 else '' }}
+        </span>
+        {% endif %}
+      </h1>
+      <div style="display: flex; gap: var(--space-md);">
+        {% if rooms_data and has_permission(current_user, 'chat.read') %}
+        <a href="{{ url_for('chat.rooms_export_excel', search=search, room_type=room_type_filter, unread_only='true' if unread_only else 'false') }}" class="btn-hl btn-hl-success">
+          <i class="fas fa-file-excel me-2"></i>
+          Exporter Excel
+        </a>
+        {% endif %}
+        {% if has_permission(current_user, 'chat.create') %}
+        <a href="{{ url_for('chat.room_new') }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-plus-circle me-2"></i>
+          Nouvelle Conversation
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Filtres et recherche -->
+    <div class="card-hl" style="margin-bottom: var(--space-xl); padding: var(--space-lg);">
+      <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+        <i class="fas fa-filter me-2"></i>
+        Filtres et Recherche
+      </h3>
+      <form method="GET" action="{{ url_for('chat.rooms_list') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+        <div class="form-group">
+          <label class="form-hl-label">Recherche</label>
+          <input type="text" name="search" value="{{ search or '' }}" class="form-hl-input" placeholder="Nom de conversation ou participant...">
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Type</label>
+          <select name="room_type" class="form-hl-select">
+            <option value="">Tous les types</option>
+            <option value="direct" {% if room_type_filter == 'direct' %}selected{% endif %}>Directes</option>
+            <option value="group" {% if room_type_filter == 'group' %}selected{% endif %}>Groupes</option>
+            <option value="channel" {% if room_type_filter == 'channel' %}selected{% endif %}>Canaux</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Filtre</label>
+          <select name="unread_only" class="form-hl-select">
+            <option value="false" {% if not unread_only %}selected{% endif %}>Toutes les conversations</option>
+            <option value="true" {% if unread_only %}selected{% endif %}>Non lues uniquement</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Trier par</label>
+          <select name="sort_by" class="form-hl-select" id="sortBy">
+            <option value="updated_at" {% if request.args.get('sort_by', 'updated_at') == 'updated_at' %}selected{% endif %}>Dernière activité</option>
+            <option value="name" {% if request.args.get('sort_by') == 'name' %}selected{% endif %}>Nom (A-Z)</option>
+            <option value="unread" {% if request.args.get('sort_by') == 'unread' %}selected{% endif %}>Non lus d'abord</option>
+            <option value="created_at" {% if request.args.get('sort_by') == 'created_at' %}selected{% endif %}>Date de création</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Par page</label>
+          <select name="per_page" class="form-hl-select" onchange="this.form.submit()">
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+            <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+          </select>
+        </div>
+        <div class="form-group" style="display: flex; gap: var(--space-sm); align-items: flex-end;">
+          <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+            <i class="fas fa-search me-2"></i>Rechercher
+          </button>
+          <a href="{{ url_for('chat.rooms_list') }}" class="btn-hl btn-hl-secondary">
+            <i class="fas fa-times me-2"></i>Réinitialiser
+          </a>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Statistiques globales -->
+    {% if total_rooms is defined %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl);">
+      <div style="text-align: center; padding: var(--space-md); background: linear-gradient(135deg, #003d82 0%, #0052a5 100%); border-radius: var(--radius-md); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <i class="fas fa-comments" style="font-size: 1.5rem; margin-bottom: var(--space-xs); opacity: 0.9;"></i>
+        <div style="font-size: 2rem; font-weight: 700; margin-bottom: var(--space-xs);">{{ total_rooms }}</div>
+        <div style="font-size: 0.875rem; opacity: 0.9;">Conversations</div>
+      </div>
+      {% if total_unread and total_unread > 0 %}
+      <div style="text-align: center; padding: var(--space-md); background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%); border-radius: var(--radius-md); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <i class="fas fa-envelope" style="font-size: 1.5rem; margin-bottom: var(--space-xs); opacity: 0.9;"></i>
+        <div style="font-size: 2rem; font-weight: 700; margin-bottom: var(--space-xs);">{{ total_unread }}</div>
+        <div style="font-size: 0.875rem; opacity: 0.9;">Messages non lus</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if rooms_data %}
+    <!-- Actions groupées -->
+    <div class="card-hl" style="margin-bottom: var(--space-lg); padding: var(--space-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+      <div style="display: flex; gap: var(--space-sm); align-items: center;">
+        <input type="checkbox" id="selectAllRooms" style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="selectAllRooms" style="cursor: pointer; font-weight: 600; color: var(--text-primary);">
+          Sélectionner tout
+        </label>
+        <span id="selectedCount" style="color: var(--text-secondary); font-size: 0.9rem; margin-left: var(--space-sm);">
+          (0 sélectionné)
+        </span>
+      </div>
+      <div style="display: flex; gap: var(--space-sm);">
+        <button id="bulkMarkReadBtn" class="btn-hl btn-hl-secondary" disabled style="opacity: 0.5; cursor: not-allowed;">
+          <i class="fas fa-check-double me-2"></i>
+          Marquer comme lus
+        </button>
+        <button id="bulkMuteBtn" class="btn-hl btn-hl-secondary" disabled style="opacity: 0.5; cursor: not-allowed;">
+          <i class="fas fa-volume-mute me-2"></i>
+          Muter
+        </button>
+        <button id="bulkUnmuteBtn" class="btn-hl btn-hl-secondary" disabled style="opacity: 0.5; cursor: not-allowed;">
+          <i class="fas fa-volume-up me-2"></i>
+          Démuter
+        </button>
+      </div>
+    </div>
+    
+    <div class="chat-rooms-grid" id="roomsGrid">
+    {% for room_data in rooms_data %}
+    <div class="chat-room-card" 
+         style="position: relative;"
+         data-room-id="{{ room_data.room.id }}"
+         data-last-message="{{ room_data.last_message.created_at.isoformat() if room_data.last_message else '' }}"
+         data-created-at="{{ room_data.room.created_at.isoformat() if room_data.room.created_at else '' }}"
+         data-unread-count="{{ room_data.unread_count }}"
+         data-room-name="{{ (room_data.other_user.username if room_data.other_user else room_data.room.name) or '' }}">
+      <input type="checkbox" class="room-checkbox" value="{{ room_data.room.id }}" style="position: absolute; top: var(--space-md); left: var(--space-md); width: 20px; height: 20px; z-index: 10; cursor: pointer;">
+      <a href="{{ url_for('chat.room_detail', room_id=room_data.room.id) }}" style="text-decoration: none; color: inherit; display: block; padding-left: calc(var(--space-md) + 28px);">
+        {% if room_data.unread_count > 0 %}
+        <span class="chat-room-badge">{{ room_data.unread_count }}</span>
+        {% endif %}
+        
+        <div class="chat-room-header">
+          <h3 class="chat-room-title">
+            {% if room_data.room.room_type == 'direct' %}
+              {% if room_data.other_user %}
+                {{ room_data.other_user.username }}
+              {% else %}
+                Conversation
+              {% endif %}
+            {% else %}
+              {{ room_data.room.name or 'Groupe' }}
+            {% endif %}
+          </h3>
+          <span class="badge-hl badge-hl-{{ 'info' if room_data.room.room_type == 'direct' else 'primary' }}">
+            {{ 'Direct' if room_data.room.room_type == 'direct' else room_data.room.room_type|title }}
+          </span>
+        </div>
+        
+        {% if room_data.last_message %}
+        <div class="chat-room-preview">
+          <strong>{{ room_data.last_message.sender.username }}:</strong>
+          {{ room_data.last_message.content[:100] }}{% if room_data.last_message.content|length > 100 %}...{% endif %}
+        </div>
+        <div class="chat-room-meta">
+          <span>{{ room_data.last_message.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+          {% if room_data.unread_count > 0 %}
+          <span style="color: var(--color-primary); font-weight: 600;">
+            {{ room_data.unread_count }} non lu{{ 's' if room_data.unread_count > 1 else '' }}
+          </span>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="chat-room-preview" style="font-style: italic;">
+          Aucun message
+        </div>
+        {% endif %}
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  
+  <!-- Pagination -->
+  {% if pagination and pagination.pages > 1 %}
+  <div style="display: flex; justify-content: center; align-items: center; gap: var(--space-md); margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('chat.rooms_list', page=pagination.prev_num, search=search, room_type=room_type_filter, unread_only='true' if unread_only else 'false', per_page=per_page) }}" 
+       class="btn-hl btn-hl-secondary">
+      <i class="fas fa-chevron-left me-2"></i>Précédent
+    </a>
+    {% endif %}
+    
+    <span style="color: var(--text-secondary); font-weight: 500; padding: var(--space-sm);">
+      Page {{ pagination.page }} sur {{ pagination.pages }} 
+      ({{ pagination.total }} conversation{{ 's' if pagination.total > 1 else '' }})
+    </span>
+    
+    {% if pagination.has_next %}
+    <a href="{{ url_for('chat.rooms_list', page=pagination.next_num, search=search, room_type=room_type_filter, unread_only='true' if unread_only else 'false', per_page=per_page) }}" 
+       class="btn-hl btn-hl-secondary">
+      Suivant<i class="fas fa-chevron-right ms-2"></i>
+    </a>
+    {% endif %}
+  </div>
+  
+  <!-- Liens de pagination rapide -->
+  <div style="display: flex; justify-content: center; gap: var(--space-xs); margin-top: var(--space-md); flex-wrap: wrap;">
+    {% for page_num in range(1, pagination.pages + 1) %}
+      {% if page_num == pagination.page %}
+      <span class="btn-hl btn-hl-primary" style="min-width: 40px; text-align: center;">{{ page_num }}</span>
+      {% elif page_num <= 3 or page_num > pagination.pages - 3 or (page_num >= pagination.page - 1 and page_num <= pagination.page + 1) %}
+      <a href="{{ url_for('chat.rooms_list', page=page_num, search=search, room_type=room_type_filter, unread_only='true' if unread_only else 'false', per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary" style="min-width: 40px; text-align: center;">{{ page_num }}</a>
+      {% elif page_num == 4 or page_num == pagination.pages - 3 %}
+      <span style="color: var(--text-muted); padding: var(--space-xs);">...</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <h2>Aucune conversation</h2>
+    <p>Commencez une nouvelle conversation pour échanger avec vos collègues.</p>
+    {% if has_permission(current_user, 'chat.create') %}
+    <a href="{{ url_for('chat.room_new') }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-lg);">
+      <i class="fas fa-plus-circle me-2"></i>
+      Créer une conversation
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+  </div>
+
+<script src="{{ url_for('static', filename='js/chat_sse.js') }}"></script>
+<script>
+// Fonction pour mettre à jour le badge du menu
+function updateMenuBadge() {
+  const badges = document.querySelectorAll('.chat-room-badge');
+  let totalUnread = 0;
+  badges.forEach(badge => {
+    totalUnread += parseInt(badge.textContent) || 0;
+  });
+  
+  const menuBadge = document.getElementById('chatMenuBadge');
+  if (menuBadge) {
+    if (totalUnread > 0) {
+      menuBadge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+      menuBadge.style.display = 'block';
+    } else {
+      menuBadge.style.display = 'none';
+    }
+  }
+}
+
+// Mettre à jour les conversations en temps réel
+if (typeof ChatRoomsSSE !== 'undefined') {
+  const roomsSSE = new ChatRoomsSSE(
+    (update) => {
+      // Mettre à jour le badge de non lus et le dernier message
+      const roomCard = document.querySelector(`a[href="/chat/${update.room_id}"]`);
+      if (roomCard) {
+        // Mettre à jour le badge
+        let badge = roomCard.querySelector('.chat-room-badge');
+        if (update.unread_count > 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'chat-room-badge';
+            roomCard.appendChild(badge);
+          }
+          badge.textContent = update.unread_count;
+        } else if (badge) {
+          badge.remove();
+        }
+        
+        // Mettre à jour le dernier message
+        const preview = roomCard.querySelector('.chat-room-preview');
+        if (preview && update.last_message) {
+          preview.innerHTML = `<strong>${update.last_message.sender_name}:</strong> ${update.last_message.content}`;
+        }
+        
+        // Mettre à jour l'heure
+        const meta = roomCard.querySelector('.chat-room-meta');
+        if (meta && update.last_message) {
+          const timeSpan = meta.querySelector('span');
+          if (timeSpan) {
+            const date = new Date(update.last_message.created_at);
+            timeSpan.textContent = date.toLocaleString('fr-FR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric',
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+          }
+        }
+      }
+      
+      // Mettre à jour le badge du menu
+      updateMenuBadge();
+    },
+    (error) => {
+      console.error('Erreur SSE rooms:', error);
+    }
+  );
+  roomsSSE.connect();
+}
+
+// Mettre à jour le badge au chargement
+updateMenuBadge();
+
+// Tri des conversations côté client
+const sortBySelect = document.getElementById('sortBy');
+const roomsGrid = document.getElementById('roomsGrid');
+
+if (sortBySelect && roomsGrid) {
+  function sortRooms(sortBy) {
+    const roomCards = Array.from(roomsGrid.querySelectorAll('.chat-room-card'));
+    
+    roomCards.sort((a, b) => {
+      if (sortBy === 'name') {
+        const nameA = (a.dataset.roomName || '').toLowerCase();
+        const nameB = (b.dataset.roomName || '').toLowerCase();
+        return nameA.localeCompare(nameB, 'fr');
+      } else if (sortBy === 'unread') {
+        const unreadA = parseInt(a.dataset.unreadCount || '0');
+        const unreadB = parseInt(b.dataset.unreadCount || '0');
+        if (unreadA !== unreadB) {
+          return unreadB - unreadA; // Plus de non lus en premier
+        }
+        // Si égalité, trier par date de dernier message
+        const dateA = new Date(a.dataset.lastMessage || 0);
+        const dateB = new Date(b.dataset.lastMessage || 0);
+        return dateB - dateA;
+      } else if (sortBy === 'created_at') {
+        const dateA = new Date(a.dataset.createdAt || 0);
+        const dateB = new Date(b.dataset.createdAt || 0);
+        return dateB - dateA;
+      } else {
+        // updated_at (par défaut) - trier par dernier message
+        const dateA = new Date(a.dataset.lastMessage || 0);
+        const dateB = new Date(b.dataset.lastMessage || 0);
+        return dateB - dateA;
+      }
+    });
+    
+    // Réorganiser les cartes dans le DOM avec animation
+    roomCards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        roomsGrid.appendChild(card);
+        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 50);
+    });
+  }
+  
+  // Trier au changement
+  sortBySelect.addEventListener('change', function() {
+    sortRooms(this.value);
+  });
+  
+  // Trier au chargement si un tri est sélectionné
+  if (sortBySelect.value !== 'updated_at') {
+    sortRooms(sortBySelect.value);
+  }
+}
+
+// Recherche globale
+const globalSearch = document.getElementById('globalSearch');
+const globalSearchResults = document.getElementById('globalSearchResults');
+let searchTimeout = null;
+
+globalSearch.addEventListener('input', function() {
+  const query = this.value.trim();
+  
+  if (query.length < 2) {
+    globalSearchResults.style.display = 'none';
+    return;
+  }
+  
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    performGlobalSearch(query);
+  }, 300);
+});
+
+async function performGlobalSearch(query) {
+  try {
+    // Rechercher dans toutes les conversations
+    const response = await fetch(`/chat/api/search?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    
+    if (response.ok && data.results && data.results.length > 0) {
+      displayGlobalSearchResults(data.results);
+    } else {
+      globalSearchResults.innerHTML = '<div class="empty-sidebar">Aucun résultat</div>';
+      globalSearchResults.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Erreur recherche globale:', error);
+  }
+}
+
+function displayGlobalSearchResults(results) {
+  globalSearchResults.innerHTML = '';
+  
+  // Grouper par conversation
+  const grouped = {};
+  results.forEach(result => {
+    if (!grouped[result.room_id]) {
+      grouped[result.room_id] = {
+        room_name: result.room_name,
+        messages: []
+      };
+    }
+    grouped[result.room_id].messages.push(result);
+  });
+  
+  for (const [roomId, data] of Object.entries(grouped)) {
+    const roomDiv = document.createElement('div');
+    roomDiv.style.marginBottom = 'var(--space-md)';
+    
+    const roomHeader = document.createElement('div');
+    roomHeader.style.cssText = 'font-weight: 600; color: #003d82; margin-bottom: var(--space-xs); font-size: 0.85rem;';
+    roomHeader.textContent = data.room_name;
+    
+    const messagesDiv = document.createElement('div');
+    messagesDiv.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+    
+    data.messages.slice(0, 3).forEach(msg => {
+      const msgLink = document.createElement('a');
+      msgLink.href = `/chat/${roomId}#message-${msg.message_id}`;
+      msgLink.style.cssText = 'padding: 6px 8px; background: #f5f7fa; border-radius: 6px; text-decoration: none; color: #2c3e50; font-size: 0.85rem; display: block;';
+      msgLink.innerHTML = `<strong>${escapeHtml(msg.sender_name)}:</strong> ${escapeHtml(msg.content.substring(0, 50))}${msg.content.length > 50 ? '...' : ''}`;
+      messagesDiv.appendChild(msgLink);
+    });
+    
+    roomDiv.appendChild(roomHeader);
+    roomDiv.appendChild(messagesDiv);
+    globalSearchResults.appendChild(roomDiv);
+  }
+  
+  globalSearchResults.style.display = 'block';
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Démarrer une conversation directe
+function startDirectChat(userId) {
+  // Créer une conversation directe avec cet utilisateur
+  fetch('/chat/api/rooms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      room_type: 'direct',
+      user_ids: [userId]
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.room_id) {
+      window.location.href = `/chat/${data.room_id}`;
+    } else {
+      alert('Erreur lors de la création de la conversation');
+    }
+  })
+  .catch(error => {
+    console.error('Erreur:', error);
+    alert('Erreur lors de la création de la conversation');
+  });
+}
+
+// Mettre à jour les statistiques
+function updateStats() {
+  // Compter les messages d'aujourd'hui
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  fetch('/chat/api/stats')
+    .then(response => response.json())
+    .then(data => {
+      if (data.today_messages !== undefined) {
+        document.getElementById('statTodayMessages').textContent = data.today_messages;
+      }
+    })
+    .catch(error => console.error('Erreur stats:', error));
+}
+
+// Mettre à jour les stats au chargement et toutes les minutes
+updateStats();
+setInterval(updateStats, 60000);
+
+// Actions groupées
+const selectAllCheckbox = document.getElementById('selectAllRooms');
+const roomCheckboxes = document.querySelectorAll('.room-checkbox');
+const selectedCountSpan = document.getElementById('selectedCount');
+const bulkMarkReadBtn = document.getElementById('bulkMarkReadBtn');
+const bulkMuteBtn = document.getElementById('bulkMuteBtn');
+const bulkUnmuteBtn = document.getElementById('bulkUnmuteBtn');
+
+function updateSelectedCount() {
+  const selected = Array.from(roomCheckboxes).filter(cb => cb.checked);
+  const count = selected.length;
+  selectedCountSpan.textContent = `(${count} sélectionné${count > 1 ? 's' : ''})`;
+  
+  // Activer/désactiver les boutons
+  const hasSelection = count > 0;
+  bulkMarkReadBtn.disabled = !hasSelection;
+  bulkMuteBtn.disabled = !hasSelection;
+  bulkUnmuteBtn.disabled = !hasSelection;
+  
+  if (hasSelection) {
+    bulkMarkReadBtn.style.opacity = '1';
+    bulkMarkReadBtn.style.cursor = 'pointer';
+    bulkMuteBtn.style.opacity = '1';
+    bulkMuteBtn.style.cursor = 'pointer';
+    bulkUnmuteBtn.style.opacity = '1';
+    bulkUnmuteBtn.style.cursor = 'pointer';
+  } else {
+    bulkMarkReadBtn.style.opacity = '0.5';
+    bulkMarkReadBtn.style.cursor = 'not-allowed';
+    bulkMuteBtn.style.opacity = '0.5';
+    bulkMuteBtn.style.cursor = 'not-allowed';
+    bulkUnmuteBtn.style.opacity = '0.5';
+    bulkUnmuteBtn.style.cursor = 'not-allowed';
+  }
+  
+  // Mettre à jour "Sélectionner tout"
+  selectAllCheckbox.checked = count === roomCheckboxes.length && count > 0;
+}
+
+selectAllCheckbox.addEventListener('change', function() {
+  roomCheckboxes.forEach(cb => cb.checked = this.checked);
+  updateSelectedCount();
+});
+
+roomCheckboxes.forEach(cb => {
+  cb.addEventListener('change', updateSelectedCount);
+});
+
+// Marquer comme lus
+bulkMarkReadBtn.addEventListener('click', async function() {
+  const selected = Array.from(roomCheckboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+  
+  if (selected.length === 0) return;
+  
+  if (!confirm(`Marquer ${selected.length} conversation(s) comme lue(s) ?`)) return;
+  
+  try {
+    const response = await fetch('/chat/api/bulk/mark-read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ room_ids: selected })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert(data.message);
+      window.location.reload();
+    } else {
+      alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de la requête');
+  }
+});
+
+// Muter
+bulkMuteBtn.addEventListener('click', async function() {
+  const selected = Array.from(roomCheckboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+  
+  if (selected.length === 0) return;
+  
+  if (!confirm(`Muter ${selected.length} conversation(s) ?`)) return;
+  
+  try {
+    const response = await fetch('/chat/api/bulk/mute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ room_ids: selected, mute: true })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert(data.message);
+      window.location.reload();
+    } else {
+      alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de la requête');
+  }
+});
+
+// Démuter
+bulkUnmuteBtn.addEventListener('click', async function() {
+  const selected = Array.from(roomCheckboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+  
+  if (selected.length === 0) return;
+  
+  if (!confirm(`Démuter ${selected.length} conversation(s) ?`)) return;
+  
+  try {
+    const response = await fetch('/chat/api/bulk/mute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ room_ids: selected, mute: false })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert(data.message);
+      window.location.reload();
+    } else {
+      alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de la requête');
+  }
+});
+
+// Initialiser le compteur
+updateSelectedCount();
+</script>
+{% endblock %}
+

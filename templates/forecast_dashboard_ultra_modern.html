@@ -1,0 +1,174 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Dashboard Prévisions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .action-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: var(--transition-normal);
+    text-decoration: none;
+    color: var(--text-primary);
+    display: block;
+  }
+  
+  .action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+  
+  .action-icon {
+    font-size: 3rem;
+    color: var(--color-primary);
+    margin-bottom: var(--space-md);
+  }
+  
+  .action-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .action-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .stats-grid,
+    .action-grid {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .action-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-tachometer-alt me-2"></i>
+      Dashboard Prévisions
+    </h1>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_forecasts|default(0) }}</div>
+      <div class="stat-card-hl-label">Total Prévisions</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ active_forecasts|default(0) }}</div>
+      <div class="stat-card-hl-label">Prévisions Actives</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ avg_accuracy|default(0) }}%</div>
+      <div class="stat-card-hl-label">Taux de Précision Moyen</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ "{:,.0f}".format(total_forecast_value|default(0))|replace(',', ' ') }}</div>
+      <div class="stat-card-hl-label">Ventes Prévisionnelles (GNF)</div>
+    </div>
+  </div>
+
+  <!-- Actions rapides -->
+  <div class="action-grid">
+    <a href="{{ url_for('forecast_new') }}" class="action-card">
+      <div class="action-icon">
+        <i class="fas fa-plus-circle"></i>
+      </div>
+      <div class="action-title">Nouvelle Prévision</div>
+      <div class="action-description">Créer une nouvelle prévision de ventes</div>
+    </a>
+    
+    <a href="{{ url_for('forecast_list') }}" class="action-card">
+      <div class="action-icon">
+        <i class="fas fa-list"></i>
+      </div>
+      <div class="action-title">Liste des Prévisions</div>
+      <div class="action-description">Voir toutes les prévisions enregistrées</div>
+    </a>
+    
+    <a href="{{ url_for('forecast_performance') }}" class="action-card">
+      <div class="action-icon">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div class="action-title">Performance</div>
+      <div class="action-description">Analyser les performances des prévisions</div>
+    </a>
+    
+    <a href="{{ url_for('forecast_import') }}" class="action-card">
+      <div class="action-icon">
+        <i class="fas fa-upload"></i>
+      </div>
+      <div class="action-title">Import Données</div>
+      <div class="action-description">Importer des données pour les prévisions</div>
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Stock Véhicule {{ vehicle.plate_number }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .stock-container { 
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .stock-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin: var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    flex-wrap: wrap; 
+    gap: var(--space-md); 
+  }
+  
+  .stock-title { 
+    font-size: 2rem; 
+    font-weight: 700; 
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: var(--space-md); 
+    margin-bottom: var(--space-xl); 
+  }
+  
+  .stat-card { 
+    background: var(--white); 
+    border-radius: var(--radius-lg); 
+    padding: var(--space-lg); 
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .stat-value { 
+    font-size: 2rem; 
+    font-weight: 700; 
+    color: var(--color-primary); 
+    margin-bottom: var(--space-xs); 
+  }
+  
+  .stat-label { 
+    color: var(--text-secondary); 
+    font-size: 0.9rem; 
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .stock-container {
+      padding: 0;
+    }
+    
+    .stock-header,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .stock-title {
+      font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stock-container">
+  <div class="stock-header">
+    <h1 class="stock-title">
+      <i class="fas fa-car me-2"></i>
+      Stock - {{ vehicle.plate_number }}
+      {% if vehicle.current_user %}
+      <small style="font-size: 1rem; color: var(--text-secondary);">({{ vehicle.current_user.full_name or vehicle.current_user.username }})</small>
+      {% endif %}
+    </h1>
+    <div>
+      <a href="{{ url_for('stocks.vehicle_low_stock', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-warning" style="margin-right: var(--space-md);">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Alertes ({{ low_stock_items|length }})
+      </a>
+      <a href="{{ url_for('stocks.movement_new', type='transfer') }}?vehicle_id={{ vehicle.id }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-exchange-alt me-2"></i>
+        Transfert
+      </a>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ total_items }}</div>
+      <div class="stat-label">Articles différents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ "{:,.0f}".format(total_value) }} GNF</div>
+      <div class="stat-label">Valeur totale</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ low_stock_items|length }}</div>
+      <div class="stat-label">Alertes mini-stock</div>
+    </div>
+  </div>
+
+  {% if stocks %}
+  <div class="table-premium">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Article</th>
+          <th>Quantité</th>
+          <th>Seuil Min.</th>
+          <th>Statut</th>
+          <th>Valeur</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in stocks %}
+        <tr>
+          <td><strong>{{ stock.stock_item.sku }}</strong></td>
+          <td>{{ stock.stock_item.name }}</td>
+          <td>{{ "{:.2f}".format(stock.quantity) }}</td>
+          <td>{{ "{:.2f}".format(stock.stock_item.min_stock_vehicle) }}</td>
+          <td>
+            {% if stock.quantity < stock.stock_item.min_stock_vehicle %}
+            <span class="badge-low">⚠️ Mini-stock</span>
+            {% else %}
+            <span class="badge-ok">✓ OK</span>
+            {% endif %}
+          </td>
+          <td>{{ "{:,.0f}".format(stock.quantity * stock.stock_item.purchase_price_gnf) }} GNF</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-car"></i>
+    <h3>Aucun stock</h3>
+    <p>Ce véhicule n'a pas encore de stock</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

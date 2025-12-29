@@ -1,0 +1,834 @@
+/* Hapag-Lloyd Inspired Design System - Import Profit Pro */
+/* Design Professionnel, Moderne et Épuré */
+
+:root {
+  /* Palette de couleurs Hapag-Lloyd */
+  --hl-blue: #003865;
+  --hl-blue-dark: #002a4d;
+  --hl-blue-light: #005a9f;
+  --hl-blue-accent: #0066cc;
+  --hl-orange: #ff6600;
+  --hl-orange-light: #ff8533;
+  
+  /* Couleurs neutres */
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* Couleurs de fond */
+  --bg-primary: var(--white);
+  --bg-secondary: var(--gray-50);
+  --bg-tertiary: var(--gray-100);
+  --bg-card: var(--white);
+  --bg-card-hover: var(--gray-50);
+  
+  /* Texte */
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-700);
+  --text-muted: var(--gray-500);
+  --text-light: var(--gray-400);
+  --text-white: var(--white);
+  
+  /* Couleurs fonctionnelles */
+  --color-primary: var(--hl-blue);
+  --color-primary-hover: var(--hl-blue-dark);
+  --color-accent: var(--hl-orange);
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: var(--hl-blue-light);
+  
+  /* Ombres */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Bordures */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+  
+  /* Espacements */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  
+  /* Transitions */
+  --transition-fast: all 0.15s ease-in-out;
+  --transition-normal: all 0.3s ease-in-out;
+  --transition-slow: all 0.5s ease-in-out;
+}
+
+/* Reset et base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Navigation Hapag-Lloyd Style - Amélioré */
+.navbar {
+  background: var(--white) !important;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--gray-200);
+  padding: var(--space-md) 0;
+  transition: var(--transition-normal);
+}
+
+/* Sidebar améliorée style Hapag-Lloyd */
+.sidebar {
+  background: linear-gradient(180deg, var(--hl-blue) 0%, var(--hl-blue-dark) 100%);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-header h4 {
+  color: var(--white);
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.menu-item {
+  color: rgba(255, 255, 255, 0.9);
+  border-left: 3px solid transparent;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-left-color: var(--hl-orange);
+}
+
+.menu-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  border-left-color: var(--hl-orange);
+  font-weight: 600;
+}
+
+.menu-group-title {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid transparent;
+}
+
+.menu-group-title:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-left-color: var(--hl-orange);
+}
+
+.menu-group-title.expanded {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  border-left-color: var(--hl-orange);
+}
+
+.menu-subitem {
+  color: rgba(255, 255, 255, 0.75);
+  border-left: 3px solid transparent;
+}
+
+.menu-subitem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--white);
+  border-left-color: var(--hl-orange);
+}
+
+.menu-subitem.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  border-left-color: var(--hl-orange);
+  font-weight: 600;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary) !important;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.navbar-brand:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+.navbar-nav .nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  padding: var(--space-sm) var(--space-md) !important;
+  margin: 0 var(--space-xs);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+  position: relative;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--color-primary) !important;
+  background: var(--bg-tertiary);
+}
+
+.navbar-nav .nav-link.active {
+  color: var(--color-primary) !important;
+  background: rgba(0, 56, 101, 0.1);
+}
+
+.navbar-nav .nav-link i {
+  margin-right: var(--space-xs);
+  font-size: 0.9rem;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  background: var(--white) !important;
+  border: 1px solid var(--gray-200) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  margin-top: var(--space-sm) !important;
+  padding: var(--space-sm) !important;
+  min-width: 220px;
+}
+
+.dropdown-item {
+  color: var(--text-secondary) !important;
+  padding: var(--space-sm) var(--space-md) !important;
+  border-radius: var(--radius-md);
+  margin: 0.125rem 0;
+  transition: var(--transition-fast);
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-tertiary) !important;
+  color: var(--color-primary) !important;
+}
+
+.dropdown-item i {
+  width: 20px;
+  margin-right: var(--space-sm);
+  color: var(--text-muted);
+}
+
+.dropdown-item:hover i {
+  color: var(--color-primary);
+}
+
+.dropdown-divider {
+  margin: var(--space-sm) 0;
+  border-color: var(--gray-200);
+}
+
+/* Cards - Style Hapag-Lloyd */
+.card-hl {
+  background: var(--bg-card);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+  margin-bottom: var(--space-lg);
+}
+
+.card-hl:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--gray-300);
+}
+
+.card-hl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.card-hl-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.card-hl-body {
+  color: var(--text-secondary);
+}
+
+/* Buttons - Style Hapag-Lloyd */
+.btn-hl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+  gap: var(--space-xs);
+}
+
+.btn-hl-primary {
+  background: var(--color-primary);
+  color: var(--text-white);
+}
+
+.btn-hl-primary:hover {
+  background: var(--color-primary-hover);
+  color: var(--text-white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-hl-secondary {
+  background: var(--white);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.btn-hl-secondary:hover {
+  background: var(--color-primary);
+  color: var(--text-white);
+}
+
+.btn-hl-accent {
+  background: var(--color-accent);
+  color: var(--text-white);
+}
+
+.btn-hl-accent:hover {
+  background: var(--hl-orange-light);
+  color: var(--text-white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-hl-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--gray-300);
+}
+
+.btn-hl-outline:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--gray-400);
+  color: var(--text-primary);
+}
+
+/* Tables - Style Hapag-Lloyd */
+.table-hl {
+  width: 100%;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.table-hl thead {
+  background: var(--bg-tertiary);
+}
+
+.table-hl th {
+  padding: var(--space-md) var(--space-lg);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.table-hl td {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--gray-200);
+  color: var(--text-secondary);
+}
+
+.table-hl tbody tr {
+  transition: var(--transition-fast);
+}
+
+.table-hl tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.table-hl tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Badges */
+.badge-hl {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-hl-primary {
+  background: rgba(0, 56, 101, 0.1);
+  color: var(--color-primary);
+}
+
+.badge-hl-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.badge-hl-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+}
+
+.badge-hl-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+.badge-hl-info {
+  background: rgba(0, 90, 159, 0.1);
+  color: var(--color-info);
+}
+
+/* Forms */
+.form-hl {
+  background: var(--white);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-hl-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  font-size: 0.875rem;
+}
+
+.form-hl-input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: var(--transition-fast);
+  background: var(--white);
+  color: var(--text-primary);
+}
+
+.form-hl-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+}
+
+.form-hl-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: var(--white);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Hero Section */
+.hero-hl {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+  color: var(--text-white);
+  padding: var(--space-3xl) 0;
+  margin-bottom: var(--space-2xl);
+}
+
+.hero-hl-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+  line-height: 1.2;
+}
+
+.hero-hl-subtitle {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  margin-bottom: var(--space-xl);
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-lg);
+  margin: var(--space-2xl) 0;
+}
+
+.stat-card-hl {
+  background: var(--white);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+}
+
+.stat-card-hl:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-card-hl-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.stat-card-hl-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Container */
+.container-hl {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+/* Page Header */
+.page-header-hl {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.page-title-hl {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+/* Footer */
+.footer-hl {
+  background: linear-gradient(180deg, var(--hl-blue-dark) 0%, var(--hl-blue) 100%);
+  color: rgba(255, 255, 255, 0.9);
+  padding: var(--space-2xl) 0 var(--space-lg);
+  margin-top: var(--space-3xl);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.footer-hl h5 {
+  color: var(--white);
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+}
+
+.footer-hl h5 i {
+  color: var(--hl-orange);
+  margin-right: var(--space-sm);
+}
+
+.footer-hl a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  display: inline-block;
+}
+
+.footer-hl a:hover {
+  color: var(--hl-orange);
+  transform: translateX(4px);
+}
+
+.footer-hl ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-hl ul li {
+  margin-bottom: var(--space-xs);
+}
+
+.footer-hl ul li::before {
+  content: "→";
+  color: var(--hl-orange);
+  margin-right: var(--space-xs);
+  opacity: 0;
+  transition: var(--transition-fast);
+}
+
+.footer-hl ul li:hover::before {
+  opacity: 1;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: var(--space-md);
+  margin-top: var(--space-xl);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+}
+
+/* Utilities */
+.text-hl-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-hl-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-hl-muted {
+  color: var(--text-muted) !important;
+}
+
+.bg-hl-primary {
+  background: var(--color-primary) !important;
+}
+
+.bg-hl-secondary {
+  background: var(--bg-secondary) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-hl-title {
+    font-size: 2rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .page-header-hl {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+}
+
+/* Animations subtiles */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Main Content - Style Hapag-Lloyd */
+.main-content {
+  min-height: calc(100vh - 200px);
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-2xl);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Container pour centrer le contenu - Style Hapag-Lloyd */
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+  width: 100%;
+}
+
+/* Sections de page - Style Hapag-Lloyd */
+.page-section {
+  margin-bottom: var(--space-3xl);
+  padding: var(--space-2xl) 0;
+}
+
+.page-section:first-child {
+  padding-top: 0;
+}
+
+.page-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Améliorations supplémentaires style Hapag-Lloyd */
+.top-header {
+  border-bottom: 2px solid var(--hl-blue);
+  box-shadow: 0 2px 8px rgba(0, 56, 101, 0.1);
+  transition: var(--transition-normal);
+}
+
+.top-header:hover {
+  box-shadow: 0 4px 12px rgba(0, 56, 101, 0.15);
+}
+
+.user-menu .dropdown-toggle {
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.user-menu .dropdown-toggle:hover {
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+/* Amélioration des icônes dans le menu */
+.menu-item i,
+.menu-subitem i {
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.menu-item:hover i,
+.menu-subitem:hover i,
+.menu-item.active i,
+.menu-subitem.active i {
+  opacity: 1;
+  color: var(--hl-orange);
+}
+
+/* Animation pour les menus déroulants */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-group-content.expanded {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Améliorations de layout style Hapag-Lloyd */
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+  width: 100%;
+}
+
+.page-section {
+  margin-bottom: var(--space-3xl);
+  padding: var(--space-xl) 0;
+}
+
+.page-section:first-child {
+  padding-top: 0;
+}
+
+.page-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-spacing {
+  margin-bottom: var(--space-2xl);
+}
+
+.section-spacing:last-child {
+  margin-bottom: 0;
+}
+
+/* Cards avec espacement amélioré */
+.card-hl {
+  margin-bottom: var(--space-xl);
+}
+
+.card-hl:last-child {
+  margin-bottom: 0;
+}
+
+/* Grilles améliorées */
+.grid-container {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-container-tight {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* Espacement vertical amélioré */
+.vertical-spacing {
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+}
+
+.vertical-spacing-sm {
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.vertical-spacing-lg {
+  margin-top: var(--space-3xl);
+  margin-bottom: var(--space-3xl);
+}
+

@@ -1,0 +1,152 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Dépôts - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <h1>
+          <i class="fas fa-warehouse icon-promo"></i>
+          Dépôts
+        </h1>
+        <a href="{{ url_for('referentiels.depot_new') }}" class="btn btn-promo btn-promo-primary">
+          <i class="fas fa-plus me-2"></i>
+          Nouveau Dépôt
+        </a>
+      </div>
+    </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if stats %}
+  <div class="card-promo section-spacing" style="margin-bottom: var(--space-lg);">
+    <div class="card-promo-header">
+      <i class="fas fa-chart-bar me-2"></i>Statistiques par Région
+    </div>
+    <div style="padding: var(--space-lg); display: flex; gap: var(--space-xl); flex-wrap: wrap;">
+      {% for region in regions %}
+      {% if stats[region.id] %}
+      <div style="flex: 1; min-width: 200px; padding: var(--space-md); background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+        <div style="font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-xs);">{{ region.name }}</div>
+        <div style="display: flex; gap: var(--space-md); margin-top: var(--space-sm);">
+          <div style="flex: 1;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">{{ stats[region.id].total }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Total</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-success);">{{ stats[region.id].active }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Actifs</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card-promo section-spacing" style="margin-bottom: var(--space-lg);">
+    <div class="card-promo-header">
+      <i class="fas fa-filter me-2"></i>Filtre par Région
+    </div>
+    <div style="padding: var(--space-lg);">
+      <form method="GET" action="{{ url_for('referentiels.depots_list') }}" style="display: flex; gap: var(--space-md); align-items: end;">
+        <div style="flex: 1; min-width: 250px;">
+          <label for="region_id" class="form-label" style="margin-bottom: var(--space-xs); color: var(--text-primary); font-weight: 600;">Région</label>
+          <select name="region_id" id="region_id" class="form-control" style="padding: var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <option value="">Toutes les régions</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if selected_region_id == region.id %}selected{% endif %}>{{ region.name }}{% if region.code %} ({{ region.code }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display: flex; gap: var(--space-sm);">
+          <button type="submit" class="btn btn-promo btn-promo-primary" style="height: fit-content;">
+            <i class="fas fa-filter me-2"></i>Filtrer
+          </button>
+          {% if selected_region_id %}
+          <a href="{{ url_for('referentiels.depots_list') }}" class="btn btn-promo" style="background: #6c757d; color: white; height: fit-content;">
+            <i class="fas fa-times me-2"></i>Effacer
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if depots %}
+  <div class="card-promo section-spacing">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Dépôts
+      {% if selected_region_id %}
+      <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary); margin-left: var(--space-sm);">
+        ({{ depots|length }} dépôt{{ 's' if depots|length > 1 else '' }} dans cette région)
+      </span>
+      {% endif %}
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Région</th>
+            <th>Ville</th>
+            <th>Téléphone</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for depot in depots %}
+          <tr>
+            <td><strong>{{ depot.name }}</strong></td>
+            <td>{{ depot.region.name if depot.region else '-' }}</td>
+            <td>{{ depot.city or '-' }}</td>
+            <td>{{ depot.phone or '-' }}</td>
+            <td>
+              {% if depot.is_active %}
+              <span class="badge badge-promo badge-promo-success">Actif</span>
+              {% else %}
+              <span class="badge badge-promo" style="background: #ef4444; color: white;">Inactif</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('referentiels.depot_edit', id=depot.id) }}" class="btn btn-sm btn-promo" style="background: #6c757d; color: white;" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('stocks.depot_stock', depot_id=depot.id) }}" class="btn btn-sm btn-promo btn-promo-info" title="Voir le stock">
+                  <i class="fas fa-boxes"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-promo section-spacing" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-warehouse" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun dépôt</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par créer votre premier dépôt</p>
+    <a href="{{ url_for('referentiels.depot_new') }}" class="btn btn-promo btn-promo-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer un Dépôt
+    </a>
+  </div>
+  {% endif %}
+  </section>
+{% endblock %}

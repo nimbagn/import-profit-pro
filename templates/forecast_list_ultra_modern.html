@@ -1,0 +1,234 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Liste des Prévisions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .filters-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .forecasts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: var(--space-lg);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .forecast-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+  }
+  
+  .forecast-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+  
+  .forecast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .forecast-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .forecast-date {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl,
+    .forecasts-grid {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .forecasts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-list me-2"></i>
+      Liste des Prévisions
+    </h1>
+    <a href="{{ url_for('forecast_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Nouvelle Prévision
+    </a>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card-hl" style="margin-bottom: var(--space-xl);">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+      Filtres
+    </h3>
+    <div class="filters-section">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Recherche</label>
+        <input type="text" id="searchInput" class="form-hl-input" placeholder="Nom de la prévision...">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Statut</label>
+        <select id="statusFilter" class="form-hl-select">
+          <option value="">Tous</option>
+          <option value="active">Actives</option>
+          <option value="completed">Terminées</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Date</label>
+        <input type="date" id="dateFilter" class="form-hl-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des prévisions -->
+  {% if forecasts %}
+  <div class="forecasts-grid">
+    {% for forecast in forecasts %}
+    <div class="forecast-card">
+      <div class="forecast-header">
+        <div>
+          <div class="forecast-title">{{ forecast.name }}</div>
+          <div class="forecast-date">
+            {{ forecast.start_date.strftime('%d/%m/%Y') }} - {{ forecast.end_date.strftime('%d/%m/%Y') }}
+          </div>
+        </div>
+        <span style="padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 600;
+          {% if forecast.status == 'active' %}background: #dbeafe; color: #1e40af;
+          {% elif forecast.status == 'completed' %}background: #dcfce7; color: #166534;
+          {% elif forecast.status == 'draft' %}background: #f3f4f6; color: #374151;
+          {% else %}background: #fef3c7; color: #92400e;{% endif %}">
+          {% if forecast.status == 'active' %}Active
+          {% elif forecast.status == 'completed' %}Terminée
+          {% elif forecast.status == 'draft' %}Brouillon
+          {% else %}Archivée{% endif %}
+        </span>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <div>
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs);">Valeur Prévisionnelle</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+            {{ "{:,.0f}".format(forecast.total_forecast_value|default(0))|replace(',', ' ') }} GNF
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs);">Valeur Réalisée</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: {% if forecast.realization_percentage >= 50 %}#22c55e{% else %}#ef4444{% endif %};">
+            {{ "{:,.0f}".format(forecast.total_realized_value|default(0))|replace(',', ' ') }} GNF
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: var(--space-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xs);">
+          <span style="font-size: 0.875rem; color: var(--text-secondary);">Taux de Réalisation</span>
+          <span style="font-size: 1rem; font-weight: 700; color: {% if forecast.realization_percentage >= 50 %}#22c55e{% else %}#ef4444{% endif %};">
+            {{ "{:.1f}".format(forecast.realization_percentage|default(0)) }}%
+          </span>
+        </div>
+        <div style="width: 100%; height: 8px; background: var(--gray-200); border-radius: var(--radius-sm); overflow: hidden;">
+          <div style="width: {{ forecast.realization_percentage|default(0) }}%; height: 100%; background: {% if forecast.realization_percentage >= 50 %}#22c55e{% else %}#ef4444{% endif %}; transition: width 0.3s;"></div>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-lg);">
+        <a href="{{ url_for('forecast_detail', id=forecast.id) }}" class="btn-hl btn-hl-primary" style="flex: 1; text-align: center;">
+          <i class="fas fa-eye me-2"></i>Voir Détails
+        </a>
+        <a href="{{ url_for('forecast_edit', id=forecast.id) }}" class="btn-hl btn-hl-outline" style="flex: 1; text-align: center;">
+          <i class="fas fa-edit me-2"></i>Modifier
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: var(--space-3xl); color: var(--text-muted);">
+    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+    <p>Aucune prévision trouvée.</p>
+    <a href="{{ url_for('forecast_new') }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-lg);">
+      <i class="fas fa-plus me-2"></i>Créer une Prévision
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('searchInput');
+  const statusFilter = document.getElementById('statusFilter');
+  const dateFilter = document.getElementById('dateFilter');
+  
+  function filterForecasts() {
+    // Logique de filtrage à implémenter
+  }
+  
+  searchInput.addEventListener('input', filterForecasts);
+  statusFilter.addEventListener('change', filterForecasts);
+  dateFilter.addEventListener('change', filterForecasts);
+});
+</script>
+{% endblock %}

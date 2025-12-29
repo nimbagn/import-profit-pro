@@ -1,0 +1,163 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Sortie {{ outgoing.reference }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .card-hl {
+    margin: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .info-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xs);
+    font-weight: 600;
+  }
+  
+  .info-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .card-hl {
+      margin: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="card-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-arrow-up me-2"></i>
+        Sortie {{ outgoing.reference }}
+      </h1>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Date</div>
+        <div class="info-value">{{ outgoing.outgoing_date.strftime('%d/%m/%Y') if outgoing.outgoing_date else '-' }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Client</div>
+        <div class="info-value">{{ outgoing.client_name or '-' }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Commercial</div>
+        <div class="info-value">{{ outgoing.commercial.full_name if outgoing.commercial else '-' }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Source</div>
+        <div class="info-value">
+          {% if outgoing.vehicle %}🚗 {{ outgoing.vehicle.plate_number }}
+          {% elif outgoing.depot %}📦 {{ outgoing.depot.name }}
+          {% else %}-{% endif %}
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Statut</div>
+        <div class="info-value">
+          <span class="badge-hl {% if outgoing.status == 'completed' %}badge-hl-success{% elif outgoing.status == 'draft' %}badge-hl-warning{% else %}badge-hl-danger{% endif %}">
+            {{ outgoing.status|title }}
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    {% if outgoing.details %}
+    <div style="margin-top: var(--space-xl);">
+      <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.25rem;">Articles vendus</h3>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Article</th>
+              <th>Quantité</th>
+              <th>Prix Unitaire</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for detail in outgoing.details %}
+            <tr>
+              <td><strong>{{ detail.stock_item.sku }}</strong></td>
+              <td>{{ detail.stock_item.name }}</td>
+              <td>{{ "{:.2f}".format(detail.quantity) }}</td>
+              <td>{{ "{:,.0f}".format(detail.unit_price_gnf) if detail.unit_price_gnf else '-' }} GNF</td>
+              <td><strong>{{ "{:,.0f}".format(detail.quantity * detail.unit_price_gnf) if detail.unit_price_gnf else '-' }} GNF</strong></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if outgoing.notes %}
+    <div style="margin-top: var(--space-xl); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); border: 1px solid var(--gray-200);">
+      <strong style="color: var(--text-primary);">Notes:</strong>
+      <p style="color: var(--text-secondary); margin-top: var(--space-xs); margin-bottom: 0;">{{ outgoing.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: var(--space-xl);">
+      <a href="{{ url_for('stocks.outgoings_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour à la liste
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

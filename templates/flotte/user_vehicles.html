@@ -1,0 +1,203 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Véhicules de {{ user.full_name or user.username }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .user-header {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+  }
+  
+  .stat-card-hl-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-card-hl-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="user-header">
+    <h1 class="page-title-hl">
+      <i class="fas fa-user-tie me-2"></i>
+      Véhicules de {{ user.full_name or user.username }}
+    </h1>
+    <div style="margin-top: var(--space-md);">
+      <strong>Email:</strong> {{ user.email or '-' }}<br>
+      <strong>Rôle:</strong> {{ user.role.name if user.role else '-' }}
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ current_vehicles }}</div>
+      <div class="stat-card-hl-label">Véhicules Actuels</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_vehicles }}</div>
+      <div class="stat-card-hl-label">Total Véhicules (Historique)</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ all_assignments|length }}</div>
+      <div class="stat-card-hl-label">Total Assignations</div>
+    </div>
+  </div>
+
+  <!-- Véhicules Actuels -->
+  {% if active_assignments %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-car me-2"></i>Véhicules Actuellement Assignés
+      </h3>
+    </div>
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Véhicule</th>
+            <th>Marque/Modèle</th>
+            <th>Date Début</th>
+            <th>Durée</th>
+            <th>Raison</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in active_assignments %}
+          <tr>
+            <td><strong>{{ assignment.vehicle.plate_number }}</strong></td>
+            <td>{{ assignment.vehicle.brand or '' }} {{ assignment.vehicle.model or '' }}</td>
+            <td>{{ assignment.start_date.strftime('%d/%m/%Y') }}</td>
+            <td>{{ assignment.duration_days }} jours</td>
+            <td>{{ assignment.reason or '-' }}</td>
+            <td>
+              <a href="{{ url_for('flotte.vehicle_detail', vehicle_id=assignment.vehicle_id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                <i class="fas fa-eye"></i> Voir la fiche
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl); margin-bottom: var(--space-xl);">
+    <i class="fas fa-car" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun véhicule actuellement assigné</h3>
+    <p style="color: var(--text-secondary);">Ce conducteur n'a pas de véhicule assigné en ce moment</p>
+  </div>
+  {% endif %}
+
+  <!-- Historique Complet -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-history me-2"></i>Historique Complet des Assignations
+      </h3>
+    </div>
+    <div class="table-hl">
+      {% if all_assignments %}
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Véhicule</th>
+            <th>Date Début</th>
+            <th>Date Fin</th>
+            <th>Durée</th>
+            <th>Raison</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in all_assignments %}
+          <tr>
+            <td><strong>{{ assignment.vehicle.plate_number }}</strong></td>
+            <td>{{ assignment.start_date.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if assignment.end_date %}
+                {{ assignment.end_date.strftime('%d/%m/%Y') }}
+              {% else %}
+                <span class="badge-hl badge-hl-success">En cours</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if assignment.duration_days is not none %}
+                {{ assignment.duration_days }} jours
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ assignment.reason or '-' }}</td>
+            <td>
+              {% if assignment.is_active %}
+                <span class="badge-hl badge-hl-success">Active</span>
+              {% else %}
+                <span class="badge-hl badge-hl-secondary">Terminée</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('flotte.vehicle_detail', vehicle_id=assignment.vehicle_id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-history" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucune assignation enregistrée</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

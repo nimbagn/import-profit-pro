@@ -1,0 +1,127 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Alertes Mini-Stock - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .alerts-container { 
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .alerts-header { 
+    margin: var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .alerts-title { 
+    font-size: 2rem; 
+    font-weight: 700; 
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .alerts-container {
+      padding: 0;
+    }
+    
+    .alerts-header,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+    }
+    
+    .alerts-title {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alerts-container">
+  <div class="alerts-header">
+    <h1 class="alerts-title">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Alertes Mini-Stock
+      {% if depot %}
+      - {{ depot.name }}
+      {% elif vehicle %}
+      - {{ vehicle.plate_number }}
+      {% endif %}
+    </h1>
+  </div>
+
+  {% if low_stock_items %}
+  <div class="card-hl">
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Article</th>
+            <th>Stock Actuel</th>
+            <th>Seuil Minimum</th>
+            <th>Déficit</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stock in low_stock_items %}
+          <tr>
+            <td><strong>{{ stock.stock_item.sku }}</strong></td>
+            <td>{{ stock.stock_item.name }}</td>
+            <td><span class="badge-hl badge-hl-danger">{{ "{:.2f}".format(stock.quantity) }}</span></td>
+            <td>{{ "{:.2f}".format(stock.stock_item.min_stock_depot if stock_type == 'depot' else stock.stock_item.min_stock_vehicle) }}</td>
+            <td><span class="badge-hl badge-hl-danger">-{{ "{:.2f}".format((stock.stock_item.min_stock_depot if stock_type == 'depot' else stock.stock_item.min_stock_vehicle) - stock.quantity) }}</span></td>
+            <td>
+              <a href="{{ url_for('stocks.movement_new', type='reception') }}?depot_id={{ depot.id if depot else '' }}&item_id={{ stock.stock_item.id }}" class="btn-hl btn-hl-primary">
+                <i class="fas fa-plus me-2"></i>
+                Réapprovisionner
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-success); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune alerte</h3>
+    <p style="color: var(--text-secondary);">Tous les stocks sont au-dessus des seuils minimums</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

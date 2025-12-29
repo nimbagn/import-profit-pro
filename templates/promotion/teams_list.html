@@ -1,0 +1,214 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Équipes de Promotion - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-users icon-promo"></i>
+        Équipes de Promotion
+      </h1>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <a href="{{ url_for('promotion.team_new') }}" class="btn btn-promo btn-promo-primary">
+        <i class="fas fa-plus me-2"></i>Nouvelle Équipe
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Information sur l'approvisionnement -->
+  {% if has_permission(current_user, 'promotion.write') %}
+  <div class="alert alert-promo alert-promo-info d-flex align-items-center section-spacing" role="alert" style="margin-top: var(--space-lg);">
+    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+    <div>
+      <strong>💡 Approvisionnement des Équipes :</strong> 
+      Cliquez sur le bouton <strong>"Approvisionner"</strong> de chaque équipe pour ajouter des gammes et pièces au stock de l'équipe. 
+      Les membres recevront ensuite leur stock depuis le stock de l'équipe lors de la distribution.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Statistiques -->
+  <div class="stats-grid section-spacing">
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value">{{ stats.total }}</div>
+      <div class="stat-card-promo-label">Total Équipes</div>
+      <i class="fas fa-users stat-card-promo-icon"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #10b981;">{{ stats.active }}</div>
+      <div class="stat-card-promo-label">Équipes Actives</div>
+      <i class="fas fa-check-circle stat-card-promo-icon" style="color: #10b981;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #005a9f;">{{ stats.total_members }}</div>
+      <div class="stat-card-promo-label">Membres Actifs</div>
+      <i class="fas fa-user-friends stat-card-promo-icon" style="color: #005a9f;"></i>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filter-card">
+      <form method="GET" class="row g-3">
+        <div class="col-md-4">
+          <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}">
+        </div>
+        <div class="col-md-3">
+          <select name="region" class="form-select">
+            <option value="">Toutes les régions</option>
+            {% for region in regions %}
+            <option value="{{ region }}" {% if region_filter == region %}selected{% endif %}>{{ region }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select name="active" class="form-select">
+            <option value="true" {% if active_only %}selected{% endif %}>Actives uniquement</option>
+            <option value="false" {% if not active_only %}selected{% endif %}>Toutes</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn-hl btn-hl-primary w-100">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+        </div>
+      </form>
+  </div>
+
+  <!-- Liste des équipes -->
+  <div class="card-promo section-spacing" id="approvisionnement">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Équipes
+    </div>
+    {% if teams %}
+    <div class="table-responsive">
+      <table class="table table-promo">
+        <thead>
+          <tr>
+            <th>Équipe</th>
+            <th>Région</th>
+            <th>Responsable</th>
+            <th>Membres</th>
+            <th>Ventes</th>
+            <th>Chiffre d'Affaires</th>
+            <th>Statut</th>
+            <th style="min-width: 200px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for team in teams %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                <i class="fas fa-users me-2" style="color: #003865;"></i>
+                <div>
+                  <strong>{{ team.name }}</strong>
+                  {% if team.description %}
+                  <br><small class="text-muted">{{ team.description[:50] }}{% if team.description|length > 50 %}...{% endif %}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if team.region %}
+              <span class="badge badge-promo badge-promo-info">
+                <i class="fas fa-map-marker-alt me-1"></i>{{ team.region }}
+              </span>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if team.team_leader %}
+              <div class="d-flex align-items-center">
+                <i class="fas fa-user-tie me-2" style="color: #10b981;"></i>
+                <span>{{ team.team_leader.full_name if team.team_leader.full_name else team.team_leader.username }}</span>
+              </div>
+              {% else %}
+              <span class="text-muted">N/A</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-promo badge-promo-primary" style="font-size: 1rem; padding: 0.5rem 0.75rem;">
+                <i class="fas fa-user-friends me-1"></i>{{ team.stats.members_count }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-promo badge-promo-success" style="font-size: 1rem; padding: 0.5rem 0.75rem;">
+                <i class="fas fa-shopping-cart me-1"></i>{{ team.stats.total_sales }}
+              </span>
+            </td>
+            <td>
+              <strong class="data-highlight" style="font-size: 1.1em;">
+                {{ "{:,.0f}".format(team.stats.total_revenue|default(0))|replace(',', ' ') }} GNF
+              </strong>
+            </td>
+            <td>
+              {% if team.is_active %}
+              <span class="badge badge-promo badge-promo-success">
+                <i class="fas fa-check-circle me-1"></i>Active
+              </span>
+              {% else %}
+              <span class="badge badge-promo" style="background: #6c757d; color: white;">
+                <i class="fas fa-times-circle me-1"></i>Inactive
+              </span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-2 flex-wrap justify-content-center">
+                <a href="{{ url_for('promotion.team_detail', id=team.id) }}" class="btn btn-sm btn-promo btn-promo-primary" title="Voir les détails">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if has_permission(current_user, 'promotion.write') %}
+                <a href="{{ url_for('promotion.team_supply', team_id=team.id) }}" class="btn btn-sm btn-promo btn-promo-success" title="Approvisionner" style="font-weight: 600; padding: 0.5rem 1rem;">
+                  <i class="fas fa-truck-loading me-1"></i>Approvisionner
+                </a>
+                <a href="{{ url_for('promotion.team_edit', id=team.id) }}" class="btn btn-sm btn-promo" style="background: #6c757d; color: white;" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5" style="padding: 1.5rem;">
+      <i class="fas fa-users fa-3x text-muted mb-3"></i>
+      <p class="text-muted">Aucune équipe trouvée</p>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <a href="{{ url_for('promotion.team_new') }}" class="btn btn-promo btn-promo-primary mt-3">
+        <i class="fas fa-plus me-2"></i>Créer une Équipe
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Scroll automatique vers la section approvisionnement si présent dans l'URL
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#approvisionnement') {
+      const section = document.getElementById('approvisionnement');
+      if (section) {
+        setTimeout(function() {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Ajouter un effet visuel pour attirer l'attention
+          section.style.transition = 'box-shadow 0.3s ease';
+          section.style.boxShadow = '0 0 20px rgba(0, 56, 101, 0.3)';
+          setTimeout(function() {
+            section.style.boxShadow = '';
+          }, 2000);
+        }, 100);
+      }
+    }
+  });
+</script>
+{% endblock %}
+

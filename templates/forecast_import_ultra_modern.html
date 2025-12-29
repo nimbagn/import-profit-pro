@@ -1,0 +1,242 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Import de Données - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .upload-zone {
+    border: 3px dashed var(--gray-300);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    text-align: center;
+    background: var(--bg-tertiary);
+    transition: var(--transition-normal);
+    cursor: pointer;
+    margin-bottom: var(--space-xl);
+  }
+  
+  .upload-zone:hover {
+    border-color: var(--color-primary);
+    background: rgba(0, 56, 101, 0.05);
+  }
+  
+  .upload-zone.dragover {
+    border-color: var(--color-primary);
+    background: rgba(0, 56, 101, 0.1);
+  }
+  
+  .upload-icon {
+    font-size: 4rem;
+    color: var(--color-primary);
+    margin-bottom: var(--space-md);
+  }
+  
+  .upload-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .upload-subtext {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  
+  .file-input {
+    display: none;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .upload-zone {
+      padding: var(--space-xl);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-upload me-2"></i>
+        Import de Données
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="upload-text">Glissez-déposez votre fichier ici</div>
+        <div class="upload-subtext">ou cliquez pour sélectionner un fichier</div>
+        <div class="upload-subtext" style="margin-top: var(--space-sm);">
+          Formats acceptés: CSV, Excel (.xlsx, .xls)
+        </div>
+      </div>
+      
+      <input type="file" id="fileInput" name="file" class="file-input" accept=".csv,.xlsx,.xls" required>
+      
+      <div id="fileName" style="margin-bottom: var(--space-lg); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); display: none;">
+        <i class="fas fa-file me-2"></i>
+        <span id="fileNameText"></span>
+      </div>
+      
+      <div style="background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+        <h3 style="color: var(--color-primary); margin-bottom: var(--space-md);">
+          <i class="fas fa-info-circle me-2"></i>Format du fichier
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-sm);">
+          Le fichier doit contenir les colonnes suivantes :
+        </p>
+        <ul style="color: var(--text-secondary); margin-left: var(--space-lg);">
+          <li><strong>article</strong> : Nom de l'article (obligatoire)</li>
+          <li><strong>forecast_quantity</strong> : Quantité prévisionnelle (obligatoire)</li>
+          <li><strong>price</strong> : Prix unitaire (obligatoire)</li>
+          <li><strong>realized_quantity</strong> : Quantité réalisée (optionnel)</li>
+        </ul>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="name" class="form-hl-label">
+          Nom de la Prévision <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="text" id="name" name="name" class="form-hl-input" 
+               placeholder="Nom de la prévision" required>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <div class="form-group">
+          <label for="commercial_name" class="form-hl-label">
+            Commercial/Vendeur
+          </label>
+          <select id="commercial_name" name="commercial_name" class="form-hl-input">
+            <option value="">-- Sélectionner un commercial --</option>
+            {% for user in users %}
+            <option value="{{ user.username }}">{{ user.username }}{% if user.role %} ({{ user.role.name }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="start_date" class="form-hl-label">
+            Date de Début <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="start_date" name="start_date" class="form-hl-input" required>
+        </div>
+        <div class="form-group">
+          <label for="end_date" class="form-hl-label">
+            Date de Fin <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="end_date" name="end_date" class="form-hl-input" required>
+        </div>
+        <div class="form-group">
+          <label for="currency" class="form-hl-label">
+            Devise <span style="color: var(--color-danger);">*</span>
+          </label>
+          <select id="currency" name="currency" class="form-hl-input" required>
+            <option value="GNF" selected>GNF - Franc Guinéen</option>
+            <option value="USD">USD - Dollar US</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="XOF">XOF - Franc CFA</option>
+          </select>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('forecast_dashboard') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-upload me-2"></i>Importer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileName = document.getElementById('fileName');
+  const fileNameText = document.getElementById('fileNameText');
+  
+  fileInput.addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      fileNameText.textContent = e.target.files[0].name;
+      fileName.style.display = 'block';
+    }
+  });
+  
+  uploadZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+  
+  uploadZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+  });
+  
+  uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      fileNameText.textContent = e.dataTransfer.files[0].name;
+      fileName.style.display = 'block';
+    }
+  });
+});
+</script>
+{% endblock %}

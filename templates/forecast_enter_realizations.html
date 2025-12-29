@@ -1,0 +1,299 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Saisie des Réalisations - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 1400px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .editable-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-lg);
+  }
+  
+  .editable-table thead {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .editable-table th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  
+  .editable-table td {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .editable-table input {
+    width: 100%;
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+  }
+  
+  .editable-table input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  }
+  
+  .editable-table tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .info-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-right: var(--space-sm);
+  }
+  
+  .info-badge-primary {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .info-badge-success {
+    background: #22c55e;
+    color: var(--white);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .editable-table {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1 class="page-title-hl">
+            <i class="fas fa-edit me-2"></i>
+            Saisie des Réalisations
+          </h1>
+          <p style="color: var(--text-secondary); margin-top: var(--space-sm);">
+            Prévision: <strong>{{ forecast.name }}</strong>
+            <span class="info-badge info-badge-primary">{{ forecast.start_date.strftime('%d/%m/%Y') }} - {{ forecast.end_date.strftime('%d/%m/%Y') }}</span>
+            {% if forecast.commercial_name %}
+            <span class="info-badge info-badge-success">
+              <i class="fas fa-user-tie me-1"></i>{{ forecast.commercial_name }}
+            </span>
+            {% endif %}
+          </p>
+        </div>
+        <a href="{{ url_for('forecast_detail', id=forecast.id) }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="realizationsForm">
+      <div style="background: var(--bg-tertiary); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+        <p style="margin: 0; color: var(--text-secondary);">
+          <i class="fas fa-info-circle me-2"></i>
+          Saisissez les quantités réalisées pour chaque article. Les valeurs seront calculées automatiquement.
+        </p>
+      </div>
+      
+      <div style="overflow-x: auto;">
+        <table class="editable-table">
+          <thead>
+            <tr>
+              <th style="width: 300px;">Article</th>
+              <th style="width: 150px;">Prix Unitaire ({{ currency }})</th>
+              <th style="width: 150px;">Quantité Prévision</th>
+              <th style="width: 150px;">Valeur Prévision ({{ currency }})</th>
+              <th style="width: 150px;">Quantité Réalisée</th>
+              <th style="width: 150px;">Valeur Réalisée ({{ currency }})</th>
+              <th style="width: 100px;">% Réalisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td><strong>{{ item.stock_item.name }}</strong></td>
+              <td>{{ "{:,.0f}".format(convert_to_currency(item.selling_price_gnf, currency)|default(0))|replace(',', ' ') }}</td>
+              <td>{{ "{:,.2f}".format(item.forecast_quantity|default(0))|replace(',', ' ') }}</td>
+              <td>{{ "{:,.0f}".format(convert_to_currency(item.selling_price_gnf * item.forecast_quantity, currency)|default(0))|replace(',', ' ') }}</td>
+              <td>
+                <input type="hidden" name="item_ids[]" value="{{ item.id }}">
+                <input type="number" 
+                       name="realized_quantities[]" 
+                       step="0.01" 
+                       min="0" 
+                       value="{{ item.realized_quantity|default(0) }}" 
+                       class="realized-qty-input"
+                       onchange="calculateRow(this)"
+                       required>
+              </td>
+              <td class="realized-value-cell">
+                {{ "{:,.0f}".format(convert_to_currency(item.realized_value_gnf|default(0), currency)|default(0))|replace(',', ' ') }}
+              </td>
+              <td class="realization-pct-cell">
+                {% if item.forecast_quantity > 0 %}
+                  {{ "%.1f"|format((item.realized_quantity / item.forecast_quantity * 100)|float) }}%
+                {% else %}
+                  0%
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="background: var(--bg-tertiary); font-weight: 700;">
+              <td><strong>TOTAL</strong></td>
+              <td></td>
+              <td id="totalForecastQty">
+                <strong>{{ "{:,.2f}".format(items|sum(attribute='forecast_quantity')|default(0))|replace(',', ' ') }}</strong>
+              </td>
+              <td id="totalForecastValue">
+                <strong>{{ "{:,.0f}".format(convert_to_currency(forecast.total_forecast_value|default(0), currency)|default(0))|replace(',', ' ') }}</strong>
+              </td>
+              <td id="totalRealizedQty"><strong>0</strong></td>
+              <td id="totalRealizedValue"><strong>0</strong></td>
+              <td id="totalRealization"><strong>0%</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('forecast_detail', id=forecast.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-times me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>Enregistrer les Réalisations
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var itemsData = {};
+  {% for item in items %}
+  itemsData[{{ item.id }}] = {
+    price: {{ convert_to_currency(item.selling_price_gnf, currency)|default(0) }},
+    forecastQty: {{ item.forecast_quantity|default(0) }},
+    forecastValue: {{ convert_to_currency(item.selling_price_gnf * item.forecast_quantity, currency)|default(0) }}
+  };
+  {% endfor %}
+  
+  function calculateRow(input) {
+    var row = input.closest('tr');
+    var itemId = parseInt(row.querySelector('input[name="item_ids[]"]').value);
+    var realizedQty = parseFloat(input.value) || 0;
+    var item = itemsData[itemId];
+    
+    if (!item) return;
+    
+    var realizedValue = item.price * realizedQty;
+    var realizationPct = item.forecastValue > 0 ? (realizedValue / item.forecastValue * 100) : 0;
+    
+    row.querySelector('.realized-value-cell').textContent = formatNumber(realizedValue);
+    row.querySelector('.realization-pct-cell').textContent = realizationPct.toFixed(1) + '%';
+    
+    updateTotals();
+  }
+  
+  function updateTotals() {
+    var rows = document.querySelectorAll('tbody tr');
+    var totalForecastQty = 0;
+    var totalForecastValue = 0;
+    var totalRealizedQty = 0;
+    var totalRealizedValue = 0;
+    
+    rows.forEach(function(row) {
+      var itemId = parseInt(row.querySelector('input[name="item_ids[]"]').value);
+      var item = itemsData[itemId];
+      if (!item) return;
+      
+      var realizedQty = parseFloat(row.querySelector('.realized-qty-input').value) || 0;
+      
+      totalForecastQty += item.forecastQty;
+      totalForecastValue += item.forecastValue;
+      totalRealizedQty += realizedQty;
+      totalRealizedValue += item.price * realizedQty;
+    });
+    
+    var totalRealization = totalForecastValue > 0 ? (totalRealizedValue / totalForecastValue * 100) : 0;
+    
+    document.getElementById('totalForecastQty').innerHTML = '<strong>' + formatNumber(totalForecastQty) + '</strong>';
+    document.getElementById('totalForecastValue').innerHTML = '<strong>' + formatNumber(totalForecastValue) + '</strong>';
+    document.getElementById('totalRealizedQty').innerHTML = '<strong>' + formatNumber(totalRealizedQty) + '</strong>';
+    document.getElementById('totalRealizedValue').innerHTML = '<strong>' + formatNumber(totalRealizedValue) + '</strong>';
+    document.getElementById('totalRealization').innerHTML = '<strong>' + totalRealization.toFixed(1) + '%</strong>';
+  }
+  
+  function formatNumber(num) {
+    return new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(num);
+  }
+  
+  // Initialiser les totaux au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    // Calculer chaque ligne
+    document.querySelectorAll('.realized-qty-input').forEach(function(input) {
+      calculateRow(input);
+    });
+  });
+</script>
+{% endblock %}
+

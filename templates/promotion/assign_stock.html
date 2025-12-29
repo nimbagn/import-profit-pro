@@ -1,0 +1,267 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Affecter des Quantités à {{ member.full_name }} - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-plus-circle me-2"></i>
+      Affecter des Quantités à {{ member.full_name }}
+    </h1>
+    <a href="{{ url_for('promotion.member_situation', member_id=member.id) }}" class="btn-hl btn-hl-secondary">
+      <i class="fas fa-arrow-left me-2"></i>Retour à la Situation
+    </a>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card-hl">
+        <div class="card-header-hl">
+          <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Affecter des Quantités de Gammes</h5>
+        </div>
+        <div class="card-body-hl">
+          <form method="POST" action="{{ url_for('promotion.assign_member_stock', member_id=member.id) }}" id="assignStockForm">
+            <div class="mb-3">
+              <label for="assignment_date" class="form-label">Date d'Affectation <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="assignment_date" name="assignment_date" 
+                     value="{{ today.isoformat() }}" required>
+              <small class="form-text text-muted">
+                Date à laquelle cette affectation est effectuée.
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label mb-0">Gammes / Pièces à Affecter <span class="text-danger">*</span></label>
+                <button type="button" class="btn btn-sm btn-success" id="addRowBtn">
+                  <i class="fas fa-plus me-1"></i>Ajouter une Ligne
+                </button>
+              </div>
+              
+              <div id="stockRows" class="table-responsive">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th style="width: 50%;">Gamme / Pièce</th>
+                      <th style="width: 30%;">Quantité</th>
+                      <th style="width: 15%;">Stock Actuel</th>
+                      <th style="width: 5%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockRowsBody">
+                    <!-- Les lignes seront ajoutées dynamiquement ici -->
+                  </tbody>
+                </table>
+              </div>
+              <small class="form-text text-muted">
+                Cliquez sur "Ajouter une Ligne" pour ajouter plusieurs gammes/pièces. La quantité remplacera le stock actuel.
+              </small>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="{{ url_for('promotion.member_situation', member_id=member.id) }}" class="btn-hl btn-hl-secondary">
+                <i class="fas fa-times me-2"></i>Annuler
+              </a>
+              <button type="submit" class="btn-hl btn-hl-primary">
+                <i class="fas fa-check me-2"></i>Affecter les Quantités
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-hl">
+        <div class="card-header-hl">
+          <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h6>
+        </div>
+        <div class="card-body-hl">
+          <p class="small">
+            <strong>Note :</strong> L'affectation de quantités définit le stock initial ou met à jour le stock actuel du membre.
+          </p>
+          <p class="small">
+            Les enlèvements augmentent automatiquement le stock, et les retours le diminuent.
+          </p>
+          <hr>
+          <h6>Stock Actuel</h6>
+          {% if current_stocks %}
+          <ul class="list-unstyled small">
+            {% for gamme in gammes %}
+              {% if current_stocks.get(gamme.id, 0) > 0 %}
+              <li>
+                <strong>{{ gamme.name }}:</strong> 
+                <span class="badge bg-primary">{{ current_stocks.get(gamme.id, 0) }}</span>
+              </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted small">Aucun stock enregistré</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Données des gammes disponibles
+  const gammes = [
+    {% for gamme in gammes %}
+    {
+      id: {{ gamme.id }},
+      name: "{{ gamme.name }}",
+      is_piece: {{ 'true' if gamme.is_piece else 'false' }},
+      unit_type: "{{ gamme.unit_type or '' }}",
+      current_stock: {{ current_stocks.get(gamme.id, 0) }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  
+  const stockRowsBody = document.getElementById('stockRowsBody');
+  const addRowBtn = document.getElementById('addRowBtn');
+  let rowCounter = 0;
+  
+  // Fonction pour créer une nouvelle ligne
+  function createRow() {
+    const row = document.createElement('tr');
+    row.id = `row_${rowCounter}`;
+    row.innerHTML = `
+      <td>
+        <select class="form-select gamme-select" name="gamme_id_${rowCounter}" required>
+          <option value="">-- Sélectionner une gamme/pièce --</option>
+          ${gammes.map(gamme => `
+            <option value="${gamme.id}" data-current="${gamme.current_stock}">
+              ${gamme.name}${gamme.is_piece ? ` (${gamme.unit_type || 'Pièce'})` : ''}${gamme.current_stock > 0 ? ` - Stock: ${gamme.current_stock}` : ''}
+            </option>
+          `).join('')}
+        </select>
+      </td>
+      <td>
+        <input type="number" class="form-control quantity-input" name="quantity_${rowCounter}" 
+               min="0" step="1" required placeholder="Quantité">
+      </td>
+      <td>
+        <span class="current-stock-display badge bg-info">-</span>
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-danger remove-row-btn" title="Supprimer cette ligne">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    
+    stockRowsBody.appendChild(row);
+    
+    // Ajouter les event listeners
+    const gammeSelect = row.querySelector('.gamme-select');
+    const quantityInput = row.querySelector('.quantity-input');
+    const stockDisplay = row.querySelector('.current-stock-display');
+    const removeBtn = row.querySelector('.remove-row-btn');
+    
+    // Mettre à jour le stock actuel quand on sélectionne une gamme
+    gammeSelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      const currentStock = selectedOption ? selectedOption.getAttribute('data-current') || 0 : 0;
+      stockDisplay.textContent = currentStock;
+      stockDisplay.className = `current-stock-display badge ${currentStock > 0 ? 'bg-info' : 'bg-secondary'}`;
+    });
+    
+    // Supprimer la ligne
+    removeBtn.addEventListener('click', function() {
+      row.remove();
+      validateForm();
+    });
+    
+    // Validation
+    gammeSelect.addEventListener('change', validateForm);
+    quantityInput.addEventListener('input', validateForm);
+    
+    rowCounter++;
+    validateForm();
+  }
+  
+  // Validation du formulaire
+  function validateForm() {
+    const rows = stockRowsBody.querySelectorAll('tr');
+    const hasValidRows = Array.from(rows).some(row => {
+      const gammeSelect = row.querySelector('.gamme-select');
+      const quantityInput = row.querySelector('.quantity-input');
+      return gammeSelect.value && quantityInput.value && parseInt(quantityInput.value) > 0;
+    });
+    
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = !hasValidRows;
+    }
+  }
+  
+  // Ajouter une ligne au clic
+  addRowBtn.addEventListener('click', createRow);
+  
+  // Validation à la soumission
+  document.getElementById('assignStockForm').addEventListener('submit', function(e) {
+    const rows = stockRowsBody.querySelectorAll('tr');
+    let hasAtLeastOneRow = false;
+    
+    rows.forEach(row => {
+      const gammeSelect = row.querySelector('.gamme-select');
+      const quantityInput = row.querySelector('.quantity-input');
+      
+      if (gammeSelect.value && quantityInput.value && parseInt(quantityInput.value) > 0) {
+        hasAtLeastOneRow = true;
+      } else {
+        // Supprimer les lignes vides
+        row.remove();
+      }
+    });
+    
+    if (!hasAtLeastOneRow) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins une gamme/pièce avec une quantité valide.');
+      return false;
+    }
+  });
+  
+  // Créer la première ligne par défaut
+  createRow();
+});
+</script>
+
+<style>
+#stockRows table {
+  margin-bottom: 0;
+}
+
+#stockRows table thead th {
+  background-color: var(--gray-100, #f8f9fa);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+#stockRows table tbody tr:hover {
+  background-color: var(--gray-50, #fafafa);
+}
+
+.current-stock-display {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.remove-row-btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.gamme-select, .quantity-input {
+  font-size: 0.9rem;
+}
+
+#addRowBtn {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+}
+</style>
+{% endblock %}
+

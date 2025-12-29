@@ -1,0 +1,270 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détails Équipe - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    {# Messages flash #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+              <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'info-circle' }} me-2"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-users icon-promo"></i>
+        {{ team.name }}
+      </h1>
+      <div class="d-flex gap-2 flex-wrap">
+        {% if has_permission(current_user, 'promotion.write') %}
+        <a href="{{ url_for('promotion.team_supply', team_id=team.id) }}" class="btn btn-promo btn-promo-primary">
+          <i class="fas fa-truck-loading me-2"></i>Approvisionner
+        </a>
+        <a href="{{ url_for('promotion.team_edit', id=team.id) }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+          <i class="fas fa-edit me-2"></i>Modifier
+        </a>
+        {% endif %}
+        <a href="{{ url_for('promotion.teams_list') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+          <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informations de l'équipe -->
+  <div class="row section-spacing">
+    <div class="col-md-6 mb-4">
+      <div class="card-promo">
+        <div class="card-promo-header">
+          <i class="fas fa-info-circle me-2"></i>Informations de l'Équipe
+        </div>
+        <div style="padding: 1.5rem;">
+          <h5 class="card-title">Informations de l'Équipe</h5>
+          <p><strong>Nom:</strong> {{ team.name }}</p>
+          <p><strong>Description:</strong> {{ team.description or 'Aucune description' }}</p>
+          <p><strong>Région:</strong> {{ team.region or 'Non spécifiée' }}</p>
+          <p><strong>Responsable:</strong> {{ team.team_leader.full_name if team.team_leader else 'N/A' }}</p>
+          <p><strong>Statut:</strong> 
+            {% if team.is_active %}
+            <span class="badge bg-success">Active</span>
+            {% else %}
+            <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+      <div class="card-promo">
+        <div class="card-promo-header">
+          <i class="fas fa-chart-bar me-2"></i>Statistiques
+        </div>
+        <div style="padding: 1.5rem;">
+          <p><strong>Membres:</strong> {{ stats.members_count }}</p>
+          <p><strong>Total Ventes:</strong> {{ stats.total_sales }}</p>
+          <p><strong>Chiffre d'Affaires:</strong> {{ "{:,.0f}".format(stats.total_revenue|default(0))|replace(',', ' ') }} GNF</p>
+          <p><strong>Commissions:</strong> {{ "{:,.0f}".format(stats.total_commissions|default(0))|replace(',', ' ') }} GNF</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock de l'équipe -->
+  <div class="card-promo section-spacing">
+    <div class="card-promo-header">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <span>
+          <i class="fas fa-boxes me-2"></i>
+          Stock de l'Équipe
+          {% if team_stock %}
+          <small class="text-muted ms-2">({{ team_stock|length }} type(s) de gamme(s) en stock)</small>
+          {% endif %}
+        </span>
+        <div class="d-flex gap-2">
+          {% if has_permission(current_user, 'promotion.read') %}
+          <a href="{{ url_for('promotion.team_stock_movements', team_id=team.id) }}" class="btn btn-sm btn-promo btn-promo-info">
+            <i class="fas fa-history me-1"></i>Historique
+          </a>
+          {% endif %}
+          {% if has_permission(current_user, 'promotion.write') %}
+          <a href="{{ url_for('promotion.team_supply', team_id=team.id) }}" class="btn btn-sm btn-promo btn-promo-primary">
+            <i class="fas fa-plus me-1"></i>Approvisionner
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Gamme / Pièce</th>
+              <th>Stock Disponible</th>
+              <th>Dernière Mise à Jour</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if team_stock and team_stock|length > 0 %}
+              {% set has_stock = false %}
+              {% set displayed_gammes = [] %}
+              
+              {# Afficher d'abord les gammes avec stock qui sont dans la liste #}
+              {% for gamme in gammes %}
+                {% set stock_qty = team_stock.get(gamme.id, 0) %}
+                {% if stock_qty > 0 %}
+                  {% set has_stock = true %}
+                  {% set displayed_gammes = displayed_gammes + [gamme.id] %}
+                  {% set stock_detail = team_stock_details.get(gamme.id, {}) %}
+                  <tr>
+                    <td>
+                      <strong>{{ gamme.name }}</strong>
+                      {% if gamme.is_piece %}
+                      <small class="text-muted">({{ gamme.unit_type or 'Pièce' }})</small>
+                      {% endif %}
+                      {% if not gamme.is_active %}
+                      <span class="badge badge-promo badge-promo-warning ms-2">Inactive</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge badge-promo badge-promo-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                        {{ stock_qty }} unité(s)
+                      </span>
+                    </td>
+                    <td>
+                      {% if stock_detail and stock_detail.last_updated %}
+                      <small class="text-muted">{{ stock_detail.last_updated.strftime('%d/%m/%Y %H:%M') if stock_detail.last_updated else '-' }}</small>
+                      {% else %}
+                      <small class="text-muted">-</small>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+              
+              {# Afficher les gammes avec stock qui ne sont pas dans la liste principale #}
+              {% for gamme_id, stock_qty in team_stock.items() %}
+                {% if gamme_id not in displayed_gammes and stock_qty > 0 %}
+                  {% set has_stock = true %}
+                  {% set gamme_obj = none %}
+                  {% for g in gammes %}
+                    {% if g.id == gamme_id %}
+                      {% set gamme_obj = g %}
+                    {% endif %}
+                  {% endfor %}
+                  {% set stock_detail = team_stock_details.get(gamme_id, {}) %}
+                  <tr>
+                    <td>
+                      {% if gamme_obj %}
+                      <strong>{{ gamme_obj.name }}</strong>
+                      {% if gamme_obj.is_piece %}
+                      <small class="text-muted">({{ gamme_obj.unit_type or 'Pièce' }})</small>
+                      {% endif %}
+                      {% else %}
+                      <strong>Gamme ID {{ gamme_id }}</strong>
+                      <span class="badge badge-promo badge-promo-warning ms-2">Non trouvée</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge badge-promo badge-promo-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                        {{ stock_qty }} unité(s)
+                      </span>
+                    </td>
+                    <td>
+                      {% if stock_detail and stock_detail.last_updated %}
+                      <small class="text-muted">{{ stock_detail.last_updated.strftime('%d/%m/%Y %H:%M') if stock_detail.last_updated else '-' }}</small>
+                      {% else %}
+                      <small class="text-muted">-</small>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+              
+              {% if not has_stock %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-4">
+                  <i class="fas fa-box-open fa-2x mb-2"></i>
+                  <p class="mb-0">Aucun stock disponible pour cette équipe</p>
+                  <small>Utilisez le bouton "Approvisionner" pour ajouter du stock</small>
+                </td>
+              </tr>
+              {% endif %}
+            {% else %}
+            <tr>
+              <td colspan="3" class="text-center text-muted py-4">
+                <i class="fas fa-box-open fa-2x mb-2"></i>
+                <p class="mb-0">Aucun stock enregistré pour cette équipe</p>
+                <small>Utilisez le bouton "Approvisionner" pour ajouter du stock</small>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Membres de l'équipe -->
+  <div class="card-promo">
+    <div class="card-promo-header">
+      <i class="fas fa-user-friends me-2"></i>
+      Membres de l'Équipe ({{ members|length }})
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Téléphone</th>
+              <th>Email</th>
+              <th>Ventes</th>
+              <th>Commission Totale</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for member in members %}
+            <tr>
+              <td><strong>{{ member.full_name }}</strong></td>
+              <td>{{ member.phone or '-' }}</td>
+              <td>{{ member.email or '-' }}</td>
+              <td><span class="badge badge-promo badge-promo-info">{{ member.stats.sales_count }}</span></td>
+              <td><strong class="data-positive">{{ "{:,.0f}".format(member.stats.total_commission|default(0))|replace(',', ' ') }} GNF</strong></td>
+              <td>
+                {% if member.is_active %}
+                <span class="badge badge-promo badge-promo-success">Actif</span>
+                {% else %}
+                <span class="badge badge-promo" style="background: #6c757d; color: white;">Inactif</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if has_permission(current_user, 'promotion.write') %}
+                <a href="{{ url_for('promotion.member_edit', id=member.id) }}" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="text-center text-muted">Aucun membre dans cette équipe</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

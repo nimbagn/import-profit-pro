@@ -1,0 +1,454 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Saisie Rapide - Import Profit Pro{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+    
+    // Éviter l'exécution multiple
+    if (window.quickEntryInitialized) {
+        return;
+    }
+    window.quickEntryInitialized = true;
+    
+document.addEventListener('DOMContentLoaded', function() {
+    const memberSelect = document.getElementById('member_id');
+    const gammeSelect = document.getElementById('gamme_id');
+    const quantityInput = document.getElementById('quantity');
+    const entriesContainer = document.getElementById('entries-container');
+    const form = document.getElementById('quick-entry-form');
+    let entryCount = 0;
+    
+    // Charger les informations de la gamme
+    if (gammeSelect) {
+        gammeSelect.addEventListener('change', function() {
+            const gammeId = this.value;
+            if (gammeId) {
+                fetch(`/promotion/api/gammes/${gammeId}/info`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('selling_price').textContent = 
+                            new Intl.NumberFormat('fr-FR').format(data.selling_price_gnf) + ' GNF';
+                        document.getElementById('commission').textContent = 
+                            new Intl.NumberFormat('fr-FR').format(data.commission_per_unit_gnf) + ' GNF';
+                    });
+            }
+        });
+    }
+    
+    // Ajouter une entrée rapide
+    function addQuickEntry() {
+        // Récupérer les éléments à chaque fois pour éviter les problèmes de portée
+        const memberSelectEl = document.getElementById('member_id');
+        const gammeSelectEl = document.getElementById('gamme_id');
+        const quantityInputEl = document.getElementById('quantity');
+        
+        // Vérifier que les éléments existent
+        if (!memberSelectEl) {
+            console.error('Element member_id introuvable');
+            alert('Erreur: Le champ membre est introuvable. Veuillez actualiser la page.');
+            return;
+        }
+        
+        if (!gammeSelectEl) {
+            console.error('Element gamme_id introuvable');
+            alert('Erreur: Le champ gamme est introuvable. Veuillez actualiser la page.');
+            return;
+        }
+        
+        const memberId = memberSelectEl.value ? String(memberSelectEl.value).trim() : '';
+        const gammeId = gammeSelectEl.value ? String(gammeSelectEl.value).trim() : '';
+        const quantity = quantityInputEl ? (quantityInputEl.value || 1) : 1;
+        
+        // Debug logs
+        console.log('DEBUG addQuickEntry:', {
+            memberId: memberId,
+            memberIdType: typeof memberId,
+            memberSelectedIndex: memberSelectEl.selectedIndex,
+            gammeId: gammeId,
+            gammeIdType: typeof gammeId,
+            gammeSelectedIndex: gammeSelectEl.selectedIndex
+        });
+        
+        // Vérification détaillée
+        if (!memberId || memberId === '' || memberId === '0' || memberSelectEl.selectedIndex <= 0) {
+            alert('Veuillez sélectionner un membre dans la liste déroulante');
+            if (memberSelectEl) {
+                memberSelectEl.focus();
+                memberSelectEl.style.borderColor = '#dc3545';
+                setTimeout(() => {
+                    memberSelectEl.style.borderColor = '';
+                }, 2000);
+            }
+            return;
+        }
+        
+        if (!gammeId || gammeId === '' || gammeId === '0' || gammeSelectEl.selectedIndex <= 0) {
+            alert('Veuillez sélectionner une gamme dans la liste déroulante');
+            if (gammeSelectEl) {
+                gammeSelectEl.focus();
+                gammeSelectEl.style.borderColor = '#dc3545';
+                setTimeout(() => {
+                    gammeSelectEl.style.borderColor = '';
+                }, 2000);
+            }
+            return;
+        }
+        
+        entryCount++;
+        const transactionTypeEl = document.getElementById('transaction_type');
+        const transactionType = transactionTypeEl ? (transactionTypeEl.value || 'enlevement') : 'enlevement';
+        const transactionTypeLabel = transactionType === 'enlevement' ? 'Enlèvement' : 'Retour';
+        const typeBadgeClass = transactionType === 'enlevement' ? 'bg-success' : 'bg-warning';
+        
+        // Récupérer les textes des options sélectionnées
+        const memberName = memberSelectEl.options[memberSelectEl.selectedIndex] ? 
+                          memberSelectEl.options[memberSelectEl.selectedIndex].text : 'Membre inconnu';
+        const gammeName = gammeSelectEl.options[gammeSelectEl.selectedIndex] ? 
+                         gammeSelectEl.options[gammeSelectEl.selectedIndex].text : 'Gamme inconnue';
+        
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'quick-entry-item card mb-2';
+        entryDiv.innerHTML = `
+            <div class="card-body p-2">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <strong>${memberName}</strong>
+                    </div>
+                    <div class="col-md-2">
+                        ${gammeName}
+                    </div>
+                    <div class="col-md-1">
+                        <span class="badge bg-info">${quantity}</span>
+                    </div>
+                    <div class="col-md-1">
+                        <span class="badge ${typeBadgeClass}">${transactionTypeLabel}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="sale_date_${entryCount}" class="form-control form-control-sm" 
+                               value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.quick-entry-item').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" name="member_id_${entryCount}" value="${memberId}">
+                <input type="hidden" name="gamme_id_${entryCount}" value="${gammeId}">
+                <input type="hidden" name="quantity_${entryCount}" value="${quantity}">
+                <input type="hidden" name="transaction_type_${entryCount}" value="${transactionType}">
+            </div>
+        `;
+        if (entriesContainer) {
+            entriesContainer.appendChild(entryDiv);
+            
+            // Mettre à jour le compteur
+            const entryCountEl = document.getElementById('entry-count');
+            if (entryCountEl) {
+                entryCountEl.textContent = entryCount;
+            }
+        }
+        
+        // Réinitialiser les champs (garder membre et gamme sélectionnés pour ajouter plusieurs fois)
+        if (quantityInputEl) quantityInputEl.value = 1;
+    }
+    
+    // Raccourci clavier: Ctrl+Enter pour ajouter
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            addQuickEntry();
+        }
+    });
+    
+    // Bouton ajouter
+    const addBtn = document.getElementById('add-entry-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', addQuickEntry);
+    }
+    
+    // Soumission du formulaire
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (entryCount === 0) {
+                e.preventDefault();
+                alert('Veuillez ajouter au moins une entrée');
+                return false;
+            }
+        });
+    }
+});
+})();
+</script>
+<style>
+.quick-entry-item {
+    animation: slideIn 0.3s ease-out;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease;
+}
+
+.quick-entry-item:hover {
+    border-color: var(--color-primary, #007bff) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px);
+}
+
+.quick-entry-item .card-body {
+    padding: 1rem !important;
+    background: #f8f9fa;
+}
+
+.quick-entry-item .badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.quick-entry-item .form-control-sm {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+}
+
+.quick-entry-item strong {
+    color: #333;
+    font-size: 1rem;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-select-lg, .form-control-lg {
+    transition: all 0.3s ease;
+}
+
+.form-select-lg:focus, .form-control-lg:focus {
+    border-color: var(--color-primary, #007bff) !important;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25) !important;
+}
+
+/* Assurer que les listes déroulantes sont visibles */
+.form-select {
+    z-index: 1000 !important;
+}
+
+.form-select:focus {
+    z-index: 1001 !important;
+}
+
+/* S'assurer que le conteneur parent permet l'overflow */
+.card-hl, .card-body-hl {
+    overflow: visible !important;
+}
+
+/* Style pour les options du select */
+select option {
+    padding: 0.75rem !important;
+    font-size: 1rem !important;
+    background: white !important;
+    color: #333 !important;
+}
+
+/* S'assurer que le sticky ne bloque pas les dropdowns */
+.sticky-top {
+    overflow: visible !important;
+}
+
+/* Forcer la visibilité des dropdowns */
+select.form-select {
+    position: relative !important;
+}
+
+select.form-select:focus {
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* S'assurer que les options sont visibles */
+select.form-select option {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+}
+
+/* Conteneur parent */
+.col-md-4 {
+    overflow: visible !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-bolt me-2"></i>
+      Saisie Rapide - Ventes en Masse
+    </h1>
+    <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  <div class="row">
+    <!-- Formulaire de saisie rapide -->
+    <div class="col-md-4" style="position: relative; z-index: 100;">
+      <div class="card-hl sticky-top" style="top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid var(--color-primary, #007bff); z-index: 100; overflow: visible; position: relative;">
+        <div class="card-header-hl" style="background: linear-gradient(135deg, var(--color-primary, #007bff) 0%, #0056b3 100%); color: white; padding: 1.25rem;">
+          <h5 class="mb-0" style="font-size: 1.25rem; font-weight: 600;">
+            <i class="fas fa-plus-circle me-2"></i>Nouvelle Entrée
+          </h5>
+        </div>
+        <div class="card-body-hl" style="padding: 1.5rem; overflow: visible;">
+          <div class="mb-3" style="position: relative; z-index: 1000;">
+            <label for="member_id" class="form-label fw-bold" style="font-size: 0.95rem; color: #333;">
+              <i class="fas fa-user me-1"></i>Membre <span class="text-danger">*</span>
+            </label>
+            <select class="form-select form-select-lg" id="member_id" required 
+                    style="font-size: 1rem; padding: 0.75rem; border: 2px solid #dee2e6; position: relative; z-index: 1001;">
+              <option value="">-- Sélectionner un membre --</option>
+              {% for member_data in members %}
+              <option value="{{ member_data.member.id }}">{{ member_data.member.full_name }}{% if member_data.member.team %} ({{ member_data.member.team.name }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3" style="position: relative; z-index: 999;">
+            <label for="gamme_id" class="form-label fw-bold" style="font-size: 0.95rem; color: #333;">
+              <i class="fas fa-box me-1"></i>Gamme / Pièce <span class="text-danger">*</span>
+            </label>
+            <select class="form-select form-select-lg" id="gamme_id" required 
+                    style="font-size: 1rem; padding: 0.75rem; border: 2px solid #dee2e6; position: relative; z-index: 1000;">
+              <option value="">-- Sélectionner une gamme --</option>
+              {% for gamme in gammes %}
+              <option value="{{ gamme.id }}" data-price="{{ gamme.selling_price_gnf }}" 
+                      data-commission="{{ gamme.commission_per_unit_gnf }}">
+                {{ gamme.name }}{% if gamme.is_piece %} - {% if gamme.unit_type %}1 {{ gamme.unit_type }}{% if gamme.unit_description %} ({{ gamme.unit_description }}){% endif %}{% else %}Pièce{% if gamme.unit_description %} - {{ gamme.unit_description }}{% endif %}{% endif %}{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="mt-2 p-2" style="background: #f8f9fa; border-radius: 0.375rem; border-left: 3px solid var(--color-primary, #007bff);">
+              <small class="text-muted d-block">
+                <strong>Prix:</strong> <span id="selling_price" class="text-success fw-bold">-</span>
+              </small>
+              <small class="text-muted d-block">
+                <strong>Commission:</strong> <span id="commission" class="text-info fw-bold">-</span>
+              </small>
+            </div>
+          </div>
+
+          <div class="mb-3" style="position: relative; z-index: 998;">
+            <label for="transaction_type" class="form-label fw-bold" style="font-size: 0.95rem; color: #333;">
+              <i class="fas fa-exchange-alt me-1"></i>Type de Transaction <span class="text-danger">*</span>
+            </label>
+            <select class="form-select form-select-lg" id="transaction_type" required 
+                    style="font-size: 1rem; padding: 0.75rem; border: 2px solid #dee2e6; position: relative; z-index: 999;">
+              <option value="enlevement" selected>🔼 Enlèvement</option>
+              <option value="retour">🔽 Retour</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="quantity" class="form-label fw-bold" style="font-size: 0.95rem; color: #333;">
+              <i class="fas fa-hashtag me-1"></i>Quantité
+            </label>
+            <input type="number" class="form-control form-control-lg" id="quantity" value="1" min="1" 
+                   style="font-size: 1.1rem; padding: 0.75rem; border: 2px solid #dee2e6; font-weight: 600; text-align: center;">
+          </div>
+
+          <button type="button" id="add-entry-btn" class="btn-hl btn-hl-primary w-100" 
+                  style="padding: 1rem; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0,123,255,0.3);">
+            <i class="fas fa-plus me-2"></i>Ajouter à la Liste
+            <br><small style="font-size: 0.85rem; opacity: 0.9;">(Ctrl+Enter)</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des entrées -->
+    <div class="col-md-8">
+      <div class="card-hl" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="card-header-hl d-flex justify-content-between align-items-center" 
+             style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 1.25rem;">
+          <h5 class="mb-0" style="font-size: 1.25rem; font-weight: 600;">
+            <i class="fas fa-list me-2"></i>Entrées à Enregistrer
+          </h5>
+          <span class="badge" id="entry-count" style="font-size: 1.1rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.3); color: white; border: 2px solid white;">0</span>
+        </div>
+        <div class="card-body-hl" style="padding: 1.5rem;">
+          <form method="POST" id="quick-entry-form" action="{{ url_for('promotion.quick_sales_save') }}">
+            <div id="entries-container" style="min-height: 300px;">
+              <div class="text-center text-muted py-5">
+                <i class="fas fa-inbox fa-4x mb-3" style="opacity: 0.3;"></i>
+                <p style="font-size: 1.1rem; font-weight: 500;">Ajoutez des entrées en utilisant le formulaire à gauche</p>
+                <small style="font-size: 0.9rem;">Appuyez sur <kbd style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">Ctrl+Enter</kbd> pour ajouter rapidement</small>
+              </div>
+            </div>
+            
+            <div class="alert alert-info d-flex align-items-center" id="info-alert" 
+                 style="background: #e7f3ff; border-left: 4px solid #0dcaf0; padding: 1rem;">
+              <i class="fas fa-info-circle me-3" style="font-size: 1.5rem; color: #0dcaf0;"></i>
+              <div>
+                <strong>Astuce:</strong> Utilisez <kbd style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">Ctrl+Enter</kbd> pour ajouter rapidement une entrée après avoir sélectionné membre et gamme.
+              </div>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2 mt-4" style="padding-top: 1rem; border-top: 2px solid #e9ecef;">
+              <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-outline" style="padding: 0.75rem 1.5rem;">
+                <i class="fas fa-times me-2"></i>Annuler
+              </a>
+              <button type="submit" class="btn-hl btn-hl-success" style="padding: 0.75rem 1.5rem; font-size: 1.05rem; font-weight: 600;">
+                <i class="fas fa-save me-2"></i>Enregistrer Toutes les Ventes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Mettre à jour le compteur
+function updateEntryCount() {
+    const count = document.querySelectorAll('.quick-entry-item').length;
+    const entryCountEl = document.getElementById('entry-count');
+    if (entryCountEl) {
+        entryCountEl.textContent = count;
+    }
+    const infoAlert = document.getElementById('info-alert');
+    const emptyMsg = document.querySelector('#entries-container .text-center');
+    
+    if (count > 0) {
+        if (emptyMsg) emptyMsg.remove();
+        if (infoAlert) infoAlert.style.display = 'none';
+    } else {
+        if (infoAlert) infoAlert.style.display = 'block';
+    }
+}
+
+// Observer les changements dans le conteneur (une seule fois)
+if (typeof window.quickEntryObserver === 'undefined') {
+    const entriesContainer = document.getElementById('entries-container');
+    if (entriesContainer) {
+        window.quickEntryObserver = new MutationObserver(updateEntryCount);
+        window.quickEntryObserver.observe(entriesContainer, { childList: true });
+        // Mettre à jour le compteur initial
+        updateEntryCount();
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,327 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Guide des Opérations Véhicules - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .operations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+  }
+  
+  .operation-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+  }
+  
+  .operation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+  
+  .operation-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: var(--space-md);
+  }
+  
+  .operation-icon.documents {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+  }
+  
+  .operation-icon.maintenances {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+  }
+  
+  .operation-icon.odometer {
+    background: rgba(0, 56, 101, 0.1);
+    color: var(--color-primary);
+  }
+  
+  .operation-icon.assignments {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+  }
+  
+  .operation-icon.stock {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+  
+  .operation-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .operation-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+  }
+  
+  .operation-steps {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-md) 0;
+  }
+  
+  .operation-steps li {
+    padding: var(--space-xs) 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+  
+  .operation-steps li:before {
+    content: "✓";
+    color: var(--color-success);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  
+  .operation-actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+    flex-wrap: wrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-book me-2"></i>
+      Guide des Opérations Véhicules
+    </h1>
+    <a href="{{ url_for('flotte.dashboard') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour au Dashboard
+    </a>
+  </div>
+
+  <div class="card-hl" style="margin-bottom: var(--space-xl);">
+    <div class="card-body-hl">
+      <h3 style="margin-bottom: var(--space-md);">📋 Vue d'ensemble</h3>
+      <p style="color: var(--text-secondary); line-height: 1.8;">
+        Ce guide vous explique comment saisir toutes les opérations liées à vos véhicules. 
+        Chaque opération est accessible depuis la <strong>fiche complète du véhicule</strong> ou directement 
+        depuis les menus de navigation.
+      </p>
+      <div style="margin-top: var(--space-lg);">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-list me-2"></i>Voir tous les véhicules
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="operations-grid">
+    <!-- Documents -->
+    <div class="operation-card">
+      <div class="operation-icon documents">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <h3 class="operation-title">Documents Véhicule</h3>
+      <p class="operation-description">
+        Gérer les documents obligatoires : assurance, carte grise, contrôle technique, taxe route, etc.
+      </p>
+      <ul class="operation-steps">
+        <li>Accéder à la fiche du véhicule</li>
+        <li>Onglet "Documents"</li>
+        <li>Cliquer sur "Ajouter un Document"</li>
+        <li>Remplir le formulaire (type, numéro, dates)</li>
+        <li>Le système alerte automatiquement les expirations</li>
+      </ul>
+      <div class="operation-actions">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-file-alt me-2"></i>Gérer les Documents
+        </a>
+      </div>
+    </div>
+
+    <!-- Maintenances -->
+    <div class="operation-card">
+      <div class="operation-icon maintenances">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h3 class="operation-title">Maintenances</h3>
+      <p class="operation-description">
+        Planifier et suivre les maintenances préventives et curatives de vos véhicules.
+      </p>
+      <ul class="operation-steps">
+        <li>Accéder à la fiche du véhicule</li>
+        <li>Onglet "Maintenances"</li>
+        <li>Cliquer sur "Planifier une Maintenance"</li>
+        <li>Choisir le type (vidange, pneus, freins, etc.)</li>
+        <li>Définir la date ou le kilométrage</li>
+        <li>Marquer comme réalisée quand effectuée</li>
+      </ul>
+      <div class="operation-actions">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-tools me-2"></i>Gérer les Maintenances
+        </a>
+      </div>
+    </div>
+
+    <!-- Odomètre -->
+    <div class="operation-card">
+      <div class="operation-icon odometer">
+        <i class="fas fa-tachometer-alt"></i>
+      </div>
+      <h3 class="operation-title">Relevés Odomètre</h3>
+      <p class="operation-description">
+        Enregistrer les kilométrages pour suivre l'utilisation et planifier les maintenances.
+      </p>
+      <ul class="operation-steps">
+        <li>Accéder à la fiche du véhicule</li>
+        <li>Onglet "Odomètre"</li>
+        <li>Cliquer sur "Nouveau Relevé"</li>
+        <li>Saisir la date et le kilométrage</li>
+        <li>Le système vérifie la cohérence (pas de km en arrière)</li>
+        <li>Historique complet disponible</li>
+      </ul>
+      <div class="operation-actions">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-tachometer-alt me-2"></i>Gérer l'Odomètre
+        </a>
+      </div>
+    </div>
+
+    <!-- Assignations -->
+    <div class="operation-card">
+      <div class="operation-icon assignments">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <h3 class="operation-title">Assignations Conducteurs</h3>
+      <p class="operation-description">
+        Assigner un conducteur à un véhicule et suivre l'historique des assignations.
+      </p>
+      <ul class="operation-steps">
+        <li>Accéder à la fiche du véhicule</li>
+        <li>Onglet "Assignations"</li>
+        <li>Cliquer sur "Nouvelle Assignation"</li>
+        <li>Sélectionner le conducteur et la date de début</li>
+        <li>L'ancienne assignation se termine automatiquement</li>
+        <li>Terminer une assignation quand nécessaire</li>
+      </ul>
+      <div class="operation-actions">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-user-tie me-2"></i>Gérer les Assignations
+        </a>
+      </div>
+    </div>
+
+    <!-- Stock -->
+    <div class="operation-card">
+      <div class="operation-icon stock">
+        <i class="fas fa-boxes"></i>
+      </div>
+      <h3 class="operation-title">Stock dans le Véhicule</h3>
+      <p class="operation-description">
+        Suivre le stock présent dans chaque véhicule et les mouvements associés.
+      </p>
+      <ul class="operation-steps">
+        <li>Accéder à la fiche du véhicule</li>
+        <li>Onglet "Stock" pour voir le stock actuel</li>
+        <li>Onglet "Mouvements" pour l'historique</li>
+        <li>Créer un mouvement depuis la section Stocks</li>
+        <li>Choisir le véhicule comme source ou destination</li>
+        <li>Le stock se met à jour automatiquement</li>
+      </ul>
+      <div class="operation-actions">
+        <a href="{{ url_for('stocks.movement_new') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-exchange-alt me-2"></i>Créer un Mouvement
+        </a>
+      </div>
+    </div>
+
+    <!-- Informations Générales -->
+    <div class="operation-card">
+      <div class="operation-icon" style="background: rgba(107, 114, 128, 0.1); color: #6b7280;">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <h3 class="operation-title">Modifier les Informations</h3>
+      <p class="operation-description">
+        Mettre à jour les informations générales du véhicule (marque, modèle, statut, etc.).
+      </p>
+      <ul class="operation-steps">
+        <li>Accéder à la liste des véhicules</li>
+        <li>Cliquer sur "Modifier" (icône crayon)</li>
+        <li>Modifier les champs nécessaires</li>
+        <li>Changer le statut (actif, inactif, maintenance)</li>
+        <li>Assigner un conducteur directement</li>
+        <li>Sauvegarder les modifications</li>
+      </ul>
+      <div class="operation-actions">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-edit me-2"></i>Modifier un Véhicule
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accès Rapide -->
+  <div class="card-hl" style="margin-top: var(--space-xl);">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-bolt me-2"></i>Accès Rapide
+      </h3>
+    </div>
+    <div class="card-body-hl">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+        <a href="{{ url_for('referentiels.vehicle_new') }}" class="btn-hl btn-hl-primary" style="text-align: center; padding: var(--space-md);">
+          <i class="fas fa-plus-circle" style="font-size: 2rem; display: block; margin-bottom: var(--space-sm);"></i>
+          Nouveau Véhicule
+        </a>
+        <a href="{{ url_for('flotte.dashboard') }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+          <i class="fas fa-tachometer-alt" style="font-size: 2rem; display: block; margin-bottom: var(--space-sm);"></i>
+          Dashboard Flotte
+        </a>
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+          <i class="fas fa-list" style="font-size: 2rem; display: block; margin-bottom: var(--space-sm);"></i>
+          Liste Véhicules
+        </a>
+        <a href="{{ url_for('stocks.movement_new') }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+          <i class="fas fa-exchange-alt" style="font-size: 2rem; display: block; margin-bottom: var(--space-sm);"></i>
+          Nouveau Mouvement
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

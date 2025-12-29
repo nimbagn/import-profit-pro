@@ -1,0 +1,564 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Dashboard Promotion - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.css" rel="stylesheet">
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 2rem !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+    background: #f8f9fa;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  
+  .page-header-hl {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .page-title-hl {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card-hl {
+    background: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stat-card-hl::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+  }
+  
+  .stat-card-hl:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .stat-card-hl-value {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+    line-height: 1;
+  }
+  
+  .stat-card-hl-label {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .stat-card-hl-icon {
+    font-size: 3rem;
+    opacity: 0.1;
+    position: absolute;
+    right: var(--space-lg);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .hero-stat-card {
+    grid-column: span 2;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-success) 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+  
+  .hero-stat-card .stat-card-hl-value {
+    color: white;
+    font-size: 4rem;
+  }
+  
+  .hero-stat-card .stat-card-hl-label {
+    color: rgba(255,255,255,0.9);
+    font-size: 1.2rem;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 3px solid var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .table-card {
+    background: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-xl);
+    transition: var(--transition-normal);
+  }
+  
+  .table-card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .chart-container {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-xl);
+    height: 400px;
+  }
+  
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: white;
+  }
+  
+  .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); }
+  .rank-2 { background: linear-gradient(135deg, #C0C0C0, #808080); }
+  .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); }
+  .rank-other { background: var(--color-primary); }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .hero-stat-card {
+      grid-column: span 1;
+    }
+    
+    .page-title-hl {
+      font-size: 1.8rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Graphique des ventes des 7 derniers jours
+  const salesCtx = document.getElementById('salesChart');
+  if (salesCtx) {
+    new Chart(salesCtx, {
+      type: 'line',
+      data: {
+        labels: {{ sales_chart_labels }},
+        datasets: [{
+          label: 'Ventes (Quantité)',
+          data: {{ sales_chart_data }},
+          borderColor: 'rgb(0, 123, 255)',
+          backgroundColor: 'rgba(0, 123, 255, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          title: {
+            display: true,
+            text: 'Évolution des Ventes (7 derniers jours)',
+            font: { size: 16, weight: 'bold' }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  // Graphique en camembert des top vendeurs
+  const topSellersCtx = document.getElementById('topSellersChart');
+  if (topSellersCtx) {
+    new Chart(topSellersCtx, {
+      type: 'doughnut',
+      data: {
+        labels: {{ top_sellers_chart_labels }},
+        datasets: [{
+          data: {{ top_sellers_chart_data }},
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(199, 199, 199, 0.8)',
+            'rgba(83, 102, 255, 0.8)',
+            'rgba(255, 99, 255, 0.8)',
+            'rgba(99, 255, 132, 0.8)'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'right'
+          },
+          title: {
+            display: true,
+            text: 'Répartition des Commissions - Top Vendeurs',
+            font: { size: 16, weight: 'bold' }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+  <!-- Alertes de Stock Faible -->
+  {% if stock_alerts %}
+  <div class="alerts-container" style="margin-bottom: 2rem;">
+    {% for alert in stock_alerts %}
+    <div class="alert alert-{% if alert.level == 'critical' %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert" style="margin-bottom: 1rem;">
+      <i class="fas fa-{% if alert.level == 'critical' %}exclamation-triangle{% else %}exclamation-circle{% endif %} me-2"></i>
+      <strong>{{ alert.message }}</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Lien vers Rapports Avancés -->
+  <div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('promotion.reports') }}" class="btn btn-promo btn-promo-primary">
+      <i class="fas fa-chart-line me-2"></i>Voir Rapports Avancés
+    </a>
+  </div>
+  <section class="page-section">
+    <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-chart-line me-2"></i>
+      Dashboard Équipe de Promotion
+    </h1>
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center;">
+      <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-shopping-cart me-2"></i>Ventes
+      </a>
+      <a href="{{ url_for('promotion.teams_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-users me-2"></i>Équipes
+      </a>
+      <a href="{{ url_for('promotion.members_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-user-friends me-2"></i>Membres
+      </a>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <a href="{{ url_for('promotion.daily_closure') }}" class="btn-hl {% if is_day_closed %}btn-hl-success{% else %}btn-hl-warning{% endif %}">
+        <i class="fas fa-calendar-check me-2"></i>
+        {% if is_day_closed %}
+        Journée Clôturée ✓
+        {% else %}
+        Clôturer la Journée
+        {% endif %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Alerte de clôture -->
+  {% if is_day_closed %}
+  <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+    <i class="fas fa-check-circle me-3" style="font-size: 1.5rem;"></i>
+    <div class="flex-grow-1">
+      <strong>✅ Journée Clôturée</strong><br>
+      La journée du {{ today.strftime('%d/%m/%Y') }} a été clôturée le {{ daily_closure.closed_at.strftime('%d/%m/%Y à %H:%M') }} par {{ daily_closure.closed_by.full_name if daily_closure.closed_by else 'N/A' }}.
+      <a href="{{ url_for('promotion.daily_closure') }}" class="alert-link ms-2">Voir le résumé →</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+    <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem;"></i>
+    <div class="flex-grow-1">
+      <strong>⚠️ Journée Non Clôturée</strong><br>
+      La journée du {{ today.strftime('%d/%m/%Y') }} n'a pas encore été clôturée. N'oubliez pas de clôturer la journée après avoir vérifié toutes les opérations.
+      <a href="{{ url_for('promotion.daily_closure') }}" class="alert-link ms-2">Clôturer maintenant →</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Statistiques Principales -->
+  <div class="stats-grid">
+    <!-- Résultat Net du Mois (Hero Card) -->
+    <div class="stat-card-hl hero-stat-card">
+      <i class="fas fa-coins stat-card-hl-icon"></i>
+      <div class="stat-card-hl-value">{{ "{:,.0f}".format(stats.resultat_net_month|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-hl-label">Résultat Net du Mois</div>
+      <div style="margin-top: var(--space-md); font-size: 0.9em; opacity: 0.9;">
+        CA Net: {{ "{:,.0f}".format(stats.total_revenue_month|default(0))|replace(',', ' ') }} GNF - 
+        Commissions Nettes: {{ "{:,.0f}".format(stats.total_commissions_month|default(0))|replace(',', ' ') }} GNF
+      </div>
+      <div style="margin-top: var(--space-xs); font-size: 0.8em; opacity: 0.8;">
+        (Enlèvements - Retours)
+      </div>
+    </div>
+    
+    <!-- CA du Mois -->
+    <div class="stat-card-hl" style="background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 123, 255, 0.05));">
+      <i class="fas fa-chart-line stat-card-hl-icon" style="color: var(--color-primary);"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-primary);">{{ "{:,.0f}".format(stats.total_revenue_month|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-hl-label">Chiffre d'Affaires du Mois</div>
+    </div>
+    
+    <!-- Commissions du Mois (Nettes) -->
+    <div class="stat-card-hl" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));">
+      <i class="fas fa-hand-holding-usd stat-card-hl-icon" style="color: var(--color-success);"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-success);">{{ "{:,.0f}".format(stats.total_commissions_month|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-hl-label">Commissions Nettes du Mois</div>
+      <div style="margin-top: var(--space-xs); font-size: 0.85em; color: var(--text-secondary);">
+        (Enlèvements - Retours)
+      </div>
+    </div>
+    
+    <!-- Commissions Aujourd'hui (Nettes) -->
+    <div class="stat-card-hl">
+      <i class="fas fa-coins stat-card-hl-icon"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-warning);">{{ "{:,.0f}".format(stats.total_commissions_today|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-hl-label">Commissions Nettes Aujourd'hui</div>
+    </div>
+    
+    <!-- Ventes du Mois -->
+    <div class="stat-card-hl">
+      <i class="fas fa-shopping-bag stat-card-hl-icon"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-info);">{{ stats.total_sales_month }}</div>
+      <div class="stat-card-hl-label">Ventes du Mois</div>
+    </div>
+    
+    <!-- Ventes Aujourd'hui -->
+    <div class="stat-card-hl" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));">
+      <i class="fas fa-calendar-day stat-card-hl-icon" style="color: var(--color-warning);"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-warning);">{{ stats.total_sales_today }}</div>
+      <div class="stat-card-hl-label">Ventes Aujourd'hui</div>
+    </div>
+    
+    <!-- CA Aujourd'hui -->
+    <div class="stat-card-hl">
+      <i class="fas fa-dollar-sign stat-card-hl-icon"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-primary);">{{ "{:,.0f}".format(stats.total_revenue_today|default(0))|replace(',', ' ') }} GNF</div>
+      <div class="stat-card-hl-label">CA Aujourd'hui</div>
+    </div>
+    
+    <!-- Équipes Actives -->
+    <div class="stat-card-hl">
+      <i class="fas fa-users stat-card-hl-icon"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-primary);">{{ stats.teams_count }}</div>
+      <div class="stat-card-hl-label">Équipes Actives</div>
+    </div>
+    
+    <!-- Membres Actifs -->
+    <div class="stat-card-hl" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));">
+      <i class="fas fa-user-friends stat-card-hl-icon" style="color: var(--color-success);"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-success);">{{ stats.members_count }}</div>
+      <div class="stat-card-hl-label">Membres Actifs</div>
+    </div>
+    
+    <!-- Gammes Actives -->
+    <div class="stat-card-hl">
+      <i class="fas fa-box stat-card-hl-icon"></i>
+      <div class="stat-card-hl-value" style="color: var(--color-info);">{{ stats.gammes_count }}</div>
+      <div class="stat-card-hl-label">Gammes Actives</div>
+    </div>
+  </div>
+
+  <!-- Graphiques -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-xl);">
+    <div class="chart-container">
+      <canvas id="salesChart"></canvas>
+    </div>
+    {% if top_sellers %}
+    <div class="chart-container">
+      <canvas id="topSellersChart"></canvas>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Top Vendeurs du Mois -->
+  {% if top_sellers %}
+  <div class="table-card">
+    <h2 class="section-title">
+      <i class="fas fa-trophy" style="color: #FFD700;"></i>
+      Top 10 Vendeurs du Mois
+    </h2>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Membre</th>
+            <th>Équipe</th>
+            <th>Quantité Vendue</th>
+            <th>Commission Totale</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for seller in top_sellers %}
+          <tr>
+            <td>
+              {% if loop.index == 1 %}
+                <span class="rank-badge rank-1">🥇</span>
+              {% elif loop.index == 2 %}
+                <span class="rank-badge rank-2">🥈</span>
+              {% elif loop.index == 3 %}
+                <span class="rank-badge rank-3">🥉</span>
+              {% else %}
+                <span class="rank-badge rank-other">#{{ loop.index }}</span>
+              {% endif %}
+            </td>
+            <td><strong>{{ seller.member.full_name if seller.member else 'N/A' }}</strong></td>
+            <td>{{ seller.member.team.name if seller.member and seller.member.team else 'N/A' }}</td>
+            <td><span class="badge bg-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">{{ seller.total_quantity }}</span></td>
+            <td><strong style="color: var(--color-success); font-size: 1.1rem;">{{ "{:,.0f}".format(seller.total_commission|default(0))|replace(',', ' ') }} GNF</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Ventes Récentes -->
+  {% if recent_sales %}
+  <div class="table-card">
+    <h2 class="section-title">
+      <i class="fas fa-clock"></i>
+      Ventes Récentes
+    </h2>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Membre</th>
+            <th>Gamme</th>
+            <th>Quantité</th>
+            <th>Montant</th>
+            <th>Commission</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sale in recent_sales %}
+          <tr>
+            <td><strong>{{ sale.sale_date.strftime('%d/%m/%Y') }}</strong></td>
+            <td>
+              {% set transaction_type = sale.transaction_type if sale.transaction_type else 'enlevement' %}
+              {% if transaction_type == 'enlevement' %}
+              <span class="badge bg-success">Enlèvement</span>
+              {% elif transaction_type == 'retour' %}
+              <span class="badge bg-warning">Retour</span>
+              {% else %}
+              <span class="badge bg-secondary">-</span>
+              {% endif %}
+            </td>
+            <td>{{ sale.member.full_name if sale.member else 'N/A' }}</td>
+            <td>{{ sale.gamme.name if sale.gamme else 'N/A' }}</td>
+            <td><span class="badge bg-info" style="font-size: 1rem;">{{ sale.quantity }}</span></td>
+            <td><strong>{{ "{:,.0f}".format(sale.total_amount_gnf|default(0))|replace(',', ' ') }} GNF</strong></td>
+            <td><strong style="color: var(--color-success);">{{ "{:,.0f}".format(sale.commission_gnf|default(0))|replace(',', ' ') }} GNF</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align: center; margin-top: var(--space-md);">
+      <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-list me-2"></i>Voir toutes les ventes
+      </a>
+    </div>
+  </div>
+  {% endif %}
+  </section>
+{% endblock %}

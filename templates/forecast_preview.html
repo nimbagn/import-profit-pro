@@ -1,0 +1,345 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Prévisualisation Prévision #{{ forecast.id }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+
+  .preview-header {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .preview-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .export-buttons {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .preview-content {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+
+  .info-section {
+    margin-bottom: var(--space-xl);
+  }
+
+  .info-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--color-primary);
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+  }
+
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-xs);
+  }
+
+  .info-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .table-preview {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-lg);
+  }
+
+  .table-preview thead {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+
+  .table-preview th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+  }
+
+  .table-preview td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-preview tbody tr:hover {
+    background: var(--bg-secondary);
+  }
+
+  .table-preview tfoot {
+    background: var(--bg-tertiary);
+    font-weight: 700;
+  }
+
+  .table-preview tfoot td {
+    border-top: 2px solid var(--color-primary);
+    padding: var(--space-md);
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+  }
+
+  .summary-card {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    color: var(--white);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .summary-card-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-bottom: var(--space-sm);
+  }
+
+  .summary-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  @media print {
+    .export-buttons {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- En-tête avec boutons d'export -->
+  <div class="preview-header">
+    <div>
+      <h1 class="preview-title">
+        <i class="fas fa-eye me-2"></i>
+        Prévisualisation - Prévision #{{ forecast.id }}
+      </h1>
+      <p style="color: var(--text-muted); margin-top: var(--space-xs);">
+        Aperçu avant export PDF ou Excel
+      </p>
+    </div>
+    <div class="export-buttons">
+      <div style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap;">
+        <select id="currency-select" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.9rem;">
+          <option value="GNF" selected>GNF</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="XOF">XOF</option>
+        </select>
+        <a href="#" id="export-pdf-btn" class="btn-hl btn-hl-primary" target="_blank" style="background: #dc3545;">
+          <i class="fas fa-file-pdf me-2"></i>
+          Exporter PDF
+        </a>
+        <a href="#" id="export-excel-btn" class="btn-hl btn-hl-primary" style="background: #28a745;">
+          <i class="fas fa-file-excel me-2"></i>
+          Exporter Excel
+        </a>
+      </div>
+      <a href="{{ url_for('forecast_detail', id=forecast.id) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour
+      </a>
+    </div>
+  </div>
+
+  <!-- Informations de la prévision -->
+  <div class="preview-content">
+    <div class="info-section">
+      <h3><i class="fas fa-info-circle me-2"></i>Informations Générales</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">ID Prévision</div>
+          <div class="info-value">#{{ forecast.id }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Nom</div>
+          <div class="info-value">{{ forecast.name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Période</div>
+          <div class="info-value">
+            {% if forecast.start_date and forecast.end_date %}
+              {{ forecast.start_date.strftime('%d/%m/%Y') }} - {{ forecast.end_date.strftime('%d/%m/%Y') }}
+            {% else %}
+              N/A
+            {% endif %}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Commercial</div>
+          <div class="info-value">{{ forecast.commercial_name or 'N/A' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Statut</div>
+          <div class="info-value">{{ forecast.status|title }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Date de création</div>
+          <div class="info-value">
+            {% if forecast.created_at %}
+              {{ forecast.created_at.strftime('%d/%m/%Y %H:%M') }}
+            {% else %}
+              N/A
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau prévision vs réalisation -->
+    <div class="info-section">
+      <h3><i class="fas fa-list me-2"></i>Détail des Prévisions</h3>
+      {% if items %}
+      <table class="table-preview">
+        <thead>
+          <tr>
+            <th>Article</th>
+            <th>Prévision</th>
+            <th>Réalisation</th>
+            <th>Écart</th>
+            <th>Taux (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          {% set article_name = item.stock_item.name if item.stock_item else 'N/A' %}
+          {% set forecast_qty = item.forecast_quantity or 0 %}
+          {% set realization_qty = item.realization_quantity or 0 %}
+          {% set variance = realization_qty - forecast_qty %}
+          {% set rate = (realization_qty / forecast_qty * 100) if forecast_qty > 0 else 0 %}
+          <tr>
+            <td>{{ article_name }}</td>
+            <td>{{ "{:,.2f}".format(forecast_qty)|replace(',', ' ') }}</td>
+            <td>{{ "{:,.2f}".format(realization_qty)|replace(',', ' ') }}</td>
+            <td style="color: {% if variance >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+              {{ "{:,.2f}".format(variance)|replace(',', ' ') }}
+            </td>
+            <td>{{ "{:.1f}".format(rate) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><strong>TOTAL</strong></td>
+            <td><strong>{{ "{:,.2f}".format(total_forecast|default(0))|replace(',', ' ') }}</strong></td>
+            <td><strong>{{ "{:,.2f}".format(total_realization|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="color: {% if total_variance >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+              <strong>{{ "{:,.2f}".format(total_variance|default(0))|replace(',', ' ') }}</strong>
+            </td>
+            <td><strong>{{ "{:.1f}".format(total_rate|default(0)) }}%</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+      {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">
+        Aucun article dans cette prévision.
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Résumé -->
+    <div class="info-section">
+      <h3><i class="fas fa-chart-line me-2"></i>Résumé</h3>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-card-label">Total Prévision</div>
+          <div class="summary-card-value">{{ "{:,.2f}".format(total_forecast|default(0))|replace(',', ' ') }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Total Réalisation</div>
+          <div class="summary-card-value">{{ "{:,.2f}".format(total_realization|default(0))|replace(',', ' ') }}</div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, {% if total_variance >= 0 %}#28a745{% else %}#dc3545{% endif %} 0%, {% if total_variance >= 0 %}#20c997{% else %}#c82333{% endif %} 100%);">
+          <div class="summary-card-label">Écart Total</div>
+          <div class="summary-card-value">{{ "{:,.2f}".format(total_variance|default(0))|replace(',', ' ') }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Taux de Réalisation</div>
+          <div class="summary-card-value">{{ "{:.1f}".format(total_rate|default(0)) }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const currencySelect = document.getElementById('currency-select');
+  const pdfBtn = document.getElementById('export-pdf-btn');
+  const excelBtn = document.getElementById('export-excel-btn');
+  const forecastId = {{ forecast.id }};
+  
+  function updateExportLinks() {
+    const currency = currencySelect.value;
+    pdfBtn.href = `{{ url_for('forecast_pdf', id=forecast.id) }}?currency=${currency}`;
+    excelBtn.href = `{{ url_for('forecast_excel', id=forecast.id) }}?currency=${currency}`;
+  }
+  
+  currencySelect.addEventListener('change', updateExportLinks);
+  updateExportLinks();
+});
+</script>
+{% endblock %}
+

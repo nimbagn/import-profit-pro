@@ -1,0 +1,510 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Nouveau Mouvement - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-exchange-alt me-2"></i>
+        Nouveau Mouvement - {{ movement_type|title }}
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Informations du mouvement -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl); padding: var(--space-lg); background: var(--gray-50); border-radius: var(--radius-md);">
+      <div>
+        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-hashtag me-2"></i>Référence
+        </label>
+        <div style="font-size: 1.125rem; font-weight: 600; color: var(--color-primary);">
+          {{ preview_reference }}
+        </div>
+        <small style="color: var(--text-secondary); font-size: 0.75rem;">Générée automatiquement</small>
+      </div>
+      <div>
+        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-user me-2"></i>Agent
+        </label>
+        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);">
+          {{ current_user.username if current_user else 'Non connecté' }}
+        </div>
+        <small style="color: var(--text-secondary); font-size: 0.75rem;">Utilisateur émetteur</small>
+      </div>
+      <div>
+        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-calendar me-2"></i>Date
+        </label>
+        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);" id="movementDate">
+          <!-- Date sera remplie par JavaScript -->
+        </div>
+        <small style="color: var(--text-secondary); font-size: 0.75rem;">Date du mouvement</small>
+      </div>
+    </div>
+
+    <form method="POST" id="movementForm">
+      {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {% endif %}
+      <input type="hidden" name="movement_type" value="{{ movement_type }}">
+      
+      {% if movement_type == 'transfer' %}
+      <!-- Section Articles pour Transfert -->
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+          <label class="form-hl-label" style="margin-bottom: 0;">
+            Articles <span style="color: var(--color-danger);">*</span>
+          </label>
+          <button type="button" class="btn-hl btn-hl-outline btn-hl-sm" onclick="addArticleRow()">
+            <i class="fas fa-plus me-2"></i>Ajouter un article
+          </button>
+        </div>
+        
+        <div id="articlesContainer">
+          <!-- Les lignes d'articles seront ajoutées dynamiquement ici -->
+        </div>
+        
+        <div id="noArticlesMessage" style="padding: var(--space-lg); text-align: center; background: var(--gray-50); border-radius: var(--radius-md); color: var(--text-secondary);">
+          <i class="fas fa-info-circle me-2"></i>
+          Cliquez sur "Ajouter un article" pour commencer
+        </div>
+      </div>
+      {% else %}
+      <!-- Formulaire simple pour réception et ajustement -->
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="stock_item_id" class="form-hl-label">
+          Article <span style="color: var(--color-danger);">*</span>
+        </label>
+        <select id="stock_item_id" name="stock_item_id" class="form-hl-select" required>
+          <option value="">Sélectionner un article</option>
+          {% for item in stock_items %}
+          <option value="{{ item.id }}">{{ item.sku }} - {{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="quantity" class="form-hl-label">
+          Quantité <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="number" step="0.001" id="quantity" name="quantity" class="form-hl-input" required>
+      </div>
+      {% endif %}
+
+      {% if movement_type == 'transfer' %}
+      <!-- Section Source (SORTIE) -->
+      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: var(--space-lg); border-radius: var(--radius-md); margin-top: var(--space-xl); margin-bottom: var(--space-lg);">
+        <h4 style="color: #dc2626; margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-sm);">
+          <i class="fas fa-arrow-up"></i>
+          Source - SORTIE de Stock
+        </h4>
+        <p style="color: #991b1b; font-size: 0.875rem; margin-bottom: var(--space-md);">
+          <i class="fas fa-info-circle me-1"></i>
+          Le stock sera <strong>déduit</strong> de la source sélectionnée
+        </p>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom: var(--space-lg);">
+            <label for="from_depot_id" class="form-hl-label">
+              <i class="fas fa-warehouse me-2" style="color: #dc2626;"></i>Dépôt Source
+            </label>
+            <select id="from_depot_id" name="from_depot_id" class="form-hl-select" onchange="updateMovementSummary()">
+              <option value="">Aucun dépôt source</option>
+              {% for depot in depots %}
+              <option value="{{ depot.id }}">{{ depot.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: var(--space-lg);">
+            <label for="from_vehicle_id" class="form-hl-label">
+              <i class="fas fa-car me-2" style="color: #dc2626;"></i>Véhicule Source
+            </label>
+            <select id="from_vehicle_id" name="from_vehicle_id" class="form-hl-select" onchange="updateMovementSummary()">
+              <option value="">Aucun véhicule source</option>
+              {% for vehicle in vehicles %}
+              <option value="{{ vehicle.id }}">{{ vehicle.plate_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flèche de transfert -->
+      <div style="text-align: center; margin: var(--space-md) 0;">
+        <div style="display: inline-block; padding: var(--space-sm) var(--space-lg); background: var(--color-primary); color: var(--white); border-radius: var(--radius-full); font-weight: 600;">
+          <i class="fas fa-arrow-down me-2"></i>Transfert
+        </div>
+      </div>
+
+      <!-- Section Destination (ENTRÉE) -->
+      <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left: 4px solid #22c55e; padding: var(--space-lg); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+        <h4 style="color: #16a34a; margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-sm);">
+          <i class="fas fa-arrow-down"></i>
+          Destination - ENTRÉE de Stock
+        </h4>
+        <p style="color: #15803d; font-size: 0.875rem; margin-bottom: var(--space-md);">
+          <i class="fas fa-info-circle me-1"></i>
+          Le stock sera <strong>ajouté</strong> à la destination sélectionnée
+        </p>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom: var(--space-lg);">
+            <label for="to_depot_id" class="form-hl-label">
+              <i class="fas fa-warehouse me-2" style="color: #16a34a;"></i>Dépôt Destination
+            </label>
+            <select id="to_depot_id" name="to_depot_id" class="form-hl-select" onchange="updateMovementSummary()">
+              <option value="">Aucun dépôt destination</option>
+              {% for depot in depots %}
+              <option value="{{ depot.id }}">{{ depot.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: var(--space-lg);">
+            <label for="to_vehicle_id" class="form-hl-label">
+              <i class="fas fa-car me-2" style="color: #16a34a;"></i>Véhicule Destination
+            </label>
+            <select id="to_vehicle_id" name="to_vehicle_id" class="form-hl-select" onchange="updateMovementSummary()">
+              <option value="">Aucun véhicule destination</option>
+              {% for vehicle in vehicles %}
+              <option value="{{ vehicle.id }}">{{ vehicle.plate_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Récapitulatif du mouvement -->
+      <div id="movementSummary" style="display: none; background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); margin-bottom: var(--space-lg); border: 2px solid var(--color-primary);">
+        <h5 style="color: var(--color-primary); margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+          <i class="fas fa-info-circle"></i>
+          Récapitulatif du Mouvement
+        </h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+          <div>
+            <strong style="color: #dc2626;">SORTIE :</strong>
+            <div id="sourceInfo" style="margin-top: var(--space-xs); color: var(--text-primary);"></div>
+          </div>
+          <div>
+            <strong style="color: #16a34a;">ENTRÉE :</strong>
+            <div id="destInfo" style="margin-top: var(--space-xs); color: var(--text-primary);"></div>
+          </div>
+        </div>
+      </div>
+      {% elif movement_type == 'reception' %}
+      <!-- Section Réception (ENTRÉE) -->
+      <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left: 4px solid #22c55e; padding: var(--space-lg); border-radius: var(--radius-md); margin-top: var(--space-xl); margin-bottom: var(--space-lg);">
+        <h4 style="color: #16a34a; margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-sm);">
+          <i class="fas fa-arrow-down"></i>
+          Réception - ENTRÉE de Stock
+        </h4>
+        <p style="color: #15803d; font-size: 0.875rem; margin-bottom: var(--space-md);">
+          <i class="fas fa-info-circle me-1"></i>
+          Le stock sera <strong>ajouté</strong> au dépôt sélectionné (entrée de stock)
+        </p>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="reception_depot_id" class="form-hl-label">
+            <i class="fas fa-warehouse me-2" style="color: #16a34a;"></i>
+            Dépôt de Réception <span style="color: var(--color-danger);">*</span>
+          </label>
+          <select id="reception_depot_id" name="reception_depot_id" class="form-hl-select" required>
+            <option value="">Sélectionner un dépôt</option>
+            {% for depot in depots %}
+            <option value="{{ depot.id }}" {% if depot_id and depot_id == depot.id %}selected{% endif %}>{{ depot.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% elif movement_type == 'adjustment' %}
+      <h4 style="color: var(--text-primary); margin-top: var(--space-xl); margin-bottom: var(--space-md);">Ajustement</h4>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="adjustment_depot_id" class="form-hl-label">Dépôt d'Ajustement</label>
+          <select id="adjustment_depot_id" name="adjustment_depot_id" class="form-hl-select">
+            <option value="">Aucun</option>
+            {% for depot in depots %}
+            <option value="{{ depot.id }}">{{ depot.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="adjustment_vehicle_id" class="form-hl-label">Véhicule d'Ajustement</label>
+          <select id="adjustment_vehicle_id" name="adjustment_vehicle_id" class="form-hl-select">
+            <option value="">Aucun</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}">{{ vehicle.plate_number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="reason" class="form-hl-label">Raison de l'ajustement</label>
+        <textarea id="reason" name="reason" class="form-hl-input" rows="3"></textarea>
+      </div>
+      {% endif %}
+
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>Créer le{{ 's' if movement_type == 'transfer' else '' }} Mouvement{{ 's' if movement_type == 'transfer' else '' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Afficher la date actuelle
+  document.addEventListener('DOMContentLoaded', function() {
+    const dateElement = document.getElementById('movementDate');
+    if (dateElement) {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      dateElement.textContent = `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
+  });
+</script>
+{% if movement_type == 'transfer' %}
+<script>
+  let articleRowCount = 0;
+  const stockItems = [
+    {% for item in stock_items %}
+    { id: {{ item.id }}, sku: "{{ item.sku }}", name: "{{ item.name }}" },
+    {% endfor %}
+  ];
+
+  function addArticleRow() {
+    articleRowCount++;
+    const container = document.getElementById('articlesContainer');
+    const noArticlesMsg = document.getElementById('noArticlesMessage');
+    
+    if (noArticlesMsg) {
+      noArticlesMsg.style.display = 'none';
+    }
+    
+    const row = document.createElement('div');
+    row.className = 'article-row';
+    row.id = `articleRow_${articleRowCount}`;
+    row.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr auto; gap: var(--space-md); margin-bottom: var(--space-md); padding: var(--space-md); background: var(--gray-50); border-radius: var(--radius-md); align-items: end;';
+    
+    row.innerHTML = `
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label" style="font-size: 0.875rem;">Article</label>
+        <select name="stock_item_ids[]" class="form-hl-select" required>
+          <option value="">Sélectionner un article</option>
+          ${stockItems.map(item => 
+            `<option value="${item.id}">${item.sku} - ${item.name}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label" style="font-size: 0.875rem;">Quantité</label>
+        <input type="number" step="0.001" name="quantities[]" class="form-hl-input" min="0.001" required>
+      </div>
+      <div>
+        <button type="button" class="btn-hl btn-hl-danger btn-hl-sm" onclick="removeArticleRow(${articleRowCount})" title="Supprimer">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(row);
+  }
+
+  function removeArticleRow(rowId) {
+    const row = document.getElementById(`articleRow_${rowId}`);
+    if (row) {
+      row.remove();
+      
+      // Afficher le message si plus d'articles
+      const container = document.getElementById('articlesContainer');
+      if (container.children.length === 0) {
+        const noArticlesMsg = document.getElementById('noArticlesMessage');
+        if (noArticlesMsg) {
+          noArticlesMsg.style.display = 'block';
+        }
+      }
+    }
+  }
+
+  // Fonction pour mettre à jour le récapitulatif
+  function updateMovementSummary() {
+    const fromDepot = document.getElementById('from_depot_id');
+    const fromVehicle = document.getElementById('from_vehicle_id');
+    const toDepot = document.getElementById('to_depot_id');
+    const toVehicle = document.getElementById('to_vehicle_id');
+    const summary = document.getElementById('movementSummary');
+    const sourceInfo = document.getElementById('sourceInfo');
+    const destInfo = document.getElementById('destInfo');
+    
+    let sourceText = '';
+    let destText = '';
+    
+    // Source (SORTIE)
+    if (fromDepot.value) {
+      sourceText = '<i class="fas fa-warehouse me-1"></i>' + fromDepot.options[fromDepot.selectedIndex].text;
+    } else if (fromVehicle.value) {
+      sourceText = '<i class="fas fa-car me-1"></i>' + fromVehicle.options[fromVehicle.selectedIndex].text;
+    } else {
+      sourceText = '<span style="color: var(--text-muted);">Aucune source</span>';
+    }
+    
+    // Destination (ENTRÉE)
+    if (toDepot.value) {
+      destText = '<i class="fas fa-warehouse me-1"></i>' + toDepot.options[toDepot.selectedIndex].text;
+    } else if (toVehicle.value) {
+      destText = '<i class="fas fa-car me-1"></i>' + toVehicle.options[toVehicle.selectedIndex].text;
+    } else {
+      destText = '<span style="color: var(--text-muted);">Aucune destination</span>';
+    }
+    
+    sourceInfo.innerHTML = sourceText;
+    destInfo.innerHTML = destText;
+    
+    // Afficher le récapitulatif si au moins une source ou destination est sélectionnée
+    if (fromDepot.value || fromVehicle.value || toDepot.value || toVehicle.value) {
+      summary.style.display = 'block';
+    } else {
+      summary.style.display = 'none';
+    }
+  }
+
+  // Validation du formulaire
+  document.getElementById('movementForm').addEventListener('submit', function(e) {
+    {% if movement_type == 'transfer' %}
+    const articleRows = document.querySelectorAll('.article-row');
+    if (articleRows.length === 0) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins un article');
+      return false;
+    }
+    
+    // Vérifier que tous les articles ont été sélectionnés et ont une quantité
+    let isValid = true;
+    articleRows.forEach(row => {
+      const select = row.querySelector('select[name="stock_item_ids[]"]');
+      const input = row.querySelector('input[name="quantities[]"]');
+      
+      if (!select.value || !input.value || parseFloat(input.value) <= 0) {
+        isValid = false;
+        row.style.border = '2px solid var(--color-danger)';
+      } else {
+        row.style.border = '';
+      }
+    });
+    
+    if (!isValid) {
+      e.preventDefault();
+      alert('Veuillez remplir tous les champs des articles (article et quantité > 0)');
+      return false;
+    }
+    
+    // Vérifier qu'au moins une source OU une destination est sélectionnée
+    const fromDepot = document.getElementById('from_depot_id');
+    const fromVehicle = document.getElementById('from_vehicle_id');
+    const toDepot = document.getElementById('to_depot_id');
+    const toVehicle = document.getElementById('to_vehicle_id');
+    
+    const hasSource = fromDepot.value || fromVehicle.value;
+    const hasDest = toDepot.value || toVehicle.value;
+    
+    if (!hasSource && !hasDest) {
+      e.preventDefault();
+      alert('Veuillez sélectionner au moins une source (SORTIE) ou une destination (ENTRÉE)');
+      return false;
+    }
+    
+    // Pour un transfert, idéalement avoir source ET destination
+    if (!hasSource) {
+      if (!confirm('Aucune source sélectionnée. Ce mouvement créera uniquement une entrée de stock. Continuer ?')) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    
+    if (!hasDest) {
+      if (!confirm('Aucune destination sélectionnée. Ce mouvement créera uniquement une sortie de stock. Continuer ?')) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    {% endif %}
+  });
+  
+  // Initialiser le récapitulatif au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if movement_type == 'transfer' %}
+    updateMovementSummary();
+    {% endif %}
+  });
+</script>
+{% endif %}
+{% endblock %}

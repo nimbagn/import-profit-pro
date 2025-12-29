@@ -1,0 +1,174 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Membres de Promotion - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-user-friends icon-promo"></i>
+        Membres de Promotion
+      </h1>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <a href="{{ url_for('promotion.member_new') }}" class="btn btn-promo btn-promo-primary">
+        <i class="fas fa-plus me-2"></i>Nouveau Membre
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filter-card">
+      <form method="GET" class="row g-3">
+        <div class="col-md-3">
+          <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}">
+        </div>
+        <div class="col-md-3">
+          <select name="team_id" class="form-select">
+            <option value="">Toutes les équipes</option>
+            {% for team in teams %}
+            <option value="{{ team.id }}" {% if team_filter == team.id %}selected{% endif %}>{{ team.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select name="active" class="form-select">
+            <option value="true" {% if active_only %}selected{% endif %}>Actifs uniquement</option>
+            <option value="false" {% if not active_only %}selected{% endif %}>Tous</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn-hl btn-hl-primary w-100">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+        </div>
+        <div class="col-md-2">
+          <a href="{{ url_for('promotion.members_list') }}" class="btn-hl btn-hl-outline w-100">
+            <i class="fas fa-redo me-2"></i>Réinitialiser
+          </a>
+        </div>
+      </form>
+  </div>
+
+  <!-- Liste des membres -->
+  <div class="card-promo">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Membres
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Équipe</th>
+              <th>Téléphone</th>
+              <th>Email</th>
+              <th>Ventes</th>
+              <th>Commission Totale</th>
+              <th>Intermédiaire</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if members %}
+            {% for member in members %}
+            <tr>
+              <td><strong>{{ member.full_name }}</strong></td>
+              <td>{{ member.team.name if member.team else '-' }}</td>
+              <td>{{ member.phone or '-' }}</td>
+              <td>{{ member.email or '-' }}</td>
+              <td><span class="badge badge-promo badge-promo-info">{{ member.stats.sales_count }}</span></td>
+              <td><strong class="data-positive">{{ "{:,.0f}".format(member.stats.total_commission|default(0))|replace(',', ' ') }} GNF</strong></td>
+              <td>
+                {% if member.intermediaire %}
+                <small>{{ member.intermediaire.full_name }}</small>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if member.is_active %}
+                <span class="badge badge-promo badge-promo-success">Actif</span>
+                {% else %}
+                <span class="badge badge-promo" style="background: #6c757d; color: white;">Inactif</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('promotion.member_situation', member_id=member.id) }}" class="btn btn-sm btn-outline-info" title="Voir la situation">
+                  <i class="fas fa-chart-line"></i> Situation
+                </a>
+                {% if has_permission(current_user, 'promotion.write') %}
+                <a href="{{ url_for('promotion.member_edit', id=member.id) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+              <td colspan="9" class="text-center text-muted">Aucun membre trouvé</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      {% if pagination and pagination.pages > 1 %}
+      <div class="card-promo-footer">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <div class="pagination-info">
+            <small class="text-muted">
+              Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+              {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+              sur {{ pagination.total }} membres
+            </small>
+          </div>
+          <nav>
+            <ul class="pagination mb-0">
+              <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('promotion.members_list', page=pagination.prev_num, search=search, team_id=team_filter) if pagination.has_prev else '#' }}">
+                  <i class="fas fa-chevron-left"></i>
+                </a>
+              </li>
+              {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                  {% if page_num == pagination.page %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ page_num }}</span>
+                    </li>
+                  {% else %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ url_for('promotion.members_list', page=page_num, search=search, team_id=team_filter) }}">{{ page_num }}</a>
+                    </li>
+                  {% endif %}
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('promotion.members_list', page=pagination.next_num, search=search, team_id=team_filter) if pagination.has_next else '#' }}">
+                  <i class="fas fa-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <div>
+            <select name="per_page" class="form-select form-select-sm" onchange="window.location.href='{{ url_for('promotion.members_list', search=search, team_id=team_filter) }}&per_page=' + this.value">
+              <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25/page</option>
+              <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50/page</option>
+              <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100/page</option>
+              <option value="200" {% if pagination.per_page == 200 %}selected{% endif %}>200/page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

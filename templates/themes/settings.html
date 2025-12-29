@@ -1,0 +1,597 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Paramètres d'Apparence - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/themes.css') }}" rel="stylesheet">
+<style>
+    .theme-preview {
+        width: 100%;
+        height: 120px;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .theme-preview:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--color-primary);
+    }
+    
+    .theme-preview.selected {
+        border-color: var(--color-primary);
+        border-width: 3px;
+        box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 0, 56, 101), 0.2);
+    }
+    
+    .theme-preview-content {
+        padding: var(--space-md);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .theme-preview-header {
+        height: 30%;
+        background: var(--color-primary);
+        border-radius: var(--radius-sm);
+    }
+    
+    .theme-preview-body {
+        height: 60%;
+        background: var(--bg-card);
+        border-radius: var(--radius-sm);
+        display: flex;
+        gap: var(--space-xs);
+    }
+    
+    .theme-preview-accent {
+        flex: 1;
+        background: var(--color-accent);
+        border-radius: var(--radius-sm);
+    }
+    
+    .theme-name {
+        font-weight: 600;
+        margin-top: var(--space-sm);
+        color: var(--text-primary);
+    }
+    
+    .theme-description {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: var(--space-xs);
+    }
+    
+    .mode-toggle {
+        display: flex;
+        gap: var(--space-sm);
+        padding: var(--space-sm);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+    }
+    
+    .mode-option {
+        flex: 1;
+        padding: var(--space-md);
+        text-align: center;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .mode-option:hover {
+        background: var(--bg-card);
+    }
+    
+    .mode-option.selected {
+        background: var(--color-primary);
+        color: var(--text-white);
+        border-color: var(--color-primary);
+    }
+    
+    .settings-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .settings-section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: var(--space-lg);
+        color: var(--text-primary);
+    }
+    
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--space-lg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-palette"></i>
+            Paramètres d'Apparence
+        </h1>
+    </div>
+    
+    <div class="settings-section">
+        <h2 class="settings-section-title">Thème de Couleur</h2>
+        <div class="settings-grid">
+            <!-- Thème Hapag-Lloyd -->
+            <div class="theme-option" data-theme="hapag-lloyd">
+                <div class="theme-preview" data-theme="hapag-lloyd">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #003865;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #ff6600;"></div>
+                            <div class="theme-preview-accent" style="background: #005a9f;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Hapag-Lloyd</div>
+                <div class="theme-description">Thème par défaut, bleu professionnel avec accents orange</div>
+            </div>
+            
+            <!-- Thème Professionnel -->
+            <div class="theme-option" data-theme="professional">
+                <div class="theme-preview" data-theme="professional">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #2563eb;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #3b82f6;"></div>
+                            <div class="theme-preview-accent" style="background: #60a5fa;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Professionnel</div>
+                <div class="theme-description">Bleu moderne et élégant pour un look professionnel</div>
+            </div>
+            
+            <!-- Thème Énergique -->
+            <div class="theme-option" data-theme="energetic">
+                <div class="theme-preview" data-theme="energetic">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #dc2626;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #f97316;"></div>
+                            <div class="theme-preview-accent" style="background: #ef4444;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Énergique</div>
+                <div class="theme-description">Rouge et orange dynamiques pour un style énergique</div>
+            </div>
+            
+            <!-- Thème Nature -->
+            <div class="theme-option" data-theme="nature">
+                <div class="theme-preview" data-theme="nature">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #059669;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #10b981;"></div>
+                            <div class="theme-preview-accent" style="background: #34d399;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Nature</div>
+                <div class="theme-description">Vert apaisant pour un environnement naturel</div>
+            </div>
+            
+            <!-- Thème Noël -->
+            <div class="theme-option" data-theme="christmas">
+                <div class="theme-preview" data-theme="christmas" style="position: relative;">
+                    <span class="theme-badge">🎄</span>
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #dc2626;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #16a34a;"></div>
+                            <div class="theme-preview-accent" style="background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Noël</div>
+                <div class="theme-description">Rouge et vert pour les fêtes de fin d'année</div>
+            </div>
+            
+            <!-- Thème Été -->
+            <div class="theme-option" data-theme="summer">
+                <div class="theme-preview" data-theme="summer" style="position: relative;">
+                    <span class="theme-badge">☀️</span>
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #f59e0b;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #fbbf24;"></div>
+                            <div class="theme-preview-accent" style="background: #f97316;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Été</div>
+                <div class="theme-description">Orange et jaune pour un été ensoleillé</div>
+            </div>
+            
+            <!-- Thème Personnalisé -->
+            <div class="theme-option" data-theme="custom">
+                <div class="theme-preview" data-theme="custom">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #667eea;"></div>
+                            <div class="theme-preview-accent" style="background: #764ba2;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Personnalisé</div>
+                <div class="theme-description">Créez votre propre palette de couleurs</div>
+            </div>
+        </div>
+        
+        <!-- Sélecteur de couleurs personnalisé (visible uniquement si thème personnalisé sélectionné) -->
+        <div id="custom-color-picker" class="color-picker-container" style="display: none; margin-top: var(--space-xl);">
+            <div class="color-picker-item">
+                <label for="custom-primary">Couleur Principale</label>
+                <input type="color" id="custom-primary" class="color-picker-input" value="#003865">
+            </div>
+            <div class="color-picker-item">
+                <label for="custom-accent">Couleur d'Accent</label>
+                <input type="color" id="custom-accent" class="color-picker-input" value="#ff6600">
+            </div>
+            <div class="color-picker-item">
+                <label for="custom-secondary">Couleur Secondaire</label>
+                <input type="color" id="custom-secondary" class="color-picker-input" value="#64748b">
+            </div>
+        </div>
+    </div>
+    
+    <div class="settings-section">
+        <h2 class="settings-section-title">Mode de Couleur</h2>
+        <div class="mode-toggle">
+            <div class="mode-option" data-mode="light">
+                <i class="fas fa-sun"></i>
+                <div style="margin-top: var(--space-xs); font-weight: 600;">Clair</div>
+                <div style="font-size: 0.875rem; margin-top: var(--space-xs);">Fond blanc, texte foncé</div>
+            </div>
+            <div class="mode-option" data-mode="dark">
+                <i class="fas fa-moon"></i>
+                <div style="margin-top: var(--space-xs); font-weight: 600;">Sombre</div>
+                <div style="font-size: 0.875rem; margin-top: var(--space-xs);">Fond sombre, texte clair</div>
+            </div>
+            <div class="mode-option" data-mode="auto">
+                <i class="fas fa-adjust"></i>
+                <div style="margin-top: var(--space-xs); font-weight: 600;">Automatique</div>
+                <div style="font-size: 0.875rem; margin-top: var(--space-xs);">Clair le jour, sombre la nuit</div>
+            </div>
+            <div class="mode-option" data-mode="system">
+                <i class="fas fa-desktop"></i>
+                <div style="margin-top: var(--space-xs); font-weight: 600;">Système</div>
+                <div style="font-size: 0.875rem; margin-top: var(--space-xs);">Suivre les préférences système</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Nouveaux thèmes supplémentaires -->
+    <div class="settings-section">
+        <h2 class="settings-section-title">Thèmes Supplémentaires</h2>
+        <div class="settings-grid">
+            <!-- Thème Minimaliste -->
+            <div class="theme-option" data-theme="minimalist">
+                <div class="theme-preview" data-theme="minimalist">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #1f2937;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #6b7280;"></div>
+                            <div class="theme-preview-accent" style="background: #9ca3af;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Minimaliste</div>
+                <div class="theme-description">Design épuré en nuances de gris</div>
+            </div>
+            
+            <!-- Thème Cyberpunk -->
+            <div class="theme-option" data-theme="cyberpunk">
+                <div class="theme-preview" data-theme="cyberpunk" style="position: relative;">
+                    <span class="theme-badge">⚡</span>
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #00ff41;"></div>
+                        <div class="theme-preview-body" style="background: #000000;">
+                            <div class="theme-preview-accent" style="background: #ff00ff;"></div>
+                            <div class="theme-preview-accent" style="background: #00ffff;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Cyberpunk</div>
+                <div class="theme-description">Vert néon et magenta futuriste</div>
+            </div>
+            
+            <!-- Thème Ocean -->
+            <div class="theme-option" data-theme="ocean">
+                <div class="theme-preview" data-theme="ocean">
+                    <div class="theme-preview-content">
+                        <div class="theme-preview-header" style="background: #0ea5e9;"></div>
+                        <div class="theme-preview-body" style="background: #ffffff;">
+                            <div class="theme-preview-accent" style="background: #06b6d4;"></div>
+                            <div class="theme-preview-accent" style="background: #14b8a6;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-name">Océan</div>
+                <div class="theme-description">Bleu océan apaisant et rafraîchissant</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export/Import -->
+    <div class="settings-section export-import-section">
+        <h2 class="settings-section-title">
+            <i class="fas fa-file-export"></i>
+            Export / Import
+        </h2>
+        <p style="color: var(--text-muted); margin-bottom: var(--space-lg);">
+            Exportez vos préférences de thème pour les sauvegarder ou les partager, ou importez un thème depuis un fichier.
+        </p>
+        <div class="export-import-buttons">
+            <button id="export-theme-btn" class="btn btn-primary">
+                <i class="fas fa-download"></i>
+                Exporter le Thème
+            </button>
+            <label for="import-theme-input" class="btn btn-secondary" style="cursor: pointer;">
+                <i class="fas fa-upload"></i>
+                Importer un Thème
+                <input type="file" id="import-theme-input" accept=".json" style="display: none;" onchange="handleThemeImport(event)">
+            </label>
+        </div>
+    </div>
+    
+    <!-- Historique -->
+    <div class="settings-section theme-history">
+        <h2 class="settings-section-title">
+            <i class="fas fa-history"></i>
+            Historique des Thèmes
+        </h2>
+        <p style="color: var(--text-muted); margin-bottom: var(--space-md);">
+            Vos thèmes récemment utilisés
+        </p>
+        <div id="theme-history-list" class="theme-history-list">
+            <!-- Rempli dynamiquement par JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Paramètres Avancés -->
+    <div class="settings-section">
+        <div class="advanced-settings">
+            <div class="advanced-settings-title" onclick="toggleAdvancedSettings()">
+                <i class="fas fa-cog"></i>
+                Paramètres Avancés
+                <i class="fas fa-chevron-down" id="advanced-toggle-icon" style="margin-left: auto; transition: transform 0.3s;"></i>
+            </div>
+            <div class="advanced-settings-content" id="advanced-settings-content">
+                <div class="setting-item">
+                    <label for="font-size">Taille de Police de Base</label>
+                    <input type="range" id="font-size" min="12" max="18" value="16" oninput="updateFontSize(this.value)">
+                    <div class="setting-value" id="font-size-value">16px</div>
+                </div>
+                <div class="setting-item">
+                    <label for="spacing">Espacement de Base</label>
+                    <input type="range" id="spacing" min="4" max="12" value="8" oninput="updateSpacing(this.value)">
+                    <div class="setting-value" id="spacing-value">8px</div>
+                </div>
+                <div class="setting-item">
+                    <label for="border-radius">Rayon des Bordures</label>
+                    <input type="range" id="border-radius" min="0" max="20" value="8" oninput="updateBorderRadius(this.value)">
+                    <div class="setting-value" id="border-radius-value">8px</div>
+                </div>
+                <div class="setting-item">
+                    <label for="font-family">Famille de Police</label>
+                    <select id="font-family" onchange="updateFontFamily(this.value)">
+                        <option value="Inter, system-ui, sans-serif">Inter (Par défaut)</option>
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Open Sans', sans-serif">Open Sans</option>
+                        <option value="'Lato', sans-serif">Lato</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="'Poppins', sans-serif">Poppins</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="settings-section">
+        <button id="save-theme-btn" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i>
+            Enregistrer les Préférences
+        </button>
+        <button id="reset-theme-btn" class="btn btn-secondary btn-lg" style="margin-left: var(--space-md);">
+            <i class="fas fa-undo"></i>
+            Réinitialiser
+        </button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/themes.js') }}"></script>
+<script>
+    // Initialiser avec les préférences actuelles
+    const currentTheme = '{{ preference.theme_name }}';
+    const currentMode = '{{ preference.color_mode }}';
+    
+    // Appliquer le thème au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        applyTheme(currentTheme, currentMode, false);
+        selectThemeOption(currentTheme);
+        selectModeOption(currentMode);
+        
+        // Afficher le sélecteur de couleurs si le thème personnalisé est sélectionné
+        if (currentTheme === 'custom') {
+            document.getElementById('custom-color-picker').style.display = 'grid';
+            loadCustomColors();
+        }
+        
+        // Gestionnaire pour le changement de thème
+        document.querySelectorAll('.theme-preview').forEach(preview => {
+            preview.addEventListener('click', function() {
+                const themeName = this.getAttribute('data-theme');
+                const colorPicker = document.getElementById('custom-color-picker');
+                
+                if (themeName === 'custom') {
+                    colorPicker.style.display = 'grid';
+                    // Charger les couleurs personnalisées
+                    const savedColors = localStorage.getItem('custom_colors');
+                    if (savedColors) {
+                        try {
+                            const colors = JSON.parse(savedColors);
+                            if (colors.color-primary) document.getElementById('custom-primary').value = colors['color-primary'];
+                            if (colors.color-accent) document.getElementById('custom-accent').value = colors['color-accent'];
+                            if (colors.color-secondary) document.getElementById('custom-secondary').value = colors['color-secondary'];
+                        } catch (e) {
+                            console.error('Erreur:', e);
+                        }
+                    }
+                } else {
+                    colorPicker.style.display = 'none';
+                }
+            });
+        });
+        
+        // Gestionnaires pour les sélecteurs de couleurs personnalisées
+        document.getElementById('custom-primary').addEventListener('input', function(e) {
+            setCustomColor('color-primary', e.target.value);
+            setCustomColor('color-primary-dark', darkenColor(e.target.value, 0.1));
+            setCustomColor('color-primary-light', lightenColor(e.target.value, 0.1));
+        });
+        
+        document.getElementById('custom-accent').addEventListener('input', function(e) {
+            setCustomColor('color-accent', e.target.value);
+        });
+        
+        document.getElementById('custom-secondary').addEventListener('input', function(e) {
+            setCustomColor('color-secondary', e.target.value);
+        });
+        
+        // Fonctions utilitaires pour ajuster les couleurs
+        function darkenColor(color, amount) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const r = Math.max(0, ((num >> 16) & 0xFF) - Math.round(255 * amount));
+            const g = Math.max(0, ((num >> 8) & 0xFF) - Math.round(255 * amount));
+            const b = Math.max(0, (num & 0xFF) - Math.round(255 * amount));
+            return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+        }
+        
+        function lightenColor(color, amount) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const r = Math.min(255, ((num >> 16) & 0xFF) + Math.round(255 * amount));
+            const g = Math.min(255, ((num >> 8) & 0xFF) + Math.round(255 * amount));
+            const b = Math.min(255, (num & 0xFF) + Math.round(255 * amount));
+            return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+        }
+        
+        // Export/Import
+        document.getElementById('export-theme-btn')?.addEventListener('click', exportTheme);
+        
+        function handleThemeImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                importTheme(file);
+            }
+        }
+        
+        // Paramètres avancés
+        function toggleAdvancedSettings() {
+            const content = document.getElementById('advanced-settings-content');
+            const icon = document.getElementById('advanced-toggle-icon');
+            content.classList.toggle('active');
+            icon.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+        
+        function updateFontSize(value) {
+            document.getElementById('font-size-value').textContent = value + 'px';
+            applyAdvancedSettings({ fontSize: parseInt(value) });
+        }
+        
+        function updateSpacing(value) {
+            document.getElementById('spacing-value').textContent = value + 'px';
+            applyAdvancedSettings({ spacing: parseInt(value) });
+        }
+        
+        function updateBorderRadius(value) {
+            document.getElementById('border-radius-value').textContent = value + 'px';
+            applyAdvancedSettings({ borderRadius: parseInt(value) });
+        }
+        
+        function updateFontFamily(value) {
+            applyAdvancedSettings({ fontFamily: value });
+        }
+        
+        // Charger les paramètres avancés sauvegardés
+        const savedAdvanced = localStorage.getItem('advanced_settings');
+        if (savedAdvanced) {
+            try {
+                const settings = JSON.parse(savedAdvanced);
+                if (settings.fontSize) {
+                    document.getElementById('font-size').value = settings.fontSize;
+                    document.getElementById('font-size-value').textContent = settings.fontSize + 'px';
+                }
+                if (settings.spacing) {
+                    document.getElementById('spacing').value = settings.spacing;
+                    document.getElementById('spacing-value').textContent = settings.spacing + 'px';
+                }
+                if (settings.borderRadius) {
+                    document.getElementById('border-radius').value = settings.borderRadius;
+                    document.getElementById('border-radius-value').textContent = settings.borderRadius + 'px';
+                }
+                if (settings.fontFamily) {
+                    document.getElementById('font-family').value = settings.fontFamily;
+                }
+                applyAdvancedSettings(settings);
+            } catch (e) {
+                console.error('Erreur lors du chargement des paramètres avancés:', e);
+            }
+        }
+        
+        // Afficher l'historique
+        function displayHistory() {
+            const historyList = document.getElementById('theme-history-list');
+            if (!historyList) return;
+            
+            loadHistory();
+            
+            if (themeHistory.length === 0) {
+                historyList.innerHTML = '<p style="color: var(--text-muted);">Aucun historique disponible</p>';
+                return;
+            }
+            
+            historyList.innerHTML = themeHistory.slice().reverse().map(entry => {
+                const date = new Date(entry.timestamp);
+                return `<div class="theme-history-item" onclick="applyThemeFromHistory('${entry.theme}', '${entry.mode}')">
+                    ${entry.theme} - ${entry.mode}
+                    <small style="display: block; color: var(--text-muted);">${date.toLocaleString('fr-FR')}</small>
+                </div>`;
+            }).join('');
+        }
+        
+        function applyThemeFromHistory(themeName, colorMode) {
+            currentTheme = themeName;
+            currentMode = colorMode;
+            applyTemporaryTheme(themeName, colorMode);
+            selectThemeOption(themeName);
+            selectModeOption(colorMode);
+        }
+        
+        // Afficher l'historique au chargement
+        setTimeout(displayHistory, 500);
+    });
+</script>
+{% endblock %}
+

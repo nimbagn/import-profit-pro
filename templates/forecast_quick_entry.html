@@ -1,0 +1,422 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Saisie Rapide Prévisions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 1400px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  .editable-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-lg);
+  }
+  
+  .editable-table thead {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .editable-table th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  
+  .editable-table td {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .editable-table input {
+    width: 100%;
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+  }
+  
+  .editable-table input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  }
+  
+  .editable-table tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .btn-add-row {
+    margin-top: var(--space-md);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+    
+    .editable-table {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-table me-2"></i>
+        Saisie Rapide Prévisions
+      </h1>
+      <p style="color: var(--text-secondary); margin-top: var(--space-sm);">
+        Remplissez directement le tableau avec les prévisions et réalisations. Les calculs se font automatiquement.
+      </p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="forecastForm">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="name" class="form-hl-label">
+            Nom de la Prévision <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="text" id="name" name="name" class="form-hl-input" required>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="commercial_name" class="form-hl-label">
+            Commercial/Vendeur
+          </label>
+          <select id="commercial_name" name="commercial_name" class="form-hl-input">
+            <option value="">-- Sélectionner un commercial --</option>
+            {% for user in users %}
+            <option value="{{ user.username }}">{{ user.username }}{% if user.role %} ({{ user.role.name }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="start_date" class="form-hl-label">
+            Date de Début <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="start_date" name="start_date" class="form-hl-input" required>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="end_date" class="form-hl-label">
+            Date de Fin <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="end_date" name="end_date" class="form-hl-input" required>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="currency" class="form-hl-label">
+            Devise <span style="color: var(--color-danger);">*</span>
+          </label>
+          <select id="currency" name="currency" class="form-hl-input" required>
+            <option value="GNF" selected>GNF - Franc Guinéen</option>
+            <option value="USD">USD - Dollar US</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="XOF">XOF - Franc CFA</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="description" class="form-hl-label">Description</label>
+        <textarea id="description" name="description" class="form-hl-input" rows="2"></textarea>
+      </div>
+      
+      <!-- Tableau éditable -->
+      <div style="margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 2px solid var(--gray-200);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+          <h3 style="color: var(--color-primary);">
+            <i class="fas fa-table me-2"></i>Tableau de Saisie
+          </h3>
+          <button type="button" onclick="addRow()" class="btn-hl btn-hl-primary btn-add-row">
+            <i class="fas fa-plus me-2"></i>Ajouter une Ligne
+          </button>
+        </div>
+        
+        <div style="overflow-x: auto;">
+          <table class="editable-table" id="forecastTable">
+            <thead>
+              <tr>
+                <th style="width: 300px;">Article</th>
+                <th style="width: 150px;">Prix Unitaire</th>
+                <th style="width: 150px;">Quantité Prévision</th>
+                <th style="width: 150px;">Valeur Prévision</th>
+                <th style="width: 150px;">Quantité Réalisée</th>
+                <th style="width: 150px;">Valeur Réalisée</th>
+                <th style="width: 100px;">% Réalisation</th>
+                <th style="width: 80px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Les lignes seront ajoutées dynamiquement -->
+            </tbody>
+            <tfoot>
+              <tr style="background: var(--bg-tertiary); font-weight: 700;">
+                <td><strong>TOTAL</strong></td>
+                <td></td>
+                <td id="totalForecastQty"><strong>0</strong></td>
+                <td id="totalForecastValue"><strong>0</strong></td>
+                <td id="totalRealizedQty"><strong>0</strong></td>
+                <td id="totalRealizedValue"><strong>0</strong></td>
+                <td id="totalRealization"><strong>0%</strong></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('forecast_dashboard') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>Enregistrer la Prévision
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de sélection d'articles -->
+<div id="articleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: var(--space-xl); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+      <h3 style="color: var(--color-primary);">Sélectionner un Article</h3>
+      <button onclick="closeArticleSelector()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+    </div>
+    <input type="text" id="articleSearch" placeholder="Rechercher un article..." 
+           style="width: 100%; padding: var(--space-md); margin-bottom: var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+    <div id="articleList" style="max-height: 400px; overflow-y: auto;">
+      {% for item in stock_items %}
+      <div class="article-item" data-id="{{ item.id }}" data-name="{{ item.name }}" 
+           onclick="selectArticle({{ item.id }}, '{{ item.name|e }}', {{ item.purchase_price_gnf|default(0) }})"
+           style="padding: var(--space-md); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: var(--space-sm); cursor: pointer; transition: var(--transition-normal);"
+           onmouseover="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--color-primary)'"
+           onmouseout="this.style.background='var(--white)'; this.style.borderColor='var(--gray-200)'">
+        <strong>{{ item.name }}</strong>
+        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+          Prix: {{ "{:,.0f}".format(item.purchase_price_gnf|default(0))|replace(',', ' ') }} GNF
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var articles = {{ stock_items|map(attribute='id')|list|tojson }};
+  var articlesData = {};
+  {% for item in stock_items %}
+  articlesData[{{ item.id }}] = {
+    id: {{ item.id }},
+    name: '{{ item.name|e }}',
+    price: {{ item.purchase_price_gnf|default(0) }}
+  };
+  {% endfor %}
+  
+  var rowIndex = 0;
+  var currentRowIndex = null;
+  
+  function addRow() {
+    var tbody = document.getElementById('tableBody');
+    var row = document.createElement('tr');
+    row.id = 'row-' + rowIndex;
+    row.innerHTML = `
+      <td>
+        <input type="text" class="article-input" placeholder="Cliquez pour sélectionner" readonly
+               onclick="showArticleSelector(${rowIndex})" style="cursor: pointer;">
+        <input type="hidden" name="article_ids[]" class="article-id">
+      </td>
+      <td><input type="number" name="prices[]" step="0.01" min="0" class="price-input" onchange="calculateRow(${rowIndex})"></td>
+      <td><input type="number" name="forecast_quantities[]" step="0.01" min="0" class="forecast-qty-input" onchange="calculateRow(${rowIndex})"></td>
+      <td class="forecast-value-cell">0</td>
+      <td><input type="number" name="realized_quantities[]" step="0.01" min="0" class="realized-qty-input" onchange="calculateRow(${rowIndex})"></td>
+      <td class="realized-value-cell">0</td>
+      <td class="realization-pct-cell">0%</td>
+      <td><button type="button" onclick="removeRow(${rowIndex})" class="btn-hl btn-hl-danger" style="padding: var(--space-xs) var(--space-sm);"><i class="fas fa-trash"></i></button></td>
+    `;
+    tbody.appendChild(row);
+    rowIndex++;
+    updateTotals();
+  }
+  
+  function removeRow(index) {
+    var row = document.getElementById('row-' + index);
+    if (row) {
+      row.remove();
+      updateTotals();
+    }
+  }
+  
+  function showArticleSelector(index) {
+    currentRowIndex = index;
+    document.getElementById('articleModal').style.display = 'flex';
+  }
+  
+  function closeArticleSelector() {
+    document.getElementById('articleModal').style.display = 'none';
+    document.getElementById('articleSearch').value = '';
+    filterArticles();
+  }
+  
+  function filterArticles() {
+    var search = document.getElementById('articleSearch').value.toLowerCase();
+    var items = document.querySelectorAll('.article-item');
+    items.forEach(function(item) {
+      var name = item.getAttribute('data-name').toLowerCase();
+      if (name.includes(search)) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  document.getElementById('articleSearch').addEventListener('input', filterArticles);
+  
+  function selectArticle(id, name, price) {
+    if (currentRowIndex === null) return;
+    
+    var row = document.getElementById('row-' + currentRowIndex);
+    if (!row) return;
+    
+    row.querySelector('.article-input').value = name;
+    row.querySelector('.article-id').value = id;
+    row.querySelector('.price-input').value = price || 0;
+    
+    calculateRow(currentRowIndex);
+    closeArticleSelector();
+  }
+  
+  function calculateRow(index) {
+    var row = document.getElementById('row-' + index);
+    if (!row) return;
+    
+    var price = parseFloat(row.querySelector('.price-input').value) || 0;
+    var forecastQty = parseFloat(row.querySelector('.forecast-qty-input').value) || 0;
+    var realizedQty = parseFloat(row.querySelector('.realized-qty-input').value) || 0;
+    
+    var forecastValue = price * forecastQty;
+    var realizedValue = price * realizedQty;
+    var realizationPct = forecastValue > 0 ? (realizedValue / forecastValue * 100) : 0;
+    
+    row.querySelector('.forecast-value-cell').textContent = formatNumber(forecastValue);
+    row.querySelector('.realized-value-cell').textContent = formatNumber(realizedValue);
+    row.querySelector('.realization-pct-cell').textContent = realizationPct.toFixed(1) + '%';
+    
+    updateTotals();
+  }
+  
+  function updateTotals() {
+    var rows = document.querySelectorAll('#tableBody tr');
+    var totalForecastQty = 0;
+    var totalForecastValue = 0;
+    var totalRealizedQty = 0;
+    var totalRealizedValue = 0;
+    
+    rows.forEach(function(row) {
+      var forecastQty = parseFloat(row.querySelector('.forecast-qty-input')?.value) || 0;
+      var realizedQty = parseFloat(row.querySelector('.realized-qty-input')?.value) || 0;
+      var price = parseFloat(row.querySelector('.price-input')?.value) || 0;
+      
+      totalForecastQty += forecastQty;
+      totalForecastValue += price * forecastQty;
+      totalRealizedQty += realizedQty;
+      totalRealizedValue += price * realizedQty;
+    });
+    
+    var totalRealization = totalForecastValue > 0 ? (totalRealizedValue / totalForecastValue * 100) : 0;
+    
+    document.getElementById('totalForecastQty').textContent = formatNumber(totalForecastQty);
+    document.getElementById('totalForecastValue').textContent = formatNumber(totalForecastValue);
+    document.getElementById('totalRealizedQty').textContent = formatNumber(totalRealizedQty);
+    document.getElementById('totalRealizedValue').textContent = formatNumber(totalRealizedValue);
+    document.getElementById('totalRealization').textContent = totalRealization.toFixed(1) + '%';
+  }
+  
+  function formatNumber(num) {
+    return new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(num);
+  }
+  
+  // Ajouter une ligne par défaut au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    addRow();
+  });
+  
+  // Validation avant soumission
+  document.getElementById('forecastForm').addEventListener('submit', function(e) {
+    var rows = document.querySelectorAll('#tableBody tr');
+    var hasData = false;
+    
+    rows.forEach(function(row) {
+      var articleId = row.querySelector('.article-id')?.value;
+      var forecastQty = row.querySelector('.forecast-qty-input')?.value;
+      if (articleId && forecastQty && parseFloat(forecastQty) > 0) {
+        hasData = true;
+      }
+    });
+    
+    if (!hasData) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins un article avec une quantité prévisionnelle');
+      return false;
+    }
+  });
+</script>
+{% endblock %}
+

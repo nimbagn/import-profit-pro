@@ -1,0 +1,326 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Historique Mouvements Stock - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+
+  .filters-section {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+
+  .item-section {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid var(--gray-200);
+  }
+
+  .item-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .item-stats {
+    display: flex;
+    gap: var(--space-lg);
+  }
+
+  .item-stat {
+    text-align: center;
+  }
+
+  .item-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  .item-stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  .badge-type {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .type-transfer { background: rgba(0, 56, 101, 0.1); color: var(--color-primary); }
+  .type-reception { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+  .type-adjustment { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
+  .type-inventory { background: rgba(118, 75, 162, 0.1); color: #764ba2; }
+
+  .movement-row {
+    transition: background 0.2s;
+  }
+
+  .movement-row:hover {
+    background: var(--bg-secondary);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-history me-2"></i>
+      Historique des Mouvements de Stock
+    </h1>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <h3 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+      <i class="fas fa-filter me-2"></i>Filtres
+    </h3>
+    <form method="GET" action="{{ url_for('stocks.stock_history') }}" class="filters-grid">
+      <div>
+        <label class="form-hl-label">Période</label>
+        <select name="period" class="form-hl-input" onchange="this.form.submit()">
+          <option value="today" {% if period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+          <option value="week" {% if period == 'week' %}selected{% endif %}>Cette semaine</option>
+          <option value="month" {% if period == 'month' %}selected{% endif %}>Ce mois</option>
+          <option value="year" {% if period == 'year' %}selected{% endif %}>Cette année</option>
+          <option value="all" {% if period == 'all' %}selected{% endif %}>Toutes les périodes</option>
+          <option value="custom" {% if period == 'custom' %}selected{% endif %}>Personnalisée</option>
+        </select>
+      </div>
+      
+      <div id="custom-dates" style="display: {% if period == 'custom' %}block{% else %}none{% endif %};">
+        <label class="form-hl-label">Date début</label>
+        <input type="date" name="start_date" class="form-hl-input" value="{{ start_date }}">
+      </div>
+      
+      <div id="custom-dates-end" style="display: {% if period == 'custom' %}block{% else %}none{% endif %};">
+        <label class="form-hl-label">Date fin</label>
+        <input type="date" name="end_date" class="form-hl-input" value="{{ end_date }}">
+      </div>
+      
+      <div>
+        <label class="form-hl-label">Article</label>
+        <select name="stock_item_id" class="form-hl-input">
+          <option value="">Tous les articles</option>
+          {% for item in stock_items %}
+          <option value="{{ item.id }}" {% if selected_stock_item_id == item.id %}selected{% endif %}>
+            {{ item.name }} ({{ item.sku }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div>
+        <label class="form-hl-label">Type de mouvement</label>
+        <select name="movement_type" class="form-hl-input">
+          <option value="">Tous les types</option>
+          <option value="transfer" {% if selected_movement_type == 'transfer' %}selected{% endif %}>Transfert</option>
+          <option value="reception" {% if selected_movement_type == 'reception' %}selected{% endif %}>Réception</option>
+          <option value="adjustment" {% if selected_movement_type == 'adjustment' %}selected{% endif %}>Ajustement</option>
+          <option value="inventory" {% if selected_movement_type == 'inventory' %}selected{% endif %}>Inventaire</option>
+        </select>
+      </div>
+      
+      <div>
+        <label class="form-hl-label">Dépôt</label>
+        <select name="depot_id" class="form-hl-input">
+          <option value="">Tous les dépôts</option>
+          {% for depot in depots %}
+          <option value="{{ depot.id }}" {% if selected_depot_id == depot.id %}selected{% endif %}>
+            {{ depot.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div>
+        <label class="form-hl-label">Véhicule</label>
+        <select name="vehicle_id" class="form-hl-input">
+          <option value="">Tous les véhicules</option>
+          {% for vehicle in vehicles %}
+          <option value="{{ vehicle.id }}" {% if selected_vehicle_id == vehicle.id %}selected{% endif %}>
+            {{ vehicle.plate_number }} - {{ vehicle.brand }} {{ vehicle.model }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div style="display: flex; align-items: flex-end;">
+        <button type="submit" class="btn-hl btn-hl-primary" style="width: 100%;">
+          <i class="fas fa-search me-2"></i>Filtrer
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Statistiques globales -->
+  <div class="card-hl" style="margin-bottom: var(--space-xl);">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">Statistiques Globales</h3>
+    </div>
+    <div style="padding: var(--space-lg); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-lg);">
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">{{ total_movements }}</div>
+        <div style="color: var(--text-secondary);">Mouvements</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: #22c55e;">+{{ "{:,.2f}".format(total_entries)|replace(',', ' ') }}</div>
+        <div style="color: var(--text-secondary);">Entrées</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">-{{ "{:,.2f}".format(total_exits)|replace(',', ' ') }}</div>
+        <div style="color: var(--text-secondary);">Sorties</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mouvements groupés par article -->
+  {% if movements_by_item %}
+    {% for item_id, data in movements_by_item.items() %}
+    <div class="item-section">
+      <div class="item-header">
+        <div>
+          <div class="item-title">
+            <i class="fas fa-box me-2"></i>
+            {{ data.item.name }} <small style="color: var(--text-muted);">({{ data.item.sku }})</small>
+          </div>
+        </div>
+        <div class="item-stats">
+          <div class="item-stat">
+            <div class="item-stat-value" style="color: #22c55e;">+{{ "{:,.2f}".format(data.total_entries)|replace(',', ' ') }}</div>
+            <div class="item-stat-label">Entrées</div>
+          </div>
+          <div class="item-stat">
+            <div class="item-stat-value" style="color: #ef4444;">-{{ "{:,.2f}".format(data.total_exits)|replace(',', ' ') }}</div>
+            <div class="item-stat-label">Sorties</div>
+          </div>
+          <div class="item-stat">
+            <div class="item-stat-value" style="color: {% if data.net >= 0 %}#22c55e{% else %}#ef4444{% endif %};">
+              {{ "{:,.2f}".format(data.net)|replace(',', ' ') }}
+            </div>
+            <div class="item-stat-label">Net</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Référence</th>
+              <th>Quantité</th>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Utilisateur</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in data.movements %}
+            <tr class="movement-row">
+              <td>{{ movement.movement_date.strftime('%d/%m/%Y %H:%M') if movement.movement_date else '-' }}</td>
+              <td>
+                <span class="badge-hl badge-type type-{{ movement.movement_type }}">
+                  {{ movement.movement_type|title }}
+                </span>
+              </td>
+              <td>{{ movement.reference or '-' }}</td>
+              <td style="color: {% if movement.quantity >= 0 %}#22c55e{% else %}#ef4444{% endif %}; font-weight: 600;">
+                {% if movement.quantity >= 0 %}+{% endif %}{{ "{:,.2f}".format(movement.quantity)|replace(',', ' ') }}
+              </td>
+              <td>
+                {% if movement.from_depot %}
+                  <i class="fas fa-warehouse me-1"></i>{{ movement.from_depot.name }}
+                {% elif movement.from_vehicle %}
+                  <i class="fas fa-truck me-1"></i>{{ movement.from_vehicle.plate_number }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                {% if movement.to_depot %}
+                  <i class="fas fa-warehouse me-1"></i>{{ movement.to_depot.name }}
+                {% elif movement.to_vehicle %}
+                  <i class="fas fa-truck me-1"></i>{{ movement.to_vehicle.plate_number }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ movement.user.username if movement.user else '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="card-hl">
+    <div style="text-align: center; padding: var(--space-3xl); color: var(--text-muted);">
+      <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+      <p>Aucun mouvement trouvé avec les filtres sélectionnés.</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const periodSelect = document.querySelector('select[name="period"]');
+  const customDates = document.getElementById('custom-dates');
+  const customDatesEnd = document.getElementById('custom-dates-end');
+  
+  periodSelect.addEventListener('change', function() {
+    if (this.value === 'custom') {
+      customDates.style.display = 'block';
+      customDatesEnd.style.display = 'block';
+    } else {
+      customDates.style.display = 'none';
+      customDatesEnd.style.display = 'none';
+    }
+  });
+});
+</script>
+{% endblock %}
+

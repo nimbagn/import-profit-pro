@@ -1,0 +1,626 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Mouvements de Stock - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .badge-type { padding: var(--space-xs) var(--space-md); border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+  .type-transfer { background: rgba(0, 56, 101, 0.1); color: var(--hl-blue); }
+  .type-reception { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+  .type-adjustment { background: rgba(255, 102, 0, 0.1); color: var(--hl-orange); }
+  .type-inventory { background: rgba(0, 56, 101, 0.15); color: var(--hl-blue); }
+  
+  /* Wrapper responsive pour tableaux */
+  .table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-lg);
+  }
+  
+  .table-hl {
+    width: 100%;
+    min-width: 1000px; /* Largeur minimale pour garder la lisibilité */
+    border-collapse: collapse;
+  }
+  
+  /* Styles harmonisés pour les cartes de statistiques */
+  .stat-card {
+    text-align: center;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    color: white;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .stat-card-total {
+    background: linear-gradient(135deg, var(--hl-blue) 0%, var(--hl-blue-dark) 100%);
+  }
+  
+  .stat-card-transfer {
+    background: linear-gradient(135deg, var(--hl-blue) 0%, var(--hl-blue-light) 100%);
+  }
+  
+  .stat-card-reception {
+    background: linear-gradient(135deg, var(--color-success) 0%, #059669 100%);
+  }
+  
+  .stat-card-adjustment {
+    background: linear-gradient(135deg, var(--hl-orange) 0%, #e55a00 100%);
+  }
+  
+  .stat-card-inventory {
+    background: linear-gradient(135deg, var(--hl-blue-dark) 0%, var(--hl-blue) 100%);
+  }
+  
+  /* Badges harmonisés */
+  .badge-quantity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .badge-quantity-positive {
+    background: linear-gradient(135deg, var(--color-success) 0%, #059669 100%);
+    color: white;
+  }
+  
+  .badge-quantity-negative {
+    background: linear-gradient(135deg, var(--color-danger) 0%, #dc2626 100%);
+    color: white;
+  }
+  
+  .badge-location {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-left: 3px solid;
+  }
+  
+  .badge-location-source {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    border-left-color: var(--color-danger);
+  }
+  
+  .badge-location-destination {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border-left-color: var(--color-success);
+  }
+  
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .table-hl {
+      min-width: 900px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .table-hl {
+      min-width: 800px;
+      font-size: 0.875rem;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.8rem;
+    }
+    
+    .filters-section {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .stat-card {
+      padding: var(--space-md);
+    }
+    
+    .stat-card .stat-value {
+      font-size: 1.5rem !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .table-hl {
+      min-width: 700px;
+      font-size: 0.75rem;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: var(--space-xs) var(--space-sm);
+    }
+    
+    .page-title-hl {
+      font-size: 1.25rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-exchange-alt me-2"></i>
+      Mouvements de Stock
+    </h1>
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+      <a href="{{ url_for('stocks.movement_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouveau Mouvement
+      </a>
+      <a href="{{ url_for('stocks.movements_export_excel', type=movement_type, search=search, date_from=date_from, date_to=date_to, stock_item_id=stock_item_id, depot_id=depot_id, vehicle_id=vehicle_id, user_id=user_id) }}" 
+         class="btn-hl" 
+         style="background: var(--color-success); color: white; border-color: var(--color-success);">
+        <i class="fas fa-file-excel me-2"></i>
+        Exporter Excel
+      </a>
+      {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+      <a href="{{ url_for('stocks.update_movements_signs') }}" class="btn-hl" style="background: var(--hl-orange); color: white; border-color: var(--hl-orange);">
+        <i class="fas fa-sync-alt me-2"></i>Mettre à jour les mouvements
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  {% if total_movements is defined %}
+  <div class="card-hl">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <div class="stat-card stat-card-total">
+        <div class="stat-value" style="font-size: 2.5rem; font-weight: 700; margin-bottom: var(--space-xs);">{{ total_movements }}</div>
+        <div style="font-size: 0.875rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px;">Total Mouvements</div>
+        <i class="fas fa-exchange-alt" style="font-size: 1.5rem; margin-top: var(--space-sm); opacity: 0.7;"></i>
+      </div>
+      {% if movements_by_type %}
+      {% set type_classes = {'transfer': 'stat-card-transfer', 'reception': 'stat-card-reception', 'adjustment': 'stat-card-adjustment', 'inventory': 'stat-card-inventory'} %}
+      {% set type_icons = {'transfer': 'fa-exchange-alt', 'reception': 'fa-arrow-down', 'adjustment': 'fa-adjust', 'inventory': 'fa-clipboard-check'} %}
+      {% for mtype, count in movements_by_type.items() %}
+      <div class="stat-card {{ type_classes.get(mtype, 'stat-card-total') }}">
+        <i class="fas {{ type_icons.get(mtype, 'fa-circle') }}" style="font-size: 1.5rem; margin-bottom: var(--space-xs); opacity: 0.9;"></i>
+        <div class="stat-value" style="font-size: 2rem; font-weight: 700; margin-bottom: var(--space-xs);">{{ count }}</div>
+        <div style="font-size: 0.875rem; opacity: 0.9; text-transform: capitalize; letter-spacing: 0.5px;">{{ mtype }}</div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Graphique de tendance -->
+  {% if chart_labels and chart_labels|length > 0 %}
+  <div class="card-hl">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.2rem; font-weight: 600;">
+      <i class="fas fa-chart-line me-2" style="color: var(--color-primary);"></i>
+      Tendances des 30 derniers jours
+    </h3>
+    <div style="position: relative; height: 300px;">
+      <canvas id="movementsTrendChart"></canvas>
+    </div>
+  </div>
+  
+  <script>
+    const ctx = document.getElementById('movementsTrendChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_labels|tojson }},
+        datasets: [
+          {
+            label: 'Transferts',
+            data: {{ chart_transfer|tojson }},
+            borderColor: 'rgb(0, 56, 101)',
+            backgroundColor: 'rgba(0, 56, 101, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Réceptions',
+            data: {{ chart_reception|tojson }},
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Ajustements',
+            data: {{ chart_adjustment|tojson }},
+            borderColor: 'var(--hl-orange)',
+            backgroundColor: 'rgba(255, 102, 0, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Inventaires',
+            data: {{ chart_inventory|tojson }},
+            borderColor: 'var(--hl-blue)',
+            backgroundColor: 'rgba(0, 56, 101, 0.15)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Total',
+            data: {{ chart_total|tojson }},
+            borderColor: 'var(--hl-blue-dark)',
+            backgroundColor: 'rgba(0, 56, 101, 0.2)',
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            titleFont: {
+              size: 14
+            },
+            bodyFont: {
+              size: 12
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          }
+        }
+      }
+    });
+  </script>
+  {% endif %}
+  {% endif %}
+
+  <!-- Filtres -->
+  <div class="card-hl">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+      Filtres et Recherche
+    </h3>
+    <form method="GET" action="{{ url_for('stocks.movements_list') }}" class="filters-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <div class="form-group">
+        <label class="form-hl-label">Recherche</label>
+        <input type="text" name="search" value="{{ search or '' }}" class="form-hl-input" placeholder="Référence, BL, fournisseur...">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Type</label>
+        <select name="type" class="form-hl-select">
+          <option value="">Tous les types</option>
+          <option value="transfer" {% if movement_type == 'transfer' %}selected{% endif %}>Transfert</option>
+          <option value="reception" {% if movement_type == 'reception' %}selected{% endif %}>Réception</option>
+          <option value="adjustment" {% if movement_type == 'adjustment' %}selected{% endif %}>Ajustement</option>
+          <option value="inventory" {% if movement_type == 'inventory' %}selected{% endif %}>Inventaire</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Date début</label>
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-hl-input">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Date fin</label>
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-hl-input">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Article</label>
+        <select name="stock_item_id" class="form-hl-select">
+          <option value="">Tous les articles</option>
+          {% if stock_items %}
+          {% for item in stock_items %}
+          <option value="{{ item.id }}" {% if stock_item_id == item.id %}selected{% endif %}>{{ item.name }}</option>
+          {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Dépôt</label>
+        <select name="depot_id" class="form-hl-select">
+          <option value="">Tous les dépôts</option>
+          {% if depots %}
+          {% for depot in depots %}
+          <option value="{{ depot.id }}" {% if depot_id == depot.id %}selected{% endif %}>{{ depot.name }}</option>
+          {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Véhicule</label>
+        <select name="vehicle_id" class="form-hl-select">
+          <option value="">Tous les véhicules</option>
+          {% if vehicles %}
+          {% for vehicle in vehicles %}
+          <option value="{{ vehicle.id }}" {% if vehicle_id == vehicle.id %}selected{% endif %}>{{ vehicle.plate_number }}</option>
+          {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Utilisateur</label>
+        <select name="user_id" class="form-hl-select">
+          <option value="">Tous les utilisateurs</option>
+          {% if users %}
+          {% for user in users %}
+          <option value="{{ user.id }}" {% if user_id == user.id %}selected{% endif %}>{{ user.username }}</option>
+          {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Par page</label>
+        <select name="per_page" class="form-hl-select" onchange="this.form.submit()">
+          <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+          <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+          <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+          <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+        </select>
+      </div>
+      <div class="form-group" style="display: flex; gap: var(--space-sm); align-items: flex-end;">
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-secondary">
+          <i class="fas fa-times me-2"></i>Réinitialiser
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {% if movements %}
+  <div class="card-hl">
+    <div class="table-responsive-wrapper">
+      <table class="table-hl">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Référence</th>
+            <th>Type</th>
+            <th>Article</th>
+            <th>Quantité<br><small style="font-weight: normal; color: var(--text-muted);">(+ entrée / - sortie)</small></th>
+            <th>Source<br><small style="font-weight: normal; color: var(--text-muted);">(Sortie)</small></th>
+            <th>Destination<br><small style="font-weight: normal; color: var(--text-muted);">(Entrée)</small></th>
+            <th>Utilisateur</th>
+            {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+            <th>Actions</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for movement in movements %}
+        <tr>
+          <td>{{ movement.movement_date.strftime('%d/%m/%Y %H:%M') if movement.movement_date else '-' }}</td>
+          <td>
+            {% if movement.reference %}
+            <a href="{{ url_for('stocks.movement_detail_by_reference', reference=movement.reference) }}" 
+               style="color: var(--color-primary); font-weight: 600; text-decoration: none;">
+              <i class="fas fa-file-invoice me-1"></i>{{ movement.reference }}
+            </a>
+            {% else %}
+            <span style="color: var(--text-muted);">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% set type_badges = {
+              'transfer': {'color': 'var(--hl-blue)', 'icon': 'fa-exchange-alt', 'bg': 'rgba(0, 56, 101, 0.1)'},
+              'reception': {'color': 'var(--color-success)', 'icon': 'fa-arrow-down', 'bg': 'rgba(16, 185, 129, 0.1)'},
+              'adjustment': {'color': 'var(--hl-orange)', 'icon': 'fa-adjust', 'bg': 'rgba(255, 102, 0, 0.1)'},
+              'inventory': {'color': 'var(--hl-blue)', 'icon': 'fa-clipboard-check', 'bg': 'rgba(0, 56, 101, 0.15)'}
+            } %}
+            {% set badge = type_badges.get(movement.movement_type, {'color': 'var(--text-muted)', 'icon': 'fa-circle', 'bg': 'var(--bg-tertiary)'}) %}
+            <span class="badge-hl badge-hl-primary" style="background: {{ badge.bg }}; color: {{ badge.color }};">
+              <i class="fas {{ badge.icon }}"></i>
+              {{ movement.movement_type|title }}
+            </span>
+          </td>
+          <td><strong>{{ movement.stock_item.sku }}</strong> - {{ movement.stock_item.name }}</td>
+          <td>
+            {% if movement.quantity >= 0 %}
+            <div class="badge-quantity badge-quantity-positive">
+              <i class="fas fa-arrow-up"></i>
+              <span>+{{ "{:.2f}".format(movement.quantity) }}</span>
+              <small style="font-size: 0.7rem; opacity: 0.9; margin-left: 0.25rem;">ENTRÉE</small>
+            </div>
+            {% else %}
+            <div class="badge-quantity badge-quantity-negative">
+              <i class="fas fa-arrow-down"></i>
+              <span>{{ "{:.2f}".format(movement.quantity) }}</span>
+              <small style="font-size: 0.7rem; opacity: 0.9; margin-left: 0.25rem;">SORTIE</small>
+            </div>
+            {% endif %}
+          </td>
+          <td>
+            {% if movement.from_depot %}
+            <span class="badge-location badge-location-source">
+              <i class="fas fa-warehouse"></i>
+              <span>{{ movement.from_depot.name }}</span>
+            </span>
+            {% elif movement.from_vehicle %}
+            <span class="badge-location badge-location-source">
+              <i class="fas fa-car"></i>
+              <span>{{ movement.from_vehicle.plate_number }}</span>
+            </span>
+            {% else %}
+            <span style="color: var(--text-muted); font-style: italic;">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if movement.to_depot %}
+            <span class="badge-location badge-location-destination">
+              <i class="fas fa-warehouse"></i>
+              <span>{{ movement.to_depot.name }}</span>
+            </span>
+            {% elif movement.to_vehicle %}
+            <span class="badge-location badge-location-destination">
+              <i class="fas fa-car"></i>
+              <span>{{ movement.to_vehicle.plate_number }}</span>
+            </span>
+            {% elif movement.supplier_name %}
+            <span class="badge-location badge-location-destination">
+              <i class="fas fa-truck"></i>
+              <span>{{ movement.supplier_name }}</span>
+            </span>
+            {% else %}
+            <span style="color: var(--text-muted); font-style: italic;">-</span>
+            {% endif %}
+          </td>
+          <td>{{ movement.user.username if movement.user else '-' }}</td>
+          {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+          <td>
+            <div style="display: flex; gap: var(--space-xs);">
+              <a href="{{ url_for('stocks.movement_edit', id=movement.id) }}" 
+                 class="btn-hl btn-hl-primary" 
+                 style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form method="POST" action="{{ url_for('stocks.movement_delete', id=movement.id) }}" 
+                    style="display: inline;"
+                    onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce mouvement ? Cette action est irréversible.');">
+                {% if csrf_token %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {% endif %}
+                <button type="submit" 
+                        class="btn-hl" 
+                        style="padding: 0.25rem 0.5rem; font-size: 0.875rem; background: var(--color-danger); color: white; border-color: var(--color-danger);">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+    <div style="display: flex; justify-content: center; align-items: center; gap: var(--space-md); margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('stocks.movements_list', page=pagination.prev_num, type=movement_type, search=search, date_from=date_from, date_to=date_to, stock_item_id=stock_item_id, depot_id=depot_id, vehicle_id=vehicle_id, user_id=user_id, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        <i class="fas fa-chevron-left me-2"></i>Précédent
+      </a>
+      {% endif %}
+      
+      <span style="color: var(--text-secondary); font-weight: 500; padding: var(--space-sm);">
+        Page {{ pagination.page }} sur {{ pagination.pages }} 
+        ({{ pagination.total }} mouvement{{ 's' if pagination.total > 1 else '' }})
+      </span>
+      
+      {% if pagination.has_next %}
+      <a href="{{ url_for('stocks.movements_list', page=pagination.next_num, type=movement_type, search=search, date_from=date_from, date_to=date_to, stock_item_id=stock_item_id, depot_id=depot_id, vehicle_id=vehicle_id, user_id=user_id, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        Suivant<i class="fas fa-chevron-right ms-2"></i>
+      </a>
+      {% endif %}
+    </div>
+    
+    <!-- Liens de pagination rapide -->
+    <div style="display: flex; justify-content: center; gap: var(--space-xs); margin-top: var(--space-md); flex-wrap: wrap;">
+      {% for page_num in range(1, pagination.pages + 1) %}
+        {% if page_num == pagination.page %}
+        <span class="btn-hl btn-hl-primary" style="min-width: 40px; text-align: center;">{{ page_num }}</span>
+        {% elif page_num <= 3 or page_num > pagination.pages - 3 or (page_num >= pagination.page - 1 and page_num <= pagination.page + 1) %}
+        <a href="{{ url_for('stocks.movements_list', page=page_num, type=movement_type, search=search, date_from=date_from, date_to=date_to, stock_item_id=stock_item_id, depot_id=depot_id, vehicle_id=vehicle_id, user_id=user_id, per_page=per_page) }}" 
+           class="btn-hl btn-hl-secondary" style="min-width: 40px; text-align: center;">{{ page_num }}</a>
+        {% elif page_num == 4 or page_num == pagination.pages - 3 %}
+        <span style="color: var(--text-muted); padding: var(--space-xs);">...</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-exchange-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun mouvement</h3>
+    <p style="color: var(--text-secondary);">Commencez par créer votre premier mouvement</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,380 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Modifier Prévision - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-edit me-2"></i>
+        Modifier la Prévision
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="name" class="form-hl-label">
+          Nom de la Prévision <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="text" id="name" name="name" class="form-hl-input" value="{{ forecast.name }}" required autofocus>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="commercial_name" class="form-hl-label">
+            Commercial/Vendeur
+          </label>
+          <select id="commercial_name" name="commercial_name" class="form-hl-input">
+            <option value="">-- Sélectionner un commercial --</option>
+            {% for user in users %}
+            <option value="{{ user.username }}" {% if forecast.commercial_name == user.username %}selected{% endif %}>{{ user.username }}{% if user.role %} ({{ user.role.name }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="start_date" class="form-hl-label">
+            Date de Début <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="start_date" name="start_date" class="form-hl-input" value="{{ forecast.start_date }}" required>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="end_date" class="form-hl-label">
+            Date de Fin <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="end_date" name="end_date" class="form-hl-input" value="{{ forecast.end_date }}" required>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="currency" class="form-hl-label">
+            Devise <span style="color: var(--color-danger);">*</span>
+          </label>
+          <select id="currency" name="currency" class="form-hl-input" required onchange="updateCurrencyDisplay()">
+            <option value="GNF" {% if forecast.currency == 'GNF' or not forecast.currency %}selected{% endif %}>GNF - Franc Guinéen</option>
+            <option value="USD" {% if forecast.currency == 'USD' %}selected{% endif %}>USD - Dollar US</option>
+            <option value="EUR" {% if forecast.currency == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+            <option value="XOF" {% if forecast.currency == 'XOF' %}selected{% endif %}>XOF - Franc CFA</option>
+          </select>
+          <div class="help-text-ultra" style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+            Toutes les valeurs seront affichées dans cette devise
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="status" class="form-hl-label">
+            Statut <span style="color: var(--color-danger);">*</span>
+          </label>
+          <select id="status" name="status" class="form-hl-input" required>
+            <option value="draft" {% if forecast.status == 'draft' %}selected{% endif %}>Brouillon</option>
+            <option value="active" {% if forecast.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="completed" {% if forecast.status == 'completed' %}selected{% endif %}>Terminée</option>
+            <option value="archived" {% if forecast.status == 'archived' %}selected{% endif %}>Archivée</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="description" class="form-hl-label">Description</label>
+        <textarea id="description" name="description" class="form-hl-input" rows="4">{{ forecast.description or '' }}</textarea>
+      </div>
+      
+      <!-- Section Articles -->
+      <div style="margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 2px solid var(--gray-200);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+          <h3 style="color: var(--color-primary);">
+            <i class="fas fa-boxes me-2"></i>Articles de la Prévision
+          </h3>
+          <button type="button" onclick="showArticleSelector()" class="btn-hl btn-hl-primary">
+            <i class="fas fa-plus me-2"></i>Ajouter Article
+          </button>
+        </div>
+        
+        <!-- Tableau des articles -->
+        <div style="overflow-x: auto;">
+          <table id="articlesTable" class="table-hl" style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th id="priceHeader">Prix Vente Gros ({{ forecast.currency|default('GNF') }})</th>
+                <th>Quantité Prévue</th>
+                <th id="valueHeader">Valeur Prévisionnelle ({{ forecast.currency|default('GNF') }})</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="articlesTableBody">
+            </tbody>
+            <tfoot id="articlesTableFooter">
+              <tr style="background: var(--bg-tertiary); font-weight: 700;">
+                <td colspan="3"><strong>TOTAL</strong></td>
+                <td id="totalForecastValue"><strong>0 {{ forecast.currency|default('GNF') }}</strong></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div id="noArticlesMessage" style="display: none; text-align: center; padding: var(--space-2xl); color: var(--text-muted);">
+            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+            <p>Aucun article ajouté. Cliquez sur "Ajouter Article" pour commencer.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('forecast_detail', id=forecast.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>Enregistrer les Modifications
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de sélection d'articles -->
+<div id="articleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: var(--space-xl); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+      <h3 style="color: var(--color-primary);">Sélectionner un Article</h3>
+      <button onclick="closeArticleSelector()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+    </div>
+    <input type="text" id="articleSearch" placeholder="Rechercher un article..." 
+           style="width: 100%; padding: var(--space-md); margin-bottom: var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+    <div id="articleList" style="max-height: 400px; overflow-y: auto;">
+      {% for item in stock_items %}
+      <div class="article-item" data-id="{{ item.id }}" data-name="{{ item.name }}" 
+           onclick="selectArticle({{ item.id }}, '{{ item.name|e }}', {{ item.purchase_price_gnf|default(0) }})"
+           style="padding: var(--space-md); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: var(--space-sm); cursor: pointer; transition: var(--transition-normal);"
+           onmouseover="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--color-primary)'"
+           onmouseout="this.style.background='var(--white)'; this.style.borderColor='var(--gray-200)'">
+        <strong>{{ item.name }}</strong>
+        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+          Prix: {{ "{:,.0f}".format(item.purchase_price_gnf|default(0))|replace(',', ' ') }} GNF
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var selectedArticles = [];
+  var currency = '{{ forecast.currency|default("GNF") }}';
+  
+  // Charger les articles existants de la prévision
+  {% for item in forecast.items %}
+  selectedArticles.push({
+    id: {{ item.stock_item_id }},
+    name: '{{ item.stock_item.name|e }}',
+    price: {{ item.selling_price_gnf|default(0) }},
+    quantity: {{ item.forecast_quantity|default(0) }}
+  });
+  {% endfor %}
+  
+  // Initialiser l'affichage au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    renderArticlesTable();
+    updateCurrencyDisplay();
+  });
+  
+  function showArticleSelector() {
+    document.getElementById('articleModal').style.display = 'flex';
+  }
+  
+  function closeArticleSelector() {
+    document.getElementById('articleModal').style.display = 'none';
+    document.getElementById('articleSearch').value = '';
+    filterArticles();
+  }
+  
+  function filterArticles() {
+    var search = document.getElementById('articleSearch').value.toLowerCase();
+    var items = document.querySelectorAll('.article-item');
+    items.forEach(function(item) {
+      var name = item.getAttribute('data-name').toLowerCase();
+      if (name.includes(search)) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  document.getElementById('articleSearch').addEventListener('input', filterArticles);
+  
+  function selectArticle(id, name, price) {
+    // Vérifier si l'article n'est pas déjà ajouté
+    if (selectedArticles.find(a => a.id === id)) {
+      alert('Cet article est déjà ajouté');
+      return;
+    }
+    
+    selectedArticles.push({
+      id: id,
+      name: name,
+      price: price || 0,
+      quantity: 0
+    });
+    
+    renderArticlesTable();
+    closeArticleSelector();
+  }
+  
+  function removeArticle(index) {
+    selectedArticles.splice(index, 1);
+    renderArticlesTable();
+  }
+  
+  function renderArticlesTable() {
+    var tbody = document.getElementById('articlesTableBody');
+    var table = document.getElementById('articlesTable');
+    var footer = document.getElementById('articlesTableFooter');
+    var noArticles = document.getElementById('noArticlesMessage');
+    
+    if (!tbody) return;
+    
+    if (selectedArticles.length === 0) {
+      table.style.display = 'none';
+      footer.style.display = 'none';
+      noArticles.style.display = 'block';
+      return;
+    }
+    
+    table.style.display = 'table';
+    footer.style.display = 'table-footer-group';
+    noArticles.style.display = 'none';
+    
+    var html = '';
+    var totalValue = 0;
+    
+    selectedArticles.forEach(function(article, index) {
+      var value = parseFloat(article.price) * parseFloat(article.quantity || 0);
+      totalValue += value;
+      
+      html += '<tr>';
+      html += '<td><strong>' + article.name + '</strong></td>';
+      html += '<td><input type="number" name="prices[]" value="' + article.price + '" step="0.01" min="0" required onchange="updateArticlePrice(' + index + ', this.value)" style="width: 100%; padding: var(--space-xs); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);"></td>';
+      html += '<td><input type="number" name="quantities[]" value="' + (article.quantity || 0) + '" step="0.01" min="0" required onchange="updateArticleQuantity(' + index + ', this.value)" style="width: 100%; padding: var(--space-xs); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);"></td>';
+      html += '<td><strong>' + formatNumber(value) + ' ' + currency + '</strong></td>';
+      html += '<td><button type="button" onclick="removeArticle(' + index + ')" class="btn-hl btn-hl-danger" style="padding: var(--space-xs) var(--space-sm);"><i class="fas fa-trash"></i></button></td>';
+      html += '</tr>';
+    });
+    
+    tbody.innerHTML = html;
+    document.getElementById('totalForecastValue').innerHTML = '<strong>' + formatNumber(totalValue) + ' ' + currency + '</strong>';
+  }
+  
+  function updateArticlePrice(index, price) {
+    if (selectedArticles[index]) {
+      selectedArticles[index].price = parseFloat(price) || 0;
+      renderArticlesTable();
+    }
+  }
+  
+  function updateArticleQuantity(index, quantity) {
+    if (selectedArticles[index]) {
+      selectedArticles[index].quantity = parseFloat(quantity) || 0;
+      renderArticlesTable();
+    }
+  }
+  
+  function formatNumber(num) {
+    return new Intl.NumberFormat('fr-FR').format(Math.round(num));
+  }
+  
+  function updateCurrencyDisplay() {
+    currency = document.getElementById('currency').value;
+    var currencySymbols = {
+      'GNF': 'GNF',
+      'USD': 'USD',
+      'EUR': 'EUR',
+      'XOF': 'XOF'
+    };
+    var symbol = currencySymbols[currency] || 'GNF';
+    document.getElementById('priceHeader').textContent = 'Prix Vente Gros (' + symbol + ')';
+    document.getElementById('valueHeader').textContent = 'Valeur Prévisionnelle (' + symbol + ')';
+    renderArticlesTable();
+  }
+  
+  // Ajouter les champs cachés au formulaire avant soumission
+  document.querySelector('form').addEventListener('submit', function(e) {
+    if (selectedArticles.length === 0) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins un article');
+      return;
+    }
+    
+    // Ajouter les champs cachés pour les IDs
+    selectedArticles.forEach(function(article) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'article_ids[]';
+      input.value = article.id;
+      this.appendChild(input);
+    }, this);
+  });
+</script>
+{% endblock %}
+

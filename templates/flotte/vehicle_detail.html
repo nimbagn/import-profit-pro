@@ -1,0 +1,781 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ vehicle.plate_number }} - Fiche Véhicule - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .vehicle-header {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .vehicle-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+  }
+  
+  .vehicle-info {
+    flex: 1;
+  }
+  
+  .vehicle-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .vehicle-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: var(--space-md);
+  }
+  
+  .vehicle-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+  }
+  
+  .vehicle-stat {
+    text-align: center;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+  }
+  
+  .vehicle-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .vehicle-stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+  
+  .tabs-container {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  
+  .tabs-header {
+    display: flex;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--gray-200);
+    overflow-x: auto;
+  }
+  
+  .tab-button {
+    padding: var(--space-md) var(--space-lg);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: var(--transition-normal);
+    white-space: nowrap;
+    position: relative;
+  }
+  
+  .tab-button:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+  
+  .tab-button.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: var(--white);
+  }
+  
+  .tab-button .badge {
+    margin-left: var(--space-xs);
+    padding: 2px 6px;
+    background: var(--color-danger);
+    color: white;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+  }
+  
+  .tab-content {
+    display: none;
+    padding: var(--space-xl);
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  .alert-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: var(--space-sm);
+  }
+  
+  .alert-badge.danger {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+  
+  .alert-badge.warning {
+    background: #fef3c7;
+    color: #d97706;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- En-tête du véhicule -->
+  <div class="vehicle-header">
+    <div class="vehicle-header-top">
+      <div class="vehicle-info">
+        <h1 class="vehicle-title">
+          <i class="fas fa-car"></i>
+          {{ vehicle.plate_number }}
+          {% if vehicle.status == 'active' %}
+            <span class="badge-hl badge-hl-success">{{ vehicle.status|title }}</span>
+          {% elif vehicle.status == 'maintenance' %}
+            <span class="badge-hl badge-hl-warning">{{ vehicle.status|title }}</span>
+          {% else %}
+            <span class="badge-hl badge-hl-danger">{{ vehicle.status|title }}</span>
+          {% endif %}
+        </h1>
+        <div class="vehicle-subtitle">
+          {{ vehicle.brand or '' }} {{ vehicle.model or '' }}
+          {% if vehicle.year %}({{ vehicle.year }}){% endif %}
+          {% if vehicle.color %}- {{ vehicle.color }}{% endif %}
+        </div>
+        <div style="margin-top: var(--space-md);">
+          <strong>Conducteur:</strong> 
+          {% if vehicle.current_user %}
+            {{ vehicle.current_user.full_name or vehicle.current_user.username }}
+          {% else %}
+            <span style="color: var(--color-danger);">Aucun conducteur assigné</span>
+          {% endif %}
+        </div>
+        {% if vehicle.whatsapp %}
+        <div style="margin-top: var(--space-xs);">
+          <strong>WhatsApp:</strong> {{ vehicle.whatsapp }}
+        </div>
+        {% endif %}
+      </div>
+      <div>
+        <a href="{{ url_for('referentiels.vehicle_edit', id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-edit me-2"></i>Modifier
+        </a>
+      </div>
+    </div>
+    
+    <!-- Statistiques rapides -->
+    <div class="vehicle-stats">
+      <div class="vehicle-stat">
+        <div class="vehicle-stat-value">{{ "{:,.0f}".format(stats.current_km|default(0))|replace(',', ' ') }} km</div>
+        <div class="vehicle-stat-label">Kilométrage Actuel</div>
+      </div>
+      <div class="vehicle-stat">
+        <div class="vehicle-stat-value">{{ stats.total_documents }}</div>
+        <div class="vehicle-stat-label">Documents
+          {% if stats.expired_documents > 0 %}
+            <span class="alert-badge danger">{{ stats.expired_documents }} expirés</span>
+          {% elif stats.expiring_documents > 0 %}
+            <span class="alert-badge warning">{{ stats.expiring_documents }} expirant</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="vehicle-stat">
+        <div class="vehicle-stat-value">{{ stats.total_maintenances }}</div>
+        <div class="vehicle-stat-label">Maintenances
+          {% if stats.due_maintenances > 0 %}
+            <span class="alert-badge warning">{{ stats.due_maintenances }} dues</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="vehicle-stat">
+        <div class="vehicle-stat-value">{{ stats.stock_items_count }}</div>
+        <div class="vehicle-stat-label">Articles en Stock</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onglets -->
+  <div class="tabs-container">
+    <div class="tabs-header">
+      <button class="tab-button active" onclick="showTab('info')">
+        <i class="fas fa-info-circle me-1"></i>Informations
+      </button>
+      <button class="tab-button" onclick="showTab('documents')">
+        <i class="fas fa-file-alt me-1"></i>Documents
+        {% if stats.expired_documents > 0 or stats.expiring_documents > 0 %}
+          <span class="badge">{{ stats.expired_documents + stats.expiring_documents }}</span>
+        {% endif %}
+      </button>
+      <button class="tab-button" onclick="showTab('maintenances')">
+        <i class="fas fa-tools me-1"></i>Maintenances
+        {% if stats.due_maintenances > 0 %}
+          <span class="badge">{{ stats.due_maintenances }}</span>
+        {% endif %}
+      </button>
+      <button class="tab-button" onclick="showTab('odometer')">
+        <i class="fas fa-tachometer-alt me-1"></i>Odomètre
+      </button>
+      <button class="tab-button" onclick="showTab('stock')">
+        <i class="fas fa-boxes me-1"></i>Stock
+      </button>
+      <button class="tab-button" onclick="showTab('movements')">
+        <i class="fas fa-exchange-alt me-1"></i>Mouvements
+      </button>
+      <button class="tab-button" onclick="showTab('assignments')">
+        <i class="fas fa-user-tie me-1"></i>Assignations
+      </button>
+    </div>
+
+    <!-- Onglet Informations -->
+    <div id="tab-info" class="tab-content active">
+      <h3 style="margin-bottom: var(--space-lg);">Informations Générales</h3>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <tbody>
+            <tr>
+              <td style="width: 200px; font-weight: 600;">Immatriculation</td>
+              <td>{{ vehicle.plate_number }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Marque</td>
+              <td>{{ vehicle.brand or '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Modèle</td>
+              <td>{{ vehicle.model or '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Année</td>
+              <td>{{ vehicle.year or '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Couleur</td>
+              <td>{{ vehicle.color or '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">VIN</td>
+              <td>{{ vehicle.vin or '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">WhatsApp</td>
+              <td>{{ vehicle.whatsapp or '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Conducteur Actuel</td>
+              <td>
+                {% if vehicle.current_user %}
+                  {{ vehicle.current_user.full_name or vehicle.current_user.username }}
+                {% else %}
+                  <span style="color: var(--color-danger);">Aucun</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Date d'Acquisition</td>
+              <td>{{ vehicle.acquisition_date.strftime('%d/%m/%Y') if vehicle.acquisition_date else '-' }}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Statut</td>
+              <td>
+                <span class="badge-hl {% if vehicle.status == 'active' %}badge-hl-success{% elif vehicle.status == 'maintenance' %}badge-hl-warning{% else %}badge-hl-danger{% endif %}">
+                  {{ vehicle.status|title }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600;">Date de Création</td>
+              <td>{{ vehicle.created_at.strftime('%d/%m/%Y %H:%M') if vehicle.created_at else '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Onglet Documents -->
+    <div id="tab-documents" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+        <h3>Documents</h3>
+        <a href="{{ url_for('flotte.document_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-plus me-2"></i>Ajouter un Document
+        </a>
+      </div>
+      
+      {% if expired_docs %}
+      <div class="alert-card critical" style="margin-bottom: var(--space-lg);">
+        <div class="alert-header">
+          <div class="alert-title">
+            <i class="fas fa-times-circle" style="color: var(--color-danger);"></i>
+            Documents Expirés
+          </div>
+        </div>
+        <ul class="alert-list">
+          {% for doc in expired_docs %}
+          <li class="alert-item">
+            <div class="alert-item-info">
+              <div class="alert-item-vehicle">{{ doc.document_type|replace('_', ' ')|title }}</div>
+              <div class="alert-item-detail">Expiré le {{ doc.expiry_date.strftime('%d/%m/%Y') }}</div>
+            </div>
+            <div class="alert-item-action">
+              <a href="{{ url_for('flotte.document_edit', vehicle_id=vehicle.id, doc_id=doc.id) }}" class="btn-hl btn-hl-sm btn-hl-primary">
+                <i class="fas fa-edit"></i>
+              </a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      
+      {% if documents %}
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Numéro</th>
+              <th>Date Émission</th>
+              <th>Date Expiration</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for doc in documents %}
+            <tr>
+              <td>{{ doc.document_type|replace('_', ' ')|title }}</td>
+              <td>{{ doc.document_number or '-' }}</td>
+              <td>{{ doc.issue_date.strftime('%d/%m/%Y') if doc.issue_date else '-' }}</td>
+              <td>{{ doc.expiry_date.strftime('%d/%m/%Y') if doc.expiry_date else '-' }}</td>
+              <td>
+                {% if doc.expiry_date %}
+                  {% set days = get_days_until_expiry(doc.expiry_date) %}
+                  {% if days < 0 %}
+                    <span class="badge-hl badge-hl-danger">Expiré ({{ days }} jours)</span>
+                  {% elif days <= 15 %}
+                    <span class="badge-hl badge-hl-warning">Expire dans {{ days }} jours</span>
+                  {% else %}
+                    <span class="badge-hl badge-hl-success">Valide</span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge-hl">-</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('flotte.document_edit', vehicle_id=vehicle.id, doc_id=doc.id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-file-alt" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucun document enregistré</p>
+        <a href="{{ url_for('flotte.document_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-md);">
+          <i class="fas fa-plus me-2"></i>Ajouter un Document
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Onglet Maintenances -->
+    <div id="tab-maintenances" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+        <h3>Maintenances</h3>
+        <a href="{{ url_for('flotte.maintenance_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-plus me-2"></i>Planifier une Maintenance
+        </a>
+      </div>
+      
+      {% if due_maintenances %}
+      <div class="alert-card warning" style="margin-bottom: var(--space-lg);">
+        <div class="alert-header">
+          <div class="alert-title">
+            <i class="fas fa-exclamation-circle" style="color: var(--color-warning);"></i>
+            Maintenances Dues
+          </div>
+        </div>
+        <ul class="alert-list">
+          {% for maint in due_maintenances %}
+          <li class="alert-item">
+            <div class="alert-item-info">
+              <div class="alert-item-vehicle">{{ maint.maintenance_type }}</div>
+              <div class="alert-item-detail">
+                {% if maint.due_at_km %}
+                  Due à {{ maint.due_at_km }} km (actuel: {{ current_km }} km)
+                {% elif maint.planned_date %}
+                  Due le {{ maint.planned_date.strftime('%d/%m/%Y') }}
+                {% endif %}
+              </div>
+            </div>
+            <div class="alert-item-action">
+              <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-sm btn-hl-warning">
+                <i class="fas fa-eye"></i>
+              </a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      
+      {% if maintenances %}
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Statut</th>
+              <th>Date Planifiée</th>
+              <th>Date Réalisée</th>
+              <th>Due à (km)</th>
+              <th>Coût</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for maint in maintenances %}
+            <tr>
+              <td>{{ maint.maintenance_type }}</td>
+              <td>
+                <span class="badge-hl {% if maint.status == 'completed' %}badge-hl-success{% elif maint.status == 'cancelled' %}badge-hl-danger{% else %}badge-hl-warning{% endif %}">
+                  {{ maint.status|title }}
+                </span>
+              </td>
+              <td>{{ maint.planned_date.strftime('%d/%m/%Y') if maint.planned_date else '-' }}</td>
+              <td>{{ maint.completed_date.strftime('%d/%m/%Y') if maint.completed_date else '-' }}</td>
+              <td>{{ "{:,.0f}".format(maint.due_at_km)|replace(',', ' ') if maint.due_at_km else '-' }}</td>
+              <td>
+                {% if maint.cost_gnf %}
+                  {{ "{:,.0f}".format(maint.cost_gnf)|replace(',', ' ') }} GNF
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-tools" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucune maintenance enregistrée</p>
+        <a href="{{ url_for('flotte.maintenance_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-md);">
+          <i class="fas fa-plus me-2"></i>Planifier une Maintenance
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Onglet Odomètre -->
+    <div id="tab-odometer" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+        <h3>Odomètre</h3>
+        <a href="{{ url_for('flotte.odometer_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-plus me-2"></i>Nouveau Relevé
+        </a>
+      </div>
+      
+      {% if current_km %}
+      <div style="background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">
+          {{ "{:,.0f}".format(current_km)|replace(',', ' ') }} km
+        </div>
+        <div style="color: var(--text-secondary); margin-top: var(--space-xs);">Kilométrage actuel</div>
+      </div>
+      {% endif %}
+      
+      {% if odometers %}
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Kilométrage</th>
+              <th>Source</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for odo in odometers %}
+            <tr>
+              <td>{{ odo.reading_date.strftime('%d/%m/%Y') if odo.reading_date else '-' }}</td>
+              <td><strong>{{ "{:,.0f}".format(odo.odometer_km)|replace(',', ' ') }} km</strong></td>
+              <td>{{ odo.source|title }}</td>
+              <td>{{ odo.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-tachometer-alt" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucun relevé enregistré</p>
+        <a href="{{ url_for('flotte.odometer_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-md);">
+          <i class="fas fa-plus me-2"></i>Nouveau Relevé
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Onglet Stock -->
+    <div id="tab-stock" class="tab-content">
+      <h3 style="margin-bottom: var(--space-lg);">Stock du Véhicule</h3>
+      
+      {% if vehicle_stocks %}
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Référence</th>
+              <th>Quantité</th>
+              <th>Prix Unitaire</th>
+              <th>Valeur Totale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for vs in vehicle_stocks %}
+            <tr>
+              <td>{{ vs.stock_item.name if vs.stock_item else '-' }}</td>
+              <td>{{ vs.stock_item.reference if vs.stock_item else '-' }}</td>
+              <td><strong>{{ "{:,.2f}".format(vs.quantity)|replace(',', ' ') }}</strong></td>
+              <td>
+                {% if vs.stock_item and vs.stock_item.unit_price %}
+                  {{ "{:,.0f}".format(vs.stock_item.unit_price)|replace(',', ' ') }} GNF
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                {% if vs.stock_item and vs.stock_item.unit_price %}
+                  {{ "{:,.0f}".format(float(vs.quantity) * float(vs.stock_item.unit_price))|replace(',', ' ') }} GNF
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" style="text-align: right; font-weight: 600;">Valeur totale du stock:</td>
+              <td style="font-weight: 700; font-size: 1.1rem;">
+                {{ "{:,.0f}".format(stock_value)|replace(',', ' ') }} GNF
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-boxes" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucun stock dans ce véhicule</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Onglet Mouvements -->
+    <div id="tab-movements" class="tab-content">
+      <h3 style="margin-bottom: var(--space-lg);">Mouvements de Stock Récents</h3>
+      
+      {% if recent_movements %}
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Référence</th>
+              <th>Article</th>
+              <th>Quantité</th>
+              <th>Source/Destination</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for mov in recent_movements %}
+            <tr>
+              <td>{{ mov.movement_date.strftime('%d/%m/%Y') if mov.movement_date else '-' }}</td>
+              <td>
+                <span class="badge-hl badge-hl-info">{{ mov.movement_type|title }}</span>
+              </td>
+              <td>{{ mov.reference or '-' }}</td>
+              <td>{{ mov.stock_item.name if mov.stock_item else '-' }}</td>
+              <td>
+                <strong {% if mov.quantity < 0 %}style="color: var(--color-danger);"{% else %}style="color: var(--color-success);"{% endif %}>
+                  {{ "{:,.2f}".format(mov.quantity)|replace(',', ' ') }}
+                </strong>
+              </td>
+              <td>
+                {% if mov.from_depot %}
+                  De: {{ mov.from_depot.name }}
+                {% elif mov.from_vehicle %}
+                  De: {{ mov.from_vehicle.plate_number }}
+                {% endif %}
+                {% if mov.to_depot %}
+                  → {{ mov.to_depot.name }}
+                {% elif mov.to_vehicle %}
+                  → {{ mov.to_vehicle.plate_number }}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-exchange-alt" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucun mouvement récent</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Onglet Assignations -->
+    <div id="tab-assignments" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+        <h3>Historique des Assignations</h3>
+        <a href="{{ url_for('flotte.vehicle_assignments', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-eye me-2"></i>Voir l'Historique Complet
+        </a>
+      </div>
+      
+      {% set assignments = vehicle.assignments[:5] if vehicle.assignments else [] %}
+      {% if assignments %}
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Conducteur</th>
+              <th>Date Début</th>
+              <th>Date Fin</th>
+              <th>Durée</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for assignment in assignments %}
+            <tr>
+              <td>
+                <strong>{{ assignment.user.full_name or assignment.user.username }}</strong>
+              </td>
+              <td>{{ assignment.start_date.strftime('%d/%m/%Y') if assignment.start_date else '-' }}</td>
+              <td>
+                {% if assignment.end_date %}
+                  {{ assignment.end_date.strftime('%d/%m/%Y') }}
+                {% else %}
+                  <span class="badge-hl badge-hl-success">En cours</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if assignment.duration_days is not none %}
+                  {{ assignment.duration_days }} jours
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                {% if assignment.is_active %}
+                  <span class="badge-hl badge-hl-success">Active</span>
+                {% else %}
+                  <span class="badge-hl badge-hl-secondary">Terminée</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('flotte.user_vehicles', user_id=assignment.user_id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="text-align: center; margin-top: var(--space-md);">
+        <a href="{{ url_for('flotte.vehicle_assignments', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-history me-2"></i>Voir tout l'historique
+        </a>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-user-tie" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Aucune assignation enregistrée</p>
+        <a href="{{ url_for('flotte.assignment_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-plus me-2"></i>Créer une Assignation
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(tabName) {
+  // Masquer tous les onglets
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Désactiver tous les boutons
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Afficher l'onglet sélectionné
+  document.getElementById('tab-' + tabName).classList.add('active');
+  
+  // Activer le bouton correspondant
+  event.target.classList.add('active');
+}
+</script>
+{% endblock %}
+

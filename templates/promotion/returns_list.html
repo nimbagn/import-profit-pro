@@ -1,0 +1,183 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Retours de Gammes - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-undo icon-promo"></i>
+        Retours de Gammes
+      </h1>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <a href="{{ url_for('promotion.return_new') }}" class="btn btn-promo btn-promo-primary">
+        <i class="fas fa-plus me-2"></i>Nouveau Retour
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid section-spacing">
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value">{{ stats.total }}</div>
+      <div class="stat-card-promo-label">Total Retours</div>
+      <i class="fas fa-undo stat-card-promo-icon"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #f59e0b;">{{ stats.pending }}</div>
+      <div class="stat-card-promo-label">En Attente</div>
+      <i class="fas fa-clock stat-card-promo-icon" style="color: #f59e0b;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #10b981;">{{ stats.approved }}</div>
+      <div class="stat-card-promo-label">Approuvés</div>
+      <i class="fas fa-check-circle stat-card-promo-icon" style="color: #10b981;"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #eb3349;">{{ stats.rejected }}</div>
+      <div class="stat-card-promo-label">Refusés</div>
+      <i class="fas fa-times-circle stat-card-promo-icon" style="color: #eb3349;"></i>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filter-card">
+      <form method="GET" class="row g-3">
+        <div class="col-md-4">
+          <input type="text" name="search" class="form-control" placeholder="🔍 Rechercher (nom agent, raison)..." value="{{ search }}">
+        </div>
+        <div class="col-md-3">
+          <select name="member_id" class="form-select">
+            <option value="">Tous les agents</option>
+            {% for member in members %}
+            <option value="{{ member.id }}" {% if member_id|string == member.id|string %}selected{% endif %}>
+              {{ member.full_name }}{% if member.phone %} - {{ member.phone }}{% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="status" class="form-select">
+            <option value="">Tous les statuts</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>En Attente</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approuvés</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Refusés</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn-hl btn-hl-primary w-100">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des retours -->
+  <div class="card-promo">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Retours
+    </div>
+    {% if returns %}
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Agent / Membre</th>
+              <th>Équipe</th>
+              <th>Gamme</th>
+              <th>Quantité</th>
+              <th>Raison</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for return_obj in returns %}
+            <tr>
+              <td>{{ return_obj.return_date.strftime('%d/%m/%Y') }}</td>
+              <td>
+                <div class="d-flex flex-column">
+                  <strong class="text-primary mb-1" style="font-size: 1.05em;">
+                    <i class="fas fa-user-circle me-1"></i>{{ return_obj.member.full_name }}
+                  </strong>
+                  {% if return_obj.member.phone %}
+                  <small class="text-muted">
+                    <i class="fas fa-phone-alt me-1"></i>{{ return_obj.member.phone }}
+                  </small>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                {% if return_obj.member.team %}
+                <span class="badge badge-promo" style="background: #6c757d; color: white;">
+                  <i class="fas fa-users me-1"></i>{{ return_obj.member.team.name }}
+                </span>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td><strong>{{ return_obj.gamme.name }}</strong></td>
+              <td><span class="badge badge-promo badge-promo-info">{{ return_obj.quantity }}</span></td>
+              <td>{{ return_obj.reason or '-' }}</td>
+              <td>
+                {% if return_obj.status == 'pending' %}
+                <span class="badge badge-promo badge-promo-warning">En Attente</span>
+                {% elif return_obj.status == 'approved' %}
+                <span class="badge badge-promo badge-promo-success">Approuvé</span>
+                {% elif return_obj.status == 'rejected' %}
+                <span class="badge badge-promo badge-promo-danger">Refusé</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if return_obj.status == 'pending' and has_permission(current_user, 'promotion.write') %}
+                <form method="POST" action="{{ url_for('promotion.return_approve', id=return_obj.id) }}" style="display: inline;">
+                  <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approuver ce retour?');">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </form>
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ return_obj.id }}">
+                  <i class="fas fa-times"></i>
+                </button>
+                <!-- Modal pour refus -->
+                <div class="modal fade" id="rejectModal{{ return_obj.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form method="POST" action="{{ url_for('promotion.return_reject', id=return_obj.id) }}">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Refuser le retour</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            <label for="rejection_reason{{ return_obj.id }}" class="form-label">Raison du refus (optionnel)</label>
+                            <textarea class="form-control" id="rejection_reason{{ return_obj.id }}" name="rejection_reason" rows="3"></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                          <button type="submit" class="btn btn-danger">Refuser</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center text-muted py-5" style="padding: 1.5rem;">
+        <i class="fas fa-inbox fa-3x mb-3"></i>
+        <p>Aucun retour enregistré.</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

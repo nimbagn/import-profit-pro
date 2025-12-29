@@ -1,0 +1,261 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Erreur serveur - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="error-animation">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="error-code">500</div>
+        </div>
+        
+        <div class="error-content">
+            <h1 class="error-title">Erreur serveur</h1>
+            <p class="error-description">
+                Une erreur interne s'est produite sur le serveur. Notre équipe technique a été notifiée
+                et travaille à résoudre le problème. Veuillez réessayer dans quelques minutes.
+            </p>
+            
+            <div class="error-actions">
+                <a href="/" class="btn-hl btn-hl-primary">
+                    <i class="fas fa-home me-2"></i>
+                    Retour à l'accueil
+                </a>
+                <button onclick="location.reload()" class="btn-hl btn-hl-outline">
+                    <i class="fas fa-redo me-2"></i>
+                    Réessayer
+                </button>
+            </div>
+            
+            <div class="error-info">
+                <div class="info-card">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <h4>Que faire maintenant ?</h4>
+                        <p>Vérifiez votre connexion internet et réessayez. Si le problème persiste, contactez le support technique.</p>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <h4>Temps de résolution</h4>
+                        <p>La plupart des problèmes sont résolus en moins de 15 minutes. Nous vous tiendrons informés.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    padding: var(--space-4);
+}
+
+.error-container {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.error-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-danger), var(--color-warning), var(--color-primary));
+}
+
+.error-animation {
+    margin-bottom: var(--space-8);
+}
+
+.error-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-danger), #dc2626);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-md);
+    font-size: 3rem;
+    color: var(--white);
+}
+
+.error-code {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--color-danger);
+    margin: 0;
+    line-height: 1;
+}
+
+.error-content {
+    margin-bottom: var(--space-8);
+}
+
+.error-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+}
+
+.error-description {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: var(--space-8);
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: center;
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+}
+
+.error-info {
+    display: grid;
+    gap: var(--space-4);
+    text-align: left;
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    transition: var(--transition-normal);
+}
+
+.info-card:hover {
+    background: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+}
+
+.info-card i {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin-top: var(--space-xs);
+    flex-shrink: 0;
+}
+
+.info-card h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+}
+
+.info-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .error-container {
+        padding: var(--space-8);
+    }
+    
+    .error-code {
+        font-size: 3rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .error-container {
+        padding: var(--space-6);
+    }
+    
+    .error-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    
+    .error-code {
+        font-size: 2.5rem;
+    }
+    
+    .info-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+// Animation d'entrée
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.error-container');
+    container.style.opacity = '0';
+    container.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+        container.style.transition = 'all 0.6s ease-out';
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
+    }, 100);
+});
+
+// Animation des cartes d'information
+document.querySelectorAll('.info-card').forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(-20px)';
+    
+    setTimeout(() => {
+        card.style.transition = 'all 0.4s ease-out';
+        card.style.opacity = '1';
+        card.style.transform = 'translateX(0)';
+    }, 300 + (index * 200));
+});
+
+// Auto-refresh optionnel après 30 secondes
+setTimeout(() => {
+    const refreshBtn = document.createElement('button');
+    refreshBtn.className = 'btn-modern warning';
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Actualiser automatiquement';
+    refreshBtn.onclick = () => location.reload();
+    
+    const actions = document.querySelector('.error-actions');
+    if (actions) {
+        actions.appendChild(refreshBtn);
+    }
+}, 30000);
+</script>
+{% endblock %}

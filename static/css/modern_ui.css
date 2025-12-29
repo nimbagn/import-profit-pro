@@ -1,0 +1,809 @@
+/* Modern UI - Interface Ultra-Moderne pour Import Profit Pro */
+/* Version 2.0 - Optimisée pour la performance et l'accessibilité */
+
+/* Variables CSS avancées */
+:root {
+  /* Animations et transitions */
+  --animation-duration-fast: 0.15s;
+  --animation-duration-normal: 0.3s;
+  --animation-duration-slow: 0.5s;
+  --animation-easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --animation-easing-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* Ombres modernes */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
+  --shadow-colored: 0 4px 20px rgba(37, 99, 235, 0.1);
+  
+  /* Bordures arrondies */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Espacements cohérents */
+  --space-0: 0;
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+  --space-20: 5rem;    /* 80px */
+  
+  /* Z-index organisé */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+}
+
+/* Animations de base */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(37, 99, 235, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+  }
+}
+
+/* Classes d'animation */
+.animate-fade-in-up {
+  animation: fadeInUp var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--animation-duration-normal) var(--animation-easing-bounce);
+}
+
+.animate-slide-in-up {
+  animation: slideInUp var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Effets de survol avancés */
+.hover-lift {
+  transition: var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-strong);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-rotate:hover {
+  transform: rotate(2deg);
+}
+
+/* Boutons ultra-modernes */
+.btn-modern {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+  overflow: hidden;
+  text-decoration: none;
+  min-height: 44px;
+  user-select: none;
+}
+
+.btn-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left var(--animation-duration-slow) ease;
+}
+
+.btn-modern:hover::before {
+  left: 100%;
+}
+
+.btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-modern:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-modern.primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-modern.primary:hover {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  box-shadow: var(--shadow-colored);
+}
+
+.btn-modern.secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+}
+
+.btn-modern.secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-modern.success {
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: white;
+}
+
+.btn-modern.success:hover {
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-modern.warning {
+  background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+  color: white;
+}
+
+.btn-modern.warning:hover {
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+}
+
+.btn-modern.danger {
+  background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+  color: white;
+}
+
+.btn-modern.danger:hover {
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* Cartes ultra-modernes */
+.card-modern {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-soft);
+  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--success), var(--warning), var(--info));
+  transform: scaleX(0);
+  transition: transform var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-strong);
+}
+
+.card-modern:hover::before {
+  transform: scaleX(1);
+}
+
+.card-modern.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-modern.glass:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Formulaires ultra-modernes */
+.form-modern {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-medium);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.form-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+}
+
+.form-group-modern {
+  position: relative;
+  margin-bottom: var(--space-6);
+}
+
+.form-label-modern {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  font-size: 0.9rem;
+  transition: var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.form-input-modern,
+.form-select-modern,
+.form-textarea-modern {
+  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+  position: relative;
+}
+
+.form-input-modern:focus,
+.form-select-modern:focus,
+.form-textarea-modern:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-input-modern:hover,
+.form-select-modern:hover,
+.form-textarea-modern:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Tableaux ultra-modernes */
+.table-modern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-medium);
+}
+
+.table-modern th {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: var(--space-5);
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+.table-modern td {
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--border);
+  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.table-modern tbody tr:hover {
+  background: var(--bg-secondary);
+  transform: scale(1.01);
+}
+
+.table-modern tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Navigation ultra-moderne */
+.nav-modern {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-medium);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--success), var(--warning), var(--info));
+}
+
+.nav-item-modern {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item-modern::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  transform: scaleY(0);
+  transition: transform var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.nav-item-modern:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transform: translateX(4px);
+}
+
+.nav-item-modern:hover::before {
+  transform: scaleY(1);
+}
+
+.nav-item-modern.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-item-modern.active::before {
+  transform: scaleY(1);
+}
+
+/* Modales ultra-modernes */
+.modal-modern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: fadeInUp var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.modal-content-modern {
+  background: var(--bg-card);
+  border-radius: var(--radius-3xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-strong);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: scaleIn var(--animation-duration-normal) var(--animation-easing-bounce);
+  position: relative;
+}
+
+.modal-content-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
+}
+
+/* États de chargement */
+.loading-modern {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-modern::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+/* Indicateurs de statut modernes */
+.status-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-modern.success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.status-modern.warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.status-modern.danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.status-modern.info {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+/* Badges modernes */
+.badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badge-modern.primary {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.badge-modern.secondary {
+  background: var(--secondary-light);
+  color: var(--secondary);
+}
+
+.badge-modern.success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.badge-modern.warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.badge-modern.danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+/* Alertes modernes */
+.alert-modern {
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-left: 4px solid;
+  animation: fadeInLeft var(--animation-duration-normal) var(--animation-easing-smooth);
+}
+
+.alert-modern.success {
+  background: var(--success-light);
+  color: var(--success);
+  border-left-color: var(--success);
+}
+
+.alert-modern.warning {
+  background: var(--warning-light);
+  color: var(--warning);
+  border-left-color: var(--warning);
+}
+
+.alert-modern.danger {
+  background: var(--danger-light);
+  color: var(--danger);
+  border-left-color: var(--danger);
+}
+
+.alert-modern.info {
+  background: var(--info-light);
+  color: var(--info);
+  border-left-color: var(--info);
+}
+
+/* Responsivité avancée */
+@media (max-width: 1024px) {
+  .card-modern {
+    padding: var(--space-4);
+  }
+  
+  .form-modern {
+    padding: var(--space-6);
+  }
+  
+  .table-modern th,
+  .table-modern td {
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  .btn-modern {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .card-modern {
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+  }
+  
+  .form-modern {
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+  }
+  
+  .modal-content-modern {
+    padding: var(--space-6);
+    margin: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .card-modern {
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+  }
+  
+  .form-modern {
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+  }
+  
+  .btn-modern {
+    padding: var(--space-4) var(--space-5);
+    font-size: 1rem;
+  }
+}
+
+/* Utilitaires d'animation */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s var(--animation-easing-smooth);
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Thème sombre */
+[data-theme="dark"] .card-modern {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: var(--border-dark);
+}
+
+[data-theme="dark"] .form-modern {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: var(--border-dark);
+}
+
+[data-theme="dark"] .table-modern {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+[data-theme="dark"] .nav-modern {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: var(--border-dark);
+}
+
+[data-theme="dark"] .modal-content-modern {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--border-dark);
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible pour l'accessibilité */
+.btn-modern:focus-visible,
+.form-input-modern:focus-visible,
+.form-select-modern:focus-visible,
+.nav-item-modern:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Contraste élevé */
+@media (prefers-contrast: high) {
+  .card-modern,
+  .form-modern,
+  .table-modern,
+  .nav-modern {
+    border-width: 2px;
+  }
+  
+  .btn-modern {
+    border: 2px solid currentColor;
+  }
+}

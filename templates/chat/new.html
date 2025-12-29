@@ -1,0 +1,245 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Nouvelle Conversation - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: var(--space-xl);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    min-height: calc(100vh - 70px);
+  }
+  
+  .form-hl {
+    background: white;
+    border-radius: 20px;
+    padding: var(--space-2xl);
+    box-shadow: 0 8px 32px rgba(0, 61, 130, 0.12);
+    border: 1px solid #e0e6ed;
+  }
+  
+  .page-header-hl {
+    background: linear-gradient(135deg, #003d82 0%, #0052a5 100%);
+    margin: calc(-1 * var(--space-2xl)) calc(-1 * var(--space-2xl)) var(--space-2xl);
+    padding: var(--space-2xl);
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .page-header-hl .page-title-hl {
+    color: white;
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-group {
+    margin-bottom: var(--space-xl);
+  }
+  
+  .form-hl-label {
+    display: block;
+    font-weight: 600;
+    color: #003d82;
+    margin-bottom: var(--space-md);
+    font-size: 1rem;
+  }
+  
+  .form-hl-select,
+  .form-hl-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e0e6ed;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+  }
+  
+  .form-hl-select:focus,
+  .form-hl-input:focus {
+    outline: none;
+    border-color: #003d82;
+    box-shadow: 0 0 0 4px rgba(0, 61, 130, 0.1);
+  }
+  
+  .users-list {
+    max-height: 450px;
+    overflow-y: auto;
+    border: 2px solid #e0e6ed;
+    border-radius: 12px;
+    padding: var(--space-md);
+    margin-top: var(--space-md);
+    background: #f8f9fa;
+  }
+  
+  .users-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .users-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  .users-list::-webkit-scrollbar-thumb {
+    background: #003d82;
+    border-radius: 4px;
+  }
+  
+  .user-item {
+    display: flex;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: var(--space-sm);
+    background: white;
+    border: 2px solid transparent;
+  }
+  
+  .user-item:hover {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8ecf1 100%);
+    border-color: #003d82;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 61, 130, 0.1);
+  }
+  
+  .user-item input[type="checkbox"] {
+    margin-right: var(--space-md);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #003d82;
+  }
+  
+  .user-item.selected {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #003d82;
+    box-shadow: 0 4px 12px rgba(0, 61, 130, 0.15);
+  }
+  
+  .user-item label {
+    flex: 1;
+    cursor: pointer;
+  }
+  
+  .user-item strong {
+    color: #003d82;
+    font-size: 1.05rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-comments me-2"></i>
+        Nouvelle Conversation
+      </h1>
+    </div>
+    
+    <form id="newRoomForm">
+      <div class="form-group">
+        <label class="form-hl-label">Type de conversation</label>
+        <select id="room_type" name="room_type" class="form-hl-select" required>
+          <option value="direct">Conversation directe (1-1)</option>
+          <option value="group">Groupe</option>
+        </select>
+      </div>
+      
+      <div class="form-group" id="group_name_group" style="display: none;">
+        <label class="form-hl-label">Nom du groupe</label>
+        <input type="text" id="group_name" name="group_name" class="form-hl-input" placeholder="Nom du groupe">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-hl-label">Sélectionner les participants</label>
+        <div class="users-list">
+          {% for user in users %}
+          <div class="user-item">
+            <input type="checkbox" name="user_ids" value="{{ user.id }}" id="user_{{ user.id }}">
+            <label for="user_{{ user.id }}" style="cursor: pointer; flex: 1;">
+              <strong>{{ user.username }}</strong>
+              {% if user.email %}
+              <span style="color: var(--text-secondary); font-size: 0.875rem;"> - {{ user.email }}</span>
+              {% endif %}
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <div style="margin-top: var(--space-xl); text-align: right;">
+        <a href="{{ url_for('chat.rooms_list') }}" class="btn-hl btn-hl-outline me-2">Annuler</a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-check me-2"></i>
+          Créer la conversation
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('room_type').addEventListener('change', function() {
+  const groupNameGroup = document.getElementById('group_name_group');
+  if (this.value === 'group') {
+    groupNameGroup.style.display = 'block';
+    document.getElementById('group_name').required = true;
+  } else {
+    groupNameGroup.style.display = 'none';
+    document.getElementById('group_name').required = false;
+  }
+});
+
+document.getElementById('newRoomForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const roomType = document.getElementById('room_type').value;
+  const groupName = document.getElementById('group_name').value;
+  const checkboxes = document.querySelectorAll('input[name="user_ids"]:checked');
+  const userIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+  
+  if (roomType === 'direct' && userIds.length !== 1) {
+    alert('Une conversation directe nécessite exactement un autre utilisateur');
+    return;
+  }
+  
+  if (roomType === 'group' && userIds.length === 0) {
+    alert('Sélectionnez au moins un participant pour créer un groupe');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/chat/api/rooms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: roomType,
+        name: roomType === 'group' ? groupName : null,
+        user_ids: userIds
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      window.location.href = `/chat/${data.room_id}`;
+    } else {
+      alert(data.error || 'Erreur lors de la création de la conversation');
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de la création de la conversation');
+  }
+});
+</script>
+{% endblock %}
+

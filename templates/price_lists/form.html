@@ -1,0 +1,723 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if price_list %}Modifier{% else %}Nouvelle{% endif %} Fiche de Prix - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 1400px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .articles-table {
+    width: 100%;
+    margin-top: var(--space-xl);
+    border-collapse: collapse;
+  }
+  
+  .articles-table thead {
+    background: var(--bg-tertiary);
+  }
+  
+  .articles-table th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .articles-table td {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .articles-table tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .articles-table input[type="number"],
+  .articles-table input[type="text"] {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+  }
+  
+  .articles-table input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+  
+  .freebies-help {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: var(--space-xs);
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--gray-200);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-card {
+      padding: var(--space-xl);
+    }
+    
+    .articles-table {
+      font-size: 0.875rem;
+    }
+    
+    .articles-table th,
+    .articles-table td {
+      padding: var(--space-xs) var(--space-sm);
+    }
+    
+    .form-actions {
+      flex-direction: column;
+    }
+    
+    .form-actions .btn-hl {
+      width: 100%;
+    }
+  }
+  
+  .article-row-selected {
+    background: rgba(0, 56, 101, 0.05) !important;
+  }
+  
+  .remove-article-btn {
+    background: var(--color-danger);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--space-xs) var(--space-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: var(--transition-fast);
+  }
+  
+  .remove-article-btn:hover {
+    background: var(--color-danger-hover);
+    transform: scale(1.05);
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Données des articles disponibles
+  const allArticlesData = {};
+  const selectedArticles = [];
+  
+  {% if articles %}
+  {% for article in articles %}
+  allArticlesData[{{ article.id }}] = {
+    id: {{ article.id }},
+    name: {{ article.name|tojson }},
+    category: {{ (article.category.name if article.category else 'Sans catégorie')|tojson }},
+    purchase_price: {{ article.purchase_price or 0 }},
+    purchase_currency: {{ (article.purchase_currency or 'USD')|tojson }},
+    unit_weight_kg: {{ article.unit_weight_kg or 0 }}
+  };
+  {% endfor %}
+  {% endif %}
+  
+  {% if price_list and price_list.items %}
+  // Charger les articles existants pour l'édition
+  {% for item in price_list.items %}
+  selectedArticles.push({
+    id: {{ item.article_id }},
+    wholesale_price: {{ item.wholesale_price if item.wholesale_price else 'null' }},
+    retail_price: {{ item.retail_price if item.retail_price else 'null' }},
+    freebies: {{ item.freebies|tojson if item.freebies else 'null' }},
+    notes: {{ item.notes|tojson if item.notes else 'null' }}
+  });
+  {% endfor %}
+  {% endif %}
+  
+  // Initialiser l'affichage
+  document.addEventListener('DOMContentLoaded', function() {
+    renderArticlesTable();
+  });
+  
+  function showArticleSelector() {
+    // Construire la liste des catégories uniques
+    const categoriesSet = new Set();
+    for (const articleId in allArticlesData) {
+      const cat = allArticlesData[articleId].category || 'Sans catégorie';
+      categoriesSet.add(cat);
+    }
+    const categoriesList = Array.from(categoriesSet).sort();
+    
+    // Construire la liste des devises uniques
+    const currenciesSet = new Set();
+    for (const articleId in allArticlesData) {
+      const curr = allArticlesData[articleId].purchase_currency || 'USD';
+      currenciesSet.add(curr);
+    }
+    const currenciesList = Array.from(currenciesSet).sort();
+    
+    // Créer la liste des articles HTML avec checkboxes
+    let articlesListHtml = '';
+    for (const articleId in allArticlesData) {
+      const article = allArticlesData[articleId];
+      const isSelected = selectedArticles.find(a => a.id == articleId);
+      
+      const purchasePrice = article.purchase_price || 0;
+      const purchaseCurrency = article.purchase_currency || 'USD';
+      const unitWeight = article.unit_weight_kg || 0;
+      const category = article.category || 'Sans catégorie';
+      
+      articlesListHtml += `
+        <div class="article-option" data-article-id="${articleId}" 
+             style="padding: 1rem; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s; background: var(--white); ${isSelected ? 'border-color: var(--color-primary); background: rgba(0,56,101,0.05);' : ''}"
+             onmouseover="if (!this.querySelector('input[type=checkbox]').checked) { this.style.borderColor='var(--color-primary)'; this.style.background='rgba(0,56,101,0.02)'; }"
+             onmouseout="if (!this.querySelector('input[type=checkbox]').checked) { this.style.borderColor='var(--gray-200)'; this.style.background='var(--white)'; }"
+             onclick="toggleArticleSelection(${articleId}, this)">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                   onclick="event.stopPropagation(); toggleArticleSelection(${articleId}, this.closest('.article-option'))"
+                   style="width: 20px; height: 20px; cursor: pointer;">
+            <div style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1rem;">
+                    ${article.name}
+                  </div>
+                  <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                    <i class="fas fa-tag me-1"></i>${category}
+                  </div>
+                </div>
+                <div style="text-align: right; margin-left: 1rem;">
+                  <div style="font-weight: 600; color: var(--color-primary); font-size: 1rem;">
+                    ${purchasePrice.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${purchaseCurrency}
+                  </div>
+                  ${unitWeight > 0 ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <i class="fas fa-weight me-1"></i>${unitWeight} kg
+                  </div>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Supprimer le modal existant s'il y en a un
+    const existingModal = document.getElementById('articleSelectorModal');
+    if (existingModal) existingModal.remove();
+    
+    // Créer le modal
+    const modal = document.createElement('div');
+    modal.id = 'articleSelectorModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    modal.innerHTML = `
+      <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 800px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="margin: 0; color: var(--color-primary); font-size: 1.5rem;">
+            <i class="fas fa-box-open me-2"></i>Sélectionner les Articles
+          </h3>
+          <button onclick="document.getElementById('articleSelectorModal').remove()" 
+                  style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem 0.5rem;"
+                  title="Fermer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <!-- Filtres -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+              <i class="fas fa-search me-1"></i>Recherche
+            </label>
+            <input type="text" id="articleSearch" placeholder="Nom d'article..." 
+                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem;"
+                   onkeyup="filterArticles()">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+              <i class="fas fa-tags me-1"></i>Catégorie
+            </label>
+            <select id="categoryFilter" onchange="filterArticles()"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
+              <option value="">Toutes les catégories</option>
+              ${categoriesList.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+              <i class="fas fa-coins me-1"></i>Devise d'achat
+            </label>
+            <select id="currencyFilter" onchange="filterArticles()"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
+              <option value="">Toutes les devises</option>
+              ${currenciesList.map(curr => `<option value="${curr}">${curr}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+            <button onclick="selectAllVisible()" 
+                    style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--text-primary); cursor: pointer; font-weight: 500; font-size: 0.95rem;"
+                    title="Sélectionner tous les articles visibles">
+              <i class="fas fa-check-double me-1"></i>Tout sélectionner
+            </button>
+            <button onclick="deselectAllVisible()" 
+                    style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--text-primary); cursor: pointer; font-weight: 500; font-size: 0.95rem;"
+                    title="Désélectionner tous les articles visibles">
+              <i class="fas fa-times me-1"></i>Tout désélectionner
+            </button>
+            <button onclick="resetFilters()" 
+                    style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--text-primary); cursor: pointer; font-weight: 500; font-size: 0.95rem;"
+                    title="Réinitialiser les filtres">
+              <i class="fas fa-redo me-1"></i>Réinitialiser
+            </button>
+          </div>
+        </div>
+        
+        <!-- Compteur de résultats -->
+        <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.9rem; color: var(--text-secondary);">
+          <i class="fas fa-info-circle me-1"></i>
+          <span id="articlesCount">${Object.keys(allArticlesData).length}</span> article(s) disponible(s) | 
+          <span id="selectedCount" style="font-weight: 600; color: var(--color-primary);">${selectedArticles.length}</span> sélectionné(s)
+        </div>
+        
+        <div id="articlesList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 8px; padding: 0.5rem;">
+          ${articlesListHtml || '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Aucun article disponible</p>'}
+        </div>
+        
+        <div style="margin-top: 1.5rem; text-align: right;">
+          <button onclick="applyArticleSelection()" 
+                  class="btn-hl btn-hl-primary"
+                  style="padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">
+            <i class="fas fa-check me-2"></i>Valider la Sélection
+          </button>
+          <button onclick="document.getElementById('articleSelectorModal').remove()" 
+                  class="btn-hl btn-hl-secondary"
+                  style="padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; margin-left: 0.5rem;">
+            Annuler
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Fermer le modal en cliquant à l'extérieur
+    modal.onclick = function(e) {
+      if (e.target === modal) modal.remove();
+    };
+    
+    // Empêcher la propagation du clic sur le contenu du modal
+    const modalContent = modal.querySelector('div[style*="background: white"]');
+    if (modalContent) {
+      modalContent.onclick = function(e) {
+        e.stopPropagation();
+      };
+    }
+  }
+  
+  function toggleArticleSelection(articleId, element) {
+    const checkbox = element.querySelector('input[type=checkbox]');
+    const isChecked = checkbox.checked;
+    
+    if (isChecked) {
+      // Désélectionner
+      checkbox.checked = false;
+      const index = selectedArticles.findIndex(a => a.id == articleId);
+      if (index > -1) {
+        selectedArticles.splice(index, 1);
+      }
+      element.style.borderColor = 'var(--gray-200)';
+      element.style.background = 'var(--white)';
+    } else {
+      // Sélectionner
+      checkbox.checked = true;
+      if (!selectedArticles.find(a => a.id == articleId)) {
+        selectedArticles.push({
+          id: articleId,
+          wholesale_price: null,
+          retail_price: null,
+          freebies: null,
+          notes: null
+        });
+      }
+      element.style.borderColor = 'var(--color-primary)';
+      element.style.background = 'rgba(0,56,101,0.05)';
+    }
+    
+    updateSelectionCount();
+  }
+  
+  function selectAllVisible() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (!modal) return;
+    
+    const visibleOptions = modal.querySelectorAll('.article-option[style*="block"], .article-option:not([style*="none"])');
+    visibleOptions.forEach(opt => {
+      const checkbox = opt.querySelector('input[type=checkbox]');
+      if (!checkbox.checked) {
+        const articleId = parseInt(opt.dataset.articleId);
+        toggleArticleSelection(articleId, opt);
+      }
+    });
+  }
+  
+  function deselectAllVisible() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (!modal) return;
+    
+    const visibleOptions = modal.querySelectorAll('.article-option[style*="block"], .article-option:not([style*="none"])');
+    visibleOptions.forEach(opt => {
+      const checkbox = opt.querySelector('input[type=checkbox]');
+      if (checkbox.checked) {
+        const articleId = parseInt(opt.dataset.articleId);
+        toggleArticleSelection(articleId, opt);
+      }
+    });
+  }
+  
+  function filterArticles() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (!modal) return;
+    
+    const searchInput = modal.querySelector('#articleSearch');
+    const categoryFilter = modal.querySelector('#categoryFilter');
+    const currencyFilter = modal.querySelector('#currencyFilter');
+    const articlesCount = modal.querySelector('#articlesCount');
+    const selectedCount = modal.querySelector('#selectedCount');
+    
+    const searchTerm = (searchInput ? searchInput.value : '').toLowerCase();
+    const categoryValue = categoryFilter ? categoryFilter.value : '';
+    const currencyValue = currencyFilter ? currencyFilter.value : '';
+    
+    const options = modal.querySelectorAll('.article-option');
+    let visibleCount = 0;
+    
+    options.forEach(opt => {
+      const articleId = opt.dataset.articleId;
+      const article = allArticlesData[articleId];
+      
+      if (!article) {
+        opt.style.display = 'none';
+        return;
+      }
+      
+      // Filtrer par recherche (nom)
+      const matchesSearch = !searchTerm || 
+        article.name.toLowerCase().includes(searchTerm);
+      
+      // Filtrer par catégorie
+      const matchesCategory = !categoryValue || 
+        (article.category || 'Sans catégorie') === categoryValue;
+      
+      // Filtrer par devise
+      const matchesCurrency = !currencyValue || 
+        (article.purchase_currency || 'USD') === currencyValue;
+      
+      const shouldShow = matchesSearch && matchesCategory && matchesCurrency;
+      opt.style.display = shouldShow ? 'block' : 'none';
+      
+      if (shouldShow) visibleCount++;
+    });
+    
+    // Mettre à jour les compteurs
+    if (articlesCount) {
+      articlesCount.textContent = visibleCount;
+    }
+    if (selectedCount) {
+      selectedCount.textContent = selectedArticles.length;
+    }
+    
+    // Afficher un message si aucun résultat
+    const articlesList = modal.querySelector('#articlesList');
+    if (articlesList && visibleCount === 0) {
+      const noResults = articlesList.querySelector('.no-results-message');
+      if (!noResults) {
+        const msg = document.createElement('p');
+        msg.className = 'no-results-message';
+        msg.style.cssText = 'text-align: center; color: var(--text-muted); padding: 2rem; font-style: italic;';
+        msg.textContent = 'Aucun article ne correspond aux critères de recherche.';
+        articlesList.appendChild(msg);
+      }
+    } else {
+      const noResults = articlesList ? articlesList.querySelector('.no-results-message') : null;
+      if (noResults) noResults.remove();
+    }
+  }
+  
+  function resetFilters() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (!modal) return;
+    
+    const searchInput = modal.querySelector('#articleSearch');
+    const categoryFilter = modal.querySelector('#categoryFilter');
+    const currencyFilter = modal.querySelector('#currencyFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (currencyFilter) currencyFilter.value = '';
+    
+    filterArticles();
+  }
+  
+  function updateSelectionCount() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (modal) {
+      const selectedCount = modal.querySelector('#selectedCount');
+      if (selectedCount) {
+        selectedCount.textContent = selectedArticles.length;
+      }
+    }
+  }
+  
+  function applyArticleSelection() {
+    renderArticlesTable();
+    document.getElementById('articleSelectorModal').remove();
+  }
+  
+  function renderArticlesTable() {
+    const tableBody = document.getElementById('articlesTableBody');
+    const tableContainer = document.getElementById('articlesTableContainer');
+    const noArticlesMessage = document.getElementById('noArticlesMessage');
+    const selectedArticlesInfo = document.getElementById('selectedArticlesInfo');
+    const selectedArticlesCount = document.getElementById('selectedArticlesCount');
+    
+    if (!tableBody) return;
+    
+    // Vider le tableau
+    tableBody.innerHTML = '';
+    
+    if (selectedArticles.length === 0) {
+      tableContainer.style.display = 'none';
+      noArticlesMessage.style.display = 'block';
+      selectedArticlesInfo.style.display = 'none';
+      return;
+    }
+    
+    tableContainer.style.display = 'block';
+    noArticlesMessage.style.display = 'none';
+    selectedArticlesInfo.style.display = 'block';
+    selectedArticlesCount.textContent = selectedArticles.length;
+    
+    // Ajouter chaque article sélectionné au tableau
+    selectedArticles.forEach((selectedArticle, index) => {
+      const article = allArticlesData[selectedArticle.id];
+      if (!article) return;
+      
+      const row = document.createElement('tr');
+      row.className = 'article-row-selected';
+      row.innerHTML = `
+        <td style="text-align: center;">
+          <button type="button" class="remove-article-btn" onclick="removeArticle(${index})" title="Retirer cet article">
+            <i class="fas fa-times"></i>
+          </button>
+        </td>
+        <td>
+          <strong>${article.name}</strong>
+          <br>
+          <small style="color: var(--text-muted);">${article.category}</small>
+          <input type="hidden" name="article_ids[]" value="${article.id}">
+        </td>
+        <td>
+          <input type="number" name="wholesale_prices[]" 
+                 value="${selectedArticle.wholesale_price || ''}"
+                 step="0.01" min="0" placeholder="0.00" style="text-align: right; width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        </td>
+        <td>
+          <input type="number" name="retail_prices[]"
+                 value="${selectedArticle.retail_price || ''}"
+                 step="0.01" min="0" placeholder="0.00" style="text-align: right; width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        </td>
+        <td>
+          <input type="text" name="freebies[]"
+                 value="${selectedArticle.freebies || ''}"
+                 placeholder="25+1,50+2,100+5" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+          <div class="freebies-help">
+            Format: quantité+gratuit (ex: 25+1,50+2)
+          </div>
+        </td>
+        <td>
+          <input type="text" name="notes[]"
+                 value="${selectedArticle.notes || ''}"
+                 placeholder="Notes..." style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        </td>
+      `;
+      
+      tableBody.appendChild(row);
+    });
+  }
+  
+  function removeArticle(index) {
+    selectedArticles.splice(index, 1);
+    renderArticlesTable();
+  }
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-card">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-tags me-2"></i>
+        {% if price_list %}Modifier{% else %}Nouvelle{% endif %} Fiche de Prix
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="priceListForm">
+      <!-- Informations générales -->
+      <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl);">
+        <div class="form-group">
+          <label for="name" class="form-hl-label">
+            Nom de la fiche <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="text" id="name" name="name" class="form-hl-input" 
+                 value="{{ price_list.name if price_list else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="start_date" class="form-hl-label">
+            Date de début <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="start_date" name="start_date" class="form-hl-input"
+                 value="{{ price_list.start_date.strftime('%Y-%m-%d') if price_list else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="end_date" class="form-hl-label">
+            Date de fin (optionnel)
+          </label>
+          <input type="date" id="end_date" name="end_date" class="form-hl-input"
+                 value="{{ price_list.end_date.strftime('%Y-%m-%d') if price_list and price_list.end_date else '' }}">
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-xl);">
+        <label for="description" class="form-hl-label">Description</label>
+        <textarea id="description" name="description" class="form-hl-input" rows="3"
+                  style="resize: vertical;">{{ price_list.description if price_list else '' }}</textarea>
+      </div>
+      
+      {% if price_list %}
+      <div class="form-group" style="margin-bottom: var(--space-xl);">
+        <label class="form-hl-label">
+          <input type="checkbox" name="is_active" {% if price_list.is_active %}checked{% endif %}>
+          Fiche active
+        </label>
+      </div>
+      {% endif %}
+      
+      <!-- Section Articles -->
+      <div style="margin-top: var(--space-2xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+          <h3 style="margin: 0; color: var(--color-primary);">
+            <i class="fas fa-box me-2"></i>
+            Articles et Prix
+          </h3>
+          <button type="button" onclick="showArticleSelector()" class="btn-hl btn-hl-primary" style="white-space: nowrap;">
+            <i class="fas fa-plus me-2"></i>
+            Ajouter des Articles
+          </button>
+        </div>
+        
+        <div id="selectedArticlesInfo" style="padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); margin-bottom: var(--space-md); display: none;">
+          <span id="selectedArticlesCount" style="font-weight: 600; color: var(--color-primary);">0</span> article(s) sélectionné(s)
+        </div>
+        
+        <div id="noArticlesMessage" style="text-align: center; padding: var(--space-3xl); color: var(--text-muted); display: none;">
+          <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.5;"></i>
+          <p style="font-size: 1.1rem; margin-bottom: var(--space-md);">Aucun article sélectionné</p>
+          <p style="margin-bottom: var(--space-lg);">Cliquez sur "Ajouter des Articles" pour commencer</p>
+          <button type="button" onclick="showArticleSelector()" class="btn-hl btn-hl-primary">
+            <i class="fas fa-plus me-2"></i>
+            Ajouter des Articles
+          </button>
+        </div>
+        
+        <div id="articlesTableContainer" style="overflow-x: auto; display: none;">
+          <table class="articles-table">
+            <thead>
+              <tr>
+                <th style="width: 5%;"></th>
+                <th style="width: 25%;">Article</th>
+                <th style="width: 18%;">Prix Grossiste (GNF)</th>
+                <th style="width: 18%;">Prix Détaillant (GNF)</th>
+                <th style="width: 18%;">Gratuités</th>
+                <th style="width: 16%;">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="articlesTableBody">
+              <!-- Les articles sélectionnés seront ajoutés ici dynamiquement -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>
+          {% if price_list %}Modifier{% else %}Créer{% endif %} la Fiche de Prix
+        </button>
+        <a href="{{ url_for('price_lists.lists') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-times me-2"></i>
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

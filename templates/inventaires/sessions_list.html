@@ -1,0 +1,251 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Sessions d'Inventaire - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card {
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    border-radius: var(--radius-md);
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  
+  .stat-card.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+  
+  .stat-card.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .stat-card.info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  }
+  
+  .stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-clipboard-check me-2"></i>
+      Sessions d'Inventaire
+    </h1>
+    <div style="display: flex; gap: var(--space-md);">
+      {% if sessions and has_permission(current_user, 'inventory.read') %}
+      <a href="{{ url_for('inventaires.sessions_export_excel', search=search, status=status_filter, depot_id=depot_id, date_from=date_from, date_to=date_to, year=year_filter) }}" class="btn-hl btn-hl-success">
+        <i class="fas fa-file-excel me-2"></i>
+        Exporter Excel
+      </a>
+      {% endif %}
+      <a href="{{ url_for('inventaires.sessions_by_year') }}" class="btn-hl btn-hl-info">
+        <i class="fas fa-calendar-alt me-2"></i>
+        Vue par Année
+      </a>
+      <a href="{{ url_for('inventaires.session_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouvelle Session
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistiques globales -->
+  {% if total_sessions is defined %}
+  <div class="stats-grid">
+    <div class="stat-card info">
+      <div class="stat-label">Total Sessions</div>
+      <div class="stat-value">{{ total_sessions }}</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-label">Brouillons</div>
+      <div class="stat-value">{{ sessions_by_status.get('draft', 0) }}</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-label">En cours</div>
+      <div class="stat-value">{{ sessions_by_status.get('in_progress', 0) }}</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">Validées</div>
+      <div class="stat-value">{{ sessions_by_status.get('validated', 0) }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Filtres -->
+  <div class="card-hl" style="margin-bottom: var(--space-md);">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+      Filtres
+    </h3>
+    <form method="GET" action="{{ url_for('inventaires.sessions_list') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <div class="form-group">
+        <label class="form-hl-label">Recherche</label>
+        <input type="text" name="search" value="{{ search or '' }}" class="form-hl-input" placeholder="Dépôt ou opérateur...">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Statut</label>
+        <select name="status" class="form-hl-select">
+          <option value="">Tous les statuts</option>
+          <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Brouillon</option>
+          <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>En cours</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Complétée</option>
+          <option value="validated" {% if status_filter == 'validated' %}selected{% endif %}>Validée</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Dépôt</label>
+        <select name="depot_id" class="form-hl-select">
+          <option value="">Tous les dépôts</option>
+          {% for depot in depots %}
+          <option value="{{ depot.id }}" {% if depot_id == depot.id %}selected{% endif %}>{{ depot.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Année</label>
+        <select name="year" class="form-hl-select" onchange="this.form.submit()">
+          <option value="">Toutes les années</option>
+          {% for year in available_years|reverse %}
+          <option value="{{ year }}" {% if year_filter == year %}selected{% endif %}>
+            {{ year }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Date début</label>
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-hl-input" {% if year_filter %}disabled title="Désactivé car filtre année actif"{% endif %}>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Date fin</label>
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-hl-input" {% if year_filter %}disabled title="Désactivé car filtre année actif"{% endif %}>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Par page</label>
+        <select name="per_page" class="form-hl-select" onchange="this.form.submit()">
+          <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+          <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+          <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+        </select>
+      </div>
+      <div class="form-group" style="display: flex; gap: var(--space-sm); align-items: flex-end;">
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        <a href="{{ url_for('inventaires.sessions_list') }}" class="btn-hl btn-hl-secondary">
+          <i class="fas fa-times me-2"></i>Réinitialiser
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {% if sessions %}
+  <div class="card-hl">
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Dépôt</th>
+            <th>Opérateur</th>
+            <th>Articles</th>
+            <th>Statut</th>
+            <th>Validé par</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session in sessions %}
+          <tr>
+            <td>{{ session.session_date.strftime('%d/%m/%Y %H:%M') if session.session_date else '-' }}</td>
+            <td><strong>{{ session.depot.name if session.depot else '-' }}</strong></td>
+            <td>{{ session.operator.username if session.operator else '-' }}</td>
+            <td>
+              <span class="badge-hl badge-hl-info">{{ session.details|length }} article(s)</span>
+            </td>
+            <td>
+              <span class="badge-hl {% if session.status == 'validated' %}badge-hl-success{% elif session.status == 'completed' %}badge-hl-success{% elif session.status == 'in_progress' %}badge-hl-warning{% else %}badge-hl-warning{% endif %}">
+                {{ session.status|replace('_', ' ')|title }}
+              </span>
+            </td>
+            <td>{{ session.validator.username if session.validator else '-' }}</td>
+            <td>
+              <div style="display: flex; gap: var(--space-xs);">
+                <a href="{{ url_for('inventaires.session_detail', id=session.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Voir détails">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if session.status != 'validated' and has_permission(current_user, 'inventory.update') %}
+                <a href="{{ url_for('inventaires.session_detail_add', id=session.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Ajouter détail">
+                  <i class="fas fa-plus"></i>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+    <div style="display: flex; justify-content: center; align-items: center; gap: var(--space-md); margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('inventaires.sessions_list', page=pagination.prev_num, search=search, status=status_filter, depot_id=depot_id, date_from=date_from, date_to=date_to, year=year_filter, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        <i class="fas fa-chevron-left me-2"></i>Précédent
+      </a>
+      {% endif %}
+      
+      <span style="color: var(--text-secondary); font-weight: 500; padding: var(--space-sm);">
+        Page {{ pagination.page }} sur {{ pagination.pages }} 
+        ({{ pagination.total }} session{{ 's' if pagination.total > 1 else '' }})
+      </span>
+      
+      {% if pagination.has_next %}
+      <a href="{{ url_for('inventaires.sessions_list', page=pagination.next_num, search=search, status=status_filter, depot_id=depot_id, date_from=date_from, date_to=date_to, year=year_filter, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        Suivant<i class="fas fa-chevron-right ms-2"></i>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-clipboard-check" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune session</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par créer votre première session d'inventaire</p>
+    <a href="{{ url_for('inventaires.session_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer une Session
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

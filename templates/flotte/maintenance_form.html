@@ -1,0 +1,82 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Planifier Maintenance - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-container {
+    max-width: 600px;
+    margin: var(--space-2xl) auto;
+    padding: 0 var(--space-lg);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-tools me-2"></i>
+        Planifier une Maintenance
+      </h1>
+    </div>
+    
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      <strong>Véhicule:</strong> {{ vehicle.plate_number }}
+    </p>
+
+    <form method="POST">
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="maintenance_type" class="form-hl-label">
+          Type de Maintenance <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="text" id="maintenance_type" name="maintenance_type" class="form-hl-input" required placeholder="Ex: Vidange, Pneus, Freins..." list="maintenance-types">
+        <datalist id="maintenance-types">
+          <option value="Vidange">
+          <option value="Pneus">
+          <option value="Freins">
+          <option value="Révision">
+          <option value="Batterie">
+          <option value="Autre">
+        </datalist>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="planned_date" class="form-hl-label">Date Planifiée</label>
+          <input type="date" id="planned_date" name="planned_date" class="form-hl-input">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="due_at_km" class="form-hl-label">Km Cible</label>
+          <input type="number" id="due_at_km" name="due_at_km" class="form-hl-input" placeholder="Ex: 50000">
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="cost_gnf" class="form-hl-label">Coût Estimé (GNF)</label>
+        <input type="number" step="0.01" id="cost_gnf" name="cost_gnf" class="form-hl-input" placeholder="0.00">
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="notes" class="form-hl-label">Notes</label>
+        <textarea id="notes" name="notes" class="form-hl-input" rows="3"></textarea>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>Planifier
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

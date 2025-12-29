@@ -1,0 +1,220 @@
+# chat/sse.py
+# Server-Sent Events pour le chat en temps réel
+
+from flask import Response, stream_with_context
+from flask_login import login_required, current_user
+from datetime import datetime, UTC
+import json
+import time
+from models import (
+    db, ChatRoom, ChatRoomMember, ChatMessage, ChatAttachment,
+    ChatMessageRead, User
+)
+from auth import has_permission
+from . import chat_bp
+
+
+def format_message_for_sse(message):
+    """Formate un message pour l'envoi via SSE"""
+    reply_to_data = None
+    if message.reply_to_id and message.reply_to:
+        reply_to_data = {
+            'id': message.reply_to.id,
+            'sender_name': message.reply_to.sender.username,
+            'content': message.reply_to.content[:100] if message.reply_to.content else ''
+        }
+    
+    return {
+        'id': message.id,
+        'room_id': message.room_id,
+        'sender_id': message.sender_id,
+        'sender_name': message.sender.username,
+        'content': message.content,
+        'message_type': message.message_type,
+        'is_edited': message.is_edited,
+        'edited_at': message.edited_at.isoformat() if message.edited_at else None,
+        'reply_to_id': message.reply_to_id,
+        'reply_to': reply_to_data,
+        'created_at': message.created_at.isoformat(),
+        'attachments': [{
+            'id': att.id,
+            'file_name': att.file_name,
+            'file_path': att.file_path,
+            'file_size': att.file_size,
+            'file_type': att.file_type,
+            'is_image': att.is_image,
+            'thumbnail_path': att.thumbnail_path
+        } for att in message.attachments]
+    }
+
+
+@chat_bp.route('/api/stream/<int:room_id>')
+@login_required
+def stream_messages(room_id):
+    """Stream Server-Sent Events pour les nouveaux messages"""
+    if not has_permission(current_user, 'chat.read'):
+        return Response('Permission refusée', status=403, mimetype='text/plain')
+    
+    # Vérifier que l'utilisateur est membre
+    membership = ChatRoomMember.query.filter_by(room_id=room_id, user_id=current_user.id).first()
+    if not membership:
+        return Response('Accès refusé', status=403, mimetype='text/plain')
+    
+    def event_stream():
+        """Générateur pour les événements SSE"""
+        last_message_id = None
+        last_check = datetime.now(UTC)
+        
+        # Envoyer un message de connexion
+        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
+        
+        try:
+            while True:
+                # Vérifier les nouveaux messages toutes les 1-2 secondes
+                time.sleep(1)
+                
+                # Récupérer les nouveaux messages depuis le dernier check avec les relations
+                from sqlalchemy.orm import joinedload
+                query = ChatMessage.query.filter_by(room_id=room_id, is_deleted=False)\
+                    .options(joinedload(ChatMessage.reply_to).joinedload(ChatMessage.sender))\
+                    .options(joinedload(ChatMessage.sender))\
+                    .options(joinedload(ChatMessage.attachments))
+                
+                if last_message_id:
+                    query = query.filter(ChatMessage.id > last_message_id)
+                else:
+                    # Pour la première connexion, récupérer les messages depuis le dernier check
+                    query = query.filter(ChatMessage.created_at > last_check)
+                
+                new_messages = query.order_by(ChatMessage.created_at.asc()).all()
+                
+                for message in new_messages:
+                    # Envoyer TOUS les messages (le client décidera s'il doit les afficher)
+                    message_data = format_message_for_sse(message)
+                    message_data['type'] = 'new_message'
+                    yield f"data: {json.dumps(message_data)}\n\n"
+                    
+                    # Mettre à jour le dernier message ID
+                    if not last_message_id or message.id > last_message_id:
+                        last_message_id = message.id
+                
+                # Envoyer un heartbeat toutes les 30 secondes pour maintenir la connexion
+                if (datetime.now(UTC) - last_check).total_seconds() > 30:
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
+                    last_check = datetime.now(UTC)
+                
+                # Vérifier si la connexion est toujours active (timeout après 5 minutes d'inactivité)
+                # Cette vérification sera gérée côté client qui se reconnectera si nécessaire
+                
+        except GeneratorExit:
+            # Connexion fermée par le client
+            pass
+        except Exception as e:
+            print(f"⚠️ Erreur dans le stream SSE: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',  # Désactiver le buffering pour nginx
+            'Connection': 'keep-alive'
+        }
+    )
+
+
+@chat_bp.route('/api/stream/rooms')
+@login_required
+def stream_rooms():
+    """Stream Server-Sent Events pour les mises à jour des conversations (nouveaux messages, etc.)"""
+    if not has_permission(current_user, 'chat.read'):
+        return Response('Permission refusée', status=403, mimetype='text/plain')
+    
+    def event_stream():
+        """Générateur pour les événements SSE des conversations"""
+        last_check = datetime.now(UTC)
+        last_room_updates = {}  # {room_id: last_message_id}
+        
+        # Envoyer un message de connexion
+        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
+        
+        try:
+            while True:
+                time.sleep(2)  # Vérifier toutes les 2 secondes
+                
+                # Récupérer toutes les conversations de l'utilisateur
+                memberships = ChatRoomMember.query.filter_by(user_id=current_user.id).all()
+                room_ids = [m.room_id for m in memberships]
+                
+                if not room_ids:
+                    continue
+                
+                # Vérifier les nouveaux messages dans chaque conversation
+                for room_id in room_ids:
+                    last_message_id = last_room_updates.get(room_id, 0)
+                    
+                    # Récupérer les nouveaux messages
+                    new_messages = ChatMessage.query.filter_by(room_id=room_id, is_deleted=False)\
+                        .filter(ChatMessage.id > last_message_id)\
+                        .filter(ChatMessage.sender_id != current_user.id)\
+                        .order_by(ChatMessage.created_at.desc())\
+                        .limit(10)\
+                        .all()
+                    
+                    if new_messages:
+                        # Prendre le dernier message pour cette room
+                        latest_message = new_messages[0]
+                        last_room_updates[room_id] = latest_message.id
+                        
+                        # Compter les non lus
+                        membership = ChatRoomMember.query.filter_by(room_id=room_id, user_id=current_user.id).first()
+                        last_read = membership.last_read_at if membership else None
+                        
+                        unread_count = 0
+                        if last_read:
+                            unread_count = ChatMessage.query.filter_by(room_id=room_id)\
+                                .filter(ChatMessage.created_at > last_read)\
+                                .filter_by(is_deleted=False)\
+                                .filter(ChatMessage.sender_id != current_user.id)\
+                                .count()
+                        else:
+                            unread_count = ChatMessage.query.filter_by(room_id=room_id)\
+                                .filter_by(is_deleted=False)\
+                                .filter(ChatMessage.sender_id != current_user.id)\
+                                .count()
+                        
+                        # Envoyer la mise à jour
+                        yield f"data: {json.dumps({
+                            'type': 'room_update',
+                            'room_id': room_id,
+                            'last_message': {
+                                'id': latest_message.id,
+                                'content': latest_message.content[:100],
+                                'sender_name': latest_message.sender.username,
+                                'created_at': latest_message.created_at.isoformat()
+                            },
+                            'unread_count': unread_count
+                        })}\n\n"
+                
+                # Heartbeat
+                if (datetime.now(UTC) - last_check).total_seconds() > 30:
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
+                    last_check = datetime.now(UTC)
+                
+        except GeneratorExit:
+            pass
+        except Exception as e:
+            print(f"⚠️ Erreur dans le stream SSE rooms: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive'
+        }
+    )
+

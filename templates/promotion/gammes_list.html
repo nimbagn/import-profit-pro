@@ -1,0 +1,133 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Gammes de Promotion - Import Profit Pro{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-box icon-promo"></i>
+        Gammes de Produits
+      </h1>
+      {% if has_permission(current_user, 'promotion.write') %}
+      <a href="{{ url_for('promotion.gamme_new') }}" class="btn btn-promo btn-promo-primary">
+        <i class="fas fa-plus me-2"></i>Nouvelle Gamme
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid section-spacing">
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value">{{ stats.total }}</div>
+      <div class="stat-card-promo-label">Total Gammes</div>
+      <i class="fas fa-boxes stat-card-promo-icon"></i>
+    </div>
+    <div class="stat-card-promo">
+      <div class="stat-card-promo-value" style="color: #10b981;">{{ stats.active }}</div>
+      <div class="stat-card-promo-label">Gammes Actives</div>
+      <i class="fas fa-check-circle stat-card-promo-icon" style="color: #10b981;"></i>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filter-card">
+      <form method="GET" class="row g-3">
+        <div class="col-md-4">
+          <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}">
+        </div>
+        <div class="col-md-3">
+          <select name="active" class="form-select">
+            <option value="true" {% if active_only %}selected{% endif %}>Actives uniquement</option>
+            <option value="false" {% if not active_only %}selected{% endif %}>Toutes</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn-hl btn-hl-primary w-100">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+        </div>
+        <div class="col-md-2">
+          <a href="{{ url_for('promotion.gammes_list') }}" class="btn-hl btn-hl-outline w-100">
+            <i class="fas fa-redo me-2"></i>Réinitialiser
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des gammes -->
+  <div class="card-promo">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Gammes
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Description</th>
+              <th>Prix de Vente</th>
+              <th>Commission/Unité</th>
+              <th>Articles</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for gamme in gammes %}
+            <tr>
+              <td>
+                <strong>{{ gamme.name }}</strong>
+                {% if gamme.is_piece %}
+                <br>
+                <small class="text-muted">
+                  <i class="fas fa-cube me-1"></i>
+                  {% if gamme.unit_type %}
+                    1 {{ gamme.unit_type }}
+                    {% if gamme.unit_description %} ({{ gamme.unit_description }}){% endif %}
+                  {% else %}
+                    Pièce
+                    {% if gamme.unit_description %} - {{ gamme.unit_description }}{% endif %}
+                  {% endif %}
+                </small>
+                {% endif %}
+              </td>
+              <td>{{ gamme.description[:50] if gamme.description else '-' }}{% if gamme.description and gamme.description|length > 50 %}...{% endif %}</td>
+              <td><strong>{{ "{:,.0f}".format(gamme.selling_price_gnf|default(0))|replace(',', ' ') }} GNF</strong></td>
+              <td><span class="badge badge-promo badge-promo-success">{{ "{:,.0f}".format(gamme.commission_per_unit_gnf|default(0))|replace(',', ' ') }} GNF</span></td>
+              <td>
+                {% if gamme.articles %}
+                <span class="badge badge-promo badge-promo-info">{{ gamme.articles|length }} article(s)</span>
+                {% else %}
+                <span class="text-muted">Aucun</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if gamme.is_active %}
+                <span class="badge badge-promo badge-promo-success">Active</span>
+                {% else %}
+                <span class="badge badge-promo" style="background: #6c757d; color: white;">Inactive</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if has_permission(current_user, 'promotion.write') %}
+                <a href="{{ url_for('promotion.gamme_edit', id=gamme.id) }}" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">Aucune gamme trouvée</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

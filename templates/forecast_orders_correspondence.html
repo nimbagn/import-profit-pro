@@ -1,0 +1,231 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Correspondance Commandes-Prévisions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .forecast-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-lg);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-chart-line me-2"></i>
+      Correspondance Commandes-Prévisions
+    </h1>
+    <div style="display: flex; gap: var(--space-md);">
+      <a href="{{ url_for('forecast_periodic_stats') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-chart-bar me-2"></i>
+        Statistiques Périodiques
+      </a>
+      <a href="{{ url_for('forecast_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour aux Prévisions
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistiques globales -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Valeur Prévisionnelle Totale
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">
+        {{ total_forecast_value|format_number(0) }} GNF
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Valeur Réalisée Totale
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: #059669;">
+        {{ total_realized_value|format_number(0) }} GNF
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Taux de Réalisation Global
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: {% if overall_percentage >= 50 %}#059669{% else %}#dc2626{% endif %};">
+        {{ "%.1f"|format(overall_percentage) }}%
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Commandes Validées (30j)
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">
+        {{ stats_period.last_30_days.orders_count }}
+      </div>
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-xs);">
+        {{ stats_period.last_30_days.total_value|format_number(0) }} GNF
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques par période -->
+  <div class="card-hl" style="margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md);">
+      <i class="fas fa-calendar-alt me-2"></i>
+      Statistiques par Période
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <div>
+        <div style="font-size: 0.875rem; color: var(--text-muted);">7 derniers jours</div>
+        <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+          {{ stats_period.last_7_days.orders_count }} commandes
+        </div>
+        <div style="font-size: 0.875rem; color: var(--text-muted);">
+          {{ stats_period.last_7_days.total_value|format_number(0) }} GNF
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 0.875rem; color: var(--text-muted);">30 derniers jours</div>
+        <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+          {{ stats_period.last_30_days.orders_count }} commandes
+        </div>
+        <div style="font-size: 0.875rem; color: var(--text-muted);">
+          {{ stats_period.last_30_days.total_value|format_number(0) }} GNF
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Détails par prévision -->
+  {% if forecasts_stats %}
+  <div style="margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);">
+    <h2 style="color: var(--text-primary); margin-bottom: var(--space-lg);">
+      <i class="fas fa-list me-2"></i>
+      Détails par Prévision
+    </h2>
+    
+    {% for stat in forecasts_stats %}
+    <div class="forecast-card">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-md);">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-xs);">
+            {{ stat.forecast.name }}
+          </h3>
+          <div style="font-size: 0.875rem; color: var(--text-muted);">
+            {{ stat.forecast.start_date.strftime('%d/%m/%Y') }} - {{ stat.forecast.end_date.strftime('%d/%m/%Y') }}
+          </div>
+        </div>
+        <a href="{{ url_for('forecast_detail', id=stat.forecast.id) }}" class="btn-hl btn-hl-sm">
+          <i class="fas fa-eye me-2"></i>
+          Voir Détails
+        </a>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-md);">
+        <div>
+          <div style="font-size: 0.875rem; color: var(--text-muted);">Commandes associées</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+            {{ stat.orders_count }}
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.875rem; color: var(--text-muted);">Prévision</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+            {{ stat.total_forecast|format_number(0) }} GNF
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.875rem; color: var(--text-muted);">Réalisé</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: #059669;">
+            {{ stat.total_realized|format_number(0) }} GNF
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.875rem; color: var(--text-muted);">Taux de réalisation</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: {% if stat.percentage >= 50 %}#059669{% else %}#dc2626{% endif %};">
+            {{ "%.1f"|format(stat.percentage) }}%
+          </div>
+        </div>
+      </div>
+      
+      {% if stat.orders %}
+      <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--gray-200);">
+        <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-sm);">
+          Commandes récentes ({{ stat.orders|length }} sur {{ stat.orders_count }})
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm);">
+          {% for order in stat.orders %}
+          <a href="{{ url_for('orders.order_detail', id=order.id) }}" 
+             class="btn-hl btn-hl-sm" 
+             style="font-size: 0.875rem; padding: var(--space-xs) var(--space-sm);">
+            <i class="fas fa-shopping-cart me-2"></i>
+            {{ order.reference }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: var(--space-3xl); color: var(--text-muted);">
+    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+    <p>Aucune prévision active trouvée.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

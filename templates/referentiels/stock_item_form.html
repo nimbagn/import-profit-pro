@@ -1,0 +1,154 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if stock_item else 'Créer' }} Article - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-{{ 'edit' if stock_item else 'plus' }} me-2"></i>
+        {{ 'Modifier' if stock_item else 'Créer' }} un Article
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="sku" class="form-hl-label">
+            SKU <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="text" id="sku" name="sku" class="form-hl-input" value="{{ stock_item.sku if stock_item else '' }}" required autofocus>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="family_id" class="form-hl-label">
+            Famille <span style="color: var(--color-danger);">*</span>
+          </label>
+          <select id="family_id" name="family_id" class="form-hl-select" required>
+            <option value="">Sélectionner une famille</option>
+            {% for family in families %}
+            <option value="{{ family.id }}" {% if stock_item and stock_item.family_id == family.id %}selected{% endif %}>
+              {{ family.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="name" class="form-hl-label">
+          Nom <span style="color: var(--color-danger);">*</span>
+        </label>
+        <input type="text" id="name" name="name" class="form-hl-input" value="{{ stock_item.name if stock_item else '' }}" required>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="purchase_price_gnf" class="form-hl-label">Prix Achat (GNF)</label>
+          <input type="number" step="0.01" id="purchase_price_gnf" name="purchase_price_gnf" class="form-hl-input" value="{{ stock_item.purchase_price_gnf if stock_item else '0' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="unit_weight_kg" class="form-hl-label">Poids Unitaire (kg)</label>
+          <input type="number" step="0.001" id="unit_weight_kg" name="unit_weight_kg" class="form-hl-input" value="{{ stock_item.unit_weight_kg if stock_item else '0' }}">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="min_stock_depot" class="form-hl-label">Seuil Min. Dépôt</label>
+          <input type="number" step="0.001" id="min_stock_depot" name="min_stock_depot" class="form-hl-input" value="{{ stock_item.min_stock_depot if stock_item else '0' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="min_stock_vehicle" class="form-hl-label">Seuil Min. Véhicule</label>
+          <input type="number" step="0.001" id="min_stock_vehicle" name="min_stock_vehicle" class="form-hl-input" value="{{ stock_item.min_stock_vehicle if stock_item else '0' }}">
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="description" class="form-hl-label">Description</label>
+        <textarea id="description" name="description" class="form-hl-input" rows="4">{{ stock_item.description if stock_item else '' }}</textarea>
+      </div>
+      
+      {% if stock_item %}
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+          <input type="checkbox" id="is_active" name="is_active" {% if stock_item.is_active %}checked{% endif %} style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="is_active" class="form-hl-label" style="margin: 0;">Article actif</label>
+        </div>
+      </div>
+      {% endif %}
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('referentiels.stock_items_list') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>{{ 'Modifier' if stock_item else 'Créer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

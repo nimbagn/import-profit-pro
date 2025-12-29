@@ -1,0 +1,245 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Fiches de Prix - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .price-list-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+    background: var(--white);
+    transition: var(--transition-fast);
+    cursor: pointer;
+  }
+  
+  .price-list-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+  
+  .price-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: var(--space-md);
+  }
+  
+  .price-list-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+  
+  .price-list-meta {
+    display: flex;
+    gap: var(--space-lg);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: var(--space-sm);
+  }
+  
+  .price-list-stats {
+    display: flex;
+    gap: var(--space-xl);
+    margin-top: var(--space-md);
+  }
+  
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .status-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+  }
+  
+  .status-upcoming {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--hl-blue);
+  }
+  
+  .status-expired {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+  }
+  
+  .status-inactive {
+    background: rgba(107, 114, 128, 0.1);
+    color: var(--text-muted);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .price-list-header {
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    
+    .price-list-stats {
+      flex-wrap: wrap;
+      gap: var(--space-md);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-tags me-2"></i>
+      Fiches de Prix
+    </h1>
+    <a href="{{ url_for('price_lists.new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Nouvelle Fiche de Prix
+    </a>
+  </div>
+
+  {% if price_lists %}
+  <div class="card-hl">
+    <div>
+      {% for price_list in price_lists %}
+      <div class="price-list-card" onclick="window.location.href='{{ url_for('price_lists.detail', price_list_id=price_list.id) }}'">
+        <div class="price-list-header">
+          <div style="flex: 1;">
+            <h3 class="price-list-title">{{ price_list.name }}</h3>
+            {% if price_list.description %}
+            <p style="color: var(--text-secondary); margin: var(--space-xs) 0 0 0; font-size: 0.9rem;">
+              {{ price_list.description }}
+            </p>
+            {% endif %}
+            <div class="price-list-meta">
+              <span>
+                <i class="fas fa-calendar-alt me-1"></i>
+                Du {{ price_list.start_date.strftime('%d/%m/%Y') }}
+                {% if price_list.end_date %}
+                au {{ price_list.end_date.strftime('%d/%m/%Y') }}
+                {% else %}
+                (sans fin)
+                {% endif %}
+              </span>
+              {% if price_list.created_by %}
+              <span>
+                <i class="fas fa-user me-1"></i>
+                {{ price_list.created_by.full_name or price_list.created_by.username }}
+              </span>
+              {% endif %}
+            </div>
+          </div>
+          <span class="badge-status status-{{ price_list.status }}">
+            {% if price_list.status == 'active' %}
+            Active
+            {% elif price_list.status == 'upcoming' %}
+            À venir
+            {% elif price_list.status == 'expired' %}
+            Expirée
+            {% else %}
+            Inactive
+            {% endif %}
+          </span>
+        </div>
+        
+        <div class="price-list-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ price_list.items|length }}</span>
+            <span class="stat-label">Articles</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">
+              {{ price_list.items|selectattr('wholesale_price')|list|length }}
+            </span>
+            <span class="stat-label">Prix Grossiste</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">
+              {{ price_list.items|selectattr('retail_price')|list|length }}
+            </span>
+            <span class="stat-label">Prix Détaillant</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card-hl">
+    <div style="text-align: center; padding: var(--space-3xl);">
+      <i class="fas fa-tags" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-lg);"></i>
+      <h3 style="color: var(--text-secondary); margin-bottom: var(--space-md);">Aucune fiche de prix</h3>
+      <p style="color: var(--text-muted); margin-bottom: var(--space-xl);">
+        Créez votre première fiche de prix pour définir les prix grossiste et détaillant de vos articles.
+      </p>
+      <a href="{{ url_for('price_lists.new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Créer une Fiche de Prix
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

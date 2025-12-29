@@ -1,0 +1,94 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if document else 'Ajouter' }} Document - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-container {
+    max-width: 600px;
+    margin: var(--space-2xl) auto;
+    padding: 0 var(--space-lg);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-{{ 'edit' if document else 'plus' }} me-2"></i>
+        {{ 'Modifier' if document else 'Ajouter' }} un Document
+      </h1>
+    </div>
+    
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      <strong>Véhicule:</strong> {{ vehicle.plate_number }}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="document_type" class="form-hl-label">
+          Type de Document <span style="color: var(--color-danger);">*</span>
+        </label>
+        <select id="document_type" name="document_type" class="form-hl-select" required>
+          <option value="">Sélectionner</option>
+          <option value="insurance" {% if document and document.document_type == 'insurance' %}selected{% endif %}>Assurance</option>
+          <option value="registration" {% if document and document.document_type == 'registration' %}selected{% endif %}>Immatriculation</option>
+          <option value="technical_inspection" {% if document and document.document_type == 'technical_inspection' %}selected{% endif %}>Visite Technique</option>
+          <option value="road_tax" {% if document and document.document_type == 'road_tax' %}selected{% endif %}>Impôt Routier</option>
+          <option value="license" {% if document and document.document_type == 'license' %}selected{% endif %}>Permis</option>
+          <option value="other" {% if document and document.document_type == 'other' %}selected{% endif %}>Autre</option>
+        </select>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="document_number" class="form-hl-label">N° Document</label>
+        <input type="text" id="document_number" name="document_number" class="form-hl-input" value="{{ document.document_number if document else '' }}">
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="issue_date" class="form-hl-label">Date d'Émission</label>
+          <input type="date" id="issue_date" name="issue_date" class="form-hl-input" value="{{ document.issue_date.strftime('%Y-%m-%d') if document and document.issue_date else '' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="expiry_date" class="form-hl-label">
+            Date d'Expiration <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="expiry_date" name="expiry_date" class="form-hl-input" value="{{ document.expiry_date.strftime('%Y-%m-%d') if document and document.expiry_date else '' }}" required>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="notes" class="form-hl-label">Notes</label>
+        <textarea id="notes" name="notes" class="form-hl-input" rows="3">{{ document.notes if document else '' }}</textarea>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('flotte.vehicle_documents', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>{{ 'Modifier' if document else 'Ajouter' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

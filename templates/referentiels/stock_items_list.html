@@ -1,0 +1,236 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Articles de Stock - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <h1>
+          <i class="fas fa-boxes icon-promo"></i>
+          Articles de Stock
+        </h1>
+        <a href="{{ url_for('referentiels.stock_item_new') }}" class="btn btn-promo btn-promo-primary">
+          <i class="fas fa-plus me-2"></i>Nouvel Article
+        </a>
+      </div>
+    </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if stats %}
+  <div class="card-promo section-spacing" style="margin-bottom: var(--space-lg);">
+    <div class="card-promo-header">
+      <i class="fas fa-chart-bar me-2"></i>Statistiques des Articles de Stock
+    </div>
+    <div style="padding: var(--space-lg); display: flex; gap: var(--space-xl); flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 150px;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">{{ stats.total }}</div>
+        <div style="color: var(--text-secondary);">Total</div>
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--color-success);">{{ stats.active }}</div>
+        <div style="color: var(--text-secondary);">Actifs</div>
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">{{ stats.inactive }}</div>
+        <div style="color: var(--text-secondary);">Inactifs</div>
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <div style="font-size: 2rem; font-weight: 700; color: #8b5cf6;">{{ stats.with_family }}</div>
+        <div style="color: var(--text-secondary);">Avec Famille</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card-promo section-spacing" style="margin-bottom: var(--space-lg);">
+    <div class="card-promo-header">
+      <i class="fas fa-search me-2"></i>Recherche et Filtres
+    </div>
+    <div style="padding: var(--space-lg);">
+      <form method="GET" action="{{ url_for('referentiels.stock_items_list') }}" style="display: flex; gap: var(--space-md); flex-wrap: wrap; align-items: end;">
+        <div style="flex: 1; min-width: 250px;">
+          <label for="search" class="form-label" style="margin-bottom: var(--space-xs); color: var(--text-primary); font-weight: 600;">Rechercher</label>
+          <input type="text" 
+                 id="search" 
+                 name="search" 
+                 class="form-control" 
+                 placeholder="SKU, nom, description..." 
+                 value="{{ search }}"
+                 style="width: 100%; padding: var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        </div>
+        <div style="min-width: 200px;">
+          <label for="family" class="form-label" style="margin-bottom: var(--space-xs); color: var(--text-primary); font-weight: 600;">Famille</label>
+          <select name="family" id="family" class="form-control" style="padding: var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <option value="">Toutes les familles</option>
+            {% for family in families %}
+            <option value="{{ family.name }}" {% if family_filter == family.name %}selected{% endif %}>{{ family.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="min-width: 150px;">
+          <label for="status" class="form-label" style="margin-bottom: var(--space-xs); color: var(--text-primary); font-weight: 600;">Statut</label>
+          <select name="status" id="status" class="form-control" style="padding: var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <option value="">Tous</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actifs</option>
+            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactifs</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: var(--space-sm); align-items: end;">
+          <button type="submit" class="btn btn-promo btn-promo-primary" style="height: fit-content;">
+            <i class="fas fa-search me-2"></i>Rechercher
+          </button>
+          {% if search or family_filter or status_filter %}
+          <a href="{{ url_for('referentiels.stock_items_list') }}" class="btn btn-promo" style="background: #6c757d; color: white; height: fit-content;">
+            <i class="fas fa-times me-2"></i>Effacer
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if stock_items %}
+  <div class="card-promo section-spacing">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Articles de Stock
+      {% if search or family_filter or status_filter %}
+      <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary); margin-left: var(--space-sm);">
+        ({{ pagination.total }} résultat{{ 's' if pagination.total > 1 else '' }} trouvé{{ 's' if pagination.total > 1 else '' }})
+      </span>
+      {% endif %}
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Nom</th>
+            <th>Famille</th>
+            <th>Prix Achat (GNF)</th>
+            <th>Poids (kg)</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in stock_items %}
+          <tr>
+            <td><strong>{{ item.sku }}</strong></td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.family.name if item.family else '-' }}</td>
+            <td>{{ "{:,.0f}".format(item.purchase_price_gnf) }}</td>
+            <td>{{ "{:.2f}".format(item.unit_weight_kg) }}</td>
+            <td>
+              {% if item.is_active %}
+              <span class="badge badge-promo badge-promo-success">Actif</span>
+              {% else %}
+              <span class="badge badge-promo" style="background: #ef4444; color: white;">Inactif</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('referentiels.stock_item_edit', id=item.id) }}" class="btn btn-sm btn-promo" style="background: #6c757d; color: white;" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if pagination and pagination.pages > 1 %}
+    <div class="card-promo-footer">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div class="pagination-info">
+          <small class="text-muted">
+            Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+            {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+            sur {{ pagination.total }} article{{ 's' if pagination.total > 1 else '' }}
+          </small>
+        </div>
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+              <a class="page-link" href="{{ url_for('referentiels.stock_items_list', page=pagination.prev_num, search=search, family=family_filter, status=status_filter) if pagination.has_prev else '#' }}">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+              {% if page_num %}
+                {% if page_num == pagination.page %}
+                  <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                  </li>
+                {% else %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('referentiels.stock_items_list', page=page_num, search=search, family=family_filter, status=status_filter) }}">{{ page_num }}</a>
+                  </li>
+                {% endif %}
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">…</span>
+                </li>
+              {% endif %}
+            {% endfor %}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+              <a class="page-link" href="{{ url_for('referentiels.stock_items_list', page=pagination.next_num, search=search, family=family_filter, status=status_filter) if pagination.has_next else '#' }}">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <div>
+          <select name="per_page" class="form-select form-select-sm" onchange="window.location.href='{{ url_for('referentiels.stock_items_list', search=search, family=family_filter, status=status_filter) }}?per_page=' + this.value">
+            <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25/page</option>
+            <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50/page</option>
+            <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100/page</option>
+            <option value="200" {% if pagination.per_page == 200 %}selected{% endif %}>200/page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-promo section-spacing" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-boxes" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">
+      {% if search or family_filter or status_filter %}
+        Aucun article trouvé
+      {% else %}
+        Aucun article
+      {% endif %}
+    </h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      {% if search or family_filter or status_filter %}
+        Aucun article ne correspond à vos critères de recherche.
+      {% else %}
+        Commencez par créer votre premier article
+      {% endif %}
+    </p>
+    {% if search or family_filter or status_filter %}
+    <a href="{{ url_for('referentiels.stock_items_list') }}" class="btn btn-promo" style="background: #6c757d; color: white; margin-right: var(--space-sm);">
+      <i class="fas fa-arrow-left me-2"></i>Voir tous les articles
+    </a>
+    {% endif %}
+    <a href="{{ url_for('referentiels.stock_item_new') }}" class="btn btn-promo btn-promo-primary">
+      <i class="fas fa-plus me-2"></i>Créer un Article
+    </a>
+  </div>
+  {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if team %}Modifier{% else %}Nouvelle{% endif %} Équipe - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-{% if team %}edit{% else %}plus{% endif %} me-2"></i>
+      {% if team %}Modifier l'Équipe{% else %}Nouvelle Équipe{% endif %}
+    </h1>
+    <a href="{{ url_for('promotion.teams_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label">Nom de l'Équipe <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" value="{{ team.name if team else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="3">{{ team.description if team else '' }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="region" class="form-label">Région d'Activité</label>
+          <input type="text" class="form-control" id="region" name="region" 
+                 value="{{ team.region if team else '' }}" 
+                 placeholder="Ex: Conakry, Kindia, Mamou, etc.">
+          <small class="form-text text-muted">Région géographique où l'équipe opère</small>
+        </div>
+
+        <div class="mb-3">
+          <label for="team_leader_id" class="form-label">Responsable de l'Équipe <span class="text-danger">*</span></label>
+          <select class="form-select" id="team_leader_id" name="team_leader_id" required>
+            <option value="">Sélectionner un responsable...</option>
+            {% for leader in leaders %}
+            <option value="{{ leader.id }}" {% if team and team.team_leader_id == leader.id %}selected{% endif %}>
+              {{ leader.full_name or leader.username }} ({{ leader.email }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                   {% if not team or team.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">
+              Équipe active
+            </label>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          <a href="{{ url_for('promotion.teams_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

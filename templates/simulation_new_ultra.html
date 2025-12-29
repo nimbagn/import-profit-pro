@@ -1,0 +1,1857 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Nouvelle Simulation - Import Profit Pro{% endblock %}
+
+{% block breadcrumb %}Nouvelle Simulation{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .simulation-new-ultra-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+
+  .hero-section-ultra {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    padding: var(--space-3xl) var(--space-xl);
+    margin: 0 0 var(--space-2xl) 0;
+    width: 100%;
+    color: var(--text-white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-section-ultra::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .hero-content-ultra {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-title-ultra {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: var(--space-4);
+    line-height: 1.1;
+  }
+
+  .hero-subtitle-ultra {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    margin-bottom: var(--space-6);
+    max-width: 600px;
+    line-height: 1.4;
+  }
+
+  .templates-section-ultra {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .section-header-ultra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title-ultra {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .section-title-ultra i {
+    color: var(--color-primary);
+  }
+
+  .templates-grid-ultra {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-5);
+  }
+
+  .template-card-ultra {
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    text-align: center;
+    transition: var(--transition-normal);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .template-card-ultra::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+
+  .template-card-ultra:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+
+  .template-card-ultra:hover::before {
+    transform: scaleX(1);
+  }
+
+  .template-card-ultra.selected {
+    border-color: var(--color-primary);
+    background: rgba(0, 56, 101, 0.05);
+  }
+
+  .template-card-ultra.selected::before {
+    transform: scaleX(1);
+  }
+
+  .template-icon-ultra {
+    font-size: 3rem;
+    margin-bottom: var(--space-md);
+    color: var(--color-primary);
+  }
+
+  .template-title-ultra {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .template-desc-ultra {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: var(--space-4);
+  }
+
+  .template-features-ultra {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .template-features-ultra li {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .template-features-ultra li::before {
+    content: '✓';
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  .form-section-ultra {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .form-grid-ultra {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .form-group-ultra {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .form-label-ultra {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .form-label-ultra i {
+    color: var(--color-primary);
+    font-size: 0.9rem;
+  }
+
+  .form-input-ultra {
+    padding: var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+  }
+
+  .form-input-ultra:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+
+  .form-textarea-ultra {
+    padding: var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    min-height: 120px;
+    resize: vertical;
+    transition: var(--transition-fast);
+    font-family: inherit;
+  }
+
+  .form-textarea-ultra:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+
+  .form-select-ultra {
+    padding: var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+    cursor: pointer;
+  }
+
+  .form-select-ultra:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1);
+  }
+
+  .help-text-ultra {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+    line-height: 1.4;
+  }
+
+  .validation-message-ultra {
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-6);
+    font-weight: 500;
+    display: none;
+  }
+
+  .validation-message-ultra.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
+  }
+
+  .validation-message-ultra.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+  }
+
+  .form-actions-ultra {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--gray-200);
+    margin-top: var(--space-lg);
+  }
+
+  .btn-form-ultra {
+    padding: var(--space-md) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 180px;
+    justify-content: center;
+  }
+
+  .btn-form-ultra.primary {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+
+  .btn-form-ultra.secondary {
+    background: var(--white);
+    color: var(--text-primary);
+    border: 1px solid var(--gray-300);
+  }
+
+  .btn-form-ultra:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-form-ultra.primary:hover {
+    background: var(--color-primary-hover);
+  }
+
+  .progress-section-ultra {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .progress-header-ultra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+  }
+
+  .progress-title-ultra {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .progress-percentage-ultra {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .progress-bar-ultra {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-bottom: var(--space-4);
+  }
+
+  .progress-fill-ultra {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+  }
+
+  .progress-steps-ultra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .progress-step-ultra {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1;
+  }
+
+  .step-icon-ultra {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .step-icon-ultra.completed {
+    background: var(--color-success);
+    color: var(--white);
+  }
+
+  .step-icon-ultra.current {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+
+  .step-icon-ultra.pending {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+
+  .step-label-ultra {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .floating-actions-ultra {
+    position: fixed;
+    bottom: var(--space-6);
+    right: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    z-index: 1000;
+  }
+
+  .btn-floating-ultra {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-primary);
+    color: var(--white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-floating-ultra:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .btn-floating-ultra.secondary {
+    background: var(--white);
+    color: var(--text-primary);
+    border: 1px solid var(--gray-300);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-floating-ultra.secondary:hover {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .hero-section-ultra,
+    .templates-section-ultra,
+    .form-section-ultra,
+    .progress-section-ultra {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .form-grid-ultra {
+      grid-template-columns: 1fr;
+    }
+    
+    .templates-grid-ultra {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-section-ultra {
+      padding: var(--space-xl) var(--space-md);
+    }
+    
+    .hero-title-ultra {
+      font-size: 2rem;
+    }
+    
+    .templates-grid-ultra {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-actions-ultra {
+      flex-direction: column;
+    }
+    
+    .floating-actions-ultra {
+      bottom: var(--space-md);
+      right: var(--space-md);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="simulation-new-ultra-container">
+  <!-- Hero Section -->
+  <div class="hero-section-ultra">
+    <div class="hero-content-ultra">
+      <h1 class="hero-title-ultra">
+        🚀 Nouvelle Simulation
+      </h1>
+      <p class="hero-subtitle-ultra">
+        Créez une simulation de rentabilité personnalisée pour analyser vos importations et optimiser vos marges.
+      </p>
+    </div>
+  </div>
+
+  <!-- Progress Section -->
+  <div class="progress-section-ultra">
+    <div class="progress-header-ultra">
+      <div class="progress-title-ultra">Progression de la Création</div>
+      <div class="progress-percentage-ultra" id="progressPercentage">0%</div>
+    </div>
+    <div class="progress-bar-ultra">
+      <div class="progress-fill-ultra" id="progressFill" style="width: 0%"></div>
+    </div>
+    <div class="progress-steps-ultra">
+      <div class="progress-step-ultra">
+        <div class="step-icon-ultra current" id="step1">1</div>
+        <div class="step-label-ultra">Template</div>
+      </div>
+      <div class="progress-step-ultra">
+        <div class="step-icon-ultra pending" id="step2">2</div>
+        <div class="step-label-ultra">Configuration</div>
+      </div>
+      <div class="progress-step-ultra">
+        <div class="step-icon-ultra pending" id="step3">3</div>
+        <div class="step-label-ultra">Validation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates Section -->
+  <div class="templates-section-ultra">
+    <div class="section-header-ultra">
+      <div class="section-title-ultra">
+        <i class="fas fa-magic"></i>
+        Choisissez un Template
+      </div>
+    </div>
+    <div class="templates-grid-ultra">
+      <div class="template-card-ultra" onclick="selectTemplate('standard')" data-template="standard">
+        <div class="template-icon-ultra">📦</div>
+        <div class="template-title-ultra">Import Standard</div>
+        <div class="template-desc-ultra">
+          Template optimisé pour les importations classiques avec transport maritime et taux standards.
+        </div>
+        <ul class="template-features-ultra">
+          <li>Transport maritime</li>
+          <li>Taux USD/EUR standards</li>
+          <li>Calculs de douane</li>
+          <li>Marge cible 20%</li>
+        </ul>
+      </div>
+
+      <div class="template-card-ultra" onclick="selectTemplate('premium')" data-template="premium">
+        <div class="template-icon-ultra">💎</div>
+        <div class="template-title-ultra">Import Premium</div>
+        <div class="template-desc-ultra">
+          Template pour produits haut de gamme avec transport aérien et marges élevées.
+        </div>
+        <ul class="template-features-ultra">
+          <li>Transport aérien</li>
+          <li>Taux optimisés</li>
+          <li>Assurance incluse</li>
+          <li>Marge cible 35%</li>
+        </ul>
+      </div>
+
+      <div class="template-card-ultra" onclick="selectTemplate('bulk')" data-template="bulk">
+        <div class="template-icon-ultra">🚛</div>
+        <div class="template-title-ultra">Import en Vrac</div>
+        <div class="template-desc-ultra">
+          Template pour gros volumes avec transport maritime et économies d'échelle.
+        </div>
+        <ul class="template-features-ultra">
+          <li>Transport maritime</li>
+          <li>Capacité camion 40T</li>
+          <li>Coûts réduits</li>
+          <li>Marge cible 15%</li>
+        </ul>
+      </div>
+
+      <div class="template-card-ultra" onclick="selectTemplate('custom')" data-template="custom">
+        <div class="template-icon-ultra">⚙️</div>
+        <div class="template-title-ultra">Personnalisé</div>
+        <div class="template-desc-ultra">
+          Créez votre propre configuration avec tous les paramètres personnalisables.
+        </div>
+        <ul class="template-features-ultra">
+          <li>Configuration libre</li>
+          <li>Tous les transports</li>
+          <li>Paramètres flexibles</li>
+          <li>Marge personnalisée</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-section-ultra">
+    <div class="section-header-ultra">
+      <div class="section-title-ultra">
+        <i class="fas fa-clipboard-list"></i>
+        Configuration de la Simulation
+      </div>
+    </div>
+
+    <form id="simulationForm" method="POST" class="form-grid-ultra">
+      {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {% endif %}
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-tag"></i>
+          Nom de la simulation *
+        </label>
+        <input type="text" name="name" class="form-input-ultra" 
+               placeholder="Ex: Simulation Import 2024" required>
+        <div class="help-text-ultra">Donnez un nom descriptif à votre simulation</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-comment"></i>
+          Description
+        </label>
+        <textarea name="description" class="form-textarea-ultra" 
+                  placeholder="Description optionnelle de la simulation..."></textarea>
+        <div class="help-text-ultra">Décrivez les objectifs et particularités de cette simulation</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-dollar-sign"></i>
+          Taux USD (GNF) *
+        </label>
+        <input type="number" name="rate_usd" id="rate_usd" class="form-input-ultra" 
+               step="0.01" value="8500" required onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals(); else console.error('calculateTotals non disponible');">
+        <div class="help-text-ultra">Taux de change USD vers GNF</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-euro-sign"></i>
+          Taux EUR (GNF) *
+        </label>
+        <input type="number" name="rate_eur" id="rate_eur" class="form-input-ultra" 
+               step="0.01" value="9200" required onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+        <div class="help-text-ultra">Taux de change EUR vers GNF</div>
+      </div>
+      
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-coins"></i>
+          Taux XOF (GNF)
+        </label>
+        <input type="number" name="rate_xof" id="rate_xof" class="form-input-ultra" 
+               step="0.01" value="0" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+        <div class="help-text-ultra">Taux de change XOF vers GNF</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-truck"></i>
+          Capacité camion (tonnes) *
+        </label>
+        <input type="number" name="truck_capacity_tons" id="truck_capacity_tons" class="form-input-ultra" 
+               step="0.1" value="25" required onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+        <div class="help-text-ultra">Capacité maximale du véhicule de transport</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-percentage"></i>
+          Marge cible (%)
+        </label>
+        <input type="number" name="target_margin_pct" id="target_margin_pct" class="form-input-ultra" 
+               step="0.1" value="20" min="0" max="100" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+        <div class="help-text-ultra">Marge de profit cible en pourcentage</div>
+      </div>
+      
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-balance-scale"></i>
+          Base de calcul
+        </label>
+        <select name="basis" id="basis" class="form-select-ultra" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+          <option value="value">Valeur</option>
+          <option value="weight">Poids</option>
+        </select>
+        <div class="help-text-ultra">Base pour la répartition des coûts (valeur ou poids)</div>
+      </div>
+      
+      <!-- Coûts d'importation -->
+      <div style="grid-column: 1 / -1; margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 2px solid var(--gray-200);">
+        <h3 style="color: var(--color-primary); margin-bottom: var(--space-lg);">
+          <i class="fas fa-calculator me-2"></i>
+          Coûts d'Importation (GNF)
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md);">
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-file-invoice-dollar"></i>
+              Douane (GNF)
+            </label>
+            <input type="number" name="customs_gnf" id="customs_gnf" class="form-input-ultra" 
+                   step="0.01" value="0" min="0" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+            <div class="help-text-ultra">Coûts de douane</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-boxes"></i>
+              Manutention (GNF)
+            </label>
+            <input type="number" name="handling_gnf" id="handling_gnf" class="form-input-ultra" 
+                   step="0.01" value="0" min="0" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+            <div class="help-text-ultra">Coûts de manutention</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-truck-loading"></i>
+              Transport fixe (GNF)
+            </label>
+            <input type="number" name="transport_fixed_gnf" id="transport_fixed_gnf" class="form-input-ultra" 
+                   step="0.01" value="0" min="0" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+            <div class="help-text-ultra">Coût fixe de transport</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-weight"></i>
+              Transport par kg (GNF)
+            </label>
+            <input type="number" name="transport_per_kg_gnf" id="transport_per_kg_gnf" class="form-input-ultra" 
+                   step="0.0001" value="0" min="0" onchange="calculateTotals()">
+            <div class="help-text-ultra">Coût de transport par kilogramme</div>
+          </div>
+          
+          <div class="form-group-ultra">
+            <label class="form-label-ultra">
+              <i class="fas fa-ellipsis-h"></i>
+              Autres coûts (GNF)
+            </label>
+            <input type="number" name="others_gnf" id="others_gnf" class="form-input-ultra" 
+                   step="0.01" value="0" min="0" onchange="if(typeof window.calculateTotals === 'function') window.calculateTotals();">
+            <div class="help-text-ultra">Autres coûts divers</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Section Articles -->
+      <div style="grid-column: 1 / -1; margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 2px solid var(--gray-200);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+          <h3 style="color: var(--color-primary); margin: 0;">
+            <i class="fas fa-box me-2"></i>
+            Articles de l'Importation
+          </h3>
+          <button type="button" class="btn-hl btn-hl-primary" onclick="if(typeof window.showArticleSelector === 'function') window.showArticleSelector(); else console.error('showArticleSelector non disponible');">
+            <i class="fas fa-plus me-2"></i>
+            Ajouter un Article
+          </button>
+        </div>
+        
+        <!-- Tableau des articles sélectionnés -->
+        <div style="overflow-x: auto; margin-bottom: var(--space-lg);">
+          <table id="articlesTable" style="width: 100%; border-collapse: collapse; background: var(--white); border-radius: var(--radius-lg); overflow: hidden; display: none;">
+            <thead>
+              <tr style="background: var(--bg-tertiary);">
+                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem;">Article</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Prix Achat</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Quantité</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Poids (kg)</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Valeur Totale</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Coût Logistique</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Prix de Revient</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Prix de Vente</th>
+                <th style="padding: var(--space-md); text-align: right; font-weight: 600; font-size: 0.875rem;">Marge</th>
+                <th style="padding: var(--space-md); text-align: center; font-weight: 600; font-size: 0.875rem;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="articlesTableBody">
+              <tr id="noArticlesRow">
+                <td colspan="10" style="padding: var(--space-2xl); text-align: center; color: var(--text-muted);">
+                  <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: var(--space-md); display: block;"></i>
+                  Aucun article ajouté. Cliquez sur "Ajouter un Article" pour commencer.
+                </td>
+              </tr>
+            </tbody>
+            <tfoot id="articlesTableFooter" style="display: none; background: var(--bg-tertiary); font-weight: 700;">
+              <tr>
+                <td style="padding: var(--space-md);">TOTAL</td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalPurchase"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalQuantity"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalWeight"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalValue"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalLogistics"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalCost"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalRevenue"></td>
+                <td style="padding: var(--space-md); text-align: right;" id="totalMargin"></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-calendar"></i>
+          Date d'import prévue
+        </label>
+        <input type="date" name="import_date" class="form-input-ultra">
+        <div class="help-text-ultra">Date prévue pour l'importation</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-map-marker-alt"></i>
+          Port d'origine
+        </label>
+        <select name="origin_port" class="form-select-ultra">
+          <option value="">Sélectionner un port</option>
+          <option value="dubai">🇦🇪 Dubai (UAE)</option>
+          <option value="shanghai">🇨🇳 Shanghai (Chine)</option>
+          <option value="singapore">🇸🇬 Singapore</option>
+          <option value="rotterdam">🇳🇱 Rotterdam (Pays-Bas)</option>
+          <option value="hamburg">🇩🇪 Hamburg (Allemagne)</option>
+          <option value="antwerp">🇧🇪 Anvers (Belgique)</option>
+        </select>
+        <div class="help-text-ultra">Port de départ de l'importation</div>
+      </div>
+
+      <div class="form-group-ultra">
+        <label class="form-label-ultra">
+          <i class="fas fa-ship"></i>
+          Type de transport
+        </label>
+        <select name="transport_type" class="form-select-ultra">
+          <option value="sea">🌊 Transport maritime</option>
+          <option value="air">✈️ Transport aérien</option>
+          <option value="road">🚛 Transport routier</option>
+          <option value="rail">🚂 Transport ferroviaire</option>
+        </select>
+        <div class="help-text-ultra">Mode de transport principal</div>
+      </div>
+
+      <div class="validation-message-ultra" id="validationMessage"></div>
+
+      <div class="form-actions-ultra">
+        <button type="submit" class="btn-form-ultra primary">
+          <i class="fas fa-save"></i>
+          Créer la Simulation
+        </button>
+        <button type="reset" class="btn-form-ultra secondary">
+          <i class="fas fa-undo"></i>
+          Réinitialiser
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Actions Flottantes -->
+<div class="floating-actions-ultra">
+  <button class="btn-floating-ultra" onclick="scrollToTop()" title="Retour en haut">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+  <button class="btn-floating-ultra secondary" onclick="saveDraft()" title="Sauvegarder brouillon">
+    <i class="fas fa-save"></i>
+  </button>
+  <a href="/simulations" class="btn-floating-ultra secondary" title="Retour aux simulations">
+    <i class="fas fa-arrow-left"></i>
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Test immédiat pour vérifier que le script est chargé
+  console.log('=== SCRIPT SIMULATION_NEW_ULTRA.HTML CHARGÉ ===');
+  
+  // Définir les fonctions immédiatement pour qu'elles soient accessibles
+  window.calculateTotals = function() {
+    console.log('calculateTotals appelé');
+    if (typeof calculateTotalsInternal === 'function') {
+      return calculateTotalsInternal();
+    }
+    console.error('calculateTotalsInternal n\'est pas défini');
+  };
+  
+  window.showArticleSelector = function() {
+    console.log('showArticleSelector appelé');
+    if (typeof showArticleSelectorInternal === 'function') {
+      return showArticleSelectorInternal();
+    }
+    console.error('showArticleSelectorInternal n\'est pas défini');
+  };
+  
+  // Variables globales
+  var selectedTemplate = null;
+  var currentStep = 1;
+  var selectedArticles = [];
+  var articlesData = {};
+  
+  // Initialiser articlesData depuis les données du serveur
+  console.log('🔍 Vérification des articles depuis le serveur...');
+  console.log('📦 Articles reçus du serveur:', {{ articles|length if articles else 0 }});
+  
+  // Initialiser articlesData
+  articlesData = {};
+  
+  {% if articles and articles|length > 0 %}
+  // Construire l'objet articlesData de manière sécurisée
+  {% for article in articles %}
+  articlesData[{{ article.id }}] = {
+    id: {{ article.id }},
+    name: {{ article.name|tojson }},
+    category: {{ (article.category.name if article.category else 'Sans catégorie')|tojson }},
+    purchase_price: {{ article.purchase_price or 0 }},
+    purchase_currency: {{ (article.purchase_currency or 'USD')|tojson }},
+    unit_weight_kg: {{ article.unit_weight_kg or 0 }}
+  };
+  {% endfor %}
+  console.log('✅ Articles chargés depuis le serveur:', Object.keys(articlesData).length);
+  console.log('📋 Liste des articles:', Object.keys(articlesData).map(id => articlesData[id].name));
+  console.log('📦 Détails des articles:', articlesData);
+  {% else %}
+  console.warn('⚠️ Aucun article disponible dans la base de données');
+  console.warn('📊 Articles reçus: {{ articles|length if articles else 0 }}');
+  {% endif %}
+  
+  console.log('📊 Total articles chargés:', Object.keys(articlesData).length);
+
+  // Gestion des templates
+  function selectTemplate(templateType) {
+    // Désélectionner tous les templates
+    document.querySelectorAll('.template-card-ultra').forEach(card => {
+      card.classList.remove('selected');
+    });
+    
+    // Sélectionner le template choisi
+    const selectedCard = document.querySelector(`[data-template="${templateType}"]`);
+    selectedCard.classList.add('selected');
+    selectedTemplate = templateType;
+    
+    // Charger les paramètres du template
+    loadTemplate(templateType);
+    
+    // Mettre à jour la progression
+    updateProgress(1);
+  }
+
+  function loadTemplate(templateType) {
+    const templates = {
+      standard: {
+        rate_usd: 8500,
+        rate_eur: 9200,
+        truck_capacity: 25,
+        target_margin: 20,
+        transport_type: 'sea',
+        origin_port: 'dubai'
+      },
+      premium: {
+        rate_usd: 8500,
+        rate_eur: 9200,
+        truck_capacity: 15,
+        target_margin: 35,
+        transport_type: 'air',
+        origin_port: 'dubai'
+      },
+      bulk: {
+        rate_usd: 8500,
+        rate_eur: 9200,
+        truck_capacity: 40,
+        target_margin: 15,
+        transport_type: 'sea',
+        origin_port: 'shanghai'
+      },
+      custom: {
+        rate_usd: 8500,
+        rate_eur: 9200,
+        truck_capacity: 25,
+        target_margin: 20,
+        transport_type: 'sea',
+        origin_port: ''
+      }
+    };
+
+    const template = templates[templateType];
+    if (template) {
+      Object.keys(template).forEach(key => {
+        const input = document.querySelector(`[name="${key}"]`);
+        if (input) {
+          input.value = template[key];
+        }
+      });
+    }
+  }
+
+  // Gestion de la progression
+  function updateProgress(step) {
+    currentStep = step;
+    const percentage = (step / 3) * 100;
+    
+    document.getElementById('progressFill').style.width = `${percentage}%`;
+    document.getElementById('progressPercentage').textContent = `${Math.round(percentage)}%`;
+    
+    // Mettre à jour les étapes
+    for (let i = 1; i <= 3; i++) {
+      const stepIcon = document.getElementById(`step${i}`);
+      if (i < step) {
+        stepIcon.className = 'step-icon-ultra completed';
+      } else if (i === step) {
+        stepIcon.className = 'step-icon-ultra current';
+      } else {
+        stepIcon.className = 'step-icon-ultra pending';
+      }
+    }
+  }
+
+  // Validation du formulaire
+  function validateForm() {
+    const name = document.querySelector('[name="name"]').value.trim();
+    const rateUsd = parseFloat(document.querySelector('[name="rate_usd"]').value);
+    const rateEur = parseFloat(document.querySelector('[name="rate_eur"]').value);
+    const truckCapacity = parseFloat(document.querySelector('[name="truck_capacity_tons"]').value);
+    
+    const errors = [];
+    
+    if (!name) {
+      errors.push('Le nom de la simulation est requis');
+    }
+    
+    if (!rateUsd || rateUsd <= 0) {
+      errors.push('Le taux USD doit être un nombre positif');
+    }
+    
+    if (!rateEur || rateEur <= 0) {
+      errors.push('Le taux EUR doit être un nombre positif');
+    }
+    
+    if (!truckCapacity || truckCapacity <= 0) {
+      errors.push('La capacité du camion doit être un nombre positif');
+    }
+    
+    return errors;
+  }
+
+  // Gestion de la soumission du formulaire
+  const simulationForm = document.getElementById('simulationForm');
+  if (simulationForm) {
+    simulationForm.addEventListener('submit', function(e) {
+      console.log('📤 Soumission du formulaire de simulation');
+      console.log('📦 Articles sélectionnés:', selectedArticles.length);
+      
+      // Valider le formulaire
+    const errors = validateForm();
+    
+    if (errors.length > 0) {
+        e.preventDefault();
+        console.error('❌ Erreurs de validation:', errors);
+      showValidationMessage(errors.join('<br>'), 'error');
+        return false;
+      }
+      
+      // Vérifier qu'il y a au moins un article
+      if (selectedArticles.length === 0) {
+        e.preventDefault();
+        console.error('❌ Aucun article sélectionné');
+        showValidationMessage('Veuillez ajouter au moins un article à la simulation.', 'error');
+        return false;
+      }
+      
+      // Vérifier que les quantités sont valides
+      let hasInvalidQuantity = false;
+      selectedArticles.forEach((article, index) => {
+        if (!article.quantity || article.quantity <= 0) {
+          hasInvalidQuantity = true;
+          console.error(`❌ Quantité invalide pour l'article ${article.name}:`, article.quantity);
+        }
+      });
+      
+      if (hasInvalidQuantity) {
+        e.preventDefault();
+        showValidationMessage('Veuillez vérifier que toutes les quantités sont supérieures à 0.', 'error');
+        return false;
+      }
+      
+      // Supprimer les anciens champs cachés s'ils existent
+      const existingHiddenInputs = this.querySelectorAll('input[type="hidden"][name^="article_"], input[type="hidden"][name^="quantities"], input[type="hidden"][name^="selling_prices"]');
+      existingHiddenInputs.forEach(input => input.remove());
+      
+      // Ajouter les articles sélectionnés au formulaire
+      selectedArticles.forEach((article, index) => {
+        console.log(`📝 Ajout de l'article ${index + 1}:`, article.name, 'Quantité:', article.quantity, 'Prix:', article.selling_price_gnf);
+        
+        // Créer des champs cachés pour chaque article
+        const articleIdInput = document.createElement('input');
+        articleIdInput.type = 'hidden';
+        articleIdInput.name = 'article_ids[]';
+        articleIdInput.value = article.id;
+        this.appendChild(articleIdInput);
+        
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'hidden';
+        quantityInput.name = 'quantities[]';
+        quantityInput.value = article.quantity || 1;
+        this.appendChild(quantityInput);
+        
+        const sellingPriceInput = document.createElement('input');
+        sellingPriceInput.type = 'hidden';
+        sellingPriceInput.name = 'selling_prices[]';
+        // Utiliser le prix de vente calculé si disponible, sinon calculer à partir du prix de revient
+        const rateUsd = parseFloat(document.getElementById('rate_usd')?.value || 8500);
+        const rateEur = parseFloat(document.getElementById('rate_eur')?.value || 9200);
+        const rateXof = parseFloat(document.getElementById('rate_xof')?.value || 0);
+        let rate = rateUsd;
+        if (article.purchase_currency === 'EUR') rate = rateEur;
+        else if (article.purchase_currency === 'XOF') rate = rateXof || rateUsd;
+        const purchasePriceGnf = (article.purchase_price || 0) * rate;
+        const marginPct = parseFloat(document.getElementById('target_margin_pct')?.value || 20);
+        const defaultSellingPrice = purchasePriceGnf * (1 + marginPct / 100);
+        sellingPriceInput.value = article.selling_price_gnf || defaultSellingPrice;
+        this.appendChild(sellingPriceInput);
+      });
+      
+      // Désactiver le bouton de soumission pour éviter les doubles soumissions
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+      }
+      
+      console.log('✅ Formulaire prêt à être soumis');
+      // Laisser le formulaire se soumettre normalement
+      // Le serveur va traiter la requête POST
+    });
+  } else {
+    console.error('❌ Formulaire simulationForm non trouvé');
+  }
+
+  function showValidationMessage(message, type) {
+    const messageEl = document.getElementById('validationMessage');
+    messageEl.innerHTML = message;
+    messageEl.className = `validation-message-ultra ${type}`;
+    messageEl.style.display = 'block';
+    
+    if (type === 'success') {
+      setTimeout(() => {
+        messageEl.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  function saveDraft() {
+    showValidationMessage('Brouillon sauvegardé!', 'success');
+  }
+
+  // Animation d'entrée
+  document.addEventListener('DOMContentLoaded', function() {
+    // Animation des templates
+    const templateCards = document.querySelectorAll('.template-card-ultra');
+    templateCards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(30px)';
+      
+      setTimeout(() => {
+        card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 150);
+    });
+
+    // Animation du formulaire
+    const formGroups = document.querySelectorAll('.form-group-ultra');
+    formGroups.forEach((group, index) => {
+      group.style.opacity = '0';
+      group.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        group.style.transition = 'all 0.5s ease';
+        group.style.opacity = '1';
+        group.style.transform = 'translateY(0)';
+      }, 300 + (index * 100));
+    });
+  });
+
+  // Gestion du scroll pour les actions flottantes
+  window.addEventListener('scroll', function() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const floatingActions = document.querySelector('.floating-actions-ultra');
+    
+    if (scrollTop > 300) {
+      floatingActions.style.opacity = '1';
+      floatingActions.style.transform = 'translateY(0)';
+    } else {
+      floatingActions.style.opacity = '0.7';
+      floatingActions.style.transform = 'translateY(10px)';
+    }
+  });
+
+  // Initialisation des actions flottantes
+  document.addEventListener('DOMContentLoaded', function() {
+    const floatingActions = document.querySelector('.floating-actions-ultra');
+    floatingActions.style.transition = 'all 0.3s ease';
+    floatingActions.style.opacity = '0.7';
+    floatingActions.style.transform = 'translateY(10px)';
+  });
+
+  // =========================================================
+  // GESTION DES ARTICLES ET CALCULS DE PRIX DE REVIENT
+  // =========================================================
+
+  function showArticleSelectorInternal() {
+    console.log('showArticleSelector appelé');
+    console.log('Articles disponibles:', Object.keys(articlesData).length);
+    
+    // Vérifier s'il y a des articles
+    if (Object.keys(articlesData).length === 0) {
+      const message = 'Aucun article disponible dans la base de données.\n\n' +
+                      'Veuillez d\'abord créer des articles dans la section "Articles" ou "Référentiels > Articles de stock".\n\n' +
+                      'Les articles doivent être actifs pour apparaître dans les simulations.';
+      alert(message);
+      // Optionnel : rediriger vers la page des articles
+      // window.location.href = '/articles/new';
+      return;
+    }
+    
+    // Supprimer le modal existant s'il y en a un
+    const existingModal = document.querySelector('div[style*="position: fixed"][style*="z-index: 10000"]');
+    if (existingModal) existingModal.remove();
+    
+    // Créer un modal simple pour sélectionner un article
+    const modal = document.createElement('div');
+    modal.id = 'articleSelectorModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    // Créer la liste des articles HTML avec plus d'informations
+    let articlesListHtml = '';
+    for (const articleId in articlesData) {
+      const article = articlesData[articleId];
+      const purchasePrice = article.purchase_price || 0;
+      const purchaseCurrency = article.purchase_currency || 'USD';
+      const unitWeight = article.unit_weight_kg || 0;
+      const category = article.category || 'Sans catégorie';
+      
+      articlesListHtml += `
+        <div class="article-option" data-article-id="${articleId}" 
+             onclick="selectArticle(${articleId})" 
+             style="padding: 1rem; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s; background: var(--white);"
+             onmouseover="this.style.borderColor='var(--color-primary)'; this.style.background='rgba(0,56,101,0.05)'"
+             onmouseout="this.style.borderColor='var(--gray-200)'; this.style.background='var(--white)'">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1rem;">
+                ${article.name}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                <i class="fas fa-tag me-1"></i>${category}
+              </div>
+            </div>
+            <div style="text-align: right; margin-left: 1rem;">
+              <div style="font-weight: 600; color: var(--color-primary); font-size: 1rem;">
+                ${purchasePrice.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${purchaseCurrency}
+              </div>
+              ${unitWeight > 0 ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                <i class="fas fa-weight me-1"></i>${unitWeight} kg
+              </div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Construire la liste des catégories uniques
+    const categoriesSet = new Set();
+    for (const articleId in articlesData) {
+      const cat = articlesData[articleId].category || 'Sans catégorie';
+      categoriesSet.add(cat);
+    }
+    const categoriesList = Array.from(categoriesSet).sort();
+    
+    // Construire la liste des devises uniques
+    const currenciesSet = new Set();
+    for (const articleId in articlesData) {
+      const curr = articlesData[articleId].purchase_currency || 'USD';
+      currenciesSet.add(curr);
+    }
+    const currenciesList = Array.from(currenciesSet).sort();
+    
+    modal.innerHTML = `
+      <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="margin: 0; color: var(--color-primary); font-size: 1.5rem;">
+            <i class="fas fa-box-open me-2"></i>Sélectionner un Article
+          </h3>
+          <button onclick="document.getElementById('articleSelectorModal').remove()" 
+                  style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem 0.5rem;"
+                  title="Fermer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <!-- Filtres -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+              <i class="fas fa-search me-1"></i>Recherche
+            </label>
+            <input type="text" id="articleSearch" placeholder="Nom, référence..." 
+                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem;"
+                   onkeyup="filterArticles()">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+              <i class="fas fa-tags me-1"></i>Catégorie
+            </label>
+            <select id="categoryFilter" onchange="filterArticles()"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
+              <option value="">Toutes les catégories</option>
+              ${categoriesList.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
+              <i class="fas fa-coins me-1"></i>Devise d'achat
+            </label>
+            <select id="currencyFilter" onchange="filterArticles()"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
+              <option value="">Toutes les devises</option>
+              ${currenciesList.map(curr => `<option value="${curr}">${curr}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <button onclick="resetFilters()" 
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--text-primary); cursor: pointer; font-weight: 500; font-size: 0.95rem;"
+                    title="Réinitialiser les filtres">
+              <i class="fas fa-redo me-1"></i>Réinitialiser
+            </button>
+          </div>
+        </div>
+        
+        <!-- Compteur de résultats -->
+        <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.9rem; color: var(--text-secondary);">
+          <i class="fas fa-info-circle me-1"></i>
+          <span id="articlesCount">${Object.keys(articlesData).length}</span> article(s) disponible(s)
+        </div>
+        
+        <div id="articlesList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 8px; padding: 0.5rem;">
+          ${articlesListHtml || '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Aucun article disponible</p>'}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Fermer le modal en cliquant à l'extérieur
+    modal.onclick = function(e) {
+      if (e.target === modal) modal.remove();
+    };
+    
+    // Empêcher la propagation du clic sur le contenu du modal
+    const modalContent = modal.querySelector('div[style*="background: white"]');
+    if (modalContent) {
+      modalContent.onclick = function(e) {
+        e.stopPropagation();
+      };
+    }
+  }
+
+  window.filterArticles = function() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (!modal) return;
+    
+    const searchInput = modal.querySelector('#articleSearch');
+    const categoryFilter = modal.querySelector('#categoryFilter');
+    const currencyFilter = modal.querySelector('#currencyFilter');
+    const articlesCount = modal.querySelector('#articlesCount');
+    
+    const searchTerm = (searchInput ? searchInput.value : '').toLowerCase();
+    const categoryValue = categoryFilter ? categoryFilter.value : '';
+    const currencyValue = currencyFilter ? currencyFilter.value : '';
+    
+    const options = modal.querySelectorAll('.article-option');
+    let visibleCount = 0;
+    
+    options.forEach(opt => {
+      const articleId = opt.dataset.articleId;
+      const article = articlesData[articleId];
+      
+      if (!article) {
+        opt.style.display = 'none';
+        return;
+      }
+      
+      // Filtrer par recherche (nom)
+      const matchesSearch = !searchTerm || 
+        article.name.toLowerCase().includes(searchTerm);
+      
+      // Filtrer par catégorie
+      const matchesCategory = !categoryValue || 
+        (article.category || 'Sans catégorie') === categoryValue;
+      
+      // Filtrer par devise
+      const matchesCurrency = !currencyValue || 
+        (article.purchase_currency || 'USD') === currencyValue;
+      
+      const shouldShow = matchesSearch && matchesCategory && matchesCurrency;
+      opt.style.display = shouldShow ? 'block' : 'none';
+      
+      if (shouldShow) visibleCount++;
+    });
+    
+    // Mettre à jour le compteur
+    if (articlesCount) {
+      articlesCount.textContent = visibleCount;
+    }
+    
+    // Afficher un message si aucun résultat
+    const articlesList = modal.querySelector('#articlesList');
+    if (articlesList && visibleCount === 0) {
+      const noResults = articlesList.querySelector('.no-results-message');
+      if (!noResults) {
+        const msg = document.createElement('p');
+        msg.className = 'no-results-message';
+        msg.style.cssText = 'text-align: center; color: var(--text-muted); padding: 2rem; font-style: italic;';
+        msg.textContent = 'Aucun article ne correspond aux critères de recherche.';
+        articlesList.appendChild(msg);
+      }
+    } else {
+      const noResults = articlesList ? articlesList.querySelector('.no-results-message') : null;
+      if (noResults) noResults.remove();
+    }
+  }
+  
+  window.resetFilters = function() {
+    const modal = document.getElementById('articleSelectorModal');
+    if (!modal) return;
+    
+    const searchInput = modal.querySelector('#articleSearch');
+    const categoryFilter = modal.querySelector('#categoryFilter');
+    const currencyFilter = modal.querySelector('#currencyFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (currencyFilter) currencyFilter.value = '';
+    
+    filterArticles();
+  }
+
+  window.selectArticle = function(articleId) {
+    console.log('selectArticle appelé avec ID:', articleId);
+    
+    // Vérifier si l'article est déjà sélectionné
+    if (selectedArticles.find(a => a.id === articleId)) {
+      alert('Cet article est déjà ajouté');
+      return;
+    }
+    
+    // Récupérer les données de l'article
+    const article = articlesData[articleId];
+    if (!article) {
+      console.error('Article non trouvé:', articleId);
+      alert('Erreur: Article non trouvé');
+      return;
+    }
+    
+    console.log('Article sélectionné:', article);
+    
+    // Ajouter l'article à la liste
+    selectedArticles.push({
+      id: article.id,
+      name: article.name,
+      category: article.category,
+      purchase_price: article.purchase_price,
+      purchase_currency: article.purchase_currency,
+      unit_weight_kg: article.unit_weight_kg,
+      quantity: 1,
+      selling_price_gnf: 0
+    });
+    
+    // Fermer le modal
+    const modal = document.getElementById('articleSelectorModal');
+    if (modal) modal.remove();
+    
+    // Mettre à jour l'affichage
+    renderArticlesTable();
+    if (typeof window.calculateTotals === 'function') {
+      window.calculateTotals();
+    } else if (typeof calculateTotalsInternal === 'function') {
+      calculateTotalsInternal();
+    }
+  }
+
+  window.removeArticle = function(index) {
+    selectedArticles.splice(index, 1);
+    renderArticlesTable();
+    if (typeof window.calculateTotals === 'function') {
+      window.calculateTotals();
+    } else if (typeof calculateTotalsInternal === 'function') {
+      calculateTotalsInternal();
+    }
+  }
+
+  function renderArticlesTable() {
+    console.log('🔄 renderArticlesTable appelé avec', selectedArticles.length, 'articles');
+    const tbody = document.getElementById('articlesTableBody');
+    const footer = document.getElementById('articlesTableFooter');
+    const noArticlesRow = document.getElementById('noArticlesRow');
+    const articlesTable = document.getElementById('articlesTable');
+    
+    // Vérifier que les éléments existent
+    if (!tbody) {
+      console.error('❌ tbody (articlesTableBody) non trouvé');
+      return;
+    }
+    
+    if (!footer) {
+      console.error('❌ footer (articlesTableFooter) non trouvé');
+    }
+    
+    if (selectedArticles.length === 0) {
+      console.log('📭 Aucun article sélectionné, affichage du message vide');
+      if (noArticlesRow) {
+        noArticlesRow.style.display = '';
+        // S'assurer que le tbody contient noArticlesRow
+        if (!tbody.contains(noArticlesRow)) {
+          tbody.innerHTML = '<tr id="noArticlesRow"><td colspan="10" style="padding: var(--space-2xl); text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: var(--space-md); display: block;"></i>Aucun article ajouté. Cliquez sur "Ajouter un Article" pour commencer.</td></tr>';
+        }
+      }
+      if (footer) footer.style.display = 'none';
+      if (articlesTable) {
+        articlesTable.style.display = 'none';
+        articlesTable.style.visibility = 'hidden';
+      }
+      return;
+    }
+    
+    console.log('✅ Affichage de', selectedArticles.length, 'articles dans le tableau');
+    
+    // Cacher le message "aucun article"
+    if (noArticlesRow) {
+      noArticlesRow.style.display = 'none';
+    }
+    
+    // Afficher le tableau et le footer
+    if (articlesTable) {
+      articlesTable.style.display = 'table';
+      articlesTable.style.visibility = 'visible';
+    }
+    if (footer) {
+      footer.style.display = 'table-footer-group';
+    }
+    
+    // Générer le HTML pour tous les articles
+    const articlesHtml = selectedArticles.map((article, index) => {
+      const rateUsd = parseFloat(document.getElementById('rate_usd')?.value || 8500);
+      const rateEur = parseFloat(document.getElementById('rate_eur')?.value || 9200);
+      const rateXof = parseFloat(document.getElementById('rate_xof')?.value || 0);
+      
+      // Utiliser le bon taux selon la devise
+      let rate = rateUsd;
+      if (article.purchase_currency === 'EUR') rate = rateEur;
+      else if (article.purchase_currency === 'XOF') rate = rateXof || rateUsd;
+      
+      const purchasePriceGnf = (article.purchase_price || 0) * rate;
+      const totalWeight = (article.quantity || 0) * (article.unit_weight_kg || 0);
+      const totalValue = (article.quantity || 0) * purchasePriceGnf;
+      
+      // Calcul des coûts logistiques (sera mis à jour par calculateTotals)
+      // Pour l'affichage initial, on utilise seulement le prix d'achat comme approximation
+      const logisticsCost = 0; // Sera calculé par calculateTotals
+      const costPrice = purchasePriceGnf + logisticsCost;
+      const marginPct = parseFloat(document.getElementById('target_margin_pct')?.value || 20);
+      // Prix de vente par défaut basé sur le prix de revient (costPrice) + marge
+      // Note: costPrice = purchasePriceGnf ici car logisticsCost = 0 initialement
+      const sellingPrice = costPrice * (1 + marginPct / 100);
+      const margin = sellingPrice - costPrice;
+      
+      return `
+        <tr>
+          <td style="padding: var(--space-md);">
+            <strong>${article.name}</strong><br>
+            <small style="color: var(--text-muted);">${article.category}</small>
+            <input type="hidden" name="article_ids[]" value="${article.id}">
+          </td>
+          <td style="padding: var(--space-md); text-align: right;">
+            ${purchasePriceGnf.toLocaleString('fr-FR', {maximumFractionDigits: 0})} GNF
+            <br><small style="color: var(--text-muted);">${article.purchase_price} ${article.purchase_currency}</small>
+          </td>
+          <td style="padding: var(--space-md); text-align: right;">
+            <input type="number" name="quantities[]" value="${article.quantity}" 
+                   min="0.01" step="0.01" 
+                   onchange="updateArticleQuantity(${index}, this.value); if(typeof window.calculateTotals === 'function') window.calculateTotals();"
+                   style="width: 100px; text-align: right; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+          </td>
+          <td style="padding: var(--space-md); text-align: right;" class="article-weight-${index}">
+            ${totalWeight.toLocaleString('fr-FR', {maximumFractionDigits: 2})} kg
+          </td>
+          <td style="padding: var(--space-md); text-align: right;" class="article-value-${index}">
+            ${totalValue.toLocaleString('fr-FR', {maximumFractionDigits: 0})} GNF
+          </td>
+          <td style="padding: var(--space-md); text-align: right;" class="article-logistics-${index}">
+            0 GNF
+          </td>
+          <td style="padding: var(--space-md); text-align: right; font-weight: 600; color: var(--color-primary);" class="article-cost-${index}">
+            ${costPrice.toLocaleString('fr-FR', {maximumFractionDigits: 0})} GNF
+          </td>
+          <td style="padding: var(--space-md); text-align: right;">
+            <input type="number" name="selling_prices[]" value="${sellingPrice.toFixed(0)}" 
+                   min="0" step="0.01" 
+                   onchange="updateArticleSellingPrice(${index}, this.value); if(typeof window.calculateTotals === 'function') window.calculateTotals();"
+                   style="width: 120px; text-align: right; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+          </td>
+          <td style="padding: var(--space-md); text-align: right;" class="article-margin-${index}">
+            ${margin.toLocaleString('fr-FR', {maximumFractionDigits: 0})} GNF
+            <br><small style="color: var(--text-muted);">${((margin / costPrice) * 100).toFixed(1)}%</small>
+          </td>
+          <td style="padding: var(--space-md); text-align: center;">
+            <button type="button" onclick="removeArticle(${index})" 
+                    class="btn-hl" style="background: var(--color-danger); color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    // Assigner le HTML au tbody
+    tbody.innerHTML = articlesHtml;
+    console.log('✅ Tableau mis à jour avec', selectedArticles.length, 'articles');
+    
+    // Recalculer les totaux après l'affichage
+    if (typeof window.calculateTotals === 'function') {
+      setTimeout(() => {
+        window.calculateTotals();
+      }, 100);
+    }
+  }
+
+  window.updateArticleQuantity = function(index, quantity) {
+    if (!selectedArticles || index < 0 || index >= selectedArticles.length) {
+      console.warn('Index invalide pour updateArticleQuantity:', index);
+      return;
+    }
+    selectedArticles[index].quantity = parseFloat(quantity) || 0;
+    
+    // Mettre à jour uniquement les valeurs calculées sans régénérer tout le tableau
+    const rateUsd = parseFloat(document.getElementById('rate_usd')?.value || 8500);
+    const rateEur = parseFloat(document.getElementById('rate_eur')?.value || 9200);
+    const rateXof = parseFloat(document.getElementById('rate_xof')?.value || 0);
+    const article = selectedArticles[index];
+    let rate = rateUsd;
+    if (article.purchase_currency === 'EUR') rate = rateEur;
+    if (article.purchase_currency === 'XOF') rate = rateXof;
+    
+    const purchasePriceGnf = (article.purchase_price || 0) * rate;
+    const totalWeight = (article.quantity || 0) * (article.unit_weight_kg || 0);
+    
+    // Mettre à jour les cellules spécifiques
+    const weightCell = document.querySelector(`.article-weight-${index}`);
+    if (weightCell) weightCell.textContent = totalWeight.toLocaleString('fr-FR', {maximumFractionDigits: 2}) + ' kg';
+    
+    // Recalculer les totaux
+    if (typeof window.calculateTotals === 'function') {
+      window.calculateTotals();
+    }
+  }
+
+  window.updateArticleSellingPrice = function(index, price) {
+    if (!selectedArticles || index < 0 || index >= selectedArticles.length) {
+      console.warn('Index invalide pour updateArticleSellingPrice:', index);
+      return;
+    }
+    selectedArticles[index].selling_price_gnf = parseFloat(price) || 0;
+  }
+
+  function calculateTotalsInternal() {
+    if (selectedArticles.length === 0) return;
+    
+    const rateUsd = parseFloat(document.getElementById('rate_usd')?.value || 8500);
+    const rateEur = parseFloat(document.getElementById('rate_eur')?.value || 9200);
+    const rateXof = parseFloat(document.getElementById('rate_xof')?.value || 0);
+    const customsGnf = parseFloat(document.getElementById('customs_gnf')?.value || 0);
+    const handlingGnf = parseFloat(document.getElementById('handling_gnf')?.value || 0);
+    const othersGnf = parseFloat(document.getElementById('others_gnf')?.value || 0);
+    const transportFixedGnf = parseFloat(document.getElementById('transport_fixed_gnf')?.value || 0);
+    const transportPerKgGnf = parseFloat(document.getElementById('transport_per_kg_gnf')?.value || 0);
+    const basis = document.getElementById('basis')?.value || 'value';
+    const marginPct = parseFloat(document.getElementById('target_margin_pct')?.value || 20);
+    
+    // Calculer les totaux
+    let totalPurchaseValue = 0; // Valeur totale d'achat (somme de tous les articles)
+    let totalQuantity = 0;
+    let totalWeight = 0;
+    let totalValue = 0;
+    
+    selectedArticles.forEach(article => {
+      // Utiliser le bon taux selon la devise
+      let rate = rateUsd;
+      if (article.purchase_currency === 'EUR') rate = rateEur;
+      else if (article.purchase_currency === 'XOF') rate = rateXof || rateUsd;
+      
+      const purchasePriceGnf = (article.purchase_price || 0) * rate;
+      const quantity = article.quantity || 0;
+      const weight = quantity * (article.unit_weight_kg || 0);
+      const value = quantity * purchasePriceGnf;
+      
+      totalPurchaseValue += value; // Somme de tous les achats
+      totalQuantity += quantity;
+      totalWeight += weight;
+      totalValue += value;
+    });
+    
+    // Calculer les coûts logistiques totaux
+    const totalFixedCosts = customsGnf + handlingGnf + othersGnf + transportFixedGnf;
+    const totalVariableCosts = totalWeight * transportPerKgGnf;
+    const totalLogisticsCosts = totalFixedCosts + totalVariableCosts;
+    
+    // Répartir les coûts logistiques selon la base
+    selectedArticles.forEach((article, index) => {
+      // Utiliser le bon taux selon la devise
+      let rate = rateUsd;
+      if (article.purchase_currency === 'EUR') rate = rateEur;
+      else if (article.purchase_currency === 'XOF') rate = rateXof || rateUsd;
+      
+      const purchasePriceGnf = (article.purchase_price || 0) * rate;
+      const quantity = article.quantity || 0;
+      const weight = quantity * (article.unit_weight_kg || 0);
+      const value = quantity * purchasePriceGnf;
+      
+      let logisticsCost = 0;
+      if (basis === 'value' && totalValue > 0) {
+        logisticsCost = (value / totalValue) * totalLogisticsCosts;
+      } else if (basis === 'weight' && totalWeight > 0) {
+        logisticsCost = (weight / totalWeight) * totalLogisticsCosts;
+      }
+      
+      const logisticsPerUnit = quantity > 0 ? logisticsCost / quantity : 0;
+      const costPrice = purchasePriceGnf + logisticsPerUnit;
+      const sellingPrice = article.selling_price_gnf || (costPrice * (1 + marginPct / 100));
+      const margin = sellingPrice - costPrice;
+      const marginPercent = costPrice > 0 ? (margin / costPrice) * 100 : 0;
+      
+      // Mettre à jour l'affichage
+      const logisticsCell = document.querySelector(`.article-logistics-${index}`);
+      const costCell = document.querySelector(`.article-cost-${index}`);
+      const marginCell = document.querySelector(`.article-margin-${index}`);
+      
+      if (logisticsCell) logisticsCell.textContent = logisticsPerUnit.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF';
+      if (costCell) costCell.textContent = costPrice.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF';
+      if (marginCell) {
+        marginCell.innerHTML = margin.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF<br>' +
+          '<small style="color: var(--text-muted);">' + marginPercent.toFixed(1) + '%</small>';
+      }
+    });
+    
+    // Mettre à jour les totaux du footer
+    const totalLogistics = totalLogisticsCosts;
+    const totalCost = totalValue + totalLogistics;
+    let totalRevenue = 0;
+    selectedArticles.forEach(article => {
+      const quantity = article.quantity || 0;
+      const sellingPrice = article.selling_price_gnf || 0;
+      totalRevenue += quantity * sellingPrice;
+    });
+    const totalMargin = totalRevenue - totalCost;
+    const totalMarginPct = totalCost > 0 ? (totalMargin / totalCost) * 100 : 0;
+    
+    // Afficher le prix d'achat moyen par article (pour référence)
+    const avgPurchasePrice = selectedArticles.length > 0 ? totalPurchaseValue / totalQuantity : 0;
+    document.getElementById('totalPurchase').textContent = avgPurchasePrice.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF/unité';
+    document.getElementById('totalQuantity').textContent = totalQuantity.toLocaleString('fr-FR', {maximumFractionDigits: 2});
+    document.getElementById('totalWeight').textContent = totalWeight.toLocaleString('fr-FR', {maximumFractionDigits: 2}) + ' kg';
+    document.getElementById('totalValue').textContent = totalValue.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF';
+    document.getElementById('totalLogistics').textContent = totalLogistics.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF';
+    document.getElementById('totalCost').textContent = totalCost.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF';
+    document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF';
+    document.getElementById('totalMargin').innerHTML = totalMargin.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' GNF<br>' +
+      '<small style="color: var(--text-muted);">' + totalMarginPct.toFixed(1) + '%</small>';
+  }
+  
+  // Mettre à jour les fonctions wrapper une fois que toutes les fonctions internes sont définies
+  if (typeof calculateTotalsInternal === 'function') {
+    window.calculateTotals = calculateTotalsInternal;
+  }
+  
+  if (typeof showArticleSelectorInternal === 'function') {
+    window.showArticleSelector = showArticleSelectorInternal;
+  }
+  
+  if (typeof renderArticlesTable === 'function') {
+    window.renderArticlesTable = renderArticlesTable;
+  }
+  
+  // Vérifier que toutes les fonctions sont définies
+  console.log('Fonctions JavaScript chargées:', {
+    calculateTotals: typeof window.calculateTotals,
+    showArticleSelector: typeof window.showArticleSelector,
+    selectArticle: typeof window.selectArticle,
+    renderArticlesTable: typeof window.renderArticlesTable
+  });
+</script>
+{% endblock %}

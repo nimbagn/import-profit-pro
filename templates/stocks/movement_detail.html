@@ -1,0 +1,199 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détail Mouvement {{ reference }} - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-file-invoice me-2"></i>
+      Bon de Transfert {{ reference }}
+    </h1>
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+      {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+        {% if movements|length > 0 %}
+        <a href="{{ url_for('stocks.movement_edit', id=movements[0].id) }}" class="btn-hl" style="background: #3b82f6; color: white; border-color: #3b82f6;">
+          <i class="fas fa-edit me-2"></i>Modifier
+        </a>
+        <form method="POST" action="{{ url_for('stocks.movement_delete', id=movements[0].id) }}" 
+              style="display: inline;"
+              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce mouvement ? Cette action est irréversible et affectera les stocks.');">
+          {% if csrf_token %}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% endif %}
+          <button type="submit" class="btn-hl" style="background: #ef4444; color: white; border-color: #ef4444;">
+            <i class="fas fa-trash me-2"></i>Supprimer
+          </button>
+        </form>
+        {% endif %}
+      {% endif %}
+      <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>Retour
+      </a>
+    </div>
+  </div>
+
+  <div class="card-hl">
+    <!-- Informations principales -->
+    <div class="info-grid" style="margin-bottom: var(--space-xl);">
+      <div class="info-item">
+        <div class="info-label">Référence</div>
+        <div class="info-value" style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">
+          {{ reference }}
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Type</div>
+        <div class="info-value">
+          <span class="badge-hl badge-type type-{{ main_movement.movement_type }}">
+            {{ main_movement.movement_type|title }}
+          </span>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Date</div>
+        <div class="info-value">
+          {{ main_movement.movement_date.strftime('%d/%m/%Y %H:%M') if main_movement.movement_date else '-' }}
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Créé par</div>
+        <div class="info-value">
+          {{ main_movement.user.username if main_movement.user else '-' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Source et Destination -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+      <!-- Source (SORTIE) -->
+      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: var(--space-lg); border-radius: var(--radius-md);">
+        <h3 style="color: #dc2626; margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+          <i class="fas fa-arrow-up"></i>
+          Source - SORTIE
+        </h3>
+        {% if main_movement.from_depot %}
+        <div style="color: var(--text-primary);">
+          <i class="fas fa-warehouse me-2" style="color: #dc2626;"></i>
+          <strong>{{ main_movement.from_depot.name }}</strong>
+        </div>
+        {% elif main_movement.from_vehicle %}
+        <div style="color: var(--text-primary);">
+          <i class="fas fa-car me-2" style="color: #dc2626;"></i>
+          <strong>{{ main_movement.from_vehicle.plate_number }}</strong>
+        </div>
+        {% else %}
+        <div style="color: var(--text-muted);">Aucune source</div>
+        {% endif %}
+      </div>
+
+      <!-- Destination (ENTRÉE) -->
+      <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left: 4px solid #22c55e; padding: var(--space-lg); border-radius: var(--radius-md);">
+        <h3 style="color: #16a34a; margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+          <i class="fas fa-arrow-down"></i>
+          Destination - ENTRÉE
+        </h3>
+        {% if main_movement.to_depot %}
+        <div style="color: var(--text-primary);">
+          <i class="fas fa-warehouse me-2" style="color: #16a34a;"></i>
+          <strong>{{ main_movement.to_depot.name }}</strong>
+        </div>
+        {% elif main_movement.to_vehicle %}
+        <div style="color: var(--text-primary);">
+          <i class="fas fa-car me-2" style="color: #16a34a;"></i>
+          <strong>{{ main_movement.to_vehicle.plate_number }}</strong>
+        </div>
+        {% else %}
+        <div style="color: var(--text-muted);">Aucune destination</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Liste des articles -->
+    <div style="margin-top: var(--space-xl);">
+      <h3 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+        <i class="fas fa-list me-2"></i>
+        Articles ({{ movements|length }})
+      </h3>
+      
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Article</th>
+              <th>SKU</th>
+              <th>Quantité<br><small style="font-weight: normal; color: var(--text-muted);">(+ entrée / - sortie)</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in movements %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>
+                <strong>{{ movement.stock_item.name if movement.stock_item else 'N/A' }}</strong>
+              </td>
+              <td>
+                <code style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">
+                  {{ movement.stock_item.sku if movement.stock_item else 'N/A' }}
+                </code>
+              </td>
+              <td style="font-weight: 700; font-size: 1.1rem; {% if movement.quantity >= 0 %}color: #16a34a; background: #dcfce7;{% else %}color: #dc2626; background: #fee2e2;{% endif %} padding: 0.75rem; border-radius: var(--radius-sm); text-align: center;">
+                {% if movement.quantity >= 0 %}
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-up"></i>
+                    <strong>+{{ "{:,.2f}".format(movement.quantity)|replace(',', ' ') }}</strong>
+                  </div>
+                  <small style="display: block; margin-top: 0.25rem; font-size: 0.75rem; opacity: 0.8;">ENTRÉE</small>
+                {% else %}
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-down"></i>
+                    <strong>{{ "{:,.2f}".format(movement.quantity)|replace(',', ' ') }}</strong>
+                  </div>
+                  <small style="display: block; margin-top: 0.25rem; font-size: 0.75rem; opacity: 0.8;">SORTIE</small>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="background: var(--gray-50); font-weight: 600;">
+              <td colspan="3" style="text-align: right;">Balance Nette:</td>
+              <td style="{% set balance = movements|sum(attribute='quantity') %}{% if balance >= 0 %}color: #16a34a;{% else %}color: #dc2626;{% endif %} font-size: 1.1rem;">
+                {% set balance = movements|sum(attribute='quantity') %}
+                {% if balance >= 0 %}
+                  <i class="fas fa-arrow-up me-1"></i>+{{ "{:,.2f}".format(balance)|replace(',', ' ') }}
+                {% else %}
+                  <i class="fas fa-arrow-down me-1"></i>{{ "{:,.2f}".format(balance)|replace(',', ' ') }}
+                {% endif %}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Informations supplémentaires -->
+    {% if main_movement.supplier_name or main_movement.bl_number or main_movement.reason %}
+    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-md);">
+      <h4 style="margin-bottom: var(--space-md); color: var(--text-primary);">Informations supplémentaires</h4>
+      {% if main_movement.supplier_name %}
+      <div style="margin-bottom: var(--space-sm);">
+        <strong>Fournisseur:</strong> {{ main_movement.supplier_name }}
+      </div>
+      {% endif %}
+      {% if main_movement.bl_number %}
+      <div style="margin-bottom: var(--space-sm);">
+        <strong>N° BL:</strong> {{ main_movement.bl_number }}
+      </div>
+      {% endif %}
+      {% if main_movement.reason %}
+      <div>
+        <strong>Raison:</strong> {{ main_movement.reason }}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,644 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Récapitulatif de Chargement - {{ summary.order.reference }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .status-badge.stock_checked {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  .status-badge.loading_in_progress {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+  
+  .status-badge.completed {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .info-card {
+    background: white;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-left: 3px solid var(--color-primary);
+  }
+  
+  .info-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .info-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .section-title i {
+    color: var(--color-primary);
+  }
+  
+  .form-section {
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  
+  .form-section.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  
+  .stock-warning {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+  }
+  
+  .stock-success {
+    background: #d1fae5;
+    border-left: 4px solid #10b981;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- En-tête -->
+  <div class="page-header-hl">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+      <div>
+        <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--text-primary);">
+          <i class="fas fa-truck-loading me-2" style="color: var(--color-primary);"></i>
+          Récapitulatif de Chargement
+        </h1>
+        <p style="margin: var(--space-sm) 0 0 0; color: var(--text-secondary);">
+          Commande: <strong>{{ summary.order.reference }}</strong> | 
+          Commercial: <strong>{{ summary.commercial.full_name or summary.commercial.username }}</strong>
+        </p>
+      </div>
+      <div>
+        <a href="{{ url_for('stocks.warehouse_dashboard') }}" class="btn-hl btn-hl-secondary">
+          <i class="fas fa-arrow-left me-2"></i>Retour au dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="card-hl" style="margin-bottom: var(--space-md);">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+               style="padding: var(--space-md); border-radius: var(--radius-md); 
+                      background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                      color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                      border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                      margin-bottom: var(--space-sm);">
+            <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Informations générales -->
+  <div class="card-hl">
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Statut</div>
+        <div class="info-value">
+          <span class="status-badge {{ summary.status }}">
+            {% if summary.status == 'pending' %}En attente
+            {% elif summary.status == 'stock_checked' %}Stock vérifié
+            {% elif summary.status == 'loading_in_progress' %}Chargement en cours
+            {% elif summary.status == 'completed' %}Complété
+            {% else %}{{ summary.status }}{% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Dépôt Source</div>
+        <div class="info-value">{{ summary.source_depot.name if summary.source_depot else '-' }}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Destination</div>
+        <div class="info-value">
+          {% if summary.commercial_depot %}
+          <i class="fas fa-warehouse me-1"></i>{{ summary.commercial_depot.name }}
+          {% elif summary.commercial_vehicle %}
+          <i class="fas fa-truck me-1"></i>{{ summary.commercial_vehicle.plate_number }}
+          {% else %}
+          <span style="color: var(--text-muted);">Non défini</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Date de création</div>
+        <div class="info-value">{{ summary.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau des articles -->
+  <div class="card-hl">
+    <h2 class="section-title">
+      <i class="fas fa-box"></i>
+      Articles à charger
+    </h2>
+    <div class="table-hl">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: var(--bg-primary); border-bottom: 2px solid var(--gray-200);">
+            <th style="padding: var(--space-md); text-align: left; font-weight: 600;">Article</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Quantité requise</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Stock actuel commercial</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Stock restant avant</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Quantité chargée</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Stock restant après</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in summary.items %}
+          <tr style="border-bottom: 1px solid var(--gray-200);">
+            <td style="padding: var(--space-md);">
+              <strong>{{ item.stock_item.name }}</strong><br>
+              <small style="color: var(--text-muted);">SKU: {{ item.stock_item.sku }}</small>
+            </td>
+            <td style="padding: var(--space-md); text-align: right; font-weight: 600;">
+              {{ item.quantity_required|format_number(0) }}
+            </td>
+            <td style="padding: var(--space-md); text-align: right;">
+              {% if summary.commercial_depot_id or summary.commercial_vehicle_id %}
+                {% set current_stock = commercial_stocks.get(item.stock_item_id, 0) %}
+                {% if current_stock > 0 %}
+                <span style="color: #f59e0b; font-weight: 600;">{{ current_stock|format_number(0) }}</span>
+                {% else %}
+                <span style="color: #10b981;">0</span>
+                {% endif %}
+              {% else %}
+              <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
+            <td style="padding: var(--space-md); text-align: right;">
+              {% if item.pre_loading_stock_remaining %}
+              <span style="color: #f59e0b; font-weight: 600;">{{ item.pre_loading_stock_remaining|format_number(0) }}</span>
+              {% else %}
+              <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
+            <td style="padding: var(--space-md); text-align: right;">
+              {% if item.quantity_loaded > 0 %}
+              <span style="color: #10b981; font-weight: 600;">{{ item.quantity_loaded|format_number(0) }}</span>
+              {% else %}
+              <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
+            <td style="padding: var(--space-md); text-align: right;">
+              {% if item.post_loading_stock_remaining %}
+              <span style="color: #f59e0b; font-weight: 600;">{{ item.post_loading_stock_remaining|format_number(0) }}</span>
+              {% else %}
+              <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section Vérification avant chargement -->
+  {% if summary.status == 'pending' %}
+  <div class="card-hl">
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-check-circle"></i>
+        Vérification du stock avant chargement
+      </h2>
+      
+      {% if summary.commercial_depot_id or summary.commercial_vehicle_id %}
+      <div class="stock-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Attention:</strong> Un dépôt/véhicule commercial a déjà été sélectionné. Vérifiez le stock actuel ci-dessus.
+      </div>
+      {% endif %}
+      
+      <form method="POST" action="{{ url_for('stocks.loading_verify_pre', id=summary.id) }}">
+        {% if csrf_token %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {% endif %}
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-lg);">
+          <div class="form-group">
+            <label class="form-hl-label">
+              <i class="fas fa-warehouse me-2"></i>
+              Dépôt Commercial
+            </label>
+            <select name="commercial_depot_id" id="commercial_depot_id" class="form-hl-select" onchange="updateStockDisplay()">
+              <option value="">Sélectionner un dépôt</option>
+              {% for depot in depots %}
+              <option value="{{ depot.id }}" {% if summary.commercial_depot_id == depot.id %}selected{% endif %}>
+                {{ depot.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-hl-label">
+              <i class="fas fa-truck me-2"></i>
+              Véhicule Commercial
+            </label>
+            <select name="commercial_vehicle_id" id="commercial_vehicle_id" class="form-hl-select" onchange="updateStockDisplay()">
+              <option value="">Sélectionner un véhicule</option>
+              {% for vehicle in vehicles %}
+              <option value="{{ vehicle.id }}" {% if summary.commercial_vehicle_id == vehicle.id %}selected{% endif %}>
+                {{ vehicle.plate_number }} - {{ vehicle.brand }} {{ vehicle.model }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        
+        <div id="stockRemainingSection" style="display: none;">
+          <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: var(--space-md); color: var(--text-primary);">
+            <i class="fas fa-exclamation-circle me-2" style="color: #f59e0b;"></i>
+            Stock restant à pointer (si > 0)
+          </h3>
+          <div class="table-hl">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: var(--bg-primary); border-bottom: 2px solid var(--gray-200);">
+                  <th style="padding: var(--space-md); text-align: left;">Article</th>
+                  <th style="padding: var(--space-md); text-align: right;">Stock actuel</th>
+                  <th style="padding: var(--space-md); text-align: right;">Stock restant à pointer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in summary.items %}
+                <tr>
+                  <td style="padding: var(--space-md);">
+                    <strong>{{ item.stock_item.name }}</strong>
+                  </td>
+                  <td style="padding: var(--space-md); text-align: right;">
+                    <span id="current_stock_{{ item.id }}" style="font-weight: 600;">-</span>
+                  </td>
+                  <td style="padding: var(--space-md); text-align: right;">
+                    <input type="number" 
+                           name="item_{{ item.id }}_remaining" 
+                           id="remaining_{{ item.id }}"
+                           step="0.0001" 
+                           min="0"
+                           class="form-hl-input" 
+                           style="width: 150px; text-align: right;"
+                           placeholder="0">
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div style="margin-top: var(--space-lg); display: flex; gap: var(--space-md);">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-check-circle me-2"></i>
+            Vérifier le stock avant chargement
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Section Chargement -->
+  {% if summary.status == 'stock_checked' or summary.status == 'loading_in_progress' %}
+  <div class="card-hl">
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-truck-loading"></i>
+        Procéder au chargement
+      </h2>
+      
+      <form method="POST" action="{{ url_for('stocks.loading_execute', id=summary.id) }}" id="loadingForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}"/>
+        
+        <div class="table-hl">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: var(--bg-primary); border-bottom: 2px solid var(--gray-200);">
+                <th style="padding: var(--space-md); text-align: left;">Article</th>
+                <th style="padding: var(--space-md); text-align: right;">Quantité requise</th>
+                <th style="padding: var(--space-md); text-align: right;">Stock disponible source</th>
+                <th style="padding: var(--space-md); text-align: right;">Quantité à charger</th>
+                <th style="padding: var(--space-md); text-align: right;">Stock restant après (optionnel)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in summary.items %}
+              <tr>
+                <td style="padding: var(--space-md);">
+                  <strong>{{ item.stock_item.name }}</strong><br>
+                  <small style="color: var(--text-muted);">SKU: {{ item.stock_item.sku }}</small>
+                </td>
+                <td style="padding: var(--space-md); text-align: right; font-weight: 600;">
+                  {{ item.quantity_required|format_number(0) }}
+                </td>
+                <td style="padding: var(--space-md); text-align: right;">
+                  {% set source_qty = source_stocks.get(item.stock_item_id, 0) %}
+                  {% if source_qty > 0 %}
+                  <span style="font-weight: 600; color: {% if source_qty >= item.quantity_required %}#10b981{% else %}#ef4444{% endif %};">
+                    {{ source_qty|format_number(0) }}
+                  </span>
+                  {% else %}
+                  <span style="color: #ef4444;">0</span>
+                  {% endif %}
+                </td>
+                <td style="padding: var(--space-md); text-align: right;">
+                  <input type="number" 
+                         name="item_{{ item.id }}_loaded" 
+                         step="0.0001" 
+                         min="0"
+                         max="{{ item.quantity_required }}"
+                         value="{{ item.quantity_loaded if item.quantity_loaded > 0 else item.quantity_required }}"
+                         class="form-hl-input" 
+                         style="width: 150px; text-align: right;"
+                         required>
+                </td>
+                <td style="padding: var(--space-md); text-align: right;">
+                  <input type="number" 
+                         name="item_{{ item.id }}_post_remaining" 
+                         step="0.0001" 
+                         min="0"
+                         value="{{ item.post_loading_stock_remaining if item.post_loading_stock_remaining else '' }}"
+                         class="form-hl-input" 
+                         style="width: 150px; text-align: right;"
+                         placeholder="0">
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-top: var(--space-lg); display: flex; gap: var(--space-md);">
+          <button type="submit" class="btn-hl btn-hl-primary" id="submitLoadingBtn">
+            <i class="fas fa-truck-loading me-2"></i>
+            <span id="submitLoadingText">Procéder au chargement</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Articles chargés (si chargement en cours ou complété) -->
+  {% if summary.status == 'loading_in_progress' or summary.status == 'completed' %}
+  <div class="card-hl">
+    <h2 class="section-title">
+      <i class="fas fa-check-circle" style="color: #10b981;"></i>
+      Articles chargés
+    </h2>
+    {% if summary.status == 'completed' %}
+    <div class="stock-success" style="margin-bottom: var(--space-lg);">
+      <i class="fas fa-check-circle me-2"></i>
+      <strong>Chargement complété</strong> le {{ summary.loading_completed_at.strftime('%d/%m/%Y à %H:%M') if summary.loading_completed_at else '-' }}
+      {% if summary.loader %}
+      par {{ summary.loader.full_name or summary.loader.username }}
+      {% endif %}
+    </div>
+    {% endif %}
+    <div class="table-hl">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: var(--bg-primary); border-bottom: 2px solid var(--gray-200);">
+            <th style="padding: var(--space-md); text-align: left; font-weight: 600;">Article</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Quantité requise</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Quantité chargée</th>
+            <th style="padding: var(--space-md); text-align: right; font-weight: 600;">Stock restant après</th>
+            <th style="padding: var(--space-md); text-align: center; font-weight: 600;">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in summary.items %}
+          <tr style="border-bottom: 1px solid var(--gray-200);">
+            <td style="padding: var(--space-md);">
+              <strong>{{ item.stock_item.name }}</strong><br>
+              <small style="color: var(--text-muted);">SKU: {{ item.stock_item.sku }}</small>
+            </td>
+            <td style="padding: var(--space-md); text-align: right; font-weight: 600;">
+              {{ item.quantity_required|format_number(0) }}
+            </td>
+            <td style="padding: var(--space-md); text-align: right;">
+              {% if item.quantity_loaded and item.quantity_loaded > 0 %}
+              <span style="color: #10b981; font-weight: 700; font-size: 1.1rem;">{{ item.quantity_loaded|format_number(0) }}</span>
+              {% else %}
+              <span style="color: var(--text-muted);">0</span>
+              {% endif %}
+            </td>
+            <td style="padding: var(--space-md); text-align: right;">
+              {% if item.post_loading_stock_remaining %}
+              <span style="color: #f59e0b; font-weight: 600;">{{ item.post_loading_stock_remaining|format_number(0) }}</span>
+              {% else %}
+              <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
+            <td style="padding: var(--space-md); text-align: center;">
+              {% if item.quantity_loaded and item.quantity_loaded > 0 %}
+                {% if item.quantity_loaded >= item.quantity_required %}
+                <span class="status-badge" style="background: #d1fae5; color: #065f46;">
+                  <i class="fas fa-check-circle me-1"></i>Complété
+                </span>
+                {% else %}
+                <span class="status-badge" style="background: #fef3c7; color: #92400e;">
+                  <i class="fas fa-exclamation-circle me-1"></i>Partiel
+                </span>
+                {% endif %}
+              {% else %}
+              <span class="status-badge" style="background: #fee2e2; color: #991b1b;">
+                <i class="fas fa-times-circle me-1"></i>Non chargé
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function updateStockDisplay() {
+  const depotId = document.getElementById('commercial_depot_id').value;
+  const vehicleId = document.getElementById('commercial_vehicle_id').value;
+  
+  if (!depotId && !vehicleId) {
+    document.getElementById('stockRemainingSection').style.display = 'none';
+    return;
+  }
+  
+  // Afficher la section de pointage du stock restant
+  document.getElementById('stockRemainingSection').style.display = 'block';
+  
+  // TODO: Charger le stock actuel via AJAX si nécessaire
+  // Pour l'instant, on laisse l'utilisateur saisir manuellement
+}
+
+// Débogage de la soumission du formulaire de chargement
+document.addEventListener('DOMContentLoaded', function() {
+  const loadingForm = document.getElementById('loadingForm');
+  const submitBtn = document.getElementById('submitLoadingBtn');
+  const submitText = document.getElementById('submitLoadingText');
+  
+  if (loadingForm) {
+    loadingForm.addEventListener('submit', function(e) {
+      console.log('🔍 Formulaire de chargement soumis');
+      
+      // Vérifier que les quantités sont bien remplies
+      const quantityInputs = loadingForm.querySelectorAll('input[name^="item_"][name$="_loaded"]');
+      let hasQuantities = false;
+      const formData = new FormData(loadingForm);
+      
+      quantityInputs.forEach(input => {
+        const value = parseFloat(input.value);
+        if (value && value > 0) {
+          hasQuantities = true;
+          console.log(`✅ Quantité trouvée: ${input.name} = ${input.value}`);
+        }
+      });
+      
+      if (!hasQuantities) {
+        console.warn('⚠️ Aucune quantité à charger trouvée');
+        e.preventDefault();
+        alert('Veuillez spécifier au moins une quantité à charger');
+        return false;
+      }
+      
+      // Vérifier le CSRF token
+      const csrfInput = loadingForm.querySelector('input[name="csrf_token"]');
+      if (!csrfInput || !csrfInput.value) {
+        console.warn('⚠️ CSRF token manquant, tentative d\'injection automatique...');
+        // Le script de base_modern_complete.html devrait l'ajouter automatiquement
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) {
+          const csrfToken = csrfMeta.getAttribute('content');
+          if (csrfToken) {
+            if (!csrfInput) {
+              const newCsrfInput = document.createElement('input');
+              newCsrfInput.type = 'hidden';
+              newCsrfInput.name = 'csrf_token';
+              newCsrfInput.value = csrfToken;
+              loadingForm.insertBefore(newCsrfInput, loadingForm.firstChild);
+              console.log('✅ CSRF token injecté automatiquement');
+            } else {
+              csrfInput.value = csrfToken;
+              console.log('✅ CSRF token mis à jour');
+            }
+          }
+        }
+      } else {
+        console.log('✅ CSRF token présent:', csrfInput.value.substring(0, 10) + '...');
+      }
+      
+      // Désactiver le bouton pour éviter les doubles soumissions
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        if (submitText) {
+          submitText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Chargement en cours...';
+        }
+      }
+      
+      console.log('✅ Soumission du formulaire autorisée');
+      // Laisser le formulaire se soumettre normalement
+    });
+  }
+});
+</script>
+{% endblock %}
+

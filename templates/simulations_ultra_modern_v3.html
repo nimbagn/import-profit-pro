@@ -1,0 +1,379 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Simulations - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stat-card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: var(--transition-normal);
+  }
+  
+  .stat-card-hl:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .stat-card-hl-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-card-hl-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .simulations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: var(--space-lg);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .simulation-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+  }
+  
+  .simulation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+  
+  .simulation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .simulation-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .simulation-date {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+  
+  .simulation-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .stat-item {
+    text-align: center;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .simulation-actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .filters-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .stats-grid,
+    .card-hl,
+    .simulations-grid {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .simulations-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .simulation-stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-calculator me-2"></i>
+      Simulations
+    </h1>
+    <a href="{{ url_for('simulation_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Nouvelle Simulation
+    </a>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ simulations|length }}</div>
+      <div class="stat-card-hl-label">Total Simulations</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ simulations|selectattr('is_completed', 'equalto', True)|list|length }}</div>
+      <div class="stat-card-hl-label">Terminées</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ "{:.1f}".format(avg_margin|default(0)) }}%</div>
+      <div class="stat-card-hl-label">Marge Moyenne</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ "{:.0f}".format(success_rate|default(0)) }}%</div>
+      <div class="stat-card-hl-label">Taux de Réussite</div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card-hl" style="margin-bottom: var(--space-xl);">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+      Filtres et Recherche
+    </h3>
+    <form method="GET" action="{{ url_for('simulations_list') }}" class="filters-section">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Recherche (ID ou date)</label>
+        <input type="text" name="search" value="{{ search or '' }}" class="form-hl-input" placeholder="ID ou date...">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Statut</label>
+        <select name="status" class="form-hl-select">
+          <option value="" {% if not status_filter %}selected{% endif %}>Tous</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Terminées</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actives</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Date début</label>
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-hl-input">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Date fin</label>
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-hl-input">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-hl-label">Par page</label>
+        <select name="per_page" class="form-hl-select" onchange="this.form.submit()">
+          <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+          <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+          <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+          <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0; display: flex; gap: var(--space-sm); align-items: center;">
+        <button type="submit" class="btn-hl btn-hl-primary" style="margin-top: 0; white-space: nowrap;">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        <a href="{{ url_for('simulations_list') }}" class="btn-hl btn-hl-secondary" style="white-space: nowrap;">
+          <i class="fas fa-times me-2"></i>Réinitialiser
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste des simulations -->
+  {% if simulations %}
+  <div class="simulations-grid" id="simulationsGrid">
+    {% for simulation in simulations %}
+    <div class="simulation-card card-hl" 
+         data-name="{{ simulation.name|lower if simulation.name else '' }}" 
+         data-status="{{ 'completed' if simulation.is_completed else 'active' }}">
+      <div class="simulation-header">
+        <div>
+          <h3 class="simulation-title">
+            {{ simulation.name if simulation.name else ('Simulation #' + simulation.id|string) }}
+          </h3>
+          <p class="simulation-date">
+            <i class="fas fa-calendar"></i>
+            {% if simulation.created_at %}
+              {{ simulation.created_at.strftime('%d/%m/%Y à %H:%M') }}
+            {% else %}
+              Date inconnue
+            {% endif %}
+          </p>
+        </div>
+        <span class="badge-hl {% if simulation.is_completed %}badge-hl-success{% else %}badge-hl-warning{% endif %}">
+          {% if simulation.is_completed %}Terminée{% else %}En cours{% endif %}
+        </span>
+      </div>
+      
+      <div class="simulation-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ simulation.items|length if simulation.items else 0 }}</div>
+          <div class="stat-label">Articles</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color: {% if simulation.total_margin_gnf|default(0) >= 0 %}#22c55e{% else %}#ef4444{% endif %};">
+            {{ "{:,.0f}".format(simulation.total_margin_gnf|default(0))|replace(',', ' ') }}
+          </div>
+          <div class="stat-label">Marge (GNF)</div>
+        </div>
+      </div>
+      
+      <div class="simulation-actions">
+        <a href="{{ url_for('simulation_detail', id=simulation.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-eye me-2"></i>
+          Voir
+        </a>
+        <a href="{{ url_for('simulation_edit', id=simulation.id) }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-edit me-2"></i>
+          Modifier
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-calculator" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune simulation</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      Commencez par créer votre première simulation d'import pour analyser la rentabilité de vos projets.
+    </p>
+    <a href="{{ url_for('simulation_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer une Simulation
+    </a>
+  </div>
+  {% endif %}
+  
+  <!-- Pagination -->
+  {% if pagination and pagination.pages > 1 %}
+  <div class="card-hl" style="margin-top: var(--space-xl);">
+    <div style="display: flex; justify-content: center; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('simulations_list', page=pagination.prev_num, search=search, status=status_filter, date_from=date_from, date_to=date_to, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        <i class="fas fa-chevron-left me-2"></i>Précédent
+      </a>
+      {% endif %}
+      
+      <span style="color: var(--text-secondary); font-weight: 500; padding: var(--space-sm);">
+        Page {{ pagination.page }} sur {{ pagination.pages }} 
+        ({{ pagination.total }} simulation{{ 's' if pagination.total > 1 else '' }})
+      </span>
+      
+      {% if pagination.has_next %}
+      <a href="{{ url_for('simulations_list', page=pagination.next_num, search=search, status=status_filter, date_from=date_from, date_to=date_to, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        Suivant<i class="fas fa-chevron-right ms-2"></i>
+      </a>
+      {% endif %}
+    </div>
+    
+    <!-- Liens de pagination rapide -->
+    <div style="display: flex; justify-content: center; gap: var(--space-xs); margin-top: var(--space-md); flex-wrap: wrap;">
+      {% for page_num in range(1, pagination.pages + 1) %}
+        {% if page_num == pagination.page %}
+        <span class="btn-hl btn-hl-primary" style="min-width: 40px; text-align: center;">{{ page_num }}</span>
+        {% elif page_num <= 3 or page_num > pagination.pages - 3 or (page_num >= pagination.page - 1 and page_num <= pagination.page + 1) %}
+        <a href="{{ url_for('simulations_list', page=page_num, search=search, status=status_filter, date_from=date_from, date_to=date_to, per_page=per_page) }}" 
+           class="btn-hl btn-hl-secondary" style="min-width: 40px; text-align: center;">{{ page_num }}</a>
+        {% elif page_num == 4 or page_num == pagination.pages - 3 %}
+        <span style="color: var(--text-muted); padding: var(--space-xs);">...</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

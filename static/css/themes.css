@@ -1,0 +1,591 @@
+/* =========================================================
+   SYSTÈME DE THÈMES PERSONNALISABLES - IMPORT PROFIT PRO
+   ========================================================= */
+
+/* =========================================================
+   THÈME 1: HAPAG-LLOYD (Par défaut)
+   ========================================================= */
+:root[data-theme="hapag-lloyd"] {
+  /* Palette de couleurs Hapag-Lloyd */
+  --hl-blue: #003865;
+  --hl-blue-dark: #002a4d;
+  --hl-blue-light: #005a9f;
+  --hl-blue-accent: #0066cc;
+  --hl-orange: #ff6600;
+  --hl-orange-light: #ff8533;
+  
+  /* Couleurs fonctionnelles */
+  --color-primary: var(--hl-blue);
+  --color-primary-hover: var(--hl-blue-dark);
+  --color-accent: var(--hl-orange);
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: var(--hl-blue-light);
+}
+
+/* =========================================================
+   THÈME 2: PROFESSIONNEL BLEU
+   ========================================================= */
+:root[data-theme="professional"] {
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-light: #3b82f6;
+  --color-primary-accent: #60a5fa;
+  --color-secondary: #64748b;
+  --color-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+}
+
+/* =========================================================
+   THÈME 3: ÉNERGIQUE ROUGE
+   ========================================================= */
+:root[data-theme="energetic"] {
+  --color-primary: #dc2626;
+  --color-primary-dark: #b91c1c;
+  --color-primary-light: #ef4444;
+  --color-primary-accent: #f87171;
+  --color-secondary: #f97316;
+  --color-accent: #f97316;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #dc2626;
+  --color-info: #06b6d4;
+}
+
+/* =========================================================
+   THÈME 4: NATURE VERT
+   ========================================================= */
+:root[data-theme="nature"] {
+  --color-primary: #059669;
+  --color-primary-dark: #047857;
+  --color-primary-light: #10b981;
+  --color-primary-accent: #34d399;
+  --color-secondary: #14b8a6;
+  --color-accent: #10b981;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+}
+
+/* =========================================================
+   THÈME 5: NOËL (Saisonnier)
+   ========================================================= */
+:root[data-theme="christmas"] {
+  --color-primary: #dc2626;
+  --color-primary-dark: #b91c1c;
+  --color-primary-light: #ef4444;
+  --color-primary-accent: #16a34a;
+  --color-secondary: #f59e0b;
+  --color-accent: #16a34a;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #dc2626;
+  --color-info: #06b6d4;
+}
+
+/* =========================================================
+   THÈME 6: ÉTÉ (Saisonnier)
+   ========================================================= */
+:root[data-theme="summer"] {
+  --color-primary: #f59e0b;
+  --color-primary-dark: #d97706;
+  --color-primary-light: #fbbf24;
+  --color-primary-accent: #fbbf24;
+  --color-secondary: #f97316;
+  --color-accent: #fbbf24;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+}
+
+/* =========================================================
+   THÈME 7: PERSONNALISÉ (Dynamique)
+   ========================================================= */
+:root[data-theme="custom"] {
+  /* Les couleurs seront définies dynamiquement via JavaScript */
+  --color-primary: #003865;
+  --color-primary-dark: #002a4d;
+  --color-primary-light: #005a9f;
+  --color-primary-accent: #0066cc;
+  --color-secondary: #64748b;
+  --color-accent: #ff6600;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+}
+
+/* =========================================================
+   THÈME 8: MINIMALISTE
+   ========================================================= */
+:root[data-theme="minimalist"] {
+  --color-primary: #1f2937;
+  --color-primary-dark: #111827;
+  --color-primary-light: #374151;
+  --color-primary-accent: #6b7280;
+  --color-secondary: #9ca3af;
+  --color-accent: #6b7280;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #6b7280;
+}
+
+/* =========================================================
+   THÈME 9: CYBERPUNK
+   ========================================================= */
+:root[data-theme="cyberpunk"] {
+  --color-primary: #00ff41;
+  --color-primary-dark: #00cc33;
+  --color-primary-light: #33ff66;
+  --color-primary-accent: #ff00ff;
+  --color-secondary: #00ffff;
+  --color-accent: #ff00ff;
+  --color-success: #00ff41;
+  --color-warning: #ffff00;
+  --color-danger: #ff0040;
+  --color-info: #00ffff;
+}
+
+/* =========================================================
+   THÈME 10: OCEAN
+   ========================================================= */
+:root[data-theme="ocean"] {
+  --color-primary: #0ea5e9;
+  --color-primary-dark: #0284c7;
+  --color-primary-light: #38bdf8;
+  --color-primary-accent: #06b6d4;
+  --color-secondary: #14b8a6;
+  --color-accent: #06b6d4;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #0ea5e9;
+}
+
+/* =========================================================
+   MODE CLAIR (Par défaut)
+   ========================================================= */
+:root[data-color-mode="light"] {
+  /* Couleurs de fond */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f9fafb;
+  --bg-sidebar: #ffffff;
+  --bg-menu-hover: #f3f4f6;
+  
+  /* Texte */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+  --text-white: #ffffff;
+  
+  /* Bordures */
+  --border-color: #e5e7eb;
+  --border-color-light: #f3f4f6;
+  --border-color-dark: #d1d5db;
+  
+  /* Ombres */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================================
+   MODE SOMBRE
+   ========================================================= */
+:root[data-color-mode="dark"] {
+  /* Couleurs de fond */
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f0f23;
+  --bg-card: #1a1a2e;
+  --bg-card-hover: #16213e;
+  --bg-sidebar: #16213e;
+  --bg-menu-hover: #0f0f23;
+  
+  /* Texte */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-muted: #9ca3af;
+  --text-light: #6b7280;
+  --text-white: #ffffff;
+  
+  /* Bordures */
+  --border-color: #374151;
+  --border-color-light: #4b5563;
+  --border-color-dark: #1f2937;
+  
+  /* Ombres */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================================
+   APPLICATION DES THÈMES AUX ÉLÉMENTS
+   ========================================================= */
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+}
+
+.menu-item {
+  color: var(--text-secondary);
+}
+
+.menu-item:hover {
+  background-color: var(--bg-menu-hover);
+  color: var(--color-primary);
+}
+
+.menu-item.active {
+  background-color: var(--color-primary);
+  color: var(--text-white);
+}
+
+/* Cartes */
+.card, .module-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+}
+
+.card:hover, .module-card:hover {
+  background-color: var(--bg-card-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Boutons */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--text-white);
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: var(--text-white);
+}
+
+/* Liens */
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Tableaux */
+table {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+thead {
+  background-color: var(--bg-secondary);
+}
+
+th {
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+tr:hover {
+  background-color: var(--bg-card-hover);
+}
+
+/* Badges */
+.badge-success {
+  background-color: var(--color-success);
+  color: var(--text-white);
+}
+
+.badge-warning {
+  background-color: var(--color-warning);
+  color: var(--text-white);
+}
+
+.badge-danger {
+  background-color: var(--color-danger);
+  color: var(--text-white);
+}
+
+.badge-info {
+  background-color: var(--color-info);
+  color: var(--text-white);
+}
+
+/* Transitions pour changement de thème */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Animation de transition entre thèmes */
+@keyframes themeTransition {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+body.theme-changing {
+  animation: themeTransition 0.4s ease;
+}
+
+/* Mode automatique - basé sur l'heure */
+:root[data-color-mode="auto"] {
+  /* Par défaut, utiliser le mode clair */
+  /* Le JavaScript changera automatiquement selon l'heure */
+}
+
+/* Mode système - basé sur les préférences du système */
+:root[data-color-mode="system"] {
+  /* Utilise les préférences du système via media query */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-color-mode="system"] {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f0f23;
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #16213e;
+    --bg-sidebar: #16213e;
+    --bg-menu-hover: #0f0f23;
+    --text-primary: #ffffff;
+    --text-secondary: #e5e7eb;
+    --text-muted: #9ca3af;
+    --text-light: #6b7280;
+    --text-white: #ffffff;
+    --border-color: #374151;
+    --border-color-light: #4b5563;
+    --border-color-dark: #1f2937;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-color-mode="system"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f9fafb;
+    --bg-sidebar: #ffffff;
+    --bg-menu-hover: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --text-white: #ffffff;
+    --border-color: #e5e7eb;
+    --border-color-light: #f3f4f6;
+    --border-color-dark: #d1d5db;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Styles pour le sélecteur de couleurs personnalisé */
+.color-picker-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.color-picker-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.color-picker-item label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.color-picker-input {
+  width: 100%;
+  height: 40px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.color-picker-input:hover {
+  border-color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+/* Badge pour thèmes saisonniers */
+.theme-badge {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  background: var(--color-accent);
+  color: var(--text-white);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Personnalisation avancée */
+.advanced-settings {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.advanced-settings-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.advanced-settings-content {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-lg);
+}
+
+.advanced-settings-content.active {
+  display: grid;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.setting-item label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.setting-item input[type="range"],
+.setting-item select {
+  width: 100%;
+  padding: var(--space-xs);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.setting-item input[type="range"] {
+  cursor: pointer;
+}
+
+.setting-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* Export/Import */
+.export-import-section {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.export-import-buttons {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* Historique des thèmes */
+.theme-history {
+  margin-top: var(--space-xl);
+}
+
+.theme-history-list {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--space-md);
+}
+
+.theme-history-item {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-history-item:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--color-primary);
+}
+

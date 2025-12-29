@@ -1,0 +1,789 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Import Profit Pro - Dashboard Premium{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  /* Hero Section Hapag-Lloyd */
+  .hero-premium {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: var(--space-3xl) var(--space-xl);
+    margin-bottom: var(--space-3xl);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    color: var(--white);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: var(--space-lg);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: var(--space-xl);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.8;
+    font-weight: 400;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-lg);
+    margin-top: var(--space-2xl);
+  }
+
+  .stat-card-premium {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-align: center;
+    transition: var(--transition-normal);
+  }
+
+  .stat-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .stat-value {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: var(--space-xs);
+    display: block;
+  }
+
+  .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  /* Modules Grid Premium */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-xl);
+    margin-bottom: var(--space-3xl);
+  }
+  
+  @media (min-width: 1400px) {
+    .modules-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .module-card-premium {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .module-card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--hl-orange));
+    transform: scaleX(0);
+    transition: var(--transition-normal);
+  }
+
+  .module-card-premium:hover::before {
+    transform: scaleX(1);
+  }
+
+  .module-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+  }
+
+  .module-icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-md);
+    display: inline-block;
+    color: var(--color-primary);
+  }
+
+  .module-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .module-description {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: var(--space-lg);
+  }
+
+  .module-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .module-stat {
+    text-align: center;
+    padding: var(--space-md);
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .module-stat-number {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-xs);
+  }
+
+  .module-stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .module-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-module {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-module.primary {
+    background: var(--primary-gradient);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .btn-module.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+  }
+
+  .btn-module.secondary {
+    background: var(--bg-glass-strong);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-module.secondary:hover {
+    background: var(--bg-glass);
+    border-color: rgba(102, 126, 234, 0.5);
+    transform: translateY(-2px);
+  }
+
+  /* Recent Activity Premium */
+  .recent-section {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-3xl);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .recent-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-md);
+  }
+
+  .recent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    background: rgba(102, 126, 234, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-normal);
+    cursor: pointer;
+  }
+
+  .recent-item:hover {
+    transform: translateX(10px);
+    background: rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: var(--shadow-md);
+  }
+
+  .recent-info {
+    flex: 1;
+  }
+
+  .recent-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .recent-meta {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .recent-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .recent-status.completed {
+    background: var(--success-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+  }
+
+  .recent-status.active {
+    background: var(--warning-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+  }
+
+  .recent-status.pending {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+  }
+
+  /* Floating Actions */
+  .floating-actions {
+    position: fixed;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    z-index: 1000;
+  }
+
+  .btn-floating {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-gradient);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-floating:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: var(--shadow-2xl), var(--shadow-glow-strong);
+  }
+
+  .btn-floating.secondary {
+    background: var(--bg-glass-strong);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .modules-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-premium {
+      min-height: 70vh;
+      padding: var(--space-xl) 0;
+    }
+
+    .hero-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+    }
+    
+    .recent-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .floating-actions {
+      bottom: var(--space-md);
+      right: var(--space-md);
+    }
+
+    .btn-floating {
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section Premium -->
+<div class="hero-premium">
+  <div class="hero-content">
+    <h1 class="hero-title">
+      <i class="fas fa-rocket me-3"></i>
+      Import Profit Pro
+      </h1>
+    <p class="hero-subtitle">
+      Plateforme premium complète pour la gestion de vos importations, stocks, inventaires, flotte et simulations de rentabilité. 
+      Optimisez vos marges avec des outils avancés d'analyse, de prévision et de traçabilité en temps réel.
+    </p>
+    
+    <div class="hero-stats">
+      <div class="stat-card-premium">
+        <div class="stat-value">{{ counts.simulations_count or 0 }}</div>
+        <div class="stat-label">Simulations</div>
+      </div>
+      <div class="stat-card-premium">
+        <div class="stat-value">{{ counts.articles_count or 0 }}</div>
+        <div class="stat-label">Articles</div>
+        </div>
+      <div class="stat-card-premium">
+        <div class="stat-value">{{ counts.depots_count or 0 }}</div>
+        <div class="stat-label">Dépôts</div>
+        </div>
+      <div class="stat-card-premium">
+        <div class="stat-value">{{ counts.vehicles_count or 0 }}</div>
+        <div class="stat-label">Véhicules</div>
+        </div>
+      <div class="stat-card-premium">
+        <div class="stat-value">{{ counts.movements_count or 0 }}</div>
+        <div class="stat-label">Mouvements</div>
+      </div>
+      <div class="stat-card-premium">
+        <div class="stat-value">{{ counts.inventory_sessions_count or 0 }}</div>
+        <div class="stat-label">Inventaires</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container">
+  <!-- Modules Principaux -->
+  <div class="modules-grid">
+    <div class="module-card-premium">
+      <div class="module-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <h3 class="module-title">Simulations de Rentabilité</h3>
+      <p class="module-description">
+        Analysez et optimisez la rentabilité de vos importations avec des outils avancés de simulation et des calculs précis de marge.
+      </p>
+      <div class="module-stats">
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.simulations_count or 0 }}</div>
+          <div class="module-stat-label">Total</div>
+        </div>
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.completed_simulations or 0 }}</div>
+          <div class="module-stat-label">Terminées</div>
+        </div>
+      </div>
+      <div class="module-actions">
+        <a href="/simulations" class="btn-module primary">
+          <i class="fas fa-chart-line"></i>
+          Voir Simulations
+        </a>
+        <a href="/simulations/new" class="btn-module secondary">
+          <i class="fas fa-plus"></i>
+          Nouvelle
+        </a>
+      </div>
+    </div>
+
+    <div class="module-card-premium">
+      <div class="module-icon">
+        <i class="fas fa-boxes"></i>
+      </div>
+      <h3 class="module-title">Gestion des Stocks</h3>
+      <p class="module-description">
+        Gérez vos stocks en temps réel : réceptions, sorties, transferts et retours avec traçabilité complète.
+      </p>
+      <div class="module-stats">
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.movements_count or 0 }}</div>
+          <div class="module-stat-label">Mouvements</div>
+        </div>
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.receptions_count or 0 }}</div>
+          <div class="module-stat-label">Réceptions</div>
+        </div>
+      </div>
+      <div class="module-actions">
+        <a href="{{ url_for('stocks.movements_list') }}" class="btn-module primary">
+          <i class="fas fa-exchange-alt"></i>
+          Mouvements
+        </a>
+        <a href="{{ url_for('stocks.receptions_list') }}" class="btn-module secondary">
+          <i class="fas fa-truck-loading"></i>
+          Réceptions
+        </a>
+      </div>
+    </div>
+
+    <div class="module-card-premium">
+      <div class="module-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <h3 class="module-title">Inventaires</h3>
+      <p class="module-description">
+        Effectuez des inventaires avec parsing de piles, calcul automatique des écarts et génération d'ajustements.
+      </p>
+      <div class="module-stats">
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.inventory_sessions_count or 0 }}</div>
+          <div class="module-stat-label">Sessions</div>
+        </div>
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.inventory_pending or 0 }}</div>
+          <div class="module-stat-label">En Attente</div>
+        </div>
+      </div>
+      <div class="module-actions">
+        <a href="{{ url_for('inventaires.sessions_list') }}" class="btn-module primary">
+          <i class="fas fa-clipboard-check"></i>
+          Sessions
+        </a>
+        <a href="{{ url_for('inventaires.session_new') }}" class="btn-module secondary">
+          <i class="fas fa-plus"></i>
+          Nouvelle Session
+        </a>
+      </div>
+    </div>
+
+    <div class="module-card-premium">
+      <div class="module-icon">
+        <i class="fas fa-truck"></i>
+      </div>
+      <h3 class="module-title">Gestion de Flotte</h3>
+      <p class="module-description">
+        Gérez votre flotte de véhicules : documents, maintenances, odomètre avec alertes automatiques.
+      </p>
+      <div class="module-stats">
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.vehicles_count or 0 }}</div>
+          <div class="module-stat-label">Véhicules</div>
+        </div>
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.maintenances_planned or 0 }}</div>
+          <div class="module-stat-label">Maintenances</div>
+        </div>
+      </div>
+      <div class="module-actions">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-module primary">
+          <i class="fas fa-truck"></i>
+          Véhicules
+        </a>
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-module secondary">
+          <i class="fas fa-tools"></i>
+          Maintenances
+        </a>
+      </div>
+    </div>
+
+    <div class="module-card-premium">
+      <div class="module-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <h3 class="module-title">Référentiels</h3>
+      <p class="module-description">
+        Gérez vos données de référence : régions, dépôts, familles d'articles et articles de stock.
+      </p>
+      <div class="module-stats">
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.depots_count or 0 }}</div>
+          <div class="module-stat-label">Dépôts</div>
+        </div>
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.stock_items_count or 0 }}</div>
+          <div class="module-stat-label">Articles Stock</div>
+        </div>
+      </div>
+      <div class="module-actions">
+        <a href="{{ url_for('referentiels.regions_list') }}" class="btn-module primary">
+          <i class="fas fa-map-marked-alt"></i>
+          Référentiels
+        </a>
+        <a href="{{ url_for('referentiels.stock_items_list') }}" class="btn-module secondary">
+          <i class="fas fa-boxes"></i>
+          Articles
+        </a>
+      </div>
+    </div>
+
+    <div class="module-card-premium">
+      <div class="module-icon">
+        <i class="fas fa-chart-bar"></i>
+      </div>
+      <h3 class="module-title">Prévisions & Ventes</h3>
+      <p class="module-description">
+        Prévoyez vos ventes avec précision et analysez les performances avec des outils de prévision avancés.
+      </p>
+      <div class="module-stats">
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.articles_count or 0 }}</div>
+          <div class="module-stat-label">Articles</div>
+        </div>
+        <div class="module-stat">
+          <div class="module-stat-number">{{ counts.categories_count or 0 }}</div>
+          <div class="module-stat-label">Catégories</div>
+        </div>
+      </div>
+      <div class="module-actions">
+        <a href="/forecast" class="btn-module primary">
+          <i class="fas fa-chart-line"></i>
+          Dashboard
+        </a>
+        <a href="/forecast/new" class="btn-module secondary">
+          <i class="fas fa-plus"></i>
+          Nouvelle Prévision
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activité Récente -->
+  <div class="recent-section">
+    <div class="recent-header">
+      <h3 class="recent-title">
+        <i class="fas fa-history"></i>
+        Activité Récente
+      </h3>
+      <div style="display: flex; gap: var(--space-md);">
+        <span class="badge-premium" style="font-size: 0.85rem;">
+          <i class="fas fa-sync-alt me-1"></i>
+          {{ counts.recent_movements or 0 }} mouvements (7j)
+        </span>
+        <span class="badge-premium" style="font-size: 0.85rem;">
+          <i class="fas fa-truck-loading me-1"></i>
+          {{ counts.recent_receptions or 0 }} réceptions (7j)
+        </span>
+      </div>
+    </div>
+    <div class="recent-grid">
+      {% if recent_simulations %}
+        <div style="grid-column: 1 / -1; margin-bottom: var(--space-md);">
+          <h4 style="color: var(--text-primary); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-sm);">
+            <i class="fas fa-chart-line me-2"></i>Simulations Récentes
+          </h4>
+        </div>
+        {% for sim in recent_simulations[:3] %}
+        <div class="recent-item" onclick="window.location.href='/simulations/{{ sim.id }}'">
+          <div class="recent-info">
+            <div class="recent-name">Simulation #{{ sim.id }}</div>
+            <div class="recent-meta">
+              <span>Créée le {{ sim.created_at.strftime('%d/%m/%Y') if sim.created_at else 'N/A' }}</span>
+              <span>{{ sim.items|length if sim.items else 0 }} articles</span>
+            </div>
+          </div>
+          <div class="recent-status {{ 'completed' if sim.is_completed else 'active' }}">
+            {{ 'Terminée' if sim.is_completed else 'Active' }}
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+      
+      {% if recent_movements %}
+        <div style="grid-column: 1 / -1; margin-top: var(--space-lg); margin-bottom: var(--space-md);">
+          <h4 style="color: var(--text-primary); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-sm);">
+            <i class="fas fa-exchange-alt me-2"></i>Mouvements de Stock Récents
+          </h4>
+        </div>
+        {% for mov in recent_movements[:3] %}
+        <div class="recent-item" onclick="window.location.href='{{ url_for('stocks.movements_list') }}'">
+          <div class="recent-info">
+            <div class="recent-name">{{ mov.movement_type|title }} - {{ mov.stock_item.sku if mov.stock_item else 'N/A' }}</div>
+            <div class="recent-meta">
+              <span>{{ mov.movement_date.strftime('%d/%m/%Y %H:%M') if mov.movement_date else 'N/A' }}</span>
+              <span>Qté: {{ mov.quantity }}</span>
+            </div>
+          </div>
+          <div class="recent-status active">
+            {{ mov.movement_type|title }}
+          </div>
+      </div>
+        {% endfor %}
+      {% endif %}
+      
+      {% if recent_inventories %}
+        <div style="grid-column: 1 / -1; margin-top: var(--space-lg); margin-bottom: var(--space-md);">
+          <h4 style="color: var(--text-primary); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-sm);">
+            <i class="fas fa-clipboard-check me-2"></i>Sessions d'Inventaire Récentes
+          </h4>
+        </div>
+        {% for inv in recent_inventories[:3] %}
+        <div class="recent-item" onclick="window.location.href='{{ url_for('inventaires.session_detail', id=inv.id) }}'">
+          <div class="recent-info">
+            <div class="recent-name">Session #{{ inv.id }} - {{ inv.depot.name if inv.depot else 'N/A' }}</div>
+            <div class="recent-meta">
+              <span>{{ inv.session_date.strftime('%d/%m/%Y') if inv.session_date else 'N/A' }}</span>
+              <span>{{ inv.details|length }} articles</span>
+            </div>
+          </div>
+          <div class="recent-status {{ inv.status }}">
+            {{ inv.status|replace('_', ' ')|title }}
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+      
+      {% if not recent_simulations and not recent_movements and not recent_inventories %}
+        <div class="recent-item">
+          <div class="recent-info">
+            <div class="recent-name">Aucune activité récente</div>
+            <div class="recent-meta">Commencez par créer votre première simulation ou mouvement de stock</div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Actions Flottantes -->
+<div class="floating-actions">
+  <button class="btn-floating" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Retour en haut">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+  <button class="btn-floating secondary" onclick="location.reload()" title="Actualiser">
+    <i class="fas fa-sync-alt"></i>
+  </button>
+  <a href="/simulations/new" class="btn-floating" title="Nouvelle simulation">
+    <i class="fas fa-plus"></i>
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Animation des statistiques
+  document.addEventListener('DOMContentLoaded', function() {
+    const statValues = document.querySelectorAll('.stat-value');
+    
+    statValues.forEach(stat => {
+      const finalValue = stat.textContent.trim();
+      const isNumber = !isNaN(parseFloat(finalValue));
+      
+      if (isNumber) {
+        const targetValue = parseFloat(finalValue);
+        let currentValue = 0;
+        const increment = targetValue / 60;
+        const duration = 2000;
+        const startTime = Date.now();
+        
+        function update() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          currentValue = targetValue * progress;
+          
+          stat.textContent = Math.floor(currentValue);
+          
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          } else {
+            stat.textContent = targetValue;
+          }
+        }
+        
+        update();
+      }
+    });
+  });
+</script>
+{% endblock %}

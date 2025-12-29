@@ -1,0 +1,256 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Rapports Avancés - Promotion{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.css" rel="stylesheet">
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 2rem !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+    background: #f8f9fa;
+  }
+  
+  .report-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+  }
+  
+  .report-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #003d82;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #003d82;
+  }
+  
+  .stat-comparison {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e0e6ed 100%);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  .stat-item {
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #003d82;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+    color: #7a8a9a;
+    margin-top: 0.5rem;
+  }
+  
+  .variation {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+  }
+  
+  .variation.positive {
+    background: #d4edda;
+    color: #155724;
+  }
+  
+  .variation.negative {
+    background: #f8d7da;
+    color: #721c24;
+  }
+  
+  .chart-container {
+    position: relative;
+    height: 400px;
+    margin-top: 1rem;
+  }
+  
+  .top-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .top-list li {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .top-list li:first-child {
+    background: linear-gradient(135deg, #003d82 0%, #0052a5 100%);
+    color: white;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-chart-line icon-promo"></i>
+        Rapports Avancés - Promotion
+      </h1>
+      <a href="{{ url_for('promotion.dashboard') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+        <i class="fas fa-arrow-left me-2"></i>Retour au Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Comparaison Mensuelle -->
+  <div class="report-card">
+    <div class="report-title">
+      <i class="fas fa-calendar-alt me-2"></i>
+      Comparaison Mensuelle
+    </div>
+    <div class="stat-comparison">
+      <div class="stat-item">
+        <div class="stat-value">{{ "{:,.0f}".format(ca_net_month)|replace(',', ' ') }} GNF</div>
+        <div class="stat-label">CA Net Ce Mois</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ "{:,.0f}".format(ca_net_last_month)|replace(',', ' ') }} GNF</div>
+        <div class="stat-label">CA Net Mois Dernier</div>
+      </div>
+      <div class="stat-item">
+        <div class="variation {% if variation >= 0 %}positive{% else %}negative{% endif %}">
+          {% if variation >= 0 %}+{% endif %}{{ "{:.1f}".format(variation) }}%
+        </div>
+        <div class="stat-label">Variation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique des Ventes (30 derniers jours) -->
+  <div class="report-card">
+    <div class="report-title">
+      <i class="fas fa-chart-area me-2"></i>
+      Évolution des Ventes (30 derniers jours)
+    </div>
+    <div class="chart-container">
+      <canvas id="salesChart"></canvas>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Top Équipes -->
+    <div class="col-md-6">
+      <div class="report-card">
+        <div class="report-title">
+          <i class="fas fa-users me-2"></i>
+          Top 5 Équipes (CA Net)
+        </div>
+        <ul class="top-list" id="topTeamsList">
+          <!-- Rempli par JavaScript -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- Top Gammes -->
+    <div class="col-md-6">
+      <div class="report-card">
+        <div class="report-title">
+          <i class="fas fa-box me-2"></i>
+          Top 5 Gammes (Quantité Vendue)
+        </div>
+        <ul class="top-list" id="topGammesList">
+          <!-- Rempli par JavaScript -->
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Graphique des ventes
+  const salesCtx = document.getElementById('salesChart').getContext('2d');
+  const salesChart = new Chart(salesCtx, {
+    type: 'line',
+    data: {
+      labels: {{ sales_by_day_labels|safe }},
+      datasets: [{
+        label: 'CA Net (GNF)',
+        data: {{ sales_by_day_data|safe }},
+        borderColor: '#003d82',
+        backgroundColor: 'rgba(0, 61, 130, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              return 'CA Net: ' + new Intl.NumberFormat('fr-FR').format(context.parsed.y) + ' GNF';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return new Intl.NumberFormat('fr-FR').format(value) + ' GNF';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Top Équipes
+  const topTeams = {{ top_teams|safe }};
+  const topTeamsList = document.getElementById('topTeamsList');
+  topTeams.forEach((team, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span><strong>${index + 1}.</strong> ${team.name}</span>
+      <span>${new Intl.NumberFormat('fr-FR').format(team.ca_net)} GNF</span>
+    `;
+    topTeamsList.appendChild(li);
+  });
+
+  // Top Gammes
+  const topGammes = {{ top_gammes|safe }};
+  const topGammesList = document.getElementById('topGammesList');
+  topGammes.forEach((gamme, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span><strong>${index + 1}.</strong> ${gamme.name}</span>
+      <span>${new Intl.NumberFormat('fr-FR').format(gamme.quantity)} unités</span>
+    `;
+    topGammesList.appendChild(li);
+  });
+</script>
+{% endblock %}
+

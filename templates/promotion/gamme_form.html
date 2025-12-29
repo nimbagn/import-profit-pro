@@ -1,0 +1,243 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if gamme %}Modifier{% else %}Nouvelle{% endif %} Gamme - Import Profit Pro{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('articles-container');
+    const addBtn = document.getElementById('add-article');
+    
+    // Template pour une nouvelle ligne d'article
+    const articleRowTemplate = `
+      <div class="row mb-2 article-row">
+        <div class="col-md-8">
+          <select class="form-select" name="article_ids">
+            <option value="">Sélectionner un article...</option>
+            {% for article in articles %}
+            <option value="{{ article.id }}">
+              {{ article.name }} ({{ article.category.name if article.category else 'Sans catégorie' }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="number" class="form-control" name="article_quantities" 
+                 value="1" min="1" placeholder="Quantité">
+        </div>
+        <div class="col-md-1">
+          <button type="button" class="btn btn-danger btn-sm remove-article" title="Supprimer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    // Ajouter un article
+    addBtn.addEventListener('click', function() {
+      const newRow = document.createElement('div');
+      newRow.className = 'row mb-2 article-row';
+      newRow.innerHTML = `
+        <div class="col-md-8">
+          <select class="form-select" name="article_ids">
+            <option value="">Sélectionner un article...</option>
+            {% for article in articles %}
+            <option value="{{ article.id }}">
+              {{ article.name }} ({{ article.category.name if article.category else 'Sans catégorie' }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="number" class="form-control" name="article_quantities" 
+                 value="1" min="1" placeholder="Quantité">
+        </div>
+        <div class="col-md-1">
+          <button type="button" class="btn btn-danger btn-sm remove-article" title="Supprimer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      container.appendChild(newRow);
+    });
+    
+    // Supprimer un article
+    container.addEventListener('click', function(e) {
+      if (e.target.closest('.remove-article')) {
+        e.target.closest('.article-row').remove();
+      }
+    });
+    
+    // Afficher/masquer les champs de pièce
+    const isPieceCheckbox = document.getElementById('is_piece');
+    const pieceFields = document.getElementById('piece-fields');
+    
+    if (isPieceCheckbox && pieceFields) {
+      isPieceCheckbox.addEventListener('change', function() {
+        pieceFields.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+          document.getElementById('unit_type').value = '';
+          document.getElementById('unit_description').value = '';
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-{% if gamme %}edit{% else %}plus{% endif %} me-2"></i>
+      {% if gamme %}Modifier la Gamme{% else %}Nouvelle Gamme{% endif %}
+    </h1>
+    <a href="{{ url_for('promotion.gammes_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label">Nom de la Gamme <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" value="{{ gamme.name if gamme else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="3">{{ gamme.description if gamme else '' }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_piece" name="is_piece" 
+                   {% if gamme and gamme.is_piece %}checked{% endif %}>
+            <label class="form-check-label" for="is_piece">
+              C'est une pièce/unitaire (ex: 1 bouteille, 1 sachet, etc.)
+            </label>
+          </div>
+        </div>
+
+        <div id="piece-fields" style="display: {% if gamme and gamme.is_piece %}block{% else %}none{% endif %};">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="unit_type" class="form-label">Type d'Unité</label>
+              <select class="form-select" id="unit_type" name="unit_type">
+                <option value="">Sélectionner...</option>
+                <option value="bouteille" {% if gamme and gamme.unit_type == 'bouteille' %}selected{% endif %}>Bouteille</option>
+                <option value="pièce" {% if gamme and gamme.unit_type == 'pièce' %}selected{% endif %}>Pièce</option>
+                <option value="sachet" {% if gamme and gamme.unit_type == 'sachet' %}selected{% endif %}>Sachet</option>
+                <option value="carton" {% if gamme and gamme.unit_type == 'carton' %}selected{% endif %}>Carton</option>
+                <option value="boîte" {% if gamme and gamme.unit_type == 'boîte' %}selected{% endif %}>Boîte</option>
+                <option value="paquet" {% if gamme and gamme.unit_type == 'paquet' %}selected{% endif %}>Paquet</option>
+                <option value="autre" {% if gamme and gamme.unit_type == 'autre' %}selected{% endif %}>Autre</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="unit_description" class="form-label">Description de l'Unité</label>
+              <input type="text" class="form-control" id="unit_description" name="unit_description" 
+                     value="{{ gamme.unit_description if gamme else '' }}" 
+                     placeholder="Ex: 800 ml, 1 kg, 500 g, etc.">
+              <small class="form-text text-muted">Exemple: "800 ml", "1 kg", "500 g", "250 ml"</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="selling_price_gnf" class="form-label">Prix de Vente (GNF) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="selling_price_gnf" name="selling_price_gnf" 
+                   value="{{ gamme.selling_price_gnf if gamme else '' }}" step="0.01" min="0" required>
+            <small class="form-text text-muted">Ex: 10000 pour 10 000 GNF</small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="commission_per_unit_gnf" class="form-label">Commission par Unité (GNF) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="commission_per_unit_gnf" name="commission_per_unit_gnf" 
+                   value="{{ gamme.commission_per_unit_gnf if gamme else '' }}" step="0.01" min="0" required>
+            <small class="form-text text-muted">Ex: 1500 pour 1 500 GNF</small>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Articles/Pièces dans la Gamme</label>
+          <div id="articles-container">
+            {% if gamme and gamme.articles %}
+              {% for article in gamme.articles %}
+              <div class="row mb-2 article-row">
+                <div class="col-md-8">
+                  <select class="form-select" name="article_ids" required>
+                    <option value="">Sélectionner un article...</option>
+                    {% for art in articles %}
+                    <option value="{{ art.id }}" {% if art.id == article.id %}selected{% endif %}>
+                      {{ art.name }} ({{ art.category.name if art.category else 'Sans catégorie' }})
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <input type="number" class="form-control" name="article_quantities" 
+                         value="{{ gamme_articles.get(article.id, 1) if gamme_articles else 1 }}" 
+                         min="1" placeholder="Quantité" required>
+                </div>
+                <div class="col-md-1">
+                  <button type="button" class="btn btn-danger btn-sm remove-article" title="Supprimer">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="row mb-2 article-row">
+                <div class="col-md-8">
+                  <select class="form-select" name="article_ids">
+                    <option value="">Sélectionner un article...</option>
+                    {% for article in articles %}
+                    <option value="{{ article.id }}">
+                      {{ article.name }} ({{ article.category.name if article.category else 'Sans catégorie' }})
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <input type="number" class="form-control" name="article_quantities" 
+                         value="1" min="1" placeholder="Quantité">
+                </div>
+                <div class="col-md-1">
+                  <button type="button" class="btn btn-danger btn-sm remove-article" title="Supprimer">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-article">
+            <i class="fas fa-plus me-1"></i>Ajouter un article
+          </button>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                   {% if not gamme or gamme.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">
+              Gamme active
+            </label>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          <a href="{{ url_for('promotion.gammes_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,620 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Import Profit Pro - Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Dashboard pleine page */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .dashboard-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .hero-section {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    color: var(--text-white);
+    padding: var(--space-3xl) var(--space-xl);
+    margin: 0 0 var(--space-2xl) 0;
+    width: 100%;
+  }
+  
+  .hero-content {
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: var(--space-md);
+    line-height: 1.2;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    margin-bottom: var(--space-xl);
+    line-height: 1.6;
+  }
+  
+  .user-region-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    margin-top: var(--space-md);
+    backdrop-filter: blur(10px);
+  }
+  
+  .stats-section {
+    margin: var(--space-3xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    margin: var(--space-2xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .module-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  
+  .module-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+  }
+  
+  .module-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 56, 101, 0.1);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+    font-size: 1.5rem;
+    color: var(--color-primary);
+  }
+  
+  .module-card:hover .module-icon {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  .module-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .module-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  
+  .recent-activity {
+    margin-top: var(--space-3xl);
+    margin-left: var(--space-xl);
+    margin-right: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .activity-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+  }
+  
+  .page-header-hl {
+    margin-left: var(--space-xl);
+    margin-right: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .modules-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .dashboard-container {
+      padding: 0;
+    }
+    
+    .hero-section {
+      padding: var(--space-2xl) var(--space-md);
+      margin: 0 0 var(--space-xl) 0;
+      width: 100%;
+    }
+    
+    .stats-section,
+    .modules-grid,
+    .recent-activity,
+    .page-header-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .hero-title {
+      font-size: 2rem;
+    }
+    
+    .modules-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .activity-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+  
+  .margin-positive {
+    color: #22c55e;
+  }
+  
+  .margin-negative {
+    color: #ef4444;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Import Profit Pro</h1>
+      <p class="hero-subtitle">
+        Plateforme complète de gestion pour vos importations, stocks, inventaires, flotte, simulations de rentabilité et fiches de prix. 
+        Optimisez vos marges avec des outils avancés d'analyse, de traçabilité et de gestion tarifaire en temps réel.
+      </p>
+      {% if counts.user_region_name %}
+      <div class="user-region-badge">
+        <i class="fas fa-map-marker-alt me-2"></i>Région : {{ counts.user_region_name }}
+      </div>
+      {% elif current_user.role and current_user.role.code in ['admin', 'superadmin'] %}
+      <div class="user-region-badge">
+        <i class="fas fa-shield-alt me-2"></i>Administrateur - Vue globale
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Statistiques Rapides -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      {% if has_permission(current_user, 'simulations.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.simulations_count or 0 }}</div>
+        <div class="stat-card-hl-label">Simulations</div>
+      </div>
+      {% endif %}
+      {% if has_permission(current_user, 'stock_items.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.articles_count or 0 }}</div>
+        <div class="stat-card-hl-label">Articles</div>
+      </div>
+      {% endif %}
+      {% if has_permission(current_user, 'depots.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.depots_count or 0 }}</div>
+        <div class="stat-card-hl-label">Dépôts</div>
+      </div>
+      {% endif %}
+      {% if has_permission(current_user, 'vehicles.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.vehicles_count or 0 }}</div>
+        <div class="stat-card-hl-label">Véhicules</div>
+      </div>
+      {% endif %}
+      {% if has_permission(current_user, 'movements.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.movements_count or 0 }}</div>
+        <div class="stat-card-hl-label">Mouvements</div>
+      </div>
+      {% endif %}
+      {% if has_permission(current_user, 'inventory.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.inventory_sessions_count or 0 }}</div>
+        <div class="stat-card-hl-label">Inventaires</div>
+      </div>
+      {% endif %}
+      {% if has_permission(current_user, 'stock_items.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.price_lists_count or 0 }}</div>
+        <div class="stat-card-hl-label">Fiches de Prix</div>
+      </div>
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.stock_items_count or 0 }}</div>
+        <div class="stat-card-hl-label">Articles Stock</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Modules Principaux -->
+  <div class="page-header-hl">
+    <h2 class="page-title-hl">Modules Principaux</h2>
+  </div>
+  
+  <div class="modules-grid">
+    {% if has_permission(current_user, 'simulations.read') %}
+    <a href="{{ url_for('simulations_list') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-calculator"></i>
+      </div>
+      <h3 class="module-title">Simulations</h3>
+      <p class="module-description">
+        Calculez la rentabilité de vos importations avec des outils avancés d'analyse de marge et d'optimisation des prix.
+      </p>
+    </a>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'stocks.read') %}
+    <a href="{{ url_for('stocks.stock_summary') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-boxes"></i>
+      </div>
+      <h3 class="module-title">Gestion des Stocks</h3>
+      <p class="module-description">
+        Récapitulatif du stock restant, historique des mouvements par article et par période avec filtres avancés.
+      </p>
+    </a>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'inventory.read') %}
+    <a href="{{ url_for('inventaires.sessions_list') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <h3 class="module-title">Inventaires</h3>
+      <p class="module-description">
+        Effectuez des inventaires avec calcul automatique des écarts et génération d'ajustements.
+      </p>
+    </a>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'vehicles.read') %}
+    <a href="{{ url_for('referentiels.vehicles_list') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-truck"></i>
+      </div>
+      <h3 class="module-title">Flotte</h3>
+      <p class="module-description">
+        Gérez votre flotte de véhicules avec suivi des documents, maintenances et relevés odomètre.
+      </p>
+    </a>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'regions.read') or has_permission(current_user, 'depots.read') or has_permission(current_user, 'families.read') or has_permission(current_user, 'stock_items.read') %}
+    <a href="{{ url_for('referentiels.regions_list') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <h3 class="module-title">Référentiels</h3>
+      <p class="module-description">
+        Gérez vos données de référence : régions, dépôts, véhicules, familles et articles de stock.
+      </p>
+    </a>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'forecast.read') %}
+    <a href="{{ url_for('forecast_dashboard') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <h3 class="module-title">Prévisions & Ventes</h3>
+      <p class="module-description">
+        Analysez les tendances et prévoyez vos ventes avec des outils d'analyse avancés.
+      </p>
+    </a>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'stock_items.read') %}
+    <a href="{{ url_for('price_lists.lists') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-tags"></i>
+      </div>
+      <h3 class="module-title">Fiches de Prix</h3>
+      <p class="module-description">
+        Gérez vos fiches de prix avec périodes de validité, prix grossiste/détaillant et gratuités.
+      </p>
+    </a>
+    
+    <a href="{{ url_for('articles_list') }}" class="module-card">
+      <div class="module-icon">
+        <i class="fas fa-box"></i>
+      </div>
+      <h3 class="module-title">Articles</h3>
+      <p class="module-description">
+        Gérez votre catalogue d'articles pour les simulations et analyses de rentabilité.
+      </p>
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Activité Récente -->
+  <div class="recent-activity">
+    <div class="page-header-hl">
+      <h2 class="page-title-hl">Activité Récente</h2>
+    </div>
+    
+    {% if has_permission(current_user, 'simulations.read') %}
+    {% if recent_simulations %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-calculator me-2"></i>Simulations Récentes</h3>
+        <a href="{{ url_for('simulations_list') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Articles</th>
+              <th>Marge (GNF)</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sim in recent_simulations[:10] %}
+            <tr>
+              <td><strong>#{{ sim.id }}</strong></td>
+              <td>{{ sim.created_at.strftime('%d/%m/%Y %H:%M') if sim.created_at else '-' }}</td>
+              <td>
+                {% if sim.items %}
+                  <span class="badge-hl badge-hl-info">{{ sim.items|length }} article{{ 's' if sim.items|length > 1 else '' }}</span>
+                {% else %}
+                  <span class="badge-hl badge-hl-secondary">0 article</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if sim.total_margin_gnf is defined and sim.total_margin_gnf >= 0 %}
+                  <strong class="margin-positive">
+                {% elif sim.total_margin_gnf is defined and sim.total_margin_gnf < 0 %}
+                  <strong class="margin-negative">
+                {% else %}
+                  <strong>
+                {% endif %}
+                  {{ "{:,.0f}".format(sim.total_margin_gnf|default(0))|replace(',', ' ') }} GNF
+                </strong>
+              </td>
+              <td>
+                <span class="badge-hl {% if sim.is_completed %}badge-hl-success{% else %}badge-hl-warning{% endif %}">
+                  {{ 'Terminée' if sim.is_completed else 'En cours' }}
+                </span>
+              </td>
+              <td>
+                <a href="{{ url_for('simulation_detail', id=sim.id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                  <i class="fas fa-eye"></i> Voir
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-calculator me-2"></i>Simulations Récentes</h3>
+        <a href="{{ url_for('simulations_list') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div style="padding: var(--space-xl); text-align: center; color: var(--text-secondary);">
+        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+        <p>Aucune simulation récente. {% if has_permission(current_user, 'simulations.create') %}<a href="{{ url_for('simulation_new') }}">Créer une nouvelle simulation</a>{% else %}Contactez un administrateur pour créer une simulation.{% endif %}</p>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if has_permission(current_user, 'stocks.read') or has_permission(current_user, 'movements.read') %}
+    <!-- Liens rapides Stock -->
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-chart-bar me-2"></i>Rapports Stock</h3>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md); padding: var(--space-lg);">
+        {% if has_permission(current_user, 'stocks.read') %}
+        <a href="{{ url_for('stocks.stock_summary') }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-lg);">
+          <i class="fas fa-chart-bar me-2" style="font-size: 1.5rem; display: block; margin-bottom: var(--space-sm);"></i>
+          <strong>Récapitulatif Stock</strong>
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+            Stock restant par article
+          </div>
+        </a>
+        <a href="{{ url_for('stocks.stock_history') }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-lg);">
+          <i class="fas fa-history me-2" style="font-size: 1.5rem; display: block; margin-bottom: var(--space-sm);"></i>
+          <strong>Historique Mouvements</strong>
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+            Mouvements par article et période
+          </div>
+        </a>
+        {% endif %}
+        {% if has_permission(current_user, 'movements.read') %}
+        <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-lg);">
+          <i class="fas fa-exchange-alt me-2" style="font-size: 1.5rem; display: block; margin-bottom: var(--space-sm);"></i>
+          <strong>Tous les Mouvements</strong>
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+            Liste complète des mouvements
+          </div>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    
+    {% if has_permission(current_user, 'movements.read') %}
+    {% if recent_movements %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-exchange-alt me-2"></i>Mouvements Récents</h3>
+        <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Article</th>
+              <th>Quantité</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in recent_movements[:5] %}
+            <tr>
+              <td>{{ movement.movement_date.strftime('%d/%m/%Y %H:%M') if movement.movement_date else '-' }}</td>
+              <td><span class="badge-hl badge-hl-info">{{ movement.movement_type|title }}</span></td>
+              <td>{{ movement.stock_item.sku if movement.stock_item else '-' }}</td>
+              <td>{{ "{:.2f}".format(movement.quantity) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if has_permission(current_user, 'inventory.read') %}
+    {% if recent_inventories %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-clipboard-check me-2"></i>Inventaires Récents</h3>
+        <a href="{{ url_for('inventaires.sessions_list') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Dépôt</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inventory in recent_inventories[:5] %}
+            <tr>
+              <td>{{ inventory.session_date.strftime('%d/%m/%Y') if inventory.session_date else '-' }}</td>
+              <td>{{ inventory.depot.name if inventory.depot else '-' }}</td>
+              <td>
+                <span class="badge-hl badge-hl-{{ 'success' if inventory.status == 'validated' else 'warning' }}">
+                  {{ inventory.status|replace('_', ' ')|title }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if has_permission(current_user, 'stock_items.read') %}
+    {% if recent_price_lists %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-tags me-2"></i>Fiches de Prix Récentes</h3>
+        <a href="{{ url_for('price_lists.lists') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Période</th>
+              <th>Statut</th>
+              <th>Articles</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for price_list in recent_price_lists[:5] %}
+            <tr>
+              <td><a href="{{ url_for('price_lists.detail', price_list_id=price_list.id) }}">{{ price_list.name }}</a></td>
+              <td>
+                {{ price_list.start_date.strftime('%d/%m/%Y') if price_list.start_date else '-' }}
+                {% if price_list.end_date %}
+                - {{ price_list.end_date.strftime('%d/%m/%Y') }}
+                {% else %}
+                (sans fin)
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge-hl badge-hl-{{ 'success' if price_list.status == 'active' else 'warning' if price_list.status == 'upcoming' else 'danger' if price_list.status == 'expired' else 'secondary' }}">
+                  {% if price_list.status == 'active' %}
+                  Active
+                  {% elif price_list.status == 'upcoming' %}
+                  À venir
+                  {% elif price_list.status == 'expired' %}
+                  Expirée
+                  {% else %}
+                  Inactive
+                  {% endif %}
+                </span>
+              </td>
+              <td>{{ price_list.items|length }} article{{ 's' if price_list.items|length > 1 else '' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+

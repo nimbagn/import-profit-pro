@@ -1,0 +1,820 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Nouvel Article - Import Profit Pro{% endblock %}
+
+{% block breadcrumb %}Nouvel Article{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .article-new-unified-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    margin: 0;
+  }
+
+  .hero-section-unified {
+    background: linear-gradient(135deg, #003865 0%, #005a9e 50%, #0077c2 100%);
+    padding: var(--space-3xl) var(--space-xl);
+    margin: 0;
+    width: 100%;
+    color: var(--text-white);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .hero-section-unified::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hero-section-unified::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  .hero-content-unified {
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .hero-title-unified {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: var(--space-md);
+    line-height: 1.1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .hero-subtitle-unified {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    margin-bottom: 0;
+    max-width: 700px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .form-section-unified {
+    background: var(--white);
+    border: none;
+    border-radius: var(--radius-xl);
+    padding: var(--space-3xl);
+    margin: calc(var(--space-2xl) * -1) auto var(--space-2xl) auto;
+    max-width: 1400px;
+    width: calc(100% - 2 * var(--space-xl));
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 10;
+    animation: slideUp 0.6s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-section-unified::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #003865, #005a9e, #0077c2);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .form-header-unified {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid #f0f4f8;
+  }
+
+  .form-title-unified {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .form-title-unified i {
+    color: #003865;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #003865, #005a9e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .form-grid-unified {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-xl);
+  }
+
+  .form-section-group {
+    background: #f8fafc;
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid #e2e8f0;
+    margin-bottom: var(--space-xl);
+  }
+
+  .form-section-group-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #003865;
+    margin-bottom: var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .form-section-group-title i {
+    font-size: 1rem;
+  }
+  
+  .price-currency-group {
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: var(--space-md);
+    align-items: start;
+  }
+  
+  @media (max-width: 768px) {
+    .price-currency-group {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group-unified {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .form-label-unified {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .form-label-unified i {
+    color: var(--color-primary);
+    font-size: 0.9rem;
+  }
+
+  .form-input-unified {
+    padding: var(--space-md) var(--space-lg);
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .form-input-unified:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-input-unified:focus {
+    outline: none;
+    border-color: #003865;
+    box-shadow: 0 0 0 4px rgba(0, 56, 101, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .form-textarea-unified {
+    padding: var(--space-md) var(--space-lg);
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    min-height: 120px;
+    resize: vertical;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    width: 100%;
+    line-height: 1.6;
+  }
+
+  .form-textarea-unified:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-textarea-unified:focus {
+    outline: none;
+    border-color: #003865;
+    box-shadow: 0 0 0 4px rgba(0, 56, 101, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .form-select-unified {
+    padding: var(--space-md) var(--space-lg);
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23003865' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-md) center;
+    padding-right: calc(var(--space-xl) + 20px);
+  }
+
+  .form-select-unified:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-select-unified:focus {
+    outline: none;
+    border-color: #003865;
+    box-shadow: 0 0 0 4px rgba(0, 56, 101, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .help-text-unified {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+    line-height: 1.4;
+  }
+
+  .validation-message-unified {
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-6);
+    font-weight: 500;
+    display: none;
+  }
+
+  .validation-message-unified.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
+  }
+
+  .validation-message-unified.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+  }
+
+  .form-actions-unified {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--gray-200);
+    margin-top: var(--space-lg);
+  }
+
+  .btn-form-unified {
+    padding: var(--space-md) var(--space-2xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 200px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-form-unified::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-form-unified:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-form-unified.primary {
+    background: linear-gradient(135deg, #003865 0%, #005a9e 100%);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(0, 56, 101, 0.3);
+  }
+
+  .btn-form-unified.secondary {
+    background: var(--white);
+    color: #003865;
+    border: 2px solid #e2e8f0;
+  }
+
+  .btn-form-unified:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 56, 101, 0.4);
+  }
+
+  .btn-form-unified.primary:hover {
+    background: linear-gradient(135deg, #005a9e 0%, #0077c2 100%);
+  }
+
+  .btn-form-unified.secondary:hover {
+    border-color: #003865;
+    background: #f8fafc;
+  }
+
+  .btn-form-unified:active {
+    transform: translateY(0);
+  }
+
+  .floating-actions-unified {
+    position: fixed;
+    bottom: var(--space-6);
+    right: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    z-index: 1000;
+  }
+
+  .btn-floating-unified {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-primary);
+    color: var(--white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-floating-unified:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .btn-floating-unified.secondary {
+    background: var(--white);
+    color: var(--text-primary);
+    border: 1px solid var(--gray-300);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-floating-unified.secondary:hover {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .hero-section-unified {
+      padding: var(--space-xl) var(--space-md);
+    }
+    
+    .form-section-unified {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .hero-title-unified {
+      font-size: 2rem;
+    }
+    
+    .form-grid-unified {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-actions-unified {
+      flex-direction: column;
+    }
+    
+    .floating-actions-unified {
+      bottom: var(--space-md);
+      right: var(--space-md);
+    }
+  }
+  
+  @media (max-width: 1024px) {
+    .form-grid-unified {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="article-new-unified-container">
+  <!-- Hero Section -->
+  <div class="hero-section-unified">
+    <div class="hero-content-unified">
+      <h1 class="hero-title-unified">
+        📦 {% if article %}Modifier l'Article{% else %}Nouvel Article{% endif %}
+      </h1>
+      <p class="hero-subtitle-unified">
+        {% if article %}Modifiez les informations de l'article.{% else %}Créez un nouvel article pour votre catalogue. Tous les articles créés ici seront disponibles pour les simulations et la gestion de stock.{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-section-unified">
+    <div class="form-header-unified">
+      <div class="form-title-unified">
+        <i class="fas fa-{% if article %}edit{% else %}plus-circle{% endif %}"></i>
+        {% if article %}Modification d'Article{% else %}Création d'Article{% endif %}
+      </div>
+    </div>
+
+    <form id="articleForm" method="POST" enctype="multipart/form-data">
+      {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {% endif %}
+      <!-- Section Informations Générales -->
+      <div class="form-section-group">
+        <div class="form-section-group-title">
+          <i class="fas fa-info-circle"></i>
+          Informations Générales
+        </div>
+        <div class="form-grid-unified">
+          <div class="form-group-unified">
+            <label class="form-label-unified">
+              <i class="fas fa-tag"></i>
+              Nom de l'article *
+            </label>
+            <input type="text" name="name" class="form-input-unified" 
+                   value="{{ article.name if article else '' }}"
+                   placeholder="Ex: Smartphone Samsung Galaxy" required>
+            <div class="help-text-unified">Nom descriptif de l'article</div>
+          </div>
+
+          <div class="form-group-unified" style="grid-column: 1 / -1;">
+            <label class="form-label-unified">
+              <i class="fas fa-image"></i>
+              Image du produit
+            </label>
+            <div style="display: flex; gap: var(--space-lg); align-items: start; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 200px;">
+                <input type="file" name="image" id="imageInput" class="form-input-unified" 
+                       accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                       onchange="previewImage(this)">
+                <div class="help-text-unified">Formats acceptés: JPG, PNG, GIF, WEBP (max 5 MB)</div>
+              </div>
+              {% if article and article.image_path %}
+              <div style="flex-shrink: 0;">
+                <div style="position: relative; display: inline-block;">
+                  <img id="currentImage" src="{{ url_for('uploaded_file', filename=article.image_path) }}" 
+                       alt="Image actuelle" 
+                       style="width: 150px; height: 150px; object-fit: cover; border-radius: var(--radius-md); border: 2px solid #e2e8f0;">
+                  <div style="position: absolute; top: -8px; right: -8px; background: white; border-radius: 50%; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-image" style="color: #003865;"></i>
+                  </div>
+                </div>
+                <div class="help-text-unified" style="text-align: center; margin-top: var(--space-xs);">Image actuelle</div>
+              </div>
+              {% endif %}
+              <div id="imagePreview" style="flex-shrink: 0; display: none;">
+                <div style="position: relative; display: inline-block;">
+                  <img id="previewImg" src="" alt="Aperçu" 
+                       style="width: 150px; height: 150px; object-fit: cover; border-radius: var(--radius-md); border: 2px solid #003865;">
+                  <div style="position: absolute; top: -8px; right: -8px; background: white; border-radius: 50%; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                  </div>
+                </div>
+                <div class="help-text-unified" style="text-align: center; margin-top: var(--space-xs);">Nouvelle image</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group-unified">
+            <label class="form-label-unified">
+              <i class="fas fa-folder"></i>
+              Catégorie
+            </label>
+            <select name="category" class="form-select-unified">
+              <option value="">Sélectionner une catégorie</option>
+              {% for category in categories %}
+              <option value="{{ category.name }}" {% if article and article.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="help-text-unified">Catégorie du produit</div>
+          </div>
+
+          <div class="form-group-unified" style="grid-column: 1 / -1;">
+            <label class="form-label-unified">
+              <i class="fas fa-comment"></i>
+              Description
+            </label>
+            <textarea name="description" class="form-textarea-unified" 
+                      placeholder="Description détaillée de l'article..."></textarea>
+            <div class="help-text-unified">Description complète du produit</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Prix et Poids -->
+      <div class="form-section-group">
+        <div class="form-section-group-title">
+          <i class="fas fa-dollar-sign"></i>
+          Prix et Poids
+        </div>
+        <div class="form-grid-unified">
+
+          <div class="form-group-unified" style="grid-column: 1 / -1;">
+            <label class="form-label-unified">
+              <i class="fas fa-dollar-sign"></i>
+              Prix d'achat *
+            </label>
+            <div class="price-currency-group">
+              <input type="number" name="purchase_price" id="purchase_price" class="form-input-unified" 
+                     value="{{ article.purchase_price if article else '' }}"
+                     step="0.01" min="0" required placeholder="Montant">
+              <select name="purchase_currency" id="purchase_currency" class="form-select-unified" required>
+                <option value="USD" {% if article and article.purchase_currency == 'USD' or not article %}selected{% endif %}>USD</option>
+                <option value="EUR" {% if article and article.purchase_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                <option value="GNF" {% if article and article.purchase_currency == 'GNF' %}selected{% endif %}>GNF</option>
+                <option value="FCFA" {% if article and article.purchase_currency == 'FCFA' %}selected{% endif %}>FCFA</option>
+              </select>
+            </div>
+            <div class="help-text-unified">Prix d'achat avec la devise (USD, EUR, GNF ou FCFA)</div>
+          </div>
+
+          <div class="form-group-unified">
+            <label class="form-label-unified">
+              <i class="fas fa-weight"></i>
+              Poids (kg) *
+            </label>
+            <input type="number" name="weight" class="form-input-unified" 
+                   value="{{ article.unit_weight_kg if article else '' }}"
+                   step="0.01" min="0" placeholder="0.00">
+            <div class="help-text-unified">Poids de l'article en kilogrammes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Statut -->
+      <div class="form-section-group">
+        <div class="form-section-group-title">
+          <i class="fas fa-toggle-on"></i>
+          Statut et Disponibilité
+        </div>
+        <div class="form-grid-unified">
+          <div class="form-group-unified" style="grid-column: 1 / -1;">
+            <label style="display: flex; align-items: center; gap: var(--space-md); cursor: pointer; padding: var(--space-lg); background: #f8fafc; border-radius: var(--radius-md); border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+              <input type="checkbox" name="is_active" {% if not article or article.is_active %}checked{% endif %} style="width: 24px; height: 24px; cursor: pointer; accent-color: #003865;">
+              <span class="form-label-unified" style="margin: 0; flex: 1;">
+                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                Article actif (visible dans les simulations)
+              </span>
+            </label>
+            <div class="help-text-unified" style="margin-top: var(--space-sm); padding-left: var(--space-lg);">Cochez cette case pour que l'article soit disponible dans les simulations et la gestion de stock</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="validation-message-unified" id="validationMessage"></div>
+
+      <div class="form-actions-unified">
+        <button type="submit" class="btn-form-unified primary">
+          <i class="fas fa-save"></i>
+          {% if article %}Enregistrer les modifications{% else %}Créer l'Article{% endif %}
+        </button>
+        <button type="reset" class="btn-form-unified secondary">
+          <i class="fas fa-undo"></i>
+          Réinitialiser
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Actions Flottantes -->
+<div class="floating-actions-unified">
+  <button class="btn-floating-unified" onclick="scrollToTop()" title="Retour en haut">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+  <button class="btn-floating-unified secondary" onclick="saveDraft()" title="Sauvegarder brouillon">
+    <i class="fas fa-save"></i>
+  </button>
+  <a href="/articles" class="btn-floating-unified secondary" title="Retour aux articles">
+    <i class="fas fa-arrow-left"></i>
+  </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Validation du formulaire
+  function validateForm() {
+    const name = document.querySelector('[name="name"]').value.trim();
+    const sku = document.querySelector('[name="sku"]').value.trim();
+    const purchasePrice = parseFloat(document.querySelector('[name="purchase_price"]').value);
+    const sellingPrice = parseFloat(document.querySelector('[name="selling_price"]').value);
+    
+    const errors = [];
+    
+    if (!name) {
+      errors.push('Le nom de l\'article est requis');
+    }
+    
+    // SKU est optionnel (n'existe pas dans le modèle)
+    // if (!sku) {
+    //   errors.push('Le SKU est requis');
+    // }
+    
+    if (!purchasePrice || purchasePrice <= 0) {
+      errors.push('Le prix d\'achat doit être un nombre positif');
+    }
+    
+    // Prix de vente est optionnel (n'existe pas dans le modèle)
+    // if (!sellingPrice || sellingPrice <= 0) {
+    //   errors.push('Le prix de vente doit être un nombre positif');
+    // }
+    
+    // if (sellingPrice && sellingPrice <= purchasePrice * 8500) {
+    //   errors.push('Le prix de vente doit être supérieur au prix d\'achat converti');
+    // }
+    
+    return errors;
+  }
+
+  // Gestion de la soumission du formulaire
+  document.getElementById('articleForm').addEventListener('submit', function(e) {
+    const errors = validateForm();
+    
+    if (errors.length > 0) {
+      e.preventDefault();
+      showValidationMessage(errors.join('<br>'), 'error');
+      return false;
+    }
+    
+    // Si la validation passe, laisser le formulaire se soumettre normalement
+    // Ne pas appeler preventDefault()
+  });
+
+  function showValidationMessage(message, type) {
+    const messageEl = document.getElementById('validationMessage');
+    messageEl.innerHTML = message;
+    messageEl.className = `validation-message-unified ${type}`;
+    messageEl.style.display = 'block';
+    
+    if (type === 'success') {
+      setTimeout(() => {
+        messageEl.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  function saveDraft() {
+    showValidationMessage('Brouillon sauvegardé!', 'success');
+  }
+
+  // Prévisualisation de l'image
+  function previewImage(input) {
+    const preview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const currentImage = document.getElementById('currentImage');
+    
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        preview.style.display = 'block';
+        if (currentImage) {
+          currentImage.style.opacity = '0.5';
+        }
+      };
+      
+      reader.readAsDataURL(input.files[0]);
+    } else {
+      preview.style.display = 'none';
+      if (currentImage) {
+        currentImage.style.opacity = '1';
+      }
+    }
+  }
+
+  // Animation d'entrée
+  document.addEventListener('DOMContentLoaded', function() {
+    // Animation du formulaire
+    const formGroups = document.querySelectorAll('.form-group-unified');
+    formGroups.forEach((group, index) => {
+      group.style.opacity = '0';
+      group.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        group.style.transition = 'all 0.5s ease';
+        group.style.opacity = '1';
+        group.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+  });
+
+  // Gestion du scroll pour les actions flottantes
+  window.addEventListener('scroll', function() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const floatingActions = document.querySelector('.floating-actions-unified');
+    
+    if (scrollTop > 300) {
+      floatingActions.style.opacity = '1';
+      floatingActions.style.transform = 'translateY(0)';
+    } else {
+      floatingActions.style.opacity = '0.7';
+      floatingActions.style.transform = 'translateY(10px)';
+    }
+  });
+
+  // Initialisation des actions flottantes
+  document.addEventListener('DOMContentLoaded', function() {
+    const floatingActions = document.querySelector('.floating-actions-unified');
+    floatingActions.style.transition = 'all 0.3s ease';
+    floatingActions.style.opacity = '0.7';
+    floatingActions.style.transform = 'translateY(10px)';
+  });
+</script>
+{% endblock %}

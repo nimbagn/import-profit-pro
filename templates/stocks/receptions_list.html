@@ -1,0 +1,241 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Réceptions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-truck-loading me-2"></i>
+      Réceptions
+    </h1>
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+      <a href="{{ url_for('stocks.reception_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouvelle Réception
+      </a>
+      <a href="{{ url_for('stocks.receptions_export_excel', search=search, date_from=date_from, date_to=date_to, depot_id=depot_id, supplier_name=supplier_name) }}" 
+         class="btn-hl btn-hl-secondary" 
+         style="background: #16a34a; color: white; border-color: #16a34a;">
+        <i class="fas fa-file-excel me-2"></i>
+        Exporter Excel
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  {% if total_receptions is defined %}
+  <div class="card-hl">
+    <div style="text-align: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md);">
+      <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">{{ total_receptions }}</div>
+      <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">Total Réceptions</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Filtres -->
+  <div class="card-hl">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+      <i class="fas fa-filter me-2"></i>
+      Filtres et Recherche
+    </h3>
+    <form method="GET" action="{{ url_for('stocks.receptions_list') }}" class="filters-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <div class="form-group">
+        <label class="form-hl-label">Recherche</label>
+        <input type="text" name="search" value="{{ search or '' }}" class="form-hl-input" placeholder="Référence, BL, fournisseur...">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Date début</label>
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-hl-input">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Date fin</label>
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-hl-input">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Dépôt</label>
+        <select name="depot_id" class="form-hl-select">
+          <option value="">Tous les dépôts</option>
+          {% if depots %}
+          {% for depot in depots %}
+          <option value="{{ depot.id }}" {% if depot_id == depot.id %}selected{% endif %}>{{ depot.name }}</option>
+          {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Fournisseur</label>
+        <input type="text" name="supplier_name" value="{{ supplier_name or '' }}" class="form-hl-input" placeholder="Nom du fournisseur...">
+      </div>
+      <div class="form-group">
+        <label class="form-hl-label">Par page</label>
+        <select name="per_page" class="form-hl-select" onchange="this.form.submit()">
+          <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+          <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+          <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+          <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+        </select>
+      </div>
+      <div class="form-group" style="display: flex; gap: var(--space-sm); align-items: flex-end;">
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        <a href="{{ url_for('stocks.receptions_list') }}" class="btn-hl btn-hl-secondary">
+          <i class="fas fa-times me-2"></i>Réinitialiser
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {% if receptions %}
+  <div class="card-hl">
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Date</th>
+            <th>Dépôt</th>
+            <th>Fournisseur</th>
+            <th>N° BL</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reception in receptions %}
+          <tr>
+            <td><strong>{{ reception.reference }}</strong></td>
+            <td>{{ reception.reception_date.strftime('%d/%m/%Y %H:%M') if reception.reception_date else '-' }}</td>
+            <td><strong>{{ reception.depot.name if reception.depot else '-' }}</strong></td>
+            <td>{{ reception.supplier_name }}</td>
+            <td>{{ reception.bl_number }}</td>
+            <td>
+              {% if reception.status == 'completed' %}
+              <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-md); background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 600; font-size: 0.875rem; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
+                <i class="fas fa-check-circle"></i>
+                {{ reception.status|title }}
+              </span>
+              {% elif reception.status == 'draft' %}
+              <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-md); background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; font-weight: 600; font-size: 0.875rem; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);">
+                <i class="fas fa-edit"></i>
+                {{ reception.status|title }}
+              </span>
+              {% else %}
+              <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-md); background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-weight: 600; font-size: 0.875rem; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ reception.status|title }}
+              </span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('stocks.reception_detail', id=reception.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Voir détails">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+    <div style="display: flex; justify-content: center; align-items: center; gap: var(--space-md); margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('stocks.receptions_list', page=pagination.prev_num, search=search, date_from=date_from, date_to=date_to, depot_id=depot_id, supplier_name=supplier_name, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        <i class="fas fa-chevron-left me-2"></i>Précédent
+      </a>
+      {% endif %}
+      
+      <span style="color: var(--text-secondary); font-weight: 500; padding: var(--space-sm);">
+        Page {{ pagination.page }} sur {{ pagination.pages }} 
+        ({{ pagination.total }} réception{{ 's' if pagination.total > 1 else '' }})
+      </span>
+      
+      {% if pagination.has_next %}
+      <a href="{{ url_for('stocks.receptions_list', page=pagination.next_num, search=search, date_from=date_from, date_to=date_to, depot_id=depot_id, supplier_name=supplier_name, per_page=per_page) }}" 
+         class="btn-hl btn-hl-secondary">
+        Suivant<i class="fas fa-chevron-right ms-2"></i>
+      </a>
+      {% endif %}
+    </div>
+    
+    <!-- Liens de pagination rapide -->
+    <div style="display: flex; justify-content: center; gap: var(--space-xs); margin-top: var(--space-md); flex-wrap: wrap;">
+      {% for page_num in range(1, pagination.pages + 1) %}
+        {% if page_num == pagination.page %}
+        <span class="btn-hl btn-hl-primary" style="min-width: 40px; text-align: center;">{{ page_num }}</span>
+        {% elif page_num <= 3 or page_num > pagination.pages - 3 or (page_num >= pagination.page - 1 and page_num <= pagination.page + 1) %}
+        <a href="{{ url_for('stocks.receptions_list', page=page_num, search=search, date_from=date_from, date_to=date_to, depot_id=depot_id, supplier_name=supplier_name, per_page=per_page) }}" 
+           class="btn-hl btn-hl-secondary" style="min-width: 40px; text-align: center;">{{ page_num }}</a>
+        {% elif page_num == 4 or page_num == pagination.pages - 3 %}
+        <span style="color: var(--text-muted); padding: var(--space-xs);">...</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-truck-loading" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune réception</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par créer votre première réception</p>
+    <a href="{{ url_for('stocks.reception_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer une Réception
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

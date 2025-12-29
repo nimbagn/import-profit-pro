@@ -1,0 +1,132 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Régions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-map-marked-alt me-2"></i>
+      Régions
+    </h1>
+    <a href="{{ url_for('referentiels.region_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Nouvelle Région
+    </a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if regions %}
+  <div class="card-hl">
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Code</th>
+            <th>Dépôts</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for region in regions %}
+          <tr>
+            <td><strong>{{ region.name }}</strong></td>
+            <td>{{ region.code or '-' }}</td>
+            <td>
+              <span class="badge-hl badge-hl-info">{{ region.depots|length }} dépôt(s)</span>
+            </td>
+            <td>{{ region.created_at.strftime('%d/%m/%Y') if region.created_at else '-' }}</td>
+            <td>
+              <div style="display: flex; gap: var(--space-xs);">
+                <a href="{{ url_for('referentiels.region_edit', id=region.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% if region.depots|length == 0 %}
+                <form method="POST" action="{{ url_for('referentiels.region_delete', id=region.id) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette région ?');">
+                  <button type="submit" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm); background: rgba(239, 68, 68, 0.1); border-color: var(--color-danger); color: var(--color-danger);" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-map-marked-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune région</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par créer votre première région</p>
+    <a href="{{ url_for('referentiels.region_new') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer une Région
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

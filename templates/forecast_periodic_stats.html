@@ -1,0 +1,465 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Statistiques Périodiques - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .period-tabs {
+    display: flex;
+    gap: var(--space-sm);
+    margin: 0 var(--space-xl) var(--space-lg) var(--space-xl);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .period-tab {
+    padding: var(--space-sm) var(--space-lg);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.3s;
+  }
+  
+  .period-tab:hover {
+    color: var(--color-primary);
+  }
+  
+  .period-tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+  
+  .stats-table-container {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .stats-table th,
+  .stats-table td {
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .stats-table th {
+    background: var(--gray-50);
+    font-weight: 600;
+    color: var(--text-primary);
+    position: sticky;
+    top: 0;
+  }
+  
+  .stats-table tr:hover {
+    background: var(--gray-50);
+  }
+  
+  .chart-container {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .period-tabs {
+      flex-wrap: wrap;
+    }
+    
+    .stats-table {
+      font-size: 0.875rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1 class="page-title-hl" style="margin: 0;">
+        <i class="fas fa-chart-bar me-2"></i>
+        Statistiques Périodiques
+      </h1>
+      <div style="display: flex; gap: var(--space-md);">
+        <a href="{{ url_for('forecast_orders_correspondence') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>
+          Retour
+        </a>
+        <a href="{{ url_for('forecast_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-list me-2"></i>
+          Prévisions
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques globales -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Total Commandes ({{ days_back }}j)
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">
+        {{ total_orders }}
+      </div>
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-xs);">
+        Moyenne: {{ "%.1f"|format(avg_daily_orders) }}/jour
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Valeur Totale ({{ days_back }}j)
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: #059669;">
+        {{ total_value|format_number(0) }} GNF
+      </div>
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-xs);">
+        Moyenne: {{ avg_daily_value|format_number(0) }} GNF/jour
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Période
+      </div>
+      <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">
+        {{ start_date.strftime('%d/%m/%Y') }} - {{ today.strftime('%d/%m/%Y') }}
+      </div>
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-xs);">
+        {{ days_back }} jours
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        Prévisions Actives
+      </div>
+      <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">
+        {{ forecast_stats|length }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Onglets de période -->
+  <div class="period-tabs">
+    <button class="period-tab {% if period_type == 'daily' %}active{% endif %}" 
+            onclick="window.location.href='{{ url_for('forecast_periodic_stats', period='daily', days=days_back) }}'">
+      <i class="fas fa-calendar-day me-2"></i>
+      Quotidien
+    </button>
+    <button class="period-tab {% if period_type == 'weekly' %}active{% endif %}" 
+            onclick="window.location.href='{{ url_for('forecast_periodic_stats', period='weekly', days=days_back) }}'">
+      <i class="fas fa-calendar-week me-2"></i>
+      Hebdomadaire
+    </button>
+    <button class="period-tab {% if period_type == 'monthly' %}active{% endif %}" 
+            onclick="window.location.href='{{ url_for('forecast_periodic_stats', period='monthly', days=days_back) }}'">
+      <i class="fas fa-calendar-alt me-2"></i>
+      Mensuel
+    </button>
+  </div>
+
+  <!-- Tableau de statistiques -->
+  <div class="stats-table-container">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md);">
+      <i class="fas fa-table me-2"></i>
+      {% if period_type == 'daily' %}
+        Statistiques Quotidiennes
+      {% elif period_type == 'weekly' %}
+        Statistiques Hebdomadaires
+      {% else %}
+        Statistiques Mensuelles
+      {% endif %}
+    </h3>
+    
+    <div style="overflow-x: auto;">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>
+              {% if period_type == 'daily' %}
+                Date
+              {% elif period_type == 'weekly' %}
+                Semaine
+              {% else %}
+                Mois
+              {% endif %}
+            </th>
+            <th style="text-align: right;">Nb Commandes</th>
+            <th style="text-align: right;">Valeur Totale</th>
+            <th style="text-align: right;">Valeur Moyenne</th>
+            <th style="text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if period_type == 'daily' %}
+            {% for day in daily_data|reverse %}
+            <tr>
+              <td><strong>{{ day.date_label }}</strong></td>
+              <td style="text-align: right;">{{ day.orders_count }}</td>
+              <td style="text-align: right; font-weight: 600; color: #059669;">
+                {{ day.total_value|format_number(0) }} GNF
+              </td>
+              <td style="text-align: right; color: var(--text-muted);">
+                {{ (day.total_value / day.orders_count)|format_number(0) if day.orders_count > 0 else '0' }} GNF
+              </td>
+              <td style="text-align: center;">
+                {% if day.orders_count > 0 %}
+                <a href="{{ url_for('orders.orders_list') }}?date={{ day.date_str }}" 
+                   class="btn-hl btn-hl-sm" 
+                   style="padding: var(--space-xs) var(--space-sm); font-size: 0.875rem;">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% else %}
+                <span style="color: var(--text-muted);">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% elif period_type == 'weekly' %}
+            {% for week in weekly_data|reverse %}
+            <tr>
+              <td><strong>{{ week.week_label }}</strong></td>
+              <td style="text-align: right;">{{ week.orders_count }}</td>
+              <td style="text-align: right; font-weight: 600; color: #059669;">
+                {{ week.total_value|format_number(0) }} GNF
+              </td>
+              <td style="text-align: right; color: var(--text-muted);">
+                {{ (week.total_value / week.orders_count)|format_number(0) if week.orders_count > 0 else '0' }} GNF
+              </td>
+              <td style="text-align: center;">
+                {% if week.orders_count > 0 %}
+                <a href="{{ url_for('orders.orders_list') }}?week={{ week.week_key }}" 
+                   class="btn-hl btn-hl-sm" 
+                   style="padding: var(--space-xs) var(--space-sm); font-size: 0.875rem;">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% else %}
+                <span style="color: var(--text-muted);">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            {% for month in monthly_data|reverse %}
+            <tr>
+              <td><strong>{{ month.month_label }}</strong></td>
+              <td style="text-align: right;">{{ month.orders_count }}</td>
+              <td style="text-align: right; font-weight: 600; color: #059669;">
+                {{ month.total_value|format_number(0) }} GNF
+              </td>
+              <td style="text-align: right; color: var(--text-muted);">
+                {{ (month.total_value / month.orders_count)|format_number(0) if month.orders_count > 0 else '0' }} GNF
+              </td>
+              <td style="text-align: center;">
+                {% if month.orders_count > 0 %}
+                <a href="{{ url_for('orders.orders_list') }}?month={{ month.month_key }}" 
+                   class="btn-hl btn-hl-sm" 
+                   style="padding: var(--space-xs) var(--space-sm); font-size: 0.875rem;">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% else %}
+                <span style="color: var(--text-muted);">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Graphique simple avec Canvas -->
+  <div class="chart-container">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md);">
+      <i class="fas fa-chart-line me-2"></i>
+      Évolution de la Valeur
+    </h3>
+    <canvas id="valueChart" style="max-height: 400px;"></canvas>
+  </div>
+
+  <!-- Prévisions dans la période -->
+  {% if forecast_stats %}
+  <div class="stats-table-container">
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md);">
+      <i class="fas fa-bullseye me-2"></i>
+      Prévisions Actives dans la Période
+    </h3>
+    
+    <div style="overflow-x: auto;">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Prévision</th>
+            <th>Période</th>
+            <th style="text-align: right;">Nb Commandes</th>
+            <th style="text-align: right;">Valeur Réalisée</th>
+            <th style="text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stat in forecast_stats %}
+          <tr>
+            <td><strong>{{ stat.forecast.name }}</strong></td>
+            <td>
+              {{ stat.forecast.start_date.strftime('%d/%m/%Y') }} - 
+              {{ stat.forecast.end_date.strftime('%d/%m/%Y') }}
+            </td>
+            <td style="text-align: right;">{{ stat.orders_count }}</td>
+            <td style="text-align: right; font-weight: 600; color: #059669;">
+              {{ stat.total_value|format_number(0) }} GNF
+            </td>
+            <td style="text-align: center;">
+              <a href="{{ url_for('forecast_detail', id=stat.forecast.id) }}" 
+                 class="btn-hl btn-hl-sm" 
+                 style="padding: var(--space-xs) var(--space-sm); font-size: 0.875rem;">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('valueChart');
+  if (!ctx) return;
+  
+  const chartData = {
+    labels: [
+      {% if period_type == 'daily' %}
+        {% for day in daily_data|reverse %}
+        '{{ day.date_label }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+      {% elif period_type == 'weekly' %}
+        {% for week in weekly_data|reverse %}
+        '{{ week.week_label }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+      {% else %}
+        {% for month in monthly_data|reverse %}
+        '{{ month.month_label }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+      {% endif %}
+    ],
+    datasets: [{
+      label: 'Valeur des Commandes (GNF)',
+      data: [
+        {% if period_type == 'daily' %}
+          {% for day in daily_data|reverse %}
+          {{ day.total_value }}{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% elif period_type == 'weekly' %}
+          {% for week in weekly_data|reverse %}
+          {{ week.total_value }}{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% else %}
+          {% for month in monthly_data|reverse %}
+          {{ month.total_value }}{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% endif %}
+      ],
+      borderColor: '#059669',
+      backgroundColor: 'rgba(5, 150, 105, 0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.4
+    }]
+  };
+  
+  new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Valeur: ' + new Intl.NumberFormat('fr-FR').format(context.parsed.y) + ' GNF';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return new Intl.NumberFormat('fr-FR').format(value) + ' GNF';
+            }
+          }
+        }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
+

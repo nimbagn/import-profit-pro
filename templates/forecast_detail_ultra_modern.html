@@ -1,0 +1,485 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}Détails Prévision - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .forecast-info {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+  }
+  
+  .info-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .info-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .table-container {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  .table-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 100%;
+    background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .table-container.scrollable::after {
+    opacity: 1;
+  }
+  
+  .table-hl {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+  }
+  
+  .table-hl thead {
+    background: var(--color-primary);
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .table-hl th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  
+  .table-hl td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  
+  .table-hl tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .table-hl tfoot {
+    background: var(--bg-tertiary);
+    font-weight: 700;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
+  
+  .table-hl tfoot td {
+    border-top: 2px solid var(--color-primary);
+    padding: var(--space-md);
+  }
+  
+  .highlight-yellow {
+    background: #fff9c4 !important;
+  }
+  
+  .positive {
+    color: #22c55e;
+  }
+  
+  .negative {
+    color: #ef4444;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .table-hl {
+      min-width: 1000px;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: var(--space-sm);
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+      padding-top: var(--space-md);
+    }
+    
+    .page-header-hl > div {
+      flex-direction: column;
+      gap: var(--space-md);
+      align-items: flex-start !important;
+    }
+    
+    .page-header-hl > div > div {
+      flex-direction: column;
+      width: 100%;
+      gap: var(--space-sm);
+    }
+    
+    .page-header-hl > div > div > a {
+      width: 100%;
+      text-align: center;
+    }
+    
+    .forecast-info,
+    .table-container {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+      padding: var(--space-md);
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: var(--space-sm);
+    }
+    
+    .table-hl {
+      min-width: 900px;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: var(--space-xs) var(--space-sm);
+      font-size: 0.75rem;
+    }
+    
+    .table-hl th:first-child,
+    .table-hl td:first-child {
+      position: sticky;
+      left: 0;
+      background: var(--white);
+      z-index: 5;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table-hl thead th:first-child {
+      background: var(--color-primary);
+      z-index: 15;
+    }
+    
+    .table-hl tfoot td:first-child {
+      background: var(--bg-tertiary);
+      z-index: 15;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .table-hl {
+      min-width: 800px;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: var(--space-xs);
+      font-size: 0.7rem;
+    }
+    
+    .page-header-hl h1 {
+      font-size: 1.25rem;
+    }
+  }
+  
+  /* Indicateur de scroll */
+  .scroll-indicator {
+    display: none;
+    position: absolute;
+    bottom: var(--space-sm);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: var(--white);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    z-index: 20;
+    animation: bounce 2s infinite;
+  }
+  
+  @media (max-width: 768px) {
+    .scroll-indicator {
+      display: block;
+    }
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-5px);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1 class="page-title-hl">
+        <i class="fas fa-chart-line me-2"></i>
+        Prévision: {{ forecast.name }}
+      </h1>
+      <div style="display: flex; gap: var(--space-md);">
+        <a href="{{ url_for('forecast_enter_realizations', id=forecast.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-edit me-2"></i>Saisir les Réalisations
+        </a>
+        <a href="{{ url_for('forecast_edit', id=forecast.id) }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-edit me-2"></i>Modifier
+        </a>
+        <a href="{{ url_for('forecast_preview', id=forecast.id) }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-eye me-2"></i>Prévisualiser
+        </a>
+        <a href="{{ url_for('forecast_list') }}" class="btn-hl btn-hl-secondary">
+          <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informations générales -->
+  <div class="forecast-info">
+    <h2 style="margin-bottom: var(--space-lg); color: var(--color-primary);">
+      <i class="fas fa-info-circle me-2"></i>Informations Générales
+    </h2>
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Période</span>
+        <span class="info-value">{{ forecast.start_date.strftime('%d/%m/%Y') }} - {{ forecast.end_date.strftime('%d/%m/%Y') }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Statut</span>
+        <span class="info-value">
+          {% if forecast.status == 'draft' %}
+            <span style="color: var(--text-muted);">Brouillon</span>
+          {% elif forecast.status == 'active' %}
+            <span style="color: #22c55e;">Active</span>
+          {% elif forecast.status == 'completed' %}
+            <span style="color: var(--color-primary);">Terminée</span>
+          {% else %}
+            <span style="color: var(--text-muted);">Archivée</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Devise</span>
+        <span class="info-value" style="padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); background: var(--color-primary); color: var(--white); font-weight: 700;">
+          {{ currency|default('GNF') }}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Valeur Prévisionnelle Totale</span>
+        <span class="info-value highlight-yellow" style="padding: var(--space-xs); border-radius: var(--radius-sm);">
+          {{ "{:,.0f}".format(total_forecast_currency|default(0))|replace(',', ' ') }} {{ currency|default('GNF') }}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Valeur Réalisée Totale</span>
+        <span class="info-value">
+          {{ "{:,.0f}".format(total_realized_currency|default(0))|replace(',', ' ') }} {{ currency|default('GNF') }}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Taux de Réalisation</span>
+        <span class="info-value {% if forecast.realization_percentage >= 50 %}positive{% else %}negative{% endif %}">
+          {{ "{:.1f}".format(forecast.realization_percentage|default(0)) }}%
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Créé par</span>
+        <span class="info-value">{{ forecast.created_by.name if forecast.created_by else 'N/A' }}</span>
+      </div>
+    </div>
+    {% if forecast.description %}
+    <div style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--gray-200);">
+      <span class="info-label">Description</span>
+      <p style="margin-top: var(--space-xs); color: var(--text-primary);">{{ forecast.description }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tableau récapitulatif -->
+  <div class="table-container" id="tableContainer">
+    <h2 style="margin-bottom: var(--space-lg); color: var(--color-primary);">
+      <i class="fas fa-table me-2"></i>Tableau Récapitulatif
+    </h2>
+    <div class="scroll-indicator">
+      <i class="fas fa-arrows-alt-h me-1"></i>Faites défiler horizontalement
+    </div>
+    
+    <table class="table-hl">
+      <thead>
+        <tr>
+          <th>ARTICLES</th>
+          <th>PRIX VENTE GROS ({{ currency|default('GNF') }})</th>
+          <th>FORCAST</th>
+          <th class="highlight-yellow">Valeur Fcast ({{ currency|default('GNF') }})</th>
+          <th>MOYENNE REALISEE</th>
+          <th>Val Réa ({{ currency|default('GNF') }})</th>
+          <th>Real%</th>
+          <th>EQ</th>
+          <th>EVal ({{ currency|default('GNF') }})</th>
+          <th>EVALCFA</th>
+          <th>ECART A 50% ({{ currency|default('GNF') }})</th>
+          <th>QAF</th>
+          <th>Nb Jr</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td><strong>{{ item.stock_item.name }}</strong></td>
+          <td>{{ "{:,.0f}".format(item.selling_price_currency|default(0))|replace(',', ' ') }}</td>
+          <td>{{ "{:,.0f}".format(item.forecast_quantity|default(0))|replace(',', ' ') }}</td>
+          <td class="highlight-yellow"><strong>{{ "{:,.0f}".format(item.forecast_value_currency|default(0))|replace(',', ' ') }}</strong></td>
+          <td>{{ "{:,.2f}".format(item.realized_quantity|default(0))|replace(',', ' ') }}</td>
+          <td>{{ "{:,.0f}".format(item.realized_value_currency|default(0))|replace(',', ' ') }}</td>
+          <td class="{% if item.realization_percentage >= 50 %}positive{% else %}negative{% endif %}">
+            <strong>{{ "{:.0f}".format(item.realization_percentage|default(0)) }}%</strong>
+          </td>
+          <td>{{ "{:,.2f}".format(item.equivalent_quantity|default(0))|replace(',', ' ') }}</td>
+          <td>{{ "{:,.0f}".format(item.evaluated_value_currency|default(0))|replace(',', ' ') }}</td>
+          <td>{{ "{:,.0f}".format(item.evaluated_value_cfa|default(0))|replace(',', ' ') }}</td>
+          <td class="{% if item.deviation_50pct_currency >= 0 %}positive{% else %}negative{% endif %}">
+            {{ "{:,.0f}".format(item.deviation_50pct_currency|default(0))|replace(',', ' ') }}
+          </td>
+          <td>{{ "{:,.2f}".format(item.quantity_available|default(0))|replace(',', ' ') }}</td>
+          <td>{{ item.number_of_days|default(1) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td><strong>TOTAL</strong></td>
+          <td>-</td>
+          <td><strong>{{ "{:,.0f}".format(items|sum(attribute='forecast_quantity')|default(0))|replace(',', ' ') }}</strong></td>
+          <td class="highlight-yellow"><strong>{{ "{:,.0f}".format(total_forecast_currency|default(0))|replace(',', ' ') }} {{ currency|default('GNF') }}</strong></td>
+          <td><strong>{{ "{:,.2f}".format(items|sum(attribute='realized_quantity')|default(0))|replace(',', ' ') }}</strong></td>
+          <td><strong>{{ "{:,.0f}".format(total_realized_currency|default(0))|replace(',', ' ') }} {{ currency|default('GNF') }}</strong></td>
+          <td><strong>{{ "{:.1f}".format(forecast.realization_percentage|default(0)) }}%</strong></td>
+          <td><strong>{{ "{:,.2f}".format(items|sum(attribute='equivalent_quantity')|default(0))|replace(',', ' ') }}</strong></td>
+          <td><strong>{{ "{:,.0f}".format(items|sum(attribute='evaluated_value_currency')|default(0))|replace(',', ' ') }} {{ currency|default('GNF') }}</strong></td>
+          <td><strong>{{ "{:,.0f}".format(items|sum(attribute='evaluated_value_cfa')|default(0))|replace(',', ' ') }}</strong></td>
+          <td><strong>{{ "{:,.0f}".format(items|sum(attribute='deviation_50pct_currency')|default(0))|replace(',', ' ') }} {{ currency|default('GNF') }}</strong></td>
+          <td><strong>{{ "{:,.2f}".format(items|sum(attribute='quantity_available')|default(0))|replace(',', ' ') }}</strong></td>
+          <td><strong>{{ items|sum(attribute='number_of_days')|default(0) / items|length if items|length > 0 else 0 }}</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Détecter si le tableau est scrollable
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('tableContainer');
+    if (container) {
+      const checkScrollable = () => {
+        if (container.scrollWidth > container.clientWidth) {
+          container.classList.add('scrollable');
+        } else {
+          container.classList.remove('scrollable');
+        }
+      };
+      
+      checkScrollable();
+      window.addEventListener('resize', checkScrollable);
+      
+      // Masquer l'indicateur après le premier scroll
+      let hasScrolled = false;
+      container.addEventListener('scroll', function() {
+        if (!hasScrolled) {
+          hasScrolled = true;
+          const indicator = container.querySelector('.scroll-indicator');
+          if (indicator) {
+            indicator.style.opacity = '0';
+            setTimeout(() => {
+              indicator.style.display = 'none';
+            }, 300);
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
+

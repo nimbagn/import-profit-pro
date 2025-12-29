@@ -1,0 +1,483 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Dashboard Flotte - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: var(--transition-normal);
+  }
+  
+  .stat-card-hl:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .stat-card-hl-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .stat-card-hl-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .alerts-section {
+    margin-bottom: var(--space-xl);
+  }
+  
+  .alert-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .alert-card.critical {
+    border-left: 4px solid var(--color-danger);
+    background: #fef2f2;
+  }
+  
+  .alert-card.warning {
+    border-left: 4px solid var(--color-warning);
+    background: #fffbeb;
+  }
+  
+  .alert-card.info {
+    border-left: 4px solid var(--color-info);
+    background: #eff6ff;
+  }
+  
+  .alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+  }
+  
+  .alert-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .alert-count {
+    background: var(--color-danger);
+    color: white;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  
+  .alert-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .alert-item {
+    padding: var(--space-md);
+    background: var(--white);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-sm);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .alert-item-info {
+    flex: 1;
+  }
+  
+  .alert-item-vehicle {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .alert-item-detail {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+  
+  .alert-item-action {
+    margin-left: var(--space-md);
+  }
+  
+  .recent-section {
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .card-body-hl {
+    padding: var(--space-lg);
+  }
+  
+  .table-hl {
+    overflow-x: auto;
+  }
+  
+  .chart-container {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-tachometer-alt me-2"></i>
+      Dashboard Flotte
+    </h1>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('flotte.operations_guide') }}" class="btn-hl btn-hl-outline" style="background: rgba(139, 92, 246, 0.1); border-color: #8b5cf6; color: #8b5cf6;">
+        <i class="fas fa-book me-2"></i>Guide des Opérations
+      </a>
+      <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-list me-2"></i>Liste des Véhicules
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistiques Globales -->
+  <div class="stats-grid">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_vehicles }}</div>
+      <div class="stat-card-hl-label">Total Véhicules</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" style="color: var(--color-success);">{{ active_vehicles }}</div>
+      <div class="stat-card-hl-label">Véhicules Actifs</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" style="color: var(--color-warning);">{{ maintenance_vehicles }}</div>
+      <div class="stat-card-hl-label">En Maintenance</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" style="color: var(--color-primary);">{{ availability_rate }}%</div>
+      <div class="stat-card-hl-label">Taux de Disponibilité</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" style="color: var(--color-info);">
+        {% if total_km %}{{ "{:,.0f}".format(total_km)|replace(',', ' ') }}{% else %}0{% endif %}
+      </div>
+      <div class="stat-card-hl-label">Kilométrage Total</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" style="color: var(--color-danger);">{{ vehicles_without_driver }}</div>
+      <div class="stat-card-hl-label">Sans Conducteur</div>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  <div class="alerts-section">
+    {% if expired_documents or expiring_soon_documents or due_maintenances or vehicles_without_driver > 0 %}
+    <h2 class="page-title-hl" style="font-size: 1.5rem; margin-bottom: var(--space-lg);">
+      <i class="fas fa-exclamation-triangle me-2"></i>Alertes
+    </h2>
+    
+    <!-- Documents expirés -->
+    {% if expired_documents %}
+    <div class="alert-card critical">
+      <div class="alert-header">
+        <div class="alert-title">
+          <i class="fas fa-times-circle" style="color: var(--color-danger);"></i>
+          Documents Expirés
+        </div>
+        <span class="alert-count">{{ expired_documents|length }}</span>
+      </div>
+      <ul class="alert-list">
+          {% for doc in expired_documents[:5] %}
+        <li class="alert-item">
+          <div class="alert-item-info">
+            <div class="alert-item-vehicle">
+              <i class="fas fa-car me-1"></i>{% if doc.vehicle %}{{ doc.vehicle.plate_number }}{% else %}Véhicule inconnu{% endif %} - {{ doc.document_type|replace('_', ' ')|title }}
+            </div>
+            <div class="alert-item-detail">
+              {% set days = get_days_until_expiry(doc.expiry_date) %}
+              Expiré le {{ doc.expiry_date.strftime('%d/%m/%Y') }} (il y a {{ -days }} jour{{ 's' if -days > 1 else '' }})
+            </div>
+          </div>
+          <div class="alert-item-action">
+            {% if doc.vehicle_id %}
+            <a href="{{ url_for('flotte.vehicle_documents', vehicle_id=doc.vehicle_id) }}" class="btn-hl btn-hl-sm btn-hl-primary">
+              <i class="fas fa-eye me-1"></i>Voir
+            </a>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if expired_documents|length > 5 %}
+      <div style="text-align: center; margin-top: var(--space-md);">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          Voir tous les documents expirés ({{ expired_documents|length }})
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Documents expirant bientôt -->
+    {% if expiring_soon_documents %}
+    <div class="alert-card warning">
+      <div class="alert-header">
+        <div class="alert-title">
+          <i class="fas fa-exclamation-circle" style="color: var(--color-warning);"></i>
+          Documents Expirant Bientôt (≤15 jours)
+        </div>
+        <span class="alert-count" style="background: var(--color-warning);">{{ expiring_soon_documents|length }}</span>
+      </div>
+      <ul class="alert-list">
+          {% for doc in expiring_soon_documents[:5] %}
+        <li class="alert-item">
+          <div class="alert-item-info">
+            <div class="alert-item-vehicle">
+              <i class="fas fa-car me-1"></i>{% if doc.vehicle %}{{ doc.vehicle.plate_number }}{% else %}Véhicule inconnu{% endif %} - {{ doc.document_type|replace('_', ' ')|title }}
+            </div>
+            <div class="alert-item-detail">
+              {% set days = get_days_until_expiry(doc.expiry_date) %}
+              Expire le {{ doc.expiry_date.strftime('%d/%m/%Y') }} ({{ days }} jour{{ 's' if days > 1 else '' }} restant{{ 's' if days > 1 else '' }})
+            </div>
+          </div>
+          <div class="alert-item-action">
+            <a href="{{ url_for('flotte.vehicle_documents', vehicle_id=doc.vehicle_id) }}" class="btn-hl btn-hl-sm btn-hl-warning">
+              <i class="fas fa-eye me-1"></i>Voir
+            </a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if expiring_soon_documents|length > 5 %}
+      <div style="text-align: center; margin-top: var(--space-md);">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          Voir tous les documents expirant ({{ expiring_soon_documents|length }})
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Maintenances dues -->
+    {% if due_maintenances %}
+    <div class="alert-card warning">
+      <div class="alert-header">
+        <div class="alert-title">
+          <i class="fas fa-tools" style="color: var(--color-warning);"></i>
+          Maintenances Dues
+        </div>
+        <span class="alert-count" style="background: var(--color-warning);">{{ due_maintenances|length }}</span>
+      </div>
+      <ul class="alert-list">
+          {% for item in due_maintenances[:5] %}
+        <li class="alert-item">
+          <div class="alert-item-info">
+            <div class="alert-item-vehicle">
+              <i class="fas fa-car me-1"></i>{% if item.maintenance.vehicle %}{{ item.maintenance.vehicle.plate_number }}{% else %}Véhicule inconnu{% endif %} - {{ item.maintenance.maintenance_type }}
+            </div>
+            <div class="alert-item-detail">
+              {{ item.reason }}
+            </div>
+          </div>
+          <div class="alert-item-action">
+            {% if item.maintenance.vehicle_id %}
+            <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=item.maintenance.vehicle_id) }}" class="btn-hl btn-hl-sm btn-hl-warning">
+              <i class="fas fa-eye me-1"></i>Voir
+            </a>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if due_maintenances|length > 5 %}
+      <div style="text-align: center; margin-top: var(--space-md);">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline">
+          Voir toutes les maintenances dues ({{ due_maintenances|length }})
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Véhicules sans conducteur -->
+    {% if vehicles_without_driver > 0 %}
+    <div class="alert-card info">
+      <div class="alert-header">
+        <div class="alert-title">
+          <i class="fas fa-user-slash" style="color: var(--color-info);"></i>
+          Véhicules Sans Conducteur
+        </div>
+        <span class="alert-count" style="background: var(--color-info);">{{ vehicles_without_driver }}</span>
+      </div>
+      <div style="text-align: center; padding: var(--space-md);">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-list me-2"></i>Voir les véhicules sans conducteur
+        </a>
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="card-hl">
+      <div class="card-body-hl" style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-success); margin-bottom: var(--space-md);"></i>
+        <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune alerte</h3>
+        <p style="color: var(--text-secondary);">Tous les véhicules sont en ordre !</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Véhicules Récents -->
+  {% if recent_vehicles %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-car me-2"></i>Véhicules Récents (30 derniers jours)
+      </h3>
+    </div>
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Immatriculation</th>
+            <th>Marque/Modèle</th>
+            <th>Conducteur</th>
+            <th>Statut</th>
+            <th>Date création</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vehicle in recent_vehicles %}
+          <tr>
+            <td><strong>{{ vehicle.plate_number }}</strong></td>
+            <td>{{ vehicle.brand or '' }} {{ vehicle.model or '' }}</td>
+            <td>{% if vehicle.current_user %}{{ vehicle.current_user.full_name }}{% else %}-{% endif %}</td>
+            <td>
+              <span class="badge-hl {% if vehicle.status == 'active' %}badge-hl-success{% elif vehicle.status == 'maintenance' %}badge-hl-warning{% else %}badge-hl-danger{% endif %}">
+                {{ vehicle.status|title }}
+              </span>
+            </td>
+            <td>{{ vehicle.created_at.strftime('%d/%m/%Y') if vehicle.created_at else '-' }}</td>
+            <td>
+              <a href="{{ url_for('referentiels.vehicle_edit', id=vehicle.id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Maintenances Récentes -->
+  {% if recent_maintenances %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-tools me-2"></i>Maintenances Récentes (30 derniers jours)
+      </h3>
+    </div>
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Véhicule</th>
+            <th>Type</th>
+            <th>Date réalisation</th>
+            <th>Coût</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for maint in recent_maintenances %}
+          <tr>
+            <td><strong>{% if maint.vehicle %}{{ maint.vehicle.plate_number }}{% else %}Véhicule inconnu{% endif %}</strong></td>
+            <td>{{ maint.maintenance_type }}</td>
+            <td>{{ maint.completed_date.strftime('%d/%m/%Y') if maint.completed_date else '-' }}</td>
+            <td>
+              {% if maint.cost_gnf %}
+                {{ "{:,.0f}".format(maint.cost_gnf)|replace(',', ' ') }} GNF
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if maint.vehicle_id %}
+              <a href="{{ url_for('flotte.vehicle_maintenances', vehicle_id=maint.vehicle_id) }}" class="btn-hl btn-hl-sm btn-hl-outline">
+                <i class="fas fa-eye"></i>
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

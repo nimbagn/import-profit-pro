@@ -1,0 +1,268 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Modifier Mouvement - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-edit me-2"></i>
+        Modifier Mouvement
+      </h1>
+      <a href="{{ url_for('stocks.movement_detail_by_reference', reference=movement.reference) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>Retour
+      </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Informations du mouvement -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl); padding: var(--space-lg); background: var(--gray-50); border-radius: var(--radius-md);">
+      <div>
+        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-hashtag me-2"></i>Référence
+        </label>
+        <div style="font-size: 1.125rem; font-weight: 600; color: var(--color-primary);">
+          {{ movement.reference }}
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-tag me-2"></i>Type
+        </label>
+        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);">
+          <span class="badge-hl badge-type type-{{ movement.movement_type }}">
+            {{ movement.movement_type|title }}
+          </span>
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-box me-2"></i>Article
+        </label>
+        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);">
+          {{ movement.stock_item.sku }} - {{ movement.stock_item.name }}
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('stocks.movement_edit', id=movement.id) }}">
+      {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {% endif %}
+      <div class="form-row" style="margin-bottom: var(--space-lg);">
+        <div class="form-group">
+          <label for="movement_date" class="form-label">
+            <i class="fas fa-calendar me-2"></i>Date du mouvement <span style="color: #ef4444;">*</span>
+          </label>
+          <input type="date" 
+                 id="movement_date" 
+                 name="movement_date" 
+                 class="form-control" 
+                 value="{{ movement.movement_date.strftime('%Y-%m-%d') if movement.movement_date else '' }}" 
+                 required>
+        </div>
+        
+        <div class="form-group">
+          <label for="quantity" class="form-label">
+            <i class="fas fa-balance-scale me-2"></i>Quantité <span style="color: #ef4444;">*</span>
+            <small style="display: block; color: var(--text-secondary); font-weight: normal; margin-top: 0.25rem;">
+              {% if movement.quantity >= 0 %}
+                <span style="color: #16a34a;">Entrée (positive)</span>
+              {% else %}
+                <span style="color: #dc2626;">Sortie (négative)</span>
+              {% endif %}
+            </small>
+          </label>
+          <input type="number" 
+                 id="quantity" 
+                 name="quantity" 
+                 class="form-control" 
+                 step="0.01" 
+                 min="0"
+                 value="{{ movement.quantity|abs }}" 
+                 required>
+          <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+            {% if movement.quantity < 0 %}
+              ⚠️ La quantité sera automatiquement convertie en négative (sortie)
+            {% else %}
+              ✓ Quantité positive (entrée)
+            {% endif %}
+          </small>
+        </div>
+      </div>
+
+      <!-- Source et Destination (lecture seule) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+        <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: var(--space-lg); border-radius: var(--radius-md);">
+          <label style="display: block; font-size: 0.875rem; color: #991b1b; margin-bottom: var(--space-sm); font-weight: 600;">
+            <i class="fas fa-arrow-down me-2"></i>Source (Sortie)
+          </label>
+          <div style="font-size: 1rem; color: #7f1d1d;">
+            {% if movement.from_depot %}
+              <i class="fas fa-warehouse me-2"></i>{{ movement.from_depot.name }}
+            {% elif movement.from_vehicle %}
+              <i class="fas fa-car me-2"></i>{{ movement.from_vehicle.plate_number }}
+            {% else %}
+              <span style="color: var(--text-muted);">Aucune source</span>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div style="background: #dcfce7; border-left: 4px solid #16a34a; padding: var(--space-lg); border-radius: var(--radius-md);">
+          <label style="display: block; font-size: 0.875rem; color: #166534; margin-bottom: var(--space-sm); font-weight: 600;">
+            <i class="fas fa-arrow-up me-2"></i>Destination (Entrée)
+          </label>
+          <div style="font-size: 1rem; color: #14532d;">
+            {% if movement.to_depot %}
+              <i class="fas fa-warehouse me-2"></i>{{ movement.to_depot.name }}
+            {% elif movement.to_vehicle %}
+              <i class="fas fa-car me-2"></i>{{ movement.to_vehicle.plate_number }}
+            {% elif movement.supplier_name %}
+              <i class="fas fa-truck me-2"></i>{{ movement.supplier_name }}
+            {% else %}
+              <span style="color: var(--text-muted);">Aucune destination</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Champs optionnels -->
+      <div class="form-row" style="margin-bottom: var(--space-lg);">
+        {% if movement.movement_type == 'reception' %}
+        <div class="form-group">
+          <label for="supplier_name" class="form-label">
+            <i class="fas fa-truck me-2"></i>Fournisseur
+          </label>
+          <input type="text" 
+                 id="supplier_name" 
+                 name="supplier_name" 
+                 class="form-control" 
+                 value="{{ movement.supplier_name or '' }}">
+        </div>
+        
+        <div class="form-group">
+          <label for="bl_number" class="form-label">
+            <i class="fas fa-file-invoice me-2"></i>N° BL
+          </label>
+          <input type="text" 
+                 id="bl_number" 
+                 name="bl_number" 
+                 class="form-control" 
+                 value="{{ movement.bl_number or '' }}">
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+          <label for="reason" class="form-label">
+            <i class="fas fa-comment me-2"></i>Raison / Notes
+          </label>
+          <textarea id="reason" 
+                    name="reason" 
+                    class="form-control" 
+                    rows="3">{{ movement.reason or '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- Avertissement -->
+      <div class="alert-hl alert-hl-warning" style="margin-bottom: var(--space-xl);">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Attention :</strong> La modification de ce mouvement affectera automatiquement les stocks associés.
+        {% if movement.quantity < 0 %}
+          <br>Ce mouvement représente une <strong>sortie</strong> (quantité négative).
+        {% else %}
+          <br>Ce mouvement représente une <strong>entrée</strong> (quantité positive).
+        {% endif %}
+      </div>
+
+      <!-- Boutons -->
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end; margin-top: var(--space-xl);">
+        <a href="{{ url_for('stocks.movement_detail_by_reference', reference=movement.reference) }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-times me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>Enregistrer les modifications
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Ajuster automatiquement le signe de la quantité selon le type de mouvement
+  const quantityInput = document.getElementById('quantity');
+  const originalQuantity = {{ movement.quantity }};
+  
+  // Si c'est une sortie (négative), s'assurer que la quantité reste négative
+  if (originalQuantity < 0) {
+    quantityInput.addEventListener('change', function() {
+      // La valeur sera convertie en négative côté serveur
+      if (this.value < 0) {
+        this.value = Math.abs(this.value);
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,144 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Régions - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+  <section class="page-section">
+    <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-map-marked-alt icon-promo"></i>
+        Régions
+      </h1>
+      <a href="{{ url_for('referentiels.region_new') }}" class="btn btn-promo btn-promo-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouvelle Région
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if region_stats %}
+  <div class="card-promo section-spacing" style="margin-bottom: var(--space-lg);">
+    <div class="card-promo-header">
+      <i class="fas fa-chart-bar me-2"></i>Vue d'Ensemble par Région
+    </div>
+    <div style="padding: var(--space-lg); display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-lg);">
+      {% for stat in region_stats %}
+      <div style="padding: var(--space-lg); background: #f8fafc; border-radius: var(--radius-md); border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-md);">
+          <h3 style="margin: 0; color: var(--color-primary); font-size: 1.25rem;">
+            <i class="fas fa-map-marker-alt me-2"></i>{{ stat.region.name }}
+            {% if stat.region.code %}
+            <small style="color: var(--text-muted); font-size: 0.875rem;">({{ stat.region.code }})</small>
+            {% endif %}
+          </h3>
+          <a href="{{ url_for('referentiels.region_edit', id=stat.region.id) }}" class="btn btn-sm btn-promo" style="background: #6c757d; color: white;" title="Modifier">
+            <i class="fas fa-edit"></i>
+          </a>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md);">
+          <div style="text-align: center; padding: var(--space-sm); background: white; border-radius: var(--radius-sm);">
+            <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">{{ stat.users_count }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Utilisateurs</div>
+          </div>
+          <div style="text-align: center; padding: var(--space-sm); background: white; border-radius: var(--radius-sm);">
+            <div style="font-size: 1.75rem; font-weight: 700; color: var(--color-success);">{{ stat.depots_count }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Dépôts</div>
+          </div>
+          <div style="text-align: center; padding: var(--space-sm); background: white; border-radius: var(--radius-sm);">
+            <div style="font-size: 1.75rem; font-weight: 700; color: #f59e0b;">{{ stat.vehicles_count }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Véhicules</div>
+          </div>
+          <div style="text-align: center; padding: var(--space-sm); background: white; border-radius: var(--radius-sm);">
+            <div style="font-size: 1.75rem; font-weight: 700; color: #8b5cf6;">{{ stat.total_stock_items }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Articles Stock</div>
+          </div>
+        </div>
+        <div style="margin-top: var(--space-md); display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+          <a href="{{ url_for('referentiels.depots_list', region_id=stat.region.id) }}" class="btn btn-sm btn-promo btn-promo-info" style="flex: 1; min-width: 120px;">
+            <i class="fas fa-warehouse me-1"></i>Voir Dépôts
+          </a>
+          <a href="{{ url_for('referentiels.vehicles_list', region_id=stat.region.id) }}" class="btn btn-sm btn-promo" style="background: #f59e0b; color: white; flex: 1; min-width: 120px;">
+            <i class="fas fa-car me-1"></i>Voir Véhicules
+          </a>
+          <a href="{{ url_for('auth.users_list', region_id=stat.region.id) }}" class="btn btn-sm btn-promo btn-promo-success" style="flex: 1; min-width: 120px;">
+            <i class="fas fa-users me-1"></i>Voir Utilisateurs
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if regions %}
+  <div class="card-promo section-spacing">
+    <div class="card-promo-header">
+      <i class="fas fa-list me-2"></i>Liste des Régions
+    </div>
+    <div class="table-responsive">
+      <table class="table table-promo">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Code</th>
+            <th>Dépôts</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for region in regions %}
+          <tr>
+            <td><strong>{{ region.name }}</strong></td>
+            <td>{{ region.code or '-' }}</td>
+            <td>
+              <span class="badge badge-promo badge-promo-info">{{ region.depots|length }} dépôt(s)</span>
+            </td>
+            <td>{{ region.created_at.strftime('%d/%m/%Y') if region.created_at else '-' }}</td>
+            <td>
+              <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('referentiels.region_edit', id=region.id) }}" class="btn btn-sm btn-promo" style="background: #6c757d; color: white;" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% if region.depots|length == 0 %}
+                <form method="POST" action="{{ url_for('referentiels.region_delete', id=region.id) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette région ?');">
+                  <button type="submit" class="btn btn-sm btn-promo" style="background: #ef4444; color: white;" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-promo section-spacing" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-map-marked-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune région</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Commencez par créer votre première région</p>
+    <a href="{{ url_for('referentiels.region_new') }}" class="btn btn-promo btn-promo-primary">
+      <i class="fas fa-plus me-2"></i>
+      Créer une Région
+    </a>
+  </div>
+  {% endif %}
+  </section>
+{% endblock %}
+

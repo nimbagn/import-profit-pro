@@ -1,0 +1,251 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Page non trouvée - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="error-animation">
+            <div class="error-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="error-code">404</div>
+        </div>
+        
+        <div class="error-content">
+            <h1 class="error-title">Page non trouvée</h1>
+            <p class="error-description">
+                Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
+                Vérifiez l'URL ou utilisez la navigation pour trouver ce que vous cherchez.
+            </p>
+            
+            <div class="error-actions">
+                <a href="/" class="btn-hl btn-hl-primary">
+                    <i class="fas fa-home me-2"></i>
+                    Retour à l'accueil
+                </a>
+                <button onclick="history.back()" class="btn-hl btn-hl-outline">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Page précédente
+                </button>
+            </div>
+            
+            <div class="error-suggestions">
+                <h3>Pages populaires :</h3>
+                <div class="suggestion-links">
+                    <a href="/simulations" class="suggestion-link">
+                        <i class="fas fa-calculator"></i>
+                        Simulations
+                    </a>
+                    <a href="/stock/items" class="suggestion-link">
+                        <i class="fas fa-boxes"></i>
+                        Stock
+                    </a>
+                    <a href="/forecast" class="suggestion-link">
+                        <i class="fas fa-chart-line"></i>
+                        Forecast
+                    </a>
+                    <a href="/articles" class="suggestion-link">
+                        <i class="fas fa-tags"></i>
+                        Articles
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    padding: var(--space-4);
+}
+
+.error-container {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.error-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-success), var(--color-warning), var(--color-info));
+}
+
+.error-animation {
+    margin-bottom: var(--space-8);
+}
+
+.error-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--hl-blue-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-md);
+    font-size: 3rem;
+    color: var(--white);
+}
+
+.error-code {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    margin: 0;
+    line-height: 1;
+}
+
+.error-content {
+    margin-bottom: var(--space-8);
+}
+
+.error-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+}
+
+.error-description {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: var(--space-8);
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: center;
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+}
+
+.error-suggestions {
+    text-align: left;
+}
+
+.error-suggestions h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.suggestion-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+}
+
+.suggestion-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: var(--transition-normal);
+}
+
+.suggestion-link:hover {
+    background: rgba(0, 56, 101, 0.05);
+    color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    border-color: var(--color-primary);
+}
+
+.suggestion-link i {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .error-container {
+        padding: var(--space-8);
+    }
+    
+    .error-code {
+        font-size: 3rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+    }
+    
+    .suggestion-links {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .error-container {
+        padding: var(--space-6);
+    }
+    
+    .error-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    
+    .error-code {
+        font-size: 2.5rem;
+    }
+}
+</style>
+
+<script>
+// Animation d'entrée
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.error-container');
+    container.style.opacity = '0';
+    container.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+        container.style.transition = 'all 0.6s ease-out';
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
+    }, 100);
+});
+
+// Animation des liens de suggestion
+document.querySelectorAll('.suggestion-link').forEach((link, index) => {
+    link.style.opacity = '0';
+    link.style.transform = 'translateX(-20px)';
+    
+    setTimeout(() => {
+        link.style.transition = 'all 0.4s ease-out';
+        link.style.opacity = '1';
+        link.style.transform = 'translateX(0)';
+    }, 300 + (index * 100));
+});
+</script>
+{% endblock %}

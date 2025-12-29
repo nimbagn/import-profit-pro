@@ -1,0 +1,547 @@
+/* =========================================================
+   RESPONSIVE GLOBAL - IMPORT PROFIT PRO
+   Support pour tous les types d'appareils
+   ========================================================= */
+
+/* =========================================================
+   BREAKPOINTS
+   ========================================================= */
+/* Mobile: < 576px */
+/* Tablet: 576px - 768px */
+/* Desktop: 768px - 1024px */
+/* Large Desktop: > 1024px */
+
+/* =========================================================
+   SIDEBAR RESPONSIVE
+   ========================================================= */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 2000;
+    }
+    
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .top-header {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Overlay pour fermer le menu */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1999;
+        backdrop-filter: blur(4px);
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+/* =========================================================
+   HEADER RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .top-header {
+        height: 60px;
+        padding: 0 1rem;
+    }
+    
+    .user-menu {
+        gap: 0.5rem;
+    }
+    
+    .user-menu .dropdown-toggle {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .user-menu .dropdown-toggle i {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-header {
+        height: 56px;
+        padding: 0 0.75rem;
+    }
+    
+    .user-menu .dropdown-toggle span {
+        display: none;
+    }
+}
+
+/* =========================================================
+   MENU MOBILE
+   ========================================================= */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--bg-tertiary);
+}
+
+@media (max-width: 1024px) {
+    .mobile-menu-toggle {
+        display: block;
+    }
+}
+
+/* =========================================================
+   CONTENU PRINCIPAL RESPONSIVE
+   ========================================================= */
+@media (max-width: 1024px) {
+    .main-content {
+        padding-top: 80px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding-top: 70px !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding-top: 66px !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+}
+
+/* =========================================================
+   CARTES ET TABLEAUX RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+        border-radius: 12px;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem 0.75rem;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .table {
+        font-size: 0.8rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.4rem 0.5rem;
+    }
+}
+
+/* =========================================================
+   FORMULAIRES RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Évite le zoom sur iOS */
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-control,
+    .form-select {
+        padding: 0.625rem 0.875rem;
+        font-size: 16px;
+    }
+    
+    .btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.95rem;
+        width: 100%;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* =========================================================
+   MODALES RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-content {
+        border-radius: 16px;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* =========================================================
+   NAVIGATION RESPONSIVE
+   ========================================================= */
+@media (max-width: 1024px) {
+    .menu-item,
+    .menu-subitem {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .menu-group-title {
+        padding: 0.5rem 1rem;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 260px;
+    }
+    
+    .menu-item {
+        padding: 0.75rem 1rem;
+    }
+    
+    .menu-subitem {
+        padding: 0.625rem 1rem 0.625rem 2.5rem;
+    }
+}
+
+/* =========================================================
+   GRID ET LAYOUT RESPONSIVE
+   ========================================================= */
+@media (max-width: 1024px) {
+    .row {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+    }
+    
+    .row > * {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .col-md-6,
+    .col-lg-4,
+    .col-lg-6,
+    .col-xl-4,
+    .col-xl-6 {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+
+/* =========================================================
+   TYPOGRAPHIE RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+    }
+    
+    h4 {
+        font-size: 1.1rem;
+    }
+    
+    p {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.25rem;
+    }
+    
+    h3 {
+        font-size: 1.1rem;
+    }
+    
+    h4 {
+        font-size: 1rem;
+    }
+    
+    p {
+        font-size: 0.9rem;
+    }
+}
+
+/* =========================================================
+   BADGES ET ALERTES RESPONSIVE
+   ========================================================= */
+@media (max-width: 480px) {
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .alert {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* =========================================================
+   PAGINATION RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    .pagination .page-item:not(.active) {
+        display: none;
+    }
+    
+    .pagination .page-item.active,
+    .pagination .page-item:first-child,
+    .pagination .page-item:last-child {
+        display: block;
+    }
+}
+
+/* =========================================================
+   DROPDOWN RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .dropdown-menu {
+        max-width: calc(100vw - 2rem);
+        left: auto !important;
+        right: 1rem !important;
+    }
+}
+
+/* =========================================================
+   UTILITAIRES RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .d-md-none {
+        display: none !important;
+    }
+    
+    .d-md-block {
+        display: block !important;
+    }
+    
+    .d-md-flex {
+        display: flex !important;
+    }
+    
+    .text-md-center {
+        text-align: center !important;
+    }
+    
+    .mb-md-3 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mt-md-3 {
+        margin-top: 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .d-sm-none {
+        display: none !important;
+    }
+    
+    .d-sm-block {
+        display: block !important;
+    }
+    
+    .d-sm-flex {
+        display: flex !important;
+    }
+    
+    .text-sm-center {
+        text-align: center !important;
+    }
+    
+    .w-sm-100 {
+        width: 100% !important;
+    }
+}
+
+/* =========================================================
+   TOUCH TARGETS (Accessibilité mobile)
+   ========================================================= */
+@media (max-width: 768px) {
+    button,
+    a,
+    input[type="checkbox"],
+    input[type="radio"],
+    .clickable {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* =========================================================
+   LANDSCAPE ORIENTATION
+   ========================================================= */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .main-content {
+        margin-left: 240px;
+    }
+}
+
+/* =========================================================
+   PRINT STYLES
+   ========================================================= */
+@media print {
+    .sidebar,
+    .top-header,
+    .btn,
+    .pagination,
+    .mobile-menu-toggle {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* =========================================================
+   HIGH DPI DISPLAYS
+   ========================================================= */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .sidebar-header,
+    .card,
+    .btn {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION (Accessibilité)
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* =========================================================
+   DARK MODE SUPPORT (si activé)
+   ========================================================= */
+@media (prefers-color-scheme: dark) {
+    /* Les thèmes personnalisables gèrent déjà le dark mode */
+}
+

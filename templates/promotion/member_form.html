@@ -1,0 +1,212 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if member %}Modifier{% else %}Nouveau{% endif %} Membre - Import Profit Pro{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    const getLocationBtn = document.getElementById('get-current-location');
+    
+    // Initialiser la carte (Conakry par défaut)
+    let map = L.map('map').setView([9.5167, -13.7167], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    let marker = null;
+    
+    // Si des coordonnées existent, placer le marqueur
+    const lat = parseFloat(latitudeInput.value) || 9.5167;
+    const lng = parseFloat(longitudeInput.value) || -13.7167;
+    if (latitudeInput.value && longitudeInput.value) {
+      marker = L.marker([lat, lng]).addTo(map);
+      map.setView([lat, lng], 15);
+    }
+    
+    // Clic sur la carte pour définir la position
+    map.on('click', function(e) {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+      
+      latitudeInput.value = lat.toFixed(8);
+      longitudeInput.value = lng.toFixed(8);
+      
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        marker = L.marker([lat, lng]).addTo(map);
+      }
+    });
+    
+    // Utiliser la position actuelle
+    getLocationBtn.addEventListener('click', function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          latitudeInput.value = lat.toFixed(8);
+          longitudeInput.value = lng.toFixed(8);
+          
+          if (marker) {
+            marker.setLatLng([lat, lng]);
+          } else {
+            marker = L.marker([lat, lng]).addTo(map);
+          }
+          
+          map.setView([lat, lng], 15);
+        }, function(error) {
+          alert('Impossible d\'obtenir votre position. Veuillez cliquer sur la carte.');
+        });
+      } else {
+        alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-{% if member %}edit{% else %}plus{% endif %} me-2"></i>
+      {% if member %}Modifier le Membre{% else %}Nouveau Membre{% endif %}
+    </h1>
+    <a href="{{ url_for('promotion.members_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label for="team_id" class="form-label">Équipe <span class="text-danger">*</span></label>
+          <select class="form-select" id="team_id" name="team_id" required>
+            <option value="">Sélectionner une équipe...</option>
+            {% for team in teams %}
+            <option value="{{ team.id }}" {% if member and member.team_id == team.id %}selected{% endif %}>
+              {{ team.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="full_name" class="form-label">Nom Complet <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="full_name" name="full_name" 
+                 value="{{ member.full_name if member else '' }}" required>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="phone" class="form-label">Téléphone</label>
+            <input type="text" class="form-control" id="phone" name="phone" 
+                   value="{{ member.phone if member else '' }}">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" 
+                   value="{{ member.email if member else '' }}">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="gender" class="form-label">Genre</label>
+            <select class="form-select" id="gender" name="gender">
+              <option value="">Non spécifié</option>
+              <option value="M" {% if member and member.gender == 'M' %}selected{% endif %}>Masculin</option>
+              <option value="F" {% if member and member.gender == 'F' %}selected{% endif %}>Féminin</option>
+            </select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="user_id" class="form-label">Utilisateur Système (optionnel)</label>
+            <select class="form-select" id="user_id" name="user_id">
+              <option value="">Aucun</option>
+              {% for user in users %}
+              <option value="{{ user.id }}" {% if member and member.user_id == user.id %}selected{% endif %}>
+                {{ user.full_name or user.username }} ({{ user.email }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="address" class="form-label">Adresse</label>
+          <textarea class="form-control" id="address" name="address" rows="2">{{ member.address if member else '' }}</textarea>
+        </div>
+
+        <!-- Géolocalisation -->
+        <div class="card mb-3" style="background: var(--bg-tertiary);">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="fas fa-map-marker-alt me-2"></i>Géolocalisation du Domicile
+            </h6>
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label for="latitude" class="form-label">Latitude</label>
+                <input type="number" class="form-control" id="latitude" name="latitude" 
+                       value="{{ member.latitude if member and member.latitude else '' }}" 
+                       step="0.00000001" placeholder="Ex: 9.5167">
+                <small class="form-text text-muted">Cliquez sur la carte ou saisissez les coordonnées</small>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label for="longitude" class="form-label">Longitude</label>
+                <input type="number" class="form-control" id="longitude" name="longitude" 
+                       value="{{ member.longitude if member and member.longitude else '' }}" 
+                       step="0.00000001" placeholder="Ex: -13.7167">
+              </div>
+            </div>
+            <div id="map" style="height: 300px; width: 100%; border-radius: 8px; margin-top: 10px;"></div>
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="get-current-location">
+              <i class="fas fa-crosshairs me-1"></i>Utiliser ma position actuelle
+            </button>
+          </div>
+        </div>
+
+        <!-- Intermédiaire/Responsable -->
+        <div class="mb-3">
+          <label for="intermediary_id" class="form-label">Intermédiaire/Responsable</label>
+          <select class="form-select" id="intermediary_id" name="intermediary_id">
+            <option value="">Aucun intermédiaire</option>
+            {% for mem in members %}
+            <option value="{{ mem.id }}" {% if member and member.intermediaire_id == mem.id %}selected{% endif %}>
+              {{ mem.full_name }} - {{ mem.team.name if mem.team else 'Sans équipe' }}
+            </option>
+            {% endfor %}
+          </select>
+          <small class="form-text text-muted">Personne responsable/intermédiaire de ce membre</small>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                   {% if not member or member.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">
+              Membre actif
+            </label>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          <a href="{{ url_for('promotion.members_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

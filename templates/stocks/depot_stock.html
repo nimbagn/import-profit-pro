@@ -1,0 +1,131 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Stock Dépôt {{ depot.name }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: var(--space-md);
+      margin-right: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-warehouse me-2"></i>
+      Stock - {{ depot.name }}
+    </h1>
+    <div style="display: flex; gap: var(--space-md);">
+      <a href="{{ url_for('stocks.depot_low_stock', depot_id=depot.id) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Alertes ({{ low_stock_items|length }})
+      </a>
+      <a href="{{ url_for('stocks.movement_new', type='reception') }}?depot_id={{ depot.id }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Réception
+      </a>
+    </div>
+  </div>
+
+  <div class="stats-grid" style="margin-bottom: var(--space-xl);">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_items }}</div>
+      <div class="stat-card-hl-label">Articles différents</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ "{:,.0f}".format(total_value) }} GNF</div>
+      <div class="stat-card-hl-label">Valeur totale</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ low_stock_items|length }}</div>
+      <div class="stat-card-hl-label">Alertes mini-stock</div>
+    </div>
+  </div>
+
+  {% if stocks %}
+  <div class="card-hl">
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Article</th>
+            <th>Quantité</th>
+            <th>Seuil Min.</th>
+            <th>Statut</th>
+            <th>Valeur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stock in stocks %}
+          <tr>
+            <td><strong>{{ stock.stock_item.sku }}</strong></td>
+            <td>{{ stock.stock_item.name }}</td>
+            <td>{{ "{:.2f}".format(stock.quantity) }}</td>
+            <td>{{ "{:.2f}".format(stock.stock_item.min_stock_depot) }}</td>
+            <td>
+              {% if stock.quantity < stock.stock_item.min_stock_depot %}
+              <span class="badge-hl badge-hl-danger">⚠️ Mini-stock</span>
+              {% else %}
+              <span class="badge-hl badge-hl-success">✓ OK</span>
+              {% endif %}
+            </td>
+            <td><strong>{{ "{:,.0f}".format(stock.quantity * stock.stock_item.purchase_price_gnf) }} GNF</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
+    <i class="fas fa-boxes" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun stock</h3>
+    <p style="color: var(--text-secondary);">Ce dépôt n'a pas encore de stock</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

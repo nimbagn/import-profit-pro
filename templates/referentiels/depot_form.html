@@ -1,0 +1,143 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if depot else 'Créer' }} Dépôt - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-{{ 'edit' if depot else 'plus' }} me-2"></i>
+        {{ 'Modifier' if depot else 'Créer' }} un Dépôt
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="name" class="form-hl-label">
+            Nom <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="text" id="name" name="name" class="form-hl-input" value="{{ depot.name if depot else '' }}" required autofocus>
+        </div>
+
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="region_id" class="form-hl-label">
+            Région
+          </label>
+          <select id="region_id" name="region_id" class="form-hl-select">
+            <option value="">Sélectionner une région</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if depot and depot.region_id == region.id %}selected{% endif %}>
+              {{ region.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="city" class="form-hl-label">Ville</label>
+          <input type="text" id="city" name="city" class="form-hl-input" value="{{ depot.city if depot else '' }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="phone" class="form-hl-label">Téléphone</label>
+          <input type="text" id="phone" name="phone" class="form-hl-input" value="{{ depot.phone if depot else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="address" class="form-hl-label">Adresse</label>
+        <textarea id="address" name="address" class="form-hl-input" rows="3">{{ depot.address if depot else '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="email" class="form-hl-label">Email</label>
+        <input type="email" id="email" name="email" class="form-hl-input" value="{{ depot.email if depot else '' }}">
+      </div>
+
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+          <input type="checkbox" id="is_active" name="is_active" {% if not depot or depot.is_active %}checked{% endif %} style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="is_active" class="form-hl-label" style="margin: 0;">Dépôt actif</label>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('referentiels.depots_list') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>
+          Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>
+          {{ 'Modifier' if depot else 'Créer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

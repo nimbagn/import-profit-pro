@@ -1,0 +1,227 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Historique des Assignations - {{ vehicle.plate_number }} - Import Profit Pro{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+  }
+  
+  .stat-card-hl-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .stat-card-hl-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  .current-assignment {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--color-success);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-user-tie me-2"></i>
+      Historique des Assignations - {{ vehicle.plate_number }}
+    </h1>
+    <div>
+      <a href="{{ url_for('flotte.vehicle_detail', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>Retour à la fiche
+      </a>
+      <a href="{{ url_for('flotte.assignment_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>Nouvelle Assignation
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value">{{ total_assignments }}</div>
+      <div class="stat-card-hl-label">Total Assignations</div>
+    </div>
+    <div class="stat-card-hl">
+      <div class="stat-card-hl-value" style="color: var(--color-success);">{{ active_assignments }}</div>
+      <div class="stat-card-hl-label">Assignations Actives</div>
+    </div>
+  </div>
+
+  <!-- Assignation Actuelle -->
+  {% if current_assignment %}
+  <div class="current-assignment">
+    <h3 style="margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+      <i class="fas fa-check-circle" style="color: var(--color-success);"></i>
+      Assignation Actuelle
+    </h3>
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <tbody>
+          <tr>
+            <td style="width: 200px; font-weight: 600;">Conducteur</td>
+            <td>
+              <strong>{{ current_assignment.user.full_name or current_assignment.user.username }}</strong>
+              <a href="{{ url_for('flotte.user_vehicles', user_id=current_assignment.user_id) }}" class="btn-hl btn-hl-sm btn-hl-outline" style="margin-left: var(--space-sm);">
+                <i class="fas fa-eye"></i> Voir ses véhicules
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Date de Début</td>
+            <td>{{ current_assignment.start_date.strftime('%d/%m/%Y') }}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Durée</td>
+            <td>{{ current_assignment.duration_days }} jours</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Raison</td>
+            <td>{{ current_assignment.reason or '-' }}</td>
+          </tr>
+          {% if current_assignment.notes %}
+          <tr>
+            <td style="font-weight: 600;">Notes</td>
+            <td>{{ current_assignment.notes }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td style="font-weight: 600;">Créée par</td>
+            <td>{{ current_assignment.created_by.full_name or current_assignment.created_by.username if current_assignment.created_by else '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: var(--space-lg);">
+      <form method="POST" action="{{ url_for('flotte.assignment_end', vehicle_id=vehicle.id, assignment_id=current_assignment.id) }}" style="display: inline;">
+        <input type="date" name="end_date" value="{{ today.strftime('%Y-%m-%d') }}" required style="margin-right: var(--space-sm); padding: var(--space-xs); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        <input type="text" name="reason" placeholder="Raison de la fin" style="margin-right: var(--space-sm); padding: var(--space-xs); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        <button type="submit" class="btn-hl btn-hl-danger" onclick="return confirm('Êtes-vous sûr de vouloir terminer cette assignation ?');">
+          <i class="fas fa-stop me-2"></i>Terminer l'Assignation
+        </button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-hl" style="text-align: center; padding: var(--space-xl); margin-bottom: var(--space-xl);">
+    <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucune assignation active</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Ce véhicule n'a pas de conducteur assigné actuellement</p>
+    <a href="{{ url_for('flotte.assignment_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>Assigner un Conducteur
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Historique -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-history me-2"></i>Historique Complet
+      </h3>
+    </div>
+    <div class="table-hl">
+      {% if assignments %}
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Conducteur</th>
+            <th>Date Début</th>
+            <th>Date Fin</th>
+            <th>Durée</th>
+            <th>Raison</th>
+            <th>Statut</th>
+            <th>Créée par</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in assignments %}
+          <tr>
+            <td>
+              <strong>{{ assignment.user.full_name or assignment.user.username }}</strong>
+              <a href="{{ url_for('flotte.user_vehicles', user_id=assignment.user_id) }}" class="btn-hl btn-hl-sm btn-hl-outline" style="margin-left: var(--space-xs);">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+            <td>{{ assignment.start_date.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if assignment.end_date %}
+                {{ assignment.end_date.strftime('%d/%m/%Y') }}
+              {% else %}
+                <span class="badge-hl badge-hl-success">En cours</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if assignment.duration_days is not none %}
+                {{ assignment.duration_days }} jours
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ assignment.reason or '-' }}</td>
+            <td>
+              {% if assignment.is_active %}
+                <span class="badge-hl badge-hl-success">Active</span>
+              {% else %}
+                <span class="badge-hl badge-hl-secondary">Terminée</span>
+              {% endif %}
+            </td>
+            <td>{{ assignment.created_by.full_name or assignment.created_by.username if assignment.created_by else '-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align: center; padding: var(--space-3xl);">
+        <i class="fas fa-history" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
+        <p style="color: var(--text-secondary);">Aucune assignation enregistrée</p>
+        <a href="{{ url_for('flotte.assignment_new', vehicle_id=vehicle.id) }}" class="btn-hl btn-hl-primary" style="margin-top: var(--space-md);">
+          <i class="fas fa-plus me-2"></i>Créer la Première Assignation
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

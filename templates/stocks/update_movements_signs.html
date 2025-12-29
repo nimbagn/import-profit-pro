@@ -1,0 +1,89 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Mise à jour des mouvements - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-sync-alt me-2"></i>
+      Mise à jour des mouvements de stock
+    </h1>
+    <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  <div class="card-hl" style="max-width: 800px; margin: var(--space-xl) auto;">
+    <div class="card-header-hl">
+      <h3 class="card-title-hl">
+        <i class="fas fa-info-circle me-2"></i>
+        Conversion au nouveau format
+      </h3>
+    </div>
+    
+    <div style="padding: var(--space-xl);">
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: var(--space-lg); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+        <h4 style="color: #d97706; margin-bottom: var(--space-md);">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Attention
+        </h4>
+        <p style="color: var(--text-primary); margin-bottom: var(--space-sm);">
+          Cette opération va convertir tous les mouvements existants au nouveau format :
+        </p>
+        <ul style="color: var(--text-primary); margin-left: var(--space-lg);">
+          <li><strong>Entrées</strong> : quantités <span style="color: #16a34a; font-weight: 700;">positives (+)</span></li>
+          <li><strong>Sorties</strong> : quantités <span style="color: #dc2626; font-weight: 700;">négatives (-)</span></li>
+          <li><strong>Transferts</strong> : seront divisés en 2 mouvements (sortie + entrée)</li>
+        </ul>
+        <p style="color: var(--text-primary); margin-top: var(--space-md); font-weight: 600;">
+          ⚠️ Cette opération est irréversible. Assurez-vous d'avoir une sauvegarde de la base de données.
+        </p>
+      </div>
+
+      <div style="margin-bottom: var(--space-xl);">
+        <h4 style="margin-bottom: var(--space-md); color: var(--text-primary);">
+          <i class="fas fa-list me-2"></i>
+          Mouvements à traiter
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+          <div style="background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-xs);">
+              {{ transfers_count }}
+            </div>
+            <div style="color: var(--text-muted);">Transferts</div>
+          </div>
+          <div style="background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-xs);">
+              {{ receptions_count }}
+            </div>
+            <div style="color: var(--text-muted);">Réceptions</div>
+          </div>
+          <div style="background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-xs);">
+              {{ adjustments_count }}
+            </div>
+            <div style="color: var(--text-muted);">Ajustements</div>
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir mettre à jour tous les mouvements ? Cette opération est irréversible.');">
+        {% if csrf_token %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {% endif %}
+        <div style="display: flex; gap: var(--space-md); justify-content: center;">
+          <button type="submit" class="btn-hl btn-hl-primary" style="min-width: 200px;">
+            <i class="fas fa-sync-alt me-2"></i>
+            Lancer la mise à jour
+          </button>
+          <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline" style="min-width: 200px;">
+            <i class="fas fa-times me-2"></i>
+            Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

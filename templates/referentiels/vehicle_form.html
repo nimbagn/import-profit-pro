@@ -1,0 +1,159 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if vehicle else 'Créer' }} Véhicule - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-{{ 'edit' if vehicle else 'plus' }} me-2"></i>
+        {{ 'Modifier' if vehicle else 'Créer' }} un Véhicule
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="plate_number" class="form-hl-label">
+            Immatriculation <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="text" id="plate_number" name="plate_number" class="form-hl-input" value="{{ vehicle.plate_number if vehicle else '' }}" required autofocus>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="current_user_id" class="form-hl-label">Conducteur</label>
+          <select id="current_user_id" name="current_user_id" class="form-hl-select">
+            <option value="">Aucun</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if vehicle and vehicle.current_user_id == user.id %}selected{% endif %}>
+              {{ user.full_name or user.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="brand" class="form-hl-label">Marque</label>
+          <input type="text" id="brand" name="brand" class="form-hl-input" value="{{ vehicle.brand if vehicle else '' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="model" class="form-hl-label">Modèle</label>
+          <input type="text" id="model" name="model" class="form-hl-input" value="{{ vehicle.model if vehicle else '' }}">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="year" class="form-hl-label">Année</label>
+          <input type="number" id="year" name="year" class="form-hl-input" value="{{ vehicle.year if vehicle else '' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="color" class="form-hl-label">Couleur</label>
+          <input type="text" id="color" name="color" class="form-hl-input" value="{{ vehicle.color if vehicle else '' }}">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="vin" class="form-hl-label">VIN</label>
+          <input type="text" id="vin" name="vin" class="form-hl-input" value="{{ vehicle.vin if vehicle else '' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="whatsapp" class="form-hl-label">WhatsApp</label>
+          <input type="text" id="whatsapp" name="whatsapp" class="form-hl-input" value="{{ vehicle.whatsapp if vehicle else '' }}">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="acquisition_date" class="form-hl-label">Date d'acquisition</label>
+          <input type="date" id="acquisition_date" name="acquisition_date" class="form-hl-input" value="{{ vehicle.acquisition_date.strftime('%Y-%m-%d') if vehicle and vehicle.acquisition_date else '' }}">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="status" class="form-hl-label">Statut</label>
+          <select id="status" name="status" class="form-hl-select">
+            <option value="active" {% if not vehicle or vehicle.status == 'active' %}selected{% endif %}>Actif</option>
+            <option value="inactive" {% if vehicle and vehicle.status == 'inactive' %}selected{% endif %}>Inactif</option>
+            <option value="maintenance" {% if vehicle and vehicle.status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('referentiels.vehicles_list') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>
+          Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>
+          {{ 'Modifier' if vehicle else 'Créer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
