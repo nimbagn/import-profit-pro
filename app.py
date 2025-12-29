@@ -41,33 +41,22 @@ if not app.config.get('SECRET_KEY') or app.config['SECRET_KEY'] in ['import_prof
     print(f"⚠️  Exécutez: python3 create_env.py")
 
 # Configuration de la base de données
-try:
-    # Essayer MySQL d'abord
-    import pymysql
-    from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD_RAW
-    from urllib.parse import quote_plus
-    
-    # Encoder le mot de passe pour gérer les caractères spéciaux comme @
-    encoded_password = quote_plus(DB_PASSWORD_RAW) if DB_PASSWORD_RAW else ""
-    db_uri = f"mysql+pymysql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    print(f"✅ Configuration MySQL: {DB_HOST}:{DB_PORT}/{DB_NAME}")
-    mysql_available = True
-except Exception as e:
-    # Fallback vers SQLite
-    db_path = os.path.join(os.path.dirname(__file__), 'instance', 'app.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    print(f"⚠️ Fallback vers SQLite: {e}")
-    mysql_available = False
+# Utiliser la configuration depuis config.py qui respecte DATABASE_URL
+from config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_ENGINE_OPTIONS
 
-# Configuration des options de base de données
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle': 300,
-    'connect_args': {'charset': 'utf8mb4'} if mysql_available else {}
-}
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = SQLALCHEMY_ENGINE_OPTIONS
+
+# Afficher le type de base de données utilisée
+if SQLALCHEMY_DATABASE_URI.startswith('postgresql'):
+    print(f"✅ Configuration PostgreSQL: {SQLALCHEMY_DATABASE_URI.split('@')[1] if '@' in SQLALCHEMY_DATABASE_URI else 'configurée'}")
+elif SQLALCHEMY_DATABASE_URI.startswith('mysql'):
+    print(f"✅ Configuration MySQL: {SQLALCHEMY_DATABASE_URI.split('@')[1] if '@' in SQLALCHEMY_DATABASE_URI else 'configurée'}")
+elif SQLALCHEMY_DATABASE_URI.startswith('sqlite'):
+    print(f"✅ Configuration SQLite: {SQLALCHEMY_DATABASE_URI}")
+else:
+    print(f"✅ Configuration base de données: {SQLALCHEMY_DATABASE_URI[:50]}...")
 
 # Initialisation de SQLAlchemy
 from models import db
