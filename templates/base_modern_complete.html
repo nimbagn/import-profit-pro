@@ -31,7 +31,7 @@
     <link href="{{ url_for('static', filename='css/menu_responsive.css') }}" rel="stylesheet">
     <!-- CSS Header & Footer Mobile Fix - Corrections menu mobile, profil et footer -->
     <link href="{{ url_for('static', filename='css/header_footer_mobile_fix.css') }}" rel="stylesheet">
-    <!-- CSS Force Responsive Global - Force responsive sur TOUTES les pages -->
+    <!-- CSS Force Responsive Global - Force responsive sur TOUTES les pages (PRIORITÉ MAXIMALE - DERNIER) -->
     <link href="{{ url_for('static', filename='css/force_responsive_global.css') }}" rel="stylesheet">
     <!-- CSS Responsive Promotion -->
     {% if request.endpoint and 'promotion' in request.endpoint %}
