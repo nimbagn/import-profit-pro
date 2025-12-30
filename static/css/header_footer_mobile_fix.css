@@ -1,0 +1,459 @@
+/* =========================================================
+   HEADER & FOOTER MOBILE FIX
+   Corrections pour menu mobile, profil utilisateur et footer
+   ========================================================= */
+
+/* =========================================================
+   MENU TOGGLE MOBILE - VISIBILITÉ
+   ========================================================= */
+.mobile-menu-toggle {
+    display: none !important;
+    background: none !important;
+    border: none !important;
+    color: var(--color-primary) !important;
+    font-size: 1.5rem !important;
+    cursor: pointer !important;
+    padding: 0.5rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    z-index: 1001 !important;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+.mobile-menu-toggle:focus {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Afficher sur mobile et tablette */
+@media (max-width: 1024px) {
+    .mobile-menu-toggle {
+        display: block !important;
+    }
+}
+
+/* =========================================================
+   USER MENU - RESPONSIVE
+   ========================================================= */
+.user-menu {
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+    .user-menu {
+        gap: var(--space-md) !important;
+    }
+    
+    .user-menu .dropdown-toggle span {
+        display: inline !important;
+    }
+}
+
+/* Tablette */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .user-menu {
+        gap: var(--space-sm) !important;
+    }
+    
+    .user-menu .dropdown-toggle {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .user-menu .dropdown-toggle span {
+        display: inline !important;
+    }
+}
+
+/* Mobile Portrait */
+@media (max-width: 768px) {
+    .user-menu {
+        gap: 0.5rem !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .user-menu .dropdown-toggle {
+        padding: 0.5rem !important;
+        font-size: 0.85rem !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    .user-menu .dropdown-toggle span {
+        display: none !important;
+    }
+    
+    .user-menu .dropdown-toggle i {
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+    }
+    
+    .user-menu .badge-hl {
+        display: none !important;
+    }
+    
+    /* Dropdown menu responsive */
+    .user-menu .dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        min-width: 200px !important;
+        max-width: calc(100vw - 2rem) !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    .user-menu .dropdown-item {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+}
+
+/* Mobile Paysage */
+@media (max-width: 768px) and (orientation: landscape) {
+    .user-menu .dropdown-toggle span {
+        display: inline !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .user-menu .dropdown-toggle {
+        padding: 0.5rem 0.75rem !important;
+    }
+}
+
+/* Petit Mobile */
+@media (max-width: 480px) {
+    .user-menu {
+        gap: 0.25rem !important;
+    }
+    
+    .user-menu .dropdown-toggle {
+        padding: 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .user-menu .dropdown-toggle i {
+        font-size: 1rem !important;
+    }
+    
+    .user-menu .dropdown-menu {
+        min-width: 180px !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* =========================================================
+   TOP HEADER - RESPONSIVE COMPLET
+   ========================================================= */
+.top-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: fixed !important;
+    z-index: 999 !important;
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+    .top-header {
+        left: 280px !important;
+        width: calc(100% - 280px) !important;
+        height: 70px !important;
+        padding: 0 var(--space-xl) !important;
+    }
+}
+
+/* Tablette Portrait */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .top-header {
+        left: 240px !important;
+        width: calc(100% - 240px) !important;
+        height: 65px !important;
+        padding: 0 1.5rem !important;
+    }
+}
+
+/* Tablette Paysage */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+    .top-header {
+        left: 220px !important;
+        width: calc(100% - 220px) !important;
+        height: 60px !important;
+        padding: 0 1.25rem !important;
+    }
+}
+
+/* Mobile Portrait */
+@media (max-width: 768px) {
+    .top-header {
+        left: 0 !important;
+        width: 100% !important;
+        height: 60px !important;
+        padding: 0 1rem !important;
+    }
+}
+
+/* Mobile Paysage */
+@media (max-width: 768px) and (orientation: landscape) {
+    .top-header {
+        height: 56px !important;
+        padding: 0 0.75rem !important;
+    }
+}
+
+/* Petit Mobile */
+@media (max-width: 480px) {
+    .top-header {
+        height: 56px !important;
+        padding: 0 0.75rem !important;
+    }
+}
+
+/* =========================================================
+   FOOTER - RESPONSIVE COMPLET
+   ========================================================= */
+.footer-hl {
+    background: linear-gradient(135deg, var(--hl-blue) 0%, var(--hl-blue-dark) 100%) !important;
+    color: var(--white) !important;
+    padding: var(--space-2xl) 0 var(--space-lg) 0 !important;
+    margin-top: var(--space-3xl) !important;
+    width: 100% !important;
+    position: relative !important;
+}
+
+.footer-hl a {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-decoration: none !important;
+    transition: color 0.2s !important;
+}
+
+.footer-hl a:hover {
+    color: var(--white) !important;
+}
+
+.footer-hl h5 {
+    color: var(--white) !important;
+    font-weight: 600 !important;
+    margin-bottom: var(--space-md) !important;
+}
+
+.footer-hl ul {
+    list-style: none !important;
+    padding: 0 !important;
+}
+
+.footer-hl ul li {
+    margin-bottom: var(--space-sm) !important;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    padding-top: var(--space-lg) !important;
+    margin-top: var(--space-xl) !important;
+    text-align: center !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+    .footer-hl {
+        margin-left: 280px !important;
+        width: calc(100% - 280px) !important;
+    }
+    
+    .footer-hl .container {
+        max-width: 1400px !important;
+        margin: 0 auto !important;
+        padding: 0 var(--space-xl) !important;
+    }
+}
+
+/* Tablette Portrait */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .footer-hl {
+        margin-left: 240px !important;
+        width: calc(100% - 240px) !important;
+    }
+    
+    .footer-hl .container {
+        padding: 0 1.5rem !important;
+    }
+    
+    .footer-hl .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: var(--space-xl) !important;
+    }
+    
+    .footer-hl .col-md-4:last-child {
+        grid-column: 1 / -1 !important;
+    }
+}
+
+/* Tablette Paysage */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+    .footer-hl {
+        margin-left: 220px !important;
+        width: calc(100% - 220px) !important;
+    }
+    
+    .footer-hl .row {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .footer-hl .col-md-4:last-child {
+        grid-column: auto !important;
+    }
+}
+
+/* Mobile Portrait */
+@media (max-width: 768px) {
+    .footer-hl {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: var(--space-xl) 0 var(--space-md) 0 !important;
+    }
+    
+    .footer-hl .container {
+        padding: 0 1rem !important;
+    }
+    
+    .footer-hl .row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--space-lg) !important;
+    }
+    
+    .footer-hl .col-md-4 {
+        width: 100% !important;
+        margin-bottom: var(--space-md) !important;
+    }
+    
+    .footer-hl h5 {
+        font-size: 1.1rem !important;
+        margin-bottom: var(--space-sm) !important;
+    }
+    
+    .footer-hl p,
+    .footer-hl ul li {
+        font-size: 0.9rem !important;
+    }
+    
+    .footer-bottom {
+        padding-top: var(--space-md) !important;
+        margin-top: var(--space-lg) !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* Mobile Paysage */
+@media (max-width: 768px) and (orientation: landscape) {
+    .footer-hl {
+        padding: var(--space-lg) 0 var(--space-sm) 0 !important;
+    }
+    
+    .footer-hl .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: var(--space-md) !important;
+    }
+    
+    .footer-hl .col-md-4:last-child {
+        grid-column: 1 / -1 !important;
+    }
+}
+
+/* Petit Mobile */
+@media (max-width: 480px) {
+    .footer-hl {
+        padding: var(--space-lg) 0 var(--space-sm) 0 !important;
+    }
+    
+    .footer-hl .container {
+        padding: 0 0.75rem !important;
+    }
+    
+    .footer-hl h5 {
+        font-size: 1rem !important;
+    }
+    
+    .footer-hl p,
+    .footer-hl ul li,
+    .footer-bottom {
+        font-size: 0.8rem !important;
+    }
+    
+    .footer-hl ul li {
+        margin-bottom: var(--space-xs) !important;
+    }
+}
+
+/* =========================================================
+   HEADER LAYOUT - ESPACEMENT
+   ========================================================= */
+@media (max-width: 768px) {
+    .top-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.5rem !important;
+    }
+    
+    .top-header .mobile-menu-toggle {
+        order: 1 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .top-header .user-menu {
+        order: 2 !important;
+        flex-shrink: 0 !important;
+        margin-left: auto !important;
+    }
+}
+
+/* =========================================================
+   FIXES SPÉCIFIQUES
+   ========================================================= */
+/* Forcer l'affichage du menu toggle */
+@media (max-width: 1024px) {
+    .mobile-menu-toggle {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* Forcer l'affichage du user menu */
+.user-menu {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Footer sans margin-left sur mobile */
+@media (max-width: 1024px) {
+    footer[style*="margin-left"] {
+        margin-left: 0 !important;
+    }
+}
+
+/* =========================================================
+   TOUCH TARGETS - ACCESSIBILITÉ
+   ========================================================= */
+@media (max-width: 768px) {
+    .mobile-menu-toggle,
+    .user-menu .dropdown-toggle,
+    .user-menu .dropdown-item {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+}
+

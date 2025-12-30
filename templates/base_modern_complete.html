@@ -29,6 +29,8 @@
     <link href="{{ url_for('static', filename='css/mobile_fix.css') }}" rel="stylesheet">
     <!-- CSS Menu Responsive - Optimisations Menu pour tous les écrans -->
     <link href="{{ url_for('static', filename='css/menu_responsive.css') }}" rel="stylesheet">
+    <!-- CSS Header & Footer Mobile Fix - Corrections menu mobile, profil et footer -->
+    <link href="{{ url_for('static', filename='css/header_footer_mobile_fix.css') }}" rel="stylesheet">
     <!-- CSS Responsive Promotion -->
     {% if request.endpoint and 'promotion' in request.endpoint %}
     <link href="{{ url_for('static', filename='css/promotion_responsive.css') }}" rel="stylesheet">
@@ -679,7 +681,7 @@
         </div>
                     
     <!-- Footer -->
-    <footer class="footer-hl" style="margin-left: 280px;">
+    <footer class="footer-hl">
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
