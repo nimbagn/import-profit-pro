@@ -98,6 +98,106 @@ body {
 }
 
 /* =========================================================
+   TABLETTE PAYSAGE (LANDSCAPE) - OPTIMISATIONS SPÉCIFIQUES
+   ========================================================= */
+/* Tablette en mode paysage (769px - 1024px et orientation: landscape) */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+    /* Sidebar toujours visible mais peut être réduite */
+    .sidebar {
+        width: 220px !important;
+        transform: translateX(0) !important;
+    }
+    
+    /* Main content optimisé */
+    .main-content,
+    .main-content[style*="margin-left"],
+    [style*="margin-left: 280px"],
+    [style*="margin-left: 260px"],
+    [style*="margin-left: 240px"] {
+        margin-left: 220px !important;
+        width: calc(100% - 220px) !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+    
+    /* Header ajusté */
+    .top-header {
+        left: 220px !important;
+        width: calc(100% - 220px) !important;
+    }
+    
+    /* Formulaires en 3 colonnes (plus d'espace horizontal) */
+    .form-row,
+    .row {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    /* Formulaires optimisés */
+    .form-hl,
+    .form-container,
+    .card-hl,
+    .card {
+        padding: 1.25rem !important;
+    }
+    
+    /* Grilles 3 colonnes */
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .stats-grid,
+    .modules-grid,
+    .cards-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    /* Tables optimisées */
+    .table,
+    .table-hl {
+        font-size: 0.95rem !important;
+    }
+    
+    .table th,
+    .table td,
+    .table-hl th,
+    .table-hl td {
+        padding: 0.75rem 1rem !important;
+    }
+    
+    /* Typographie optimisée */
+    h1 { font-size: 2.25rem !important; }
+    h2 { font-size: 2rem !important; }
+    h3 { font-size: 1.75rem !important; }
+    h4 { font-size: 1.5rem !important; }
+    
+    p, li, span {
+        font-size: 1rem !important;
+    }
+    
+    /* Modales optimisées */
+    .modal-dialog {
+        margin: 1rem auto !important;
+        max-width: 85% !important;
+    }
+    
+    .modal-content {
+        border-radius: 12px !important;
+    }
+    
+    /* Boutons optimisés */
+    .btn,
+    button {
+        padding: 0.75rem 1.5rem !important;
+        min-height: 44px !important;
+    }
+}
+
+/* =========================================================
    MOBILE - MASQUAGE SIDEBAR (< 768px)
    ========================================================= */
 @media (max-width: 768px) {
