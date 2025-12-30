@@ -1,0 +1,301 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détails Personnel - {{ user.username }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg);
+  }
+  
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .info-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .info-value {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .badge-role {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+  
+  .role-admin { background: var(--color-danger); color: var(--white); }
+  .role-supervisor { background: var(--color-warning); color: var(--white); }
+  .role-warehouse { background: var(--color-success); color: var(--white); }
+  .role-commercial { background: var(--color-info); color: var(--white); }
+  .role-rh { background: #9b59b6; color: var(--white); }
+  
+  .status-active { color: var(--color-success); }
+  .status-inactive { color: var(--color-danger); }
+  
+  .activity-item {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+    }
+    
+    .activity-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+    
+    .page-title-hl {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rh-container {
+      padding: 0.75rem;
+    }
+    
+    .info-grid {
+      padding: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <div>
+      <a href="{{ url_for('rh.personnel_list') }}" class="btn-hl btn-hl-outline" style="margin-bottom: var(--space-md);">
+        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+      </a>
+      <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+        <i class="fas fa-user me-2"></i>{{ user.username }}
+      </h1>
+    </div>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('rh.personnel_edit', user_id=user.id) }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-edit me-2"></i>Modifier
+      </a>
+    </div>
+  </div>
+
+  <!-- Informations générales -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-info-circle me-2"></i>Informations Générales
+      </h3>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Nom d'utilisateur</span>
+        <span class="info-value">{{ user.username }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ user.email }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Nom complet</span>
+        <span class="info-value">{{ user.full_name or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Téléphone</span>
+        <span class="info-value">{{ user.phone or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Rôle</span>
+        <span class="info-value">
+          <span class="badge-role role-{{ user.role.code if user.role else 'none' }}">
+            {{ user.role.name if user.role else 'Sans rôle' }}
+          </span>
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Région</span>
+        <span class="info-value">{{ user.region.name if user.region else '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Statut</span>
+        <span class="info-value">
+          <i class="fas fa-circle status-{{ 'active' if user.is_active else 'inactive' }}"></i>
+          {{ 'Actif' if user.is_active else 'Inactif' }}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Dernière connexion</span>
+        <span class="info-value">
+          {% if user.last_login %}
+            {{ user.last_login.strftime('%d/%m/%Y à %H:%M') }}
+          {% else %}
+            Jamais
+          {% endif %}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Date de création</span>
+        <span class="info-value">{{ user.created_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques d'activité -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-chart-line me-2"></i>Statistiques d'Activité (30 derniers jours)
+      </h3>
+    </div>
+    <div style="padding: var(--space-lg);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--space-xs);">Connexions</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">{{ recent_logins }}</div>
+        </div>
+        {% if last_activity %}
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--space-xs);">Dernière activité</div>
+          <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+            {{ last_activity.created_at.strftime('%d/%m/%Y %H:%M') }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ last_activity.action }}</div>
+        </div>
+        {% endif %}
+      </div>
+      
+      {% if activity_stats %}
+      <div>
+        <h4 style="margin-bottom: var(--space-md); color: var(--text-primary);">Activités par type</h4>
+        <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+          {% for stat in activity_stats %}
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm); background: var(--bg-tertiary); border-radius: var(--radius-md);">
+            <span style="color: var(--text-primary);">{{ stat.action }}</span>
+            <span style="font-weight: 600; color: var(--color-primary);">{{ stat.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Activités récentes -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-history me-2"></i>Activités Récentes
+      </h3>
+    </div>
+    <div>
+      {% if recent_activities %}
+        {% for activity in recent_activities %}
+        <div class="activity-item">
+          <div>
+            <div style="font-weight: 600; color: var(--text-primary);">{{ activity.action }}</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              {{ activity.created_at.strftime('%d/%m/%Y à %H:%M:%S') }}
+            </div>
+          </div>
+          <div style="color: var(--text-secondary); font-size: 0.9rem;">
+            {{ activity.module or '-' }}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="padding: var(--space-xl); text-align: center; color: var(--text-secondary);">
+          Aucune activité enregistrée
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

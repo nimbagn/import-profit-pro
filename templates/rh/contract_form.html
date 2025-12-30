@@ -1,0 +1,239 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if contract else 'Nouveau' }} Contrat - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .form-control, .form-select {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    width: 100%;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .form-control,
+    .form-select {
+      font-size: 16px;
+      padding: 0.75rem 1rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rh-container {
+      padding: 0.75rem;
+    }
+    
+    .form-grid {
+      padding: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+             style="padding: var(--space-md); border-radius: var(--radius-md); 
+                    background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                    color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                    border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                    margin-bottom: var(--space-lg);">
+          <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div style="margin-bottom: var(--space-xl);">
+    <a href="{% if contract %}{{ url_for('rh.contract_detail', contract_id=contract.id) }}{% else %}{{ url_for('rh.employee_contracts_list', employee_id=employee.id) }}{% endif %}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+      <i class="fas fa-{{ 'edit' if contract else 'plus' }} me-2"></i>
+      {{ 'Modifier' if contract else 'Nouveau' }} Contrat - {{ employee.full_name }}
+    </h1>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-file-contract me-2"></i>Informations du Contrat
+      </h3>
+    </div>
+    <form method="POST" action="{% if contract %}{{ url_for('rh.contract_edit', contract_id=contract.id) }}{% else %}{{ url_for('rh.contract_new', employee_id=employee.id) }}{% endif %}">
+      <div class="form-grid">
+        {% if not contract %}
+        <div class="form-group">
+          <label class="form-label">Numéro de contrat *</label>
+          <input type="text" name="contract_number" value="{{ contract.contract_number if contract else '' }}" class="form-control" required>
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+          <label class="form-label">Type de contrat *</label>
+          <select name="contract_type" class="form-select" required>
+            <option value="">Sélectionner</option>
+            <option value="cdi" {% if contract and contract.contract_type == 'cdi' %}selected{% endif %}>CDI</option>
+            <option value="cdd" {% if contract and contract.contract_type == 'cdd' %}selected{% endif %}>CDD</option>
+            <option value="stage" {% if contract and contract.contract_type == 'stage' %}selected{% endif %}>Stage</option>
+            <option value="consultant" {% if contract and contract.contract_type == 'consultant' %}selected{% endif %}>Consultant</option>
+            <option value="freelance" {% if contract and contract.contract_type == 'freelance' %}selected{% endif %}>Freelance</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date de début *</label>
+          <input type="date" name="start_date" value="{{ contract.start_date.strftime('%Y-%m-%d') if contract and contract.start_date else '' }}" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date de fin</label>
+          <input type="date" name="end_date" value="{{ contract.end_date.strftime('%Y-%m-%d') if contract and contract.end_date else '' }}" class="form-control">
+          <small style="color: var(--text-secondary); font-size: 0.85rem;">Laisser vide pour CDI</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Salaire</label>
+          <input type="number" name="salary" value="{{ contract.salary if contract and contract.salary else '' }}" step="0.01" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Devise</label>
+          <select name="currency" class="form-select">
+            <option value="GNF" {% if not contract or contract.currency == 'GNF' %}selected{% endif %}>GNF</option>
+            <option value="USD" {% if contract and contract.currency == 'USD' %}selected{% endif %}>USD</option>
+            <option value="EUR" {% if contract and contract.currency == 'EUR' %}selected{% endif %}>EUR</option>
+            <option value="XOF" {% if contract and contract.currency == 'XOF' %}selected{% endif %}>XOF</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Poste</label>
+          <input type="text" name="position" value="{{ contract.position if contract else employee.position or '' }}" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Département</label>
+          <input type="text" name="department" value="{{ contract.department if contract else employee.department or '' }}" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select name="status" class="form-select">
+            <option value="draft" {% if not contract or contract.status == 'draft' %}selected{% endif %}>Brouillon</option>
+            <option value="active" {% if contract and contract.status == 'active' %}selected{% endif %}>Actif</option>
+            <option value="expired" {% if contract and contract.status == 'expired' %}selected{% endif %}>Expiré</option>
+            <option value="terminated" {% if contract and contract.status == 'terminated' %}selected{% endif %}>Terminé</option>
+          </select>
+        </div>
+      </div>
+      
+      <div style="padding: var(--space-lg); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-sm);">
+        <a href="{% if contract %}{{ url_for('rh.contract_detail', contract_id=contract.id) }}{% else %}{{ url_for('rh.employee_contracts_list', employee_id=employee.id) }}{% endif %}" class="btn-hl btn-hl-outline">
+          Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

@@ -307,7 +307,12 @@
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0 !important;
+      padding: 1rem !important;
       padding-top: 70px !important;
+    }
+    
+    .page-container {
+      padding: 0;
     }
     
     .page-header-hl {
@@ -315,7 +320,7 @@
     }
     
     .page-title-hl {
-      font-size: 24px;
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
     }
     
     .card-hl {

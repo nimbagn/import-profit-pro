@@ -94,6 +94,60 @@
     background: #fee2e2;
     color: #991b1b;
   }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .page-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .page-container {
+      padding: 1rem;
+    }
+    
+    .card-header-hl {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .card-body-hl {
+      padding: 1rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-container {
+      padding: 0.75rem;
+    }
+    
+    .card-body-hl {
+      padding: 0.75rem;
+    }
+  }
 </style>
 {% endblock %}
 

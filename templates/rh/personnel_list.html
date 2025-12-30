@@ -1,0 +1,406 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Gestion du Personnel - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+
+  .page-header-hl {
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: var(--space-sm) 0;
+  }
+  
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .table-premium {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-premium thead {
+    background: var(--bg-tertiary);
+  }
+
+  .table-premium th {
+    padding: var(--space-md);
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-premium td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+  }
+
+  .table-premium tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .table-premium tbody tr.user-inactive {
+    opacity: 0.85;
+    background: #fef2f2;
+  }
+  
+  .table-premium tbody tr.user-inactive:hover {
+    background: #fee2e2;
+    opacity: 1;
+  }
+  
+  .badge-role {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .role-admin { background: var(--color-danger); color: var(--white); }
+  .role-supervisor { background: var(--color-warning); color: var(--white); }
+  .role-warehouse { background: var(--color-success); color: var(--white); }
+  .role-commercial { background: var(--color-info); color: var(--white); }
+  .role-rh { background: #9b59b6; color: var(--white); }
+  
+  .status-active { color: var(--color-success); }
+  .status-inactive { color: var(--color-danger); }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+  
+  .badge-status.status-active {
+    background: var(--color-success);
+    color: var(--white);
+  }
+  
+  .badge-status.status-inactive {
+    background: var(--color-danger);
+    color: var(--white);
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .table-premium {
+      min-width: 800px;
+      font-size: 0.875rem;
+    }
+    
+    .table-premium th,
+    .table-premium td {
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rh-container {
+      padding: 0.75rem;
+    }
+    
+    .stats-grid {
+      gap: 0.75rem;
+    }
+    
+    .stat-card {
+      padding: 1rem;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+    }
+    
+    .table-premium {
+      min-width: 700px;
+      font-size: 0.8rem;
+    }
+  }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+             style="padding: var(--space-md); border-radius: var(--radius-md); 
+                    background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                    color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                    border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                    margin-bottom: var(--space-lg);">
+          <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div class="page-header-hl">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-users-cog me-2"></i>
+        Gestion du Personnel
+      </h1>
+      <div style="display: flex; gap: var(--space-sm);">
+        <a href="{{ url_for('rh.statistiques') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-chart-bar me-2"></i>
+          Statistiques
+        </a>
+        <a href="{{ url_for('rh.activites_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-history me-2"></i>
+          Activités
+        </a>
+        <a href="{{ url_for('rh.personnel_new') }}" class="btn-hl btn-hl-primary">
+          <i class="fas fa-user-plus me-2"></i>
+          Nouveau Personnel
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Personnel</div>
+      <div class="stat-value">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Actifs</div>
+      <div class="stat-value" style="color: var(--color-success);">{{ active_users }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Inactifs</div>
+      <div class="stat-value" style="color: var(--color-danger);">{{ inactive_users }}</div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-filter me-2"></i>Filtres
+      </h3>
+    </div>
+    <div style="padding: var(--space-lg);">
+      <form method="GET" action="{{ url_for('rh.personnel_list') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); align-items: end;">
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Recherche</label>
+          <input type="text" name="search" value="{{ search }}" placeholder="Nom, email, téléphone..." class="form-control" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Rôle</label>
+          <select name="role_id" class="form-select" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Tous les rôles</option>
+            {% for role in roles %}
+            <option value="{{ role.id }}" {% if selected_role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Région</label>
+          <select name="region_id" class="form-select" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Toutes les régions</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if selected_region_id == region.id %}selected{% endif %}>{{ region.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Statut</label>
+          <select name="is_active" class="form-select" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Tous ({{ total_users }})</option>
+            <option value="active" {% if selected_is_active == 'active' %}selected{% endif %}>Actifs uniquement ({{ active_users }})</option>
+            <option value="inactive" {% if selected_is_active == 'inactive' %}selected{% endif %}>Inactifs uniquement ({{ inactive_users }})</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: var(--space-sm);">
+          <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1; padding: var(--space-sm) var(--space-md);">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+          <a href="{{ url_for('rh.personnel_list') }}" class="btn-hl btn-hl-outline" style="padding: var(--space-sm) var(--space-md);" title="Réinitialiser les filtres">
+            <i class="fas fa-redo"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste du personnel -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-list me-2"></i>Liste du Personnel ({{ users|length }})
+      </h3>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table-premium">
+        <thead>
+          <tr>
+            <th>Nom d'utilisateur</th>
+            <th>Email</th>
+            <th>Nom complet</th>
+            <th>Rôle</th>
+            <th>Région</th>
+            <th>Statut</th>
+            <th>Dernière connexion</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr class="{% if not user.is_active %}user-inactive{% endif %}">
+            <td><strong>{{ user.username }}</strong></td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.full_name or '-' }}</td>
+            <td>
+              <span class="badge-role role-{{ user.role.code if user.role else 'none' }}">
+                {{ user.role.name if user.role else 'Sans rôle' }}
+              </span>
+            </td>
+            <td>{{ user.region.name if user.region else '-' }}</td>
+            <td>
+              {% if user.is_active %}
+                <span class="badge-status status-active">
+                  <i class="fas fa-check-circle me-1"></i>Actif
+                </span>
+              {% else %}
+                <span class="badge-status status-inactive" style="background: var(--color-danger); color: var(--white);">
+                  <i class="fas fa-times-circle me-1"></i>Inactif
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.last_login %}
+                {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+              {% else %}
+                Jamais
+              {% endif %}
+            </td>
+            <td>
+              <div style="display: flex; gap: var(--space-sm);">
+                <a href="{{ url_for('rh.personnel_detail', user_id=user.id) }}" class="btn-hl btn-hl-outline" title="Voir détails" style="padding: var(--space-xs) var(--space-sm);">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('rh.personnel_edit', user_id=user.id) }}" class="btn-hl btn-hl-outline" title="Modifier" style="padding: var(--space-xs) var(--space-sm);">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--text-secondary);">
+              {% if selected_is_active %}
+                Aucun utilisateur {% if selected_is_active == 'active' %}actif{% else %}inactif{% endif %} trouvé
+              {% else %}
+                Aucun utilisateur trouvé
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

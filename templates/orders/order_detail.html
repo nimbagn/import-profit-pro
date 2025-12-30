@@ -730,19 +730,26 @@
   @media (max-width: 1024px) {
     .main-content {
       margin-left: 0 !important;
+      padding: 1rem !important;
       margin-top: 60px !important;
     }
     
+    .page-container {
+      padding: 0;
+    }
+    
     .hero-section-order {
-      padding: var(--space-2xl) var(--space-lg);
+      padding: var(--space-2xl) 1rem;
     }
     
     .hero-title-order {
-      font-size: 1.75rem;
+      font-size: clamp(1.5rem, 4vw, 1.75rem);
     }
     
     .content-section-order {
-      width: calc(100% - 2 * var(--space-md));
+      width: calc(100% - 2rem);
+      margin-left: 1rem;
+      margin-right: 1rem;
       margin-left: var(--space-md);
       margin-right: var(--space-md);
     }
@@ -759,17 +766,58 @@
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0 !important;
+      padding: 1rem !important;
       margin-top: 0 !important;
     }
     
+    .page-container {
+      padding: 0;
+    }
+    
     .hero-section-order {
-      padding: var(--space-lg) var(--space-md);
+      padding: var(--space-lg) 1rem;
     }
     
     .hero-content-order {
       flex-direction: column;
       align-items: flex-start !important;
       gap: var(--space-md);
+    }
+    
+    .hero-title-order {
+      font-size: clamp(1.25rem, 5vw, 1.5rem);
+    }
+    
+    .content-section-order {
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0;
+    }
+    
+    .card-hl {
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .clients-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .items-table {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .items-table table {
+      min-width: 600px;
+      font-size: 0.875rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
     }
     
     .hero-title-order {
@@ -915,16 +963,29 @@
   }
   
   @media (max-width: 480px) {
+    .hero-section-order {
+      padding: 1rem 0.75rem;
+    }
+    
     .hero-title-order {
-      font-size: 1.25rem;
+      font-size: clamp(1.1rem, 5vw, 1.25rem);
     }
     
     .hero-subtitle-order {
-      font-size: 0.8rem;
+      font-size: clamp(0.8rem, 3vw, 0.9rem);
+    }
+    
+    .content-section-order {
+      margin-top: -1.5rem;
+    }
+    
+    .card-hl {
+      padding: 1rem;
+      border-radius: 12px;
     }
     
     .order-total-value {
-      font-size: 1.5rem !important;
+      font-size: clamp(1.25rem, 6vw, 1.5rem) !important;
     }
     
     .items-table {

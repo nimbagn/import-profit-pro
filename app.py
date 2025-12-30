@@ -139,7 +139,9 @@ except Exception as e:
 
 # Import et enregistrement des blueprints
 from auth import auth_bp, apply_login_rate_limit
+from rh import rh_bp
 app.register_blueprint(auth_bp)
+app.register_blueprint(rh_bp)
 
 # Appliquer le rate limiting APRÈS l'enregistrement du blueprint
 if limiter:
@@ -262,6 +264,79 @@ with app.app_context():
                         'stock_items': ['read'],
                         'promotion': ['read', 'write'],
                         'orders': ['read', 'validate', 'update']
+                    }
+                },
+                {
+                    'name': 'Ressources Humaines',
+                    'code': 'rh',
+                    'description': 'Gestion du personnel et suivi des interactions utilisateurs',
+                    'permissions': {
+                        'users': ['read', 'create', 'update'],
+                        'employees': ['read'],
+                        'contracts': ['read'],
+                        'trainings': ['read'],
+                        'evaluations': ['read'],
+                        'absences': ['read'],
+                        'roles': ['read'],
+                        'reports': ['read'],
+                        'analytics': ['read']
+                    }
+                },
+                {
+                    'name': 'RH Manager',
+                    'code': 'rh_manager',
+                    'description': 'Gestion complète du personnel, contrats, formations, évaluations',
+                    'permissions': {
+                        'users': ['read', 'create', 'update', 'delete'],
+                        'employees': ['read', 'create', 'update', 'delete'],
+                        'contracts': ['read', 'create', 'update', 'delete'],
+                        'trainings': ['read', 'create', 'update', 'delete'],
+                        'evaluations': ['read', 'create', 'update', 'delete'],
+                        'absences': ['read', 'create', 'update', 'delete'],
+                        'roles': ['read'],
+                        'reports': ['read', 'export'],
+                        'analytics': ['read', 'export']
+                    }
+                },
+                {
+                    'name': 'RH Assistant',
+                    'code': 'rh_assistant',
+                    'description': 'Assistance RH : saisie données, suivi formations, gestion absences',
+                    'permissions': {
+                        'users': ['read', 'create', 'update'],
+                        'employees': ['read', 'create', 'update'],
+                        'contracts': ['read', 'create', 'update'],
+                        'trainings': ['read', 'create', 'update'],
+                        'evaluations': ['read', 'create'],
+                        'absences': ['read', 'create', 'update'],
+                        'reports': ['read']
+                    }
+                },
+                {
+                    'name': 'RH Recruiter',
+                    'code': 'rh_recruiter',
+                    'description': 'Recrutement et intégration du personnel',
+                    'permissions': {
+                        'users': ['read', 'create'],
+                        'employees': ['read', 'create', 'update'],
+                        'contracts': ['read', 'create'],
+                        'trainings': ['read', 'create'],
+                        'reports': ['read']
+                    }
+                },
+                {
+                    'name': 'RH Analyst',
+                    'code': 'rh_analyst',
+                    'description': 'Analyse et reporting RH, statistiques, tableaux de bord',
+                    'permissions': {
+                        'users': ['read'],
+                        'employees': ['read'],
+                        'contracts': ['read'],
+                        'trainings': ['read'],
+                        'evaluations': ['read'],
+                        'absences': ['read'],
+                        'reports': ['read', 'export'],
+                        'analytics': ['read', 'export']
                     }
                 }
             ]

@@ -1,0 +1,220 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Statistiques d'Utilisation - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: var(--space-sm) 0;
+  }
+  
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .table-premium {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-premium thead {
+    background: var(--bg-tertiary);
+  }
+
+  .table-premium th {
+    padding: var(--space-md);
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-premium td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+  }
+
+  .table-premium tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0 !important; }
+    .rh-container { padding: var(--space-md); }
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <h1 class="page-title-hl">
+      <i class="fas fa-chart-bar me-2"></i>Statistiques d'Utilisation
+    </h1>
+    <div style="display: flex; gap: var(--space-sm);">
+      <form method="GET" action="{{ url_for('rh.statistiques') }}" style="display: flex; gap: var(--space-sm); align-items: center;">
+        <select name="days" class="form-select" style="padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+          <option value="7" {% if days == 7 %}selected{% endif %}>7 derniers jours</option>
+          <option value="30" {% if days == 30 %}selected{% endif %}>30 derniers jours</option>
+          <option value="90" {% if days == 90 %}selected{% endif %}>90 derniers jours</option>
+          <option value="365" {% if days == 365 %}selected{% endif %}>1 an</option>
+        </select>
+        <button type="submit" class="btn-hl btn-hl-primary" style="padding: var(--space-sm) var(--space-md);">
+          <i class="fas fa-filter me-2"></i>Filtrer
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Statistiques générales -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Utilisateurs</div>
+      <div class="stat-value">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Utilisateurs Actifs</div>
+      <div class="stat-value" style="color: var(--color-success);">{{ active_users }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Connexions ({{ days }}j)</div>
+      <div class="stat-value" style="color: var(--color-primary);">{{ logins_count }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Utilisateurs Actifs ({{ days }}j)</div>
+      <div class="stat-value" style="color: var(--color-info);">{{ active_users_period }}</div>
+    </div>
+  </div>
+
+  <!-- Activités par type -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-chart-pie me-2"></i>Activités par Type
+      </h3>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table-premium">
+        <thead>
+          <tr>
+            <th>Type d'action</th>
+            <th>Nombre</th>
+            <th>Pourcentage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stat in activities_by_type %}
+          <tr>
+            <td><strong>{{ stat.action }}</strong></td>
+            <td>{{ stat.count }}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                <div style="flex: 1; height: 8px; background: var(--gray-200); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="height: 100%; background: var(--color-primary); width: {% if activities_by_type|length > 0 %}{{ (stat.count / activities_by_type[0].count * 100)|round }}%{% else %}0%{% endif %};"></div>
+                </div>
+                <span style="min-width: 50px; text-align: right;">{% if activities_by_type|length > 0 %}{{ (stat.count / activities_by_type[0].count * 100)|round }}%{% else %}0%{% endif %}</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Top utilisateurs actifs -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-trophy me-2"></i>Top 10 Utilisateurs les Plus Actifs
+      </h3>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table-premium">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Utilisateur</th>
+            <th>Nom complet</th>
+            <th>Nombre d'activités</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user_stat in top_active_users %}
+          <tr>
+            <td>
+              {% if loop.index == 1 %}
+                <span style="color: #FFD700;">🥇</span>
+              {% elif loop.index == 2 %}
+                <span style="color: #C0C0C0;">🥈</span>
+              {% elif loop.index == 3 %}
+                <span style="color: #CD7F32;">🥉</span>
+              {% else %}
+                <strong>#{{ loop.index }}</strong>
+              {% endif %}
+            </td>
+            <td><strong>{{ user_stat.username }}</strong></td>
+            <td>{{ user_stat.full_name or '-' }}</td>
+            <td><span style="color: var(--color-primary); font-weight: 600;">{{ user_stat.activity_count }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

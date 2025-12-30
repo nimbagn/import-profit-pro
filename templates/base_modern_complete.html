@@ -33,6 +33,8 @@
     <link href="{{ url_for('static', filename='css/header_footer_mobile_fix.css') }}" rel="stylesheet">
     <!-- CSS Force Responsive Global - Force responsive sur TOUTES les pages (PRIORITÉ MAXIMALE - DERNIER) -->
     <link href="{{ url_for('static', filename='css/force_responsive_global.css') }}" rel="stylesheet">
+    <!-- CSS Responsive Unified - Responsive unifié et amélioré -->
+    <link href="{{ url_for('static', filename='css/responsive_unified.css') }}" rel="stylesheet">
     <!-- CSS Responsive Promotion -->
     {% if request.endpoint and 'promotion' in request.endpoint %}
     <link href="{{ url_for('static', filename='css/promotion_responsive.css') }}" rel="stylesheet">
@@ -610,6 +612,35 @@
                     <span class="chat-menu-badge" id="chatMenuBadge" style="display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); animation: pulse 2s infinite;"></span>
                 </a>
                 {% endif %}
+                
+                {% if current_user.role and current_user.role.code in ['rh', 'rh_manager', 'rh_assistant', 'rh_recruiter', 'rh_analyst'] or has_permission(current_user, 'users.read') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and 'rh' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Ressources Humaines</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and 'rh' in request.endpoint %}expanded{% endif %}">
+                        <a href="{{ url_for('rh.personnel_list') }}" class="menu-subitem {% if request.endpoint == 'rh.personnel_list' or request.endpoint == 'rh.personnel_detail' or request.endpoint == 'rh.personnel_new' or request.endpoint == 'rh.personnel_edit' %}active{% endif %}">
+                            <i class="fas fa-users"></i>
+                            Personnel Plateforme
+                        </a>
+                        {% if current_user.role and current_user.role.code in ['rh_manager', 'rh_assistant', 'rh_recruiter'] %}
+                        <a href="{{ url_for('rh.employees_list') }}" class="menu-subitem {% if request.endpoint == 'rh.employees_list' or request.endpoint == 'rh.employee_detail' or request.endpoint == 'rh.employee_new' or request.endpoint == 'rh.employee_edit' %}active{% endif %}">
+                            <i class="fas fa-user-tie"></i>
+                            Employés Externes
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('rh.activites_list') }}" class="menu-subitem {% if request.endpoint == 'rh.activites_list' %}active{% endif %}">
+                            <i class="fas fa-history"></i>
+                            Activités
+                        </a>
+                        <a href="{{ url_for('rh.statistiques') }}" class="menu-subitem {% if request.endpoint == 'rh.statistiques' %}active{% endif %}">
+                            <i class="fas fa-chart-bar"></i>
+                            Statistiques
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </nav>
         </aside>
         
@@ -640,6 +671,12 @@
                         <li><a class="dropdown-item" href="{{ url_for('auth.users_list') }}">
                             <i class="fas fa-users me-2"></i>
                             Gestion Utilisateurs
+                        </a></li>
+                        {% endif %}
+                        {% if current_user.role and current_user.role.code == 'rh' or has_permission(current_user, 'users.read') %}
+                        <li><a class="dropdown-item" href="{{ url_for('rh.personnel_list') }}">
+                            <i class="fas fa-users-cog me-2"></i>
+                            Ressources Humaines
                         </a></li>
                         {% endif %}
                         {% if has_permission(current_user, 'roles.read') %}
@@ -726,6 +763,9 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Responsive Enhancements JS -->
+    <script src="{{ url_for('static', filename='js/responsive_enhancements.js') }}"></script>
     
     <!-- Scripts personnalisés -->
     <script>

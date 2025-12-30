@@ -9,7 +9,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, UTC
-from models import db, User, Role, Region
+from models import db, User, Role, Region, UserActivityLog
 import re
 import os
 
@@ -97,6 +97,24 @@ def login():
             # Mettre à jour la dernière connexion
             user.last_login = datetime.now(UTC)
             db.session.commit()
+            
+            # Logger la connexion
+            try:
+                from flask import request
+                activity = UserActivityLog(
+                    user_id=user.id,
+                    action='login',
+                    module='auth',
+                    ip_address=request.remote_addr,
+                    user_agent=request.headers.get('User-Agent', ''),
+                    created_at=datetime.now(UTC)
+                )
+                db.session.add(activity)
+                db.session.commit()
+            except Exception as e:
+                # Ne pas bloquer la connexion si le logging échoue
+                print(f"Erreur lors de l'enregistrement de la connexion: {e}")
+                db.session.rollback()
             
             # Connecter l'utilisateur
             login_user(user, remember=remember)
@@ -280,6 +298,24 @@ def reset_password():
 @login_required
 def logout():
     """Déconnexion"""
+    # Logger la déconnexion avant de déconnecter
+    try:
+        from flask import request
+        activity = UserActivityLog(
+            user_id=current_user.id,
+            action='logout',
+            module='auth',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', ''),
+            created_at=datetime.now(UTC)
+        )
+        db.session.add(activity)
+        db.session.commit()
+    except Exception as e:
+        # Ne pas bloquer la déconnexion si le logging échoue
+        print(f"Erreur lors de l'enregistrement de la déconnexion: {e}")
+        db.session.rollback()
+    
     logout_user()
     flash('Vous avez été déconnecté avec succès', 'success')
     return redirect(url_for('auth.login'))
@@ -362,10 +398,17 @@ def register():
         )
         
         db.session.add(user)
+        db.session.flush()  # S'assurer que l'utilisateur est créé dans la session
         db.session.commit()
         
+        # Rediriger vers la liste avec le filtre de région si l'utilisateur créé a une région
+        # Cela garantit que l'utilisateur créé sera visible dans la liste
+        redirect_url = url_for('auth.users_list')
+        if user.region_id:
+            redirect_url = url_for('auth.users_list', region_id=user.region_id)
+        
         flash(f'Utilisateur {username} créé avec succès', 'success')
-        return redirect(url_for('auth.users_list'))
+        return redirect(redirect_url)
     
     roles = Role.query.all()
     regions = Region.query.order_by(Region.name).all()
@@ -386,7 +429,9 @@ def users_list():
     if region_id:
         query = query.filter_by(region_id=region_id)
     
-    users = query.order_by(User.created_at.desc()).all()
+    # Trier par date de création (plus récent en premier), puis par ID si created_at est NULL
+    from sqlalchemy import desc, nullslast
+    users = query.order_by(nullslast(desc(User.created_at)), desc(User.id)).all()
     roles = Role.query.all()
     regions = Region.query.order_by(Region.name).all()
     return render_template('auth/users_list.html', users=users, roles=roles, regions=regions, selected_region_id=region_id)
@@ -878,14 +923,37 @@ def roles_list():
     
     roles = Role.query.order_by(Role.name).all()
     
-    # Calculer les statistiques
+    # Calculer les statistiques globales
     total_users = sum(len(role.users) for role in roles)
     roles_with_permissions = sum(1 for role in roles if role.permissions)
     admin_count = sum(1 for role in roles if role.code == 'admin')
     
+    # Calculer les statistiques d'utilisateurs actifs/inactifs par rôle
+    roles_stats = []
+    total_active = 0
+    total_inactive = 0
+    
+    for role in roles:
+        active_users = [u for u in role.users if u.is_active]
+        inactive_users = [u for u in role.users if not u.is_active]
+        
+        roles_stats.append({
+            'role': role,
+            'active_count': len(active_users),
+            'inactive_count': len(inactive_users),
+            'active_users': active_users,
+            'inactive_users': inactive_users
+        })
+        
+        total_active += len(active_users)
+        total_inactive += len(inactive_users)
+    
     return render_template('auth/roles_list.html', 
                          roles=roles,
+                         roles_stats=roles_stats,
                          total_users=total_users,
+                         total_active=total_active,
+                         total_inactive=total_inactive,
                          roles_with_permissions=roles_with_permissions,
                          admin_count=admin_count)
 

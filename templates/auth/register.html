@@ -49,6 +49,39 @@
     gap: var(--space-md);
   }
 
+  /* Responsive pour formulaires */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+
+    .register-container {
+      padding: 0;
+      margin: 1rem auto;
+    }
+
+    .register-card {
+      padding: 1.5rem;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 16px; /* Évite le zoom sur iOS */
+      padding: 0.75rem 1rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+    }
+  }
+
   .form-group {
     margin-bottom: var(--space-lg);
   }

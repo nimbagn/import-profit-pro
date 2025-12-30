@@ -1,0 +1,175 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détails Contrat - {{ contract.contract_number }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg);
+  }
+  
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .info-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .info-value {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+
+  .status-active { background: var(--color-success); color: var(--white); }
+  .status-draft { background: var(--gray-400); color: var(--white); }
+  .status-expired { background: var(--color-warning); color: var(--white); }
+  .status-terminated { background: var(--color-danger); color: var(--white); }
+  
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0 !important; }
+    .rh-container { padding: var(--space-md); }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <div>
+      <a href="{{ url_for('rh.employee_contracts_list', employee_id=contract.employee_id) }}" class="btn-hl btn-hl-outline" style="margin-bottom: var(--space-md);">
+        <i class="fas fa-arrow-left me-2"></i>Retour aux contrats
+      </a>
+      <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+        <i class="fas fa-file-contract me-2"></i>Contrat {{ contract.contract_number }}
+      </h1>
+    </div>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('rh.contract_edit', contract_id=contract.id) }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-edit me-2"></i>Modifier
+      </a>
+    </div>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-info-circle me-2"></i>Informations du Contrat
+      </h3>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Numéro de contrat</span>
+        <span class="info-value">{{ contract.contract_number }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Employé</span>
+        <span class="info-value">
+          <a href="{{ url_for('rh.employee_detail', employee_id=contract.employee_id) }}" style="color: var(--color-primary);">
+            {{ contract.employee.full_name }}
+          </a>
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Type</span>
+        <span class="info-value">{{ contract.contract_type|upper }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Date de début</span>
+        <span class="info-value">{{ contract.start_date.strftime('%d/%m/%Y') }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Date de fin</span>
+        <span class="info-value">
+          {% if contract.end_date %}
+            {{ contract.end_date.strftime('%d/%m/%Y') }}
+          {% else %}
+            <span style="color: var(--text-secondary);">Indéterminé (CDI)</span>
+          {% endif %}
+        </span>
+      </div>
+      {% if contract.salary %}
+      <div class="info-item">
+        <span class="info-label">Salaire</span>
+        <span class="info-value">{{ "{:,.0f}".format(contract.salary) }} {{ contract.currency }}</span>
+      </div>
+      {% endif %}
+      <div class="info-item">
+        <span class="info-label">Poste</span>
+        <span class="info-value">{{ contract.position or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Département</span>
+        <span class="info-value">{{ contract.department or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Statut</span>
+        <span class="info-value">
+          <span class="badge-status status-{{ contract.status }}">
+            {% if contract.status == 'active' %}Actif
+            {% elif contract.status == 'draft' %}Brouillon
+            {% elif contract.status == 'expired' %}Expiré
+            {% elif contract.status == 'terminated' %}Terminé
+            {% endif %}
+          </span>
+        </span>
+      </div>
+      {% if contract.created_at %}
+      <div class="info-item">
+        <span class="info-label">Date de création</span>
+        <span class="info-value">{{ contract.created_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

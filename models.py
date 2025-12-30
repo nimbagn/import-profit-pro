@@ -236,6 +236,262 @@ class UserPreference(db.Model):
     def __repr__(self):
         return f"<UserPreference user={self.user_id} theme={self.theme_name} mode={self.color_mode}>"
 
+class UserActivityLog(db.Model):
+    """Journal des activités et interactions des utilisateurs"""
+    __tablename__ = "user_activity_logs"
+    id = PK()
+    user_id = FK("users.id", onupdate="CASCADE", ondelete="CASCADE", nullable=False, index=True)
+    action = db.Column(db.String(100), nullable=False, index=True)  # login, logout, create_order, update_stock, etc.
+    module = db.Column(db.String(50), nullable=True, index=True)  # auth, orders, stocks, etc.
+    activity_metadata = db.Column(db.JSON, nullable=True)  # Données additionnelles (JSON) - renommé de 'metadata' car réservé par SQLAlchemy
+    ip_address = db.Column(db.String(45), nullable=True)  # IPv4 ou IPv6
+    user_agent = db.Column(db.String(500), nullable=True)  # User-Agent du navigateur
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC), index=True)
+    
+    user = db.relationship("User", backref=db.backref("activity_logs", lazy="dynamic"))
+    
+    __table_args__ = (
+        db.Index("idx_activity_user", "user_id"),
+        db.Index("idx_activity_action", "action"),
+        db.Index("idx_activity_module", "module"),
+        db.Index("idx_activity_created", "created_at"),
+        db.Index("idx_activity_user_action", "user_id", "action"),
+    )
+    
+    def __repr__(self):
+        return f"<UserActivityLog user={self.user_id} action={self.action} at={self.created_at}>"
+
+# =========================================================
+# RESSOURCES HUMAINES — EMPLOYÉS EXTERNES (SANS ACCÈS PLATEFORME)
+# =========================================================
+
+class Employee(db.Model):
+    """Employés sans accès à la plateforme mais suivis par le service RH"""
+    __tablename__ = "employees"
+    id = PK()
+    employee_number = db.Column(db.String(50), unique=True, nullable=False, index=True)  # Numéro d'employé
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    phone_secondary = db.Column(db.String(20), nullable=True)
+    gender = db.Column(db.Enum("M", "F", name="gender"), nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
+    national_id = db.Column(db.String(50), nullable=True, index=True)  # Numéro CNI/Passeport
+    address = db.Column(db.String(500), nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    emergency_contact_name = db.Column(db.String(200), nullable=True)
+    emergency_contact_phone = db.Column(db.String(20), nullable=True)
+    emergency_contact_relation = db.Column(db.String(50), nullable=True)  # Relation (conjoint, parent, etc.)
+    
+    # Informations professionnelles
+    department = db.Column(db.String(100), nullable=True)  # Département/Service
+    position = db.Column(db.String(100), nullable=True)  # Poste/Fonction
+    manager_id = FK("employees.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Responsable hiérarchique
+    region_id = FK("regions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    depot_id = FK("depots.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    # Statut
+    employment_status = db.Column(db.Enum("active", "inactive", "suspended", "terminated", "on_leave", name="employment_status"), 
+                                 nullable=False, default="active", index=True)
+    hire_date = db.Column(db.Date, nullable=True, index=True)  # Date d'embauche
+    termination_date = db.Column(db.Date, nullable=True)  # Date de fin de contrat
+    termination_reason = db.Column(db.Text, nullable=True)  # Raison de fin de contrat
+    
+    # Lien avec utilisateur (si l'employé a un compte)
+    user_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL", unique=True)
+    
+    # Métadonnées
+    notes = db.Column(db.Text, nullable=True)  # Notes générales
+    photo_path = db.Column(db.String(500), nullable=True)  # Photo de profil
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    created_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    # Relations
+    manager = db.relationship("Employee", remote_side=[id], backref="subordinates")
+    region = db.relationship("Region", backref="employees")
+    depot = db.relationship("Depot", backref="employees")
+    user = db.relationship("User", foreign_keys=[user_id], backref="employee_profile")
+    created_by = db.relationship("User", foreign_keys=[created_by_id], backref="created_employees")
+    contracts = db.relationship("EmployeeContract", backref="employee", lazy="dynamic", cascade="all, delete-orphan", order_by="desc(EmployeeContract.start_date)")
+    trainings = db.relationship("EmployeeTraining", backref="employee", lazy="dynamic", cascade="all, delete-orphan", order_by="desc(EmployeeTraining.start_date)")
+    evaluations = db.relationship("EmployeeEvaluation", backref="employee", lazy="dynamic", cascade="all, delete-orphan", order_by="desc(EmployeeEvaluation.evaluation_date)")
+    absences = db.relationship("EmployeeAbsence", backref="employee", lazy="dynamic", cascade="all, delete-orphan", order_by="desc(EmployeeAbsence.start_date)")
+    
+    __table_args__ = (
+        db.Index("idx_employee_number", "employee_number"),
+        db.Index("idx_employee_name", "last_name", "first_name"),
+        db.Index("idx_employee_status", "employment_status"),
+        db.Index("idx_employee_department", "department"),
+        db.Index("idx_employee_position", "position"),
+    )
+    
+    @property
+    def full_name(self):
+        """Nom complet de l'employé"""
+        return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def current_contract(self):
+        """Contrat actuel (le plus récent actif)"""
+        return self.contracts.filter_by(status='active').first()
+    
+    def __repr__(self):
+        return f"<Employee {self.employee_number} - {self.full_name}>"
+
+class EmployeeContract(db.Model):
+    """Contrats des employés"""
+    __tablename__ = "employee_contracts"
+    id = PK()
+    employee_id = FK("employees.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE", index=True)
+    contract_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    contract_type = db.Column(db.Enum("cdi", "cdd", "stage", "consultant", "freelance", name="contract_type"), nullable=False)
+    start_date = db.Column(db.Date, nullable=False, index=True)
+    end_date = db.Column(db.Date, nullable=True, index=True)  # NULL pour CDI
+    salary = db.Column(N18_2, nullable=True)  # Salaire mensuel
+    currency = db.Column(db.String(8), nullable=False, default="GNF")
+    position = db.Column(db.String(100), nullable=True)  # Poste dans ce contrat
+    department = db.Column(db.String(100), nullable=True)  # Département dans ce contrat
+    status = db.Column(db.Enum("draft", "active", "expired", "terminated", name="contract_status"), 
+                       nullable=False, default="draft", index=True)
+    termination_date = db.Column(db.Date, nullable=True)
+    termination_reason = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    document_path = db.Column(db.String(500), nullable=True)  # Chemin vers le contrat signé
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    created_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    created_by = db.relationship("User", foreign_keys=[created_by_id], backref="created_contracts")
+    
+    __table_args__ = (
+        db.Index("idx_contract_employee", "employee_id"),
+        db.Index("idx_contract_status", "status"),
+        db.Index("idx_contract_dates", "start_date", "end_date"),
+    )
+    
+    @property
+    def is_active(self):
+        """Vérifie si le contrat est actif"""
+        today = date.today()
+        if self.status != 'active':
+            return False
+        if self.start_date > today:
+            return False
+        if self.end_date and self.end_date < today:
+            return False
+        return True
+    
+    def __repr__(self):
+        return f"<EmployeeContract {self.contract_number} - {self.contract_type}>"
+
+class EmployeeTraining(db.Model):
+    """Formations suivies par les employés"""
+    __tablename__ = "employee_trainings"
+    id = PK()
+    employee_id = FK("employees.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE", index=True)
+    training_name = db.Column(db.String(200), nullable=False)
+    training_type = db.Column(db.Enum("internal", "external", "online", "certification", name="training_type"), nullable=False)
+    provider = db.Column(db.String(200), nullable=True)  # Organisme de formation
+    start_date = db.Column(db.Date, nullable=False, index=True)
+    end_date = db.Column(db.Date, nullable=True, index=True)
+    duration_hours = db.Column(db.Integer, nullable=True)  # Durée en heures
+    status = db.Column(db.Enum("planned", "in_progress", "completed", "cancelled", name="training_status"), 
+                       nullable=False, default="planned", index=True)
+    cost = db.Column(N18_2, nullable=True)  # Coût de la formation
+    currency = db.Column(db.String(8), nullable=False, default="GNF")
+    certificate_obtained = db.Column(db.Boolean, nullable=False, default=False)
+    certificate_path = db.Column(db.String(500), nullable=True)  # Chemin vers le certificat
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    created_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    created_by = db.relationship("User", foreign_keys=[created_by_id], backref="created_trainings")
+    
+    __table_args__ = (
+        db.Index("idx_training_employee", "employee_id"),
+        db.Index("idx_training_status", "status"),
+        db.Index("idx_training_dates", "start_date", "end_date"),
+    )
+    
+    def __repr__(self):
+        return f"<EmployeeTraining {self.training_name} - {self.employee_id}>"
+
+class EmployeeEvaluation(db.Model):
+    """Évaluations de performance des employés"""
+    __tablename__ = "employee_evaluations"
+    id = PK()
+    employee_id = FK("employees.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE", index=True)
+    evaluation_type = db.Column(db.Enum("annual", "probation", "mid_year", "project", "custom", name="evaluation_type"), nullable=False)
+    evaluation_date = db.Column(db.Date, nullable=False, index=True)
+    evaluator_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Évaluateur
+    overall_rating = db.Column(db.Enum("excellent", "very_good", "good", "satisfactory", "needs_improvement", "unsatisfactory", name="rating"), nullable=True)
+    overall_score = db.Column(N18_2, nullable=True)  # Score sur 100
+    strengths = db.Column(db.Text, nullable=True)  # Points forts
+    areas_for_improvement = db.Column(db.Text, nullable=True)  # Axes d'amélioration
+    goals = db.Column(db.Text, nullable=True)  # Objectifs pour la prochaine période
+    comments = db.Column(db.Text, nullable=True)  # Commentaires généraux
+    status = db.Column(db.Enum("draft", "submitted", "reviewed", "approved", name="evaluation_status"), 
+                       nullable=False, default="draft", index=True)
+    document_path = db.Column(db.String(500), nullable=True)  # Chemin vers le document d'évaluation
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    created_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    evaluator = db.relationship("User", foreign_keys=[evaluator_id], backref="conducted_evaluations")
+    created_by = db.relationship("User", foreign_keys=[created_by_id], backref="created_evaluations")
+    
+    __table_args__ = (
+        db.Index("idx_evaluation_employee", "employee_id"),
+        db.Index("idx_evaluation_date", "evaluation_date"),
+        db.Index("idx_evaluation_status", "status"),
+    )
+    
+    def __repr__(self):
+        return f"<EmployeeEvaluation {self.evaluation_type} - {self.employee_id} - {self.evaluation_date}>"
+
+class EmployeeAbsence(db.Model):
+    """Absences des employés (congés, maladie, etc.)"""
+    __tablename__ = "employee_absences"
+    id = PK()
+    employee_id = FK("employees.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE", index=True)
+    absence_type = db.Column(db.Enum("vacation", "sick_leave", "personal", "maternity", "paternity", "unpaid", "other", name="absence_type"), nullable=False)
+    start_date = db.Column(db.Date, nullable=False, index=True)
+    end_date = db.Column(db.Date, nullable=False, index=True)
+    days_count = db.Column(db.Integer, nullable=False)  # Nombre de jours
+    status = db.Column(db.Enum("pending", "approved", "rejected", "cancelled", name="absence_status"), 
+                       nullable=False, default="pending", index=True)
+    reason = db.Column(db.Text, nullable=True)  # Raison de l'absence
+    approved_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    approved_at = db.Column(db.DateTime, nullable=True)
+    rejection_reason = db.Column(db.Text, nullable=True)
+    medical_certificate_path = db.Column(db.String(500), nullable=True)  # Pour les arrêts maladie
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    created_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    approved_by = db.relationship("User", foreign_keys=[approved_by_id], backref="approved_absences")
+    created_by = db.relationship("User", foreign_keys=[created_by_id], backref="created_absences")
+    
+    __table_args__ = (
+        db.Index("idx_absence_employee", "employee_id"),
+        db.Index("idx_absence_dates", "start_date", "end_date"),
+        db.Index("idx_absence_status", "status"),
+        db.Index("idx_absence_type", "absence_type"),
+    )
+    
+    @property
+    def is_active(self):
+        """Vérifie si l'absence est en cours"""
+        today = date.today()
+        return self.start_date <= today <= self.end_date and self.status == 'approved'
+    
+    def __repr__(self):
+        return f"<EmployeeAbsence {self.absence_type} - {self.employee_id} - {self.start_date} to {self.end_date}>"
+
 # =========================================================
 # RÉFÉRENTIELS — RÉGIONS / DÉPÔTS / VÉHICULES / FAMILLES
 # =========================================================

@@ -1,0 +1,168 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Activités Utilisateurs - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .table-premium {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-premium thead {
+    background: var(--bg-tertiary);
+  }
+
+  .table-premium th {
+    padding: var(--space-md);
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-premium td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+  }
+
+  .table-premium tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0 !important; }
+    .rh-container { padding: var(--space-md); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <h1 class="page-title-hl">
+      <i class="fas fa-history me-2"></i>Activités Utilisateurs
+    </h1>
+    <a href="{{ url_for('rh.personnel_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-users me-2"></i>Personnel
+    </a>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-filter me-2"></i>Filtres
+      </h3>
+    </div>
+    <div style="padding: var(--space-lg);">
+      <form method="GET" action="{{ url_for('rh.activites_list') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); align-items: end;">
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Utilisateur</label>
+          <select name="user_id" class="form-select" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Tous les utilisateurs</option>
+            {% for u in users %}
+            <option value="{{ u.id }}" {% if selected_user_id == u.id %}selected{% endif %}>{{ u.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Action</label>
+          <select name="action" class="form-select" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            <option value="">Toutes les actions</option>
+            {% for action in actions %}
+            <option value="{{ action }}" {% if selected_action == action %}selected{% endif %}>{{ action }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Date début</label>
+          <input type="date" name="date_from" value="{{ date_from }}" class="form-control" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: 0.9rem;">Date fin</label>
+          <input type="date" name="date_to" value="{{ date_to }}" class="form-control" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+        </div>
+        <div>
+          <button type="submit" class="btn-hl btn-hl-primary" style="width: 100%; padding: var(--space-sm) var(--space-md);">
+            <i class="fas fa-search me-2"></i>Filtrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des activités -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-list me-2"></i>Activités ({{ activities|length }})
+      </h3>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table-premium">
+        <thead>
+          <tr>
+            <th>Date/Heure</th>
+            <th>Utilisateur</th>
+            <th>Action</th>
+            <th>Module</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for activity in activities %}
+          <tr>
+            <td>{{ activity.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+            <td><strong>{{ activity.user.username if activity.user else 'N/A' }}</strong></td>
+            <td><span style="color: var(--color-primary); font-weight: 600;">{{ activity.action }}</span></td>
+            <td>{{ activity.module or '-' }}</td>
+            <td>{{ activity.ip_address or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align: center; padding: var(--space-xl); color: var(--text-secondary);">
+              Aucune activité trouvée
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

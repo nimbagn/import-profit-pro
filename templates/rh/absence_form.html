@@ -1,0 +1,219 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if absence else 'Nouvelle' }} Absence - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .form-control, .form-select, .form-textarea {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    width: 100%;
+  }
+  
+  .form-textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .form-control:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .form-control,
+    .form-select,
+    .form-textarea {
+      font-size: 16px;
+      padding: 0.75rem 1rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rh-container {
+      padding: 0.75rem;
+    }
+    
+    .form-grid {
+      padding: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+             style="padding: var(--space-md); border-radius: var(--radius-md); 
+                    background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                    color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                    border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                    margin-bottom: var(--space-lg);">
+          <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div style="margin-bottom: var(--space-xl);">
+    <a href="{% if absence %}{{ url_for('rh.employee_absences_list', employee_id=absence.employee_id) }}{% else %}{{ url_for('rh.employee_absences_list', employee_id=employee.id) }}{% endif %}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+      <i class="fas fa-{{ 'edit' if absence else 'plus' }} me-2"></i>
+      {{ 'Modifier' if absence else 'Nouvelle' }} Absence - {{ employee.full_name }}
+    </h1>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-calendar-times me-2"></i>Informations de l'Absence
+      </h3>
+    </div>
+    <form method="POST" action="{% if absence %}{{ url_for('rh.absence_edit', absence_id=absence.id) }}{% else %}{{ url_for('rh.absence_new', employee_id=employee.id) }}{% endif %}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Type d'absence *</label>
+          <select name="absence_type" class="form-select" required>
+            <option value="">Sélectionner</option>
+            <option value="vacation" {% if absence and absence.absence_type == 'vacation' %}selected{% endif %}>Congés</option>
+            <option value="sick_leave" {% if absence and absence.absence_type == 'sick_leave' %}selected{% endif %}>Arrêt maladie</option>
+            <option value="personal" {% if absence and absence.absence_type == 'personal' %}selected{% endif %}>Personnel</option>
+            <option value="maternity" {% if absence and absence.absence_type == 'maternity' %}selected{% endif %}>Maternité</option>
+            <option value="paternity" {% if absence and absence.absence_type == 'paternity' %}selected{% endif %}>Paternité</option>
+            <option value="unpaid" {% if absence and absence.absence_type == 'unpaid' %}selected{% endif %}>Non payé</option>
+            <option value="other" {% if absence and absence.absence_type == 'other' %}selected{% endif %}>Autre</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date de début *</label>
+          <input type="date" name="start_date" value="{{ absence.start_date.strftime('%Y-%m-%d') if absence and absence.start_date else '' }}" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date de fin *</label>
+          <input type="date" name="end_date" value="{{ absence.end_date.strftime('%Y-%m-%d') if absence and absence.end_date else '' }}" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select name="status" class="form-select">
+            <option value="pending" {% if not absence or absence.status == 'pending' %}selected{% endif %}>En attente</option>
+            <option value="approved" {% if absence and absence.status == 'approved' %}selected{% endif %}>Approuvé</option>
+            <option value="rejected" {% if absence and absence.status == 'rejected' %}selected{% endif %}>Rejeté</option>
+            <option value="cancelled" {% if absence and absence.status == 'cancelled' %}selected{% endif %}>Annulé</option>
+          </select>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Raison</label>
+          <textarea name="reason" class="form-textarea">{{ absence.reason if absence else '' }}</textarea>
+        </div>
+      </div>
+      
+      <div style="padding: var(--space-lg); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-sm);">
+        <a href="{% if absence %}{{ url_for('rh.employee_absences_list', employee_id=absence.employee_id) }}{% else %}{{ url_for('rh.employee_absences_list', employee_id=employee.id) }}{% endif %}" class="btn-hl btn-hl-outline">
+          Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

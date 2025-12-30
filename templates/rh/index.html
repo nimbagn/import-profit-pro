@@ -1,0 +1,706 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Ressources Humaines - Tableau de Bord{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-dashboard {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  }
+
+  .page-header-rh {
+    background: linear-gradient(135deg, #003865 0%, #0052a5 100%);
+    color: white;
+    padding: 40px;
+    margin-bottom: 0;
+  }
+
+  .page-header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .page-title-rh {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    margin: 0;
+  }
+
+  .dashboard-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+
+  .stat-card.primary {
+    background: linear-gradient(135deg, #003865 0%, #0052a5 100%);
+    color: white;
+  }
+
+  .stat-card.success {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    color: white;
+  }
+
+  .stat-card.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    color: white;
+  }
+
+  .stat-card.info {
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+    color: white;
+  }
+  
+  .stat-card.gray {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    color: white;
+  }
+
+  .stat-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.9;
+  }
+
+  .stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 8px 0;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .module-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .module-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: #003865;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .module-icon {
+    font-size: 48px;
+    color: #003865;
+    margin-bottom: 16px;
+  }
+
+  .module-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+  }
+
+  .module-description {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 32px 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .data-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+  }
+
+  .data-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .data-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  .table-rh {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-rh thead {
+    background: #f9fafb;
+  }
+
+  .table-rh th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .table-rh td {
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #6b7280;
+  }
+
+  .table-rh tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-success {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-info {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .page-header-rh {
+      padding: 32px 24px;
+    }
+    
+    .dashboard-content {
+      padding: 24px;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    
+    .modules-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .data-card {
+      padding: 20px;
+    }
+    
+    .table-rh {
+      font-size: 0.875rem;
+    }
+    
+    .table-rh th,
+    .table-rh td {
+      padding: 10px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .page-header-rh {
+      padding: 24px 20px;
+    }
+    
+    .page-title-rh {
+      font-size: clamp(1.5rem, 5vw, 2rem);
+    }
+    
+    .page-subtitle {
+      font-size: clamp(0.9rem, 3vw, 1rem);
+    }
+    
+    .dashboard-content {
+      padding: 20px;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .stat-card {
+      padding: 20px;
+    }
+    
+    .stat-value {
+      font-size: clamp(1.75rem, 6vw, 2.25rem);
+    }
+    
+    .stat-icon {
+      font-size: 28px;
+    }
+
+    .modules-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    
+    .module-card {
+      padding: 20px;
+    }
+    
+    .module-icon {
+      font-size: 40px;
+    }
+    
+    .module-title {
+      font-size: 18px;
+    }
+    
+    .section-title {
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      margin: 24px 0 12px 0;
+    }
+    
+    .data-card {
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .data-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .data-card-title {
+      font-size: 16px;
+    }
+    
+    .table-rh {
+      font-size: 0.875rem;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-rh thead {
+      display: none;
+    }
+    
+    .table-rh tbody {
+      display: block;
+    }
+    
+    .table-rh tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      background: white;
+    }
+    
+    .table-rh td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border: none;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .table-rh td:last-child {
+      border-bottom: none;
+    }
+    
+    .table-rh td::before {
+      content: attr(data-label) ": ";
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 12px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-header-rh {
+      padding: 20px 16px;
+    }
+    
+    .dashboard-content {
+      padding: 16px;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    
+    .stat-card {
+      padding: 16px;
+    }
+    
+    .stat-value {
+      font-size: 1.75rem;
+    }
+    
+    .stat-icon {
+      font-size: 24px;
+    }
+    
+    .modules-grid {
+      gap: 12px;
+    }
+    
+    .module-card {
+      padding: 16px;
+    }
+    
+    .module-icon {
+      font-size: 36px;
+    }
+    
+    .data-card {
+      padding: 12px;
+    }
+    
+    .table-rh td {
+      font-size: 0.8rem;
+      padding: 6px 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-dashboard">
+  <!-- En-tête -->
+  <div class="page-header-rh">
+    <div class="page-header-content">
+      <h1 class="page-title-rh">
+        <i class="fas fa-users-cog"></i>
+        Ressources Humaines
+      </h1>
+      <p class="page-subtitle">Tableau de bord de gestion du personnel et des employés</p>
+    </div>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="dashboard-content">
+    <!-- Statistiques principales -->
+    <div class="stats-grid">
+      <div class="stat-card primary">
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-label">Utilisateurs au total</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon">
+          <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-value">{{ active_users }}</div>
+        <div class="stat-label">Utilisateurs actifs</div>
+      </div>
+      <div class="stat-card gray">
+        <div class="stat-icon">
+          <i class="fas fa-user-times"></i>
+        </div>
+        <div class="stat-value">{{ inactive_users }}</div>
+        <div class="stat-label">Utilisateurs inactifs</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-icon">
+          <i class="fas fa-briefcase"></i>
+        </div>
+        <div class="stat-value">{{ total_employees }}</div>
+        <div class="stat-label">Employés externes</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="stat-value">{{ active_employees }}</div>
+        <div class="stat-label">Employés actifs</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-icon">
+          <i class="fas fa-file-contract"></i>
+        </div>
+        <div class="stat-value">{{ active_contracts }}</div>
+        <div class="stat-label">Contrats actifs</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-icon">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="stat-value">{{ ongoing_trainings }}</div>
+        <div class="stat-label">Formations en cours</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-icon">
+          <i class="fas fa-calendar-times"></i>
+        </div>
+        <div class="stat-value">{{ pending_absences }}</div>
+        <div class="stat-label">Absences en attente</div>
+      </div>
+    </div>
+
+    <!-- Statistiques d'activité -->
+    <div class="stats-grid" style="margin-top: 32px;">
+      <div class="stat-card info">
+        <div class="stat-icon">
+          <i class="fas fa-history"></i>
+        </div>
+        <div class="stat-value">{{ recent_activities_count }}</div>
+        <div class="stat-label">Activités (30j)</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon">
+          <i class="fas fa-sign-in-alt"></i>
+        </div>
+        <div class="stat-value">{{ recent_logins }}</div>
+        <div class="stat-label">Connexions (30j)</div>
+      </div>
+    </div>
+
+    <!-- Modules principaux -->
+    <h2 class="section-title">
+      <i class="fas fa-th-large"></i>
+      Modules RH
+    </h2>
+    <div class="modules-grid">
+      <a href="{{ url_for('rh.personnel_list') }}" class="module-card">
+        <div class="module-icon">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <h3 class="module-title">Personnel Plateforme</h3>
+        <p class="module-description">Gérer les utilisateurs de la plateforme, leurs rôles et permissions</p>
+      </a>
+      <a href="{{ url_for('rh.employees_list') }}" class="module-card">
+        <div class="module-icon">
+          <i class="fas fa-briefcase"></i>
+        </div>
+        <h3 class="module-title">Employés Externes</h3>
+        <p class="module-description">Gérer les employés sans accès à la plateforme</p>
+      </a>
+      <a href="{{ url_for('rh.activites_list') }}" class="module-card">
+        <div class="module-icon">
+          <i class="fas fa-history"></i>
+        </div>
+        <h3 class="module-title">Activités Utilisateurs</h3>
+        <p class="module-description">Consulter l'historique des activités et interactions</p>
+      </a>
+      <a href="{{ url_for('rh.statistiques') }}" class="module-card">
+        <div class="module-icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <h3 class="module-title">Statistiques</h3>
+        <p class="module-description">Analyser l'utilisation de l'application et les tendances</p>
+      </a>
+    </div>
+
+    <!-- Utilisateurs par rôle -->
+    {% if users_by_role %}
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3 class="data-card-title">
+          <i class="fas fa-user-shield me-2"></i>
+          Répartition par Rôle
+        </h3>
+      </div>
+      <table class="table-rh">
+        <thead>
+          <tr>
+            <th>Rôle</th>
+            <th>Code</th>
+            <th>Nombre d'utilisateurs</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for role_name, role_code, count in users_by_role %}
+          <tr>
+            <td data-label="Rôle"><strong>{{ role_name }}</strong></td>
+            <td data-label="Code"><code>{{ role_code }}</code></td>
+            <td data-label="Nombre">
+              <span class="badge badge-info">{{ count }}</span>
+            </td>
+            <td data-label="Actions">
+              <a href="{{ url_for('auth.roles_list') }}" class="btn-hl btn-hl-outline btn-sm">
+                <i class="fas fa-eye me-1"></i>Voir
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Top utilisateurs actifs -->
+    {% if top_active_users %}
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3 class="data-card-title">
+          <i class="fas fa-fire me-2"></i>
+          Top 5 Utilisateurs les Plus Actifs (30 derniers jours)
+        </h3>
+      </div>
+      <table class="table-rh">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Nom complet</th>
+            <th>Activités</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user_id, username, full_name, activity_count in top_active_users %}
+          <tr>
+            <td data-label="Utilisateur"><strong>{{ username }}</strong></td>
+            <td data-label="Nom complet">{{ full_name or '-' }}</td>
+            <td data-label="Activités">
+              <span class="badge badge-success">{{ activity_count }}</span>
+            </td>
+            <td data-label="Actions">
+              <a href="{{ url_for('rh.personnel_detail', user_id=user_id) }}" class="btn-hl btn-hl-outline btn-sm">
+                <i class="fas fa-eye me-1"></i>Détails
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Activités récentes -->
+    {% if activities_by_type %}
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3 class="data-card-title">
+          <i class="fas fa-chart-pie me-2"></i>
+          Activités par Type (30 derniers jours)
+        </h3>
+      </div>
+      <table class="table-rh">
+        <thead>
+          <tr>
+            <th>Type d'activité</th>
+            <th>Nombre</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for action, count in activities_by_type %}
+          <tr>
+            <td data-label="Type d'activité"><strong>{{ action }}</strong></td>
+            <td data-label="Nombre">
+              <span class="badge badge-info">{{ count }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

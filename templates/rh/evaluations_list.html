@@ -1,0 +1,189 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Évaluations - {{ employee.full_name }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .table-premium {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-premium thead {
+    background: var(--bg-tertiary);
+  }
+
+  .table-premium th {
+    padding: var(--space-md);
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-premium td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+  }
+
+  .table-premium tbody tr:hover {
+    background: var(--bg-tertiary);
+  }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+
+  .status-approved { background: var(--color-success); color: var(--white); }
+  .status-submitted { background: var(--color-info); color: var(--white); }
+  .status-reviewed { background: var(--color-warning); color: var(--white); }
+  .status-draft { background: var(--gray-400); color: var(--white); }
+  
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0 !important; }
+    .rh-container { padding: var(--space-md); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+             style="padding: var(--space-md); border-radius: var(--radius-md); 
+                    background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                    color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                    border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                    margin-bottom: var(--space-lg);">
+          <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <div>
+      <a href="{{ url_for('rh.employee_detail', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="margin-bottom: var(--space-md);">
+        <i class="fas fa-arrow-left me-2"></i>Retour à l'employé
+      </a>
+      <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+        <i class="fas fa-star me-2"></i>Évaluations - {{ employee.full_name }}
+      </h1>
+    </div>
+    <a href="{{ url_for('rh.evaluation_new', employee_id=employee.id) }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-plus me-2"></i>Nouvelle Évaluation
+    </a>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-list me-2"></i>Liste des Évaluations ({{ evaluations|length }})
+      </h3>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table-premium">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Évaluateur</th>
+            <th>Note</th>
+            <th>Score</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for evaluation in evaluations %}
+          <tr>
+            <td><strong>{{ evaluation.evaluation_type|replace('_', ' ')|title }}</strong></td>
+            <td>{{ evaluation.evaluation_date.strftime('%d/%m/%Y') }}</td>
+            <td>{{ evaluation.evaluator.username if evaluation.evaluator else '-' }}</td>
+            <td>
+              {% if evaluation.overall_rating %}
+                <span style="color: var(--color-primary); font-weight: 600;">
+                  {{ evaluation.overall_rating|replace('_', ' ')|title }}
+                </span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if evaluation.overall_score %}
+                <strong>{{ evaluation.overall_score }}/100</strong>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge-status status-{{ evaluation.status }}">
+                {{ evaluation.status|replace('_', ' ')|title }}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: var(--space-sm);">
+                <a href="{{ url_for('rh.evaluation_edit', evaluation_id=evaluation.id) }}" class="btn-hl btn-hl-outline" title="Modifier" style="padding: var(--space-xs) var(--space-sm);">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--text-secondary);">
+              Aucune évaluation enregistrée
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

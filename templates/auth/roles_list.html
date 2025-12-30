@@ -66,7 +66,7 @@
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 20px;
   }
 
@@ -448,14 +448,28 @@
         <div class="stat-value">{{ total_users }}</div>
         <div class="stat-label">Utilisateurs au total</div>
       </div>
-        <div class="stat-card success">
+      <div class="stat-card success">
+        <div class="stat-icon">
+          <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-value">{{ total_active }}</div>
+        <div class="stat-label">Utilisateurs actifs</div>
+      </div>
+      <div class="stat-card" style="background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);">
+        <div class="stat-icon">
+          <i class="fas fa-user-times"></i>
+        </div>
+        <div class="stat-value">{{ total_inactive }}</div>
+        <div class="stat-label">Utilisateurs inactifs</div>
+      </div>
+      <div class="stat-card info">
         <div class="stat-icon">
           <i class="fas fa-key"></i>
         </div>
         <div class="stat-value">{{ roles_with_permissions }}</div>
         <div class="stat-label">Rôles avec permissions</div>
       </div>
-      <div class="stat-card info">
+      <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);">
         <div class="stat-icon">
           <i class="fas fa-crown"></i>
         </div>
@@ -469,7 +483,8 @@
   <div class="roles-section">
     {% if roles %}
     <div class="roles-grid">
-      {% for role in roles %}
+      {% for stat in roles_stats %}
+      {% set role = stat.role %}
       <div class="role-card {% if role.code == 'admin' %}admin{% endif %}">
         <div class="role-header">
           <div class="role-title-section">
@@ -493,21 +508,62 @@
         <div class="role-stats">
           <div class="role-stat">
             <span class="role-stat-value">{{ role.users|length }}</span>
-            <span class="role-stat-label">Utilisateur{{ 's' if role.users|length != 1 else '' }}</span>
+            <span class="role-stat-label">Total</span>
           </div>
           <div class="role-stat">
-            <span class="role-stat-value">
-              {% if role.code == 'admin' %}
-                ∞
-              {% elif role.permissions %}
-                {{ role.permissions|length }}
-              {% else %}
-                0
-              {% endif %}
-            </span>
-            <span class="role-stat-label">Permission{{ 's' if (role.permissions|length if role.permissions else 0) != 1 else '' }}</span>
+            <span class="role-stat-value" style="color: #10b981;">{{ stat.active_count }}</span>
+            <span class="role-stat-label">Actifs</span>
+          </div>
+          <div class="role-stat">
+            <span class="role-stat-value" style="color: #6b7280;">{{ stat.inactive_count }}</span>
+            <span class="role-stat-label">Inactifs</span>
           </div>
         </div>
+
+        <!-- Liste des utilisateurs actifs et inactifs -->
+        {% if stat.active_users or stat.inactive_users %}
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+          {% if stat.active_users %}
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <i class="fas fa-user-check" style="color: #10b981; font-size: 14px;"></i>
+              <span style="font-size: 13px; font-weight: 600; color: #374151;">Utilisateurs actifs ({{ stat.active_count }})</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              {% for user in stat.active_users %}
+              <a href="{{ url_for('auth.user_detail', user_id=user.id) }}" 
+                 style="display: inline-block; padding: 4px 10px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 12px; text-decoration: none; transition: all 0.2s;"
+                 onmouseover="this.style.background='#a7f3d0'; this.style.transform='translateY(-1px)'"
+                 onmouseout="this.style.background='#d1fae5'; this.style.transform='translateY(0)'"
+                 title="{{ user.full_name or user.username }} - {{ user.email }}">
+                <i class="fas fa-user" style="margin-right: 4px;"></i>{{ user.username }}
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          
+          {% if stat.inactive_users %}
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <i class="fas fa-user-times" style="color: #6b7280; font-size: 14px;"></i>
+              <span style="font-size: 13px; font-weight: 600; color: #374151;">Utilisateurs inactifs ({{ stat.inactive_count }})</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              {% for user in stat.inactive_users %}
+              <a href="{{ url_for('auth.user_detail', user_id=user.id) }}" 
+                 style="display: inline-block; padding: 4px 10px; background: #f3f4f6; color: #4b5563; border-radius: 6px; font-size: 12px; text-decoration: none; transition: all 0.2s; opacity: 0.7;"
+                 onmouseover="this.style.background='#e5e7eb'; this.style.opacity='1'; this.style.transform='translateY(-1px)'"
+                 onmouseout="this.style.background='#f3f4f6'; this.style.opacity='0.7'; this.style.transform='translateY(0)'"
+                 title="{{ user.full_name or user.username }} - {{ user.email }}">
+                <i class="fas fa-user-slash" style="margin-right: 4px;"></i>{{ user.username }}
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
 
         <div class="role-actions">
           <a href="{{ url_for('auth.role_detail', role_id=role.id) }}" class="btn-hl btn-hl-outline" title="Voir les détails">

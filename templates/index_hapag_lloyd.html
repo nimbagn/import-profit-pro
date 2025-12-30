@@ -149,9 +149,32 @@
     }
   }
   
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .dashboard-container {
+      padding: 0;
+    }
+    
+    .stats-section {
+      margin: var(--space-xl) 1rem;
+      width: calc(100% - 2rem);
+    }
+    
+    .modules-grid {
+      margin: var(--space-xl) 1rem;
+      width: calc(100% - 2rem);
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0 !important;
+      padding: 0 !important;
     }
     
     .dashboard-container {
@@ -159,26 +182,78 @@
     }
     
     .hero-section {
-      padding: var(--space-2xl) var(--space-md);
+      padding: var(--space-2xl) 1rem;
       margin: 0 0 var(--space-xl) 0;
       width: 100%;
+    }
+    
+    .hero-title {
+      font-size: clamp(1.75rem, 5vw, 2rem);
+    }
+    
+    .hero-subtitle {
+      font-size: clamp(1rem, 3vw, 1.25rem);
     }
     
     .stats-section,
     .modules-grid,
     .recent-activity,
     .page-header-hl {
-      margin-left: var(--space-md);
-      margin-right: var(--space-md);
-      width: calc(100% - 2 * var(--space-md));
-    }
-    
-    .hero-title {
-      font-size: 2rem;
+      margin-left: 1rem;
+      margin-right: 1rem;
+      width: calc(100% - 2rem);
     }
     
     .modules-grid {
       grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .activity-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .activity-header .btn-hl {
+      width: 100%;
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-hl table {
+      min-width: 600px;
+      font-size: 0.875rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-section {
+      padding: var(--space-xl) 0.75rem;
+    }
+    
+    .stats-section,
+    .modules-grid,
+    .recent-activity {
+      margin-left: 0.75rem;
+      margin-right: 0.75rem;
+      width: calc(100% - 1.5rem);
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .module-card {
+      padding: 1rem;
     }
   }
   

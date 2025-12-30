@@ -1,0 +1,398 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détails Employé - {{ employee.full_name }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg);
+  }
+  
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .info-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .info-value {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .badge-status {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+
+  .status-active { background: var(--color-success); color: var(--white); }
+  .status-inactive { background: var(--color-danger); color: var(--white); }
+  .status-suspended { background: var(--color-warning); color: var(--white); }
+  .status-terminated { background: #6c757d; color: var(--white); }
+  .status-on_leave { background: var(--color-info); color: var(--white); }
+  
+  .section-item {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .section-item:last-child {
+    border-bottom: none;
+  }
+  
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0 !important; }
+    .rh-container { padding: var(--space-md); }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <div>
+      <a href="{{ url_for('rh.employees_list') }}" class="btn-hl btn-hl-outline" style="margin-bottom: var(--space-md);">
+        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+      </a>
+      <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+        <i class="fas fa-user-tie me-2"></i>{{ employee.full_name }}
+      </h1>
+      <p style="color: var(--text-secondary); margin-top: var(--space-sm);">
+        <strong>Numéro d'employé:</strong> {{ employee.employee_number }}
+        {% if employee.user %}
+        <span style="margin-left: var(--space-md); color: var(--color-success);">
+          <i class="fas fa-check-circle me-1"></i>Compte utilisateur lié
+        </span>
+        {% endif %}
+      </p>
+    </div>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('rh.employee_edit', employee_id=employee.id) }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-edit me-2"></i>Modifier
+      </a>
+    </div>
+  </div>
+
+  <!-- Informations générales -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-info-circle me-2"></i>Informations Générales
+      </h3>
+    </div>
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Prénom</span>
+        <span class="info-value">{{ employee.first_name }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Nom</span>
+        <span class="info-value">{{ employee.last_name }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ employee.email or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Téléphone</span>
+        <span class="info-value">{{ employee.phone or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Département</span>
+        <span class="info-value">{{ employee.department or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Poste</span>
+        <span class="info-value">{{ employee.position or '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Région</span>
+        <span class="info-value">{{ employee.region.name if employee.region else '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Dépôt</span>
+        <span class="info-value">{{ employee.depot.name if employee.depot else '-' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Statut</span>
+        <span class="info-value">
+          <span class="badge-status status-{{ employee.employment_status }}">
+            {% if employee.employment_status == 'active' %}Actif
+            {% elif employee.employment_status == 'inactive' %}Inactif
+            {% elif employee.employment_status == 'suspended' %}Suspendu
+            {% elif employee.employment_status == 'terminated' %}Terminé
+            {% elif employee.employment_status == 'on_leave' %}En congé
+            {% endif %}
+          </span>
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Date d'embauche</span>
+        <span class="info-value">
+          {% if employee.hire_date %}
+            {{ employee.hire_date.strftime('%d/%m/%Y') }}
+          {% else %}
+            -
+          {% endif %}
+        </span>
+      </div>
+      {% if employee.manager %}
+      <div class="info-item">
+        <span class="info-label">Responsable</span>
+        <span class="info-value">{{ employee.manager.full_name }}</span>
+      </div>
+      {% endif %}
+      {% if employee.user %}
+      <div class="info-item">
+        <span class="info-label">Compte utilisateur</span>
+        <span class="info-value">
+          <a href="{{ url_for('rh.personnel_detail', user_id=employee.user.id) }}" style="color: var(--color-primary);">
+            {{ employee.user.username }}
+          </a>
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions rapides -->
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-tasks me-2"></i>Actions Rapides
+      </h3>
+    </div>
+    <div style="padding: var(--space-lg); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+      <a href="{{ url_for('rh.employee_contracts_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+        <i class="fas fa-file-contract me-2"></i>Contrats
+      </a>
+      <a href="{{ url_for('rh.employee_trainings_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+        <i class="fas fa-graduation-cap me-2"></i>Formations
+      </a>
+      <a href="{{ url_for('rh.employee_evaluations_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+        <i class="fas fa-star me-2"></i>Évaluations
+      </a>
+      <a href="{{ url_for('rh.employee_absences_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="text-align: center; padding: var(--space-md);">
+        <i class="fas fa-calendar-times me-2"></i>Absences
+      </a>
+    </div>
+  </div>
+
+  <!-- Contrat actuel -->
+  {% if current_contract %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h3 style="margin: 0; color: var(--text-primary);">
+          <i class="fas fa-file-contract me-2"></i>Contrat Actuel
+        </h3>
+        <a href="{{ url_for('rh.employee_contracts_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);">
+          <i class="fas fa-list me-1"></i>Tous les contrats
+        </a>
+      </div>
+    </div>
+    <div style="padding: var(--space-lg);">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Numéro de contrat</span>
+          <span class="info-value">{{ current_contract.contract_number }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Type</span>
+          <span class="info-value">{{ current_contract.contract_type|upper }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Date de début</span>
+          <span class="info-value">{{ current_contract.start_date.strftime('%d/%m/%Y') }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Date de fin</span>
+          <span class="info-value">
+            {% if current_contract.end_date %}
+              {{ current_contract.end_date.strftime('%d/%m/%Y') }}
+            {% else %}
+              Indéterminé (CDI)
+            {% endif %}
+          </span>
+        </div>
+        {% if current_contract.salary %}
+        <div class="info-item">
+          <span class="info-label">Salaire</span>
+          <span class="info-value">{{ "{:,.0f}".format(current_contract.salary) }} {{ current_contract.currency }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Formations récentes -->
+  {% if recent_trainings %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h3 style="margin: 0; color: var(--text-primary);">
+          <i class="fas fa-graduation-cap me-2"></i>Formations Récentes
+        </h3>
+        <a href="{{ url_for('rh.employee_trainings_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);">
+          <i class="fas fa-list me-1"></i>Toutes les formations
+        </a>
+      </div>
+    </div>
+    <div>
+      {% for training in recent_trainings %}
+      <div class="section-item">
+        <div>
+          <div style="font-weight: 600; color: var(--text-primary);">{{ training.training_name }}</div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">
+            {{ training.start_date.strftime('%d/%m/%Y') }}
+            {% if training.end_date %} - {{ training.end_date.strftime('%d/%m/%Y') }}{% endif %}
+            | {{ training.training_type }}
+          </div>
+        </div>
+        <div>
+          <span class="badge-status status-{{ training.status }}">
+            {% if training.status == 'completed' %}Terminée
+            {% elif training.status == 'in_progress' %}En cours
+            {% elif training.status == 'planned' %}Planifiée
+            {% elif training.status == 'cancelled' %}Annulée
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Évaluations récentes -->
+  {% if recent_evaluations %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h3 style="margin: 0; color: var(--text-primary);">
+          <i class="fas fa-star me-2"></i>Évaluations Récentes
+        </h3>
+        <a href="{{ url_for('rh.employee_evaluations_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);">
+          <i class="fas fa-list me-1"></i>Toutes les évaluations
+        </a>
+      </div>
+    </div>
+    <div>
+      {% for evaluation in recent_evaluations %}
+      <div class="section-item">
+        <div>
+          <div style="font-weight: 600; color: var(--text-primary);">
+            {{ evaluation.evaluation_type|replace('_', ' ')|title }}
+            - {{ evaluation.evaluation_date.strftime('%d/%m/%Y') }}
+          </div>
+          {% if evaluation.overall_rating %}
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+            Note: {{ evaluation.overall_rating|replace('_', ' ')|title }}
+            {% if evaluation.overall_score %} ({{ evaluation.overall_score }}/100){% endif %}
+          </div>
+          {% endif %}
+        </div>
+        <div>
+          <span class="badge-status status-{{ evaluation.status }}">
+            {{ evaluation.status|replace('_', ' ')|title }}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Absences récentes -->
+  {% if recent_absences %}
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h3 style="margin: 0; color: var(--text-primary);">
+          <i class="fas fa-calendar-times me-2"></i>Absences Récentes
+        </h3>
+        <a href="{{ url_for('rh.employee_absences_list', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);">
+          <i class="fas fa-list me-1"></i>Toutes les absences
+        </a>
+      </div>
+    </div>
+    <div>
+      {% for absence in recent_absences %}
+      <div class="section-item">
+        <div>
+          <div style="font-weight: 600; color: var(--text-primary);">
+            {{ absence.absence_type|replace('_', ' ')|title }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">
+            {{ absence.start_date.strftime('%d/%m/%Y') }} - {{ absence.end_date.strftime('%d/%m/%Y') }}
+            ({{ absence.days_count }} jour{{ 's' if absence.days_count > 1 else '' }})
+          </div>
+        </div>
+        <div>
+          <span class="badge-status status-{{ absence.status }}">
+            {% if absence.status == 'approved' %}Approuvé
+            {% elif absence.status == 'pending' %}En attente
+            {% elif absence.status == 'rejected' %}Rejeté
+            {% elif absence.status == 'cancelled' %}Annulé
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,237 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if user else 'Nouveau' }} Personnel - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .form-control, .form-select {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    width: 100%;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .form-control,
+    .form-select {
+      font-size: 16px; /* Évite le zoom sur iOS */
+      padding: 0.75rem 1rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rh-container {
+      padding: 0.75rem;
+    }
+    
+    .form-grid {
+      padding: 0.75rem;
+    }
+    
+    .card-hl {
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+             style="padding: var(--space-md); border-radius: var(--radius-md); 
+                    background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                    color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                    border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                    margin-bottom: var(--space-lg);">
+          <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div style="margin-bottom: var(--space-xl);">
+    <a href="{% if user %}{{ url_for('rh.personnel_detail', user_id=user.id) }}{% else %}{{ url_for('rh.personnel_list') }}{% endif %}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+      <i class="fas fa-{{ 'edit' if user else 'user-plus' }} me-2"></i>
+      {{ 'Modifier' if user else 'Nouveau' }} Personnel
+    </h1>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-user me-2"></i>Informations
+      </h3>
+    </div>
+    <form method="POST" action="{% if user %}{{ url_for('rh.personnel_edit', user_id=user.id) }}{% else %}{{ url_for('rh.personnel_new') }}{% endif %}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nom d'utilisateur *</label>
+          <input type="text" name="username" value="{{ user.username if user else '' }}" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input type="email" name="email" value="{{ user.email if user else '' }}" class="form-control" required>
+        </div>
+        
+        {% if not user %}
+        <div class="form-group">
+          <label class="form-label">Mot de passe *</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+          <label class="form-label">Nom complet</label>
+          <input type="text" name="full_name" value="{{ user.full_name if user else '' }}" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input type="text" name="phone" value="{{ user.phone if user else '' }}" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Rôle *</label>
+          <select name="role_id" class="form-select" required>
+            <option value="">Sélectionner un rôle</option>
+            {% for role in roles %}
+            <option value="{{ role.id }}" {% if user and user.role_id == role.id %}selected{% endif %}>
+              {{ role.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Région</label>
+          <select name="region_id" class="form-select">
+            <option value="">Aucune région</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if user and user.region_id == region.id %}selected{% endif %}>
+              {{ region.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <div style="display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm);">
+            <input type="checkbox" name="is_active" id="is_active" {% if not user or user.is_active %}checked{% endif %}>
+            <label for="is_active" style="margin: 0; cursor: pointer;">Actif</label>
+          </div>
+        </div>
+      </div>
+      
+      <div style="padding: var(--space-lg); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-sm);">
+        <a href="{% if user %}{{ url_for('rh.personnel_detail', user_id=user.id) }}{% else %}{{ url_for('rh.personnel_list') }}{% endif %}" class="btn-hl btn-hl-outline">
+          Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

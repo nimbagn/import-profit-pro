@@ -138,16 +138,32 @@
     }
   }
   
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .page-container {
+      padding: 0;
+    }
+  }
+
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .page-container {
+      padding: 0;
     }
     
     .page-header-hl,
     .card-hl {
-      margin-left: var(--space-md);
-      margin-right: var(--space-md);
-      width: calc(100% - 2 * var(--space-md));
+      margin-left: 1rem;
+      margin-right: 1rem;
+      width: calc(100% - 2rem);
     }
     
     .table-hl {

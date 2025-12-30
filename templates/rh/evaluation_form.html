@@ -1,0 +1,257 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{{ 'Modifier' if evaluation else 'Nouvelle' }} Évaluation - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .rh-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+  
+  .card-hl {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .card-header-hl {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--bg-tertiary);
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .form-control, .form-select, .form-textarea {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    width: 100%;
+  }
+  
+  .form-textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .form-control:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .rh-container {
+      padding: 1rem;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .form-control,
+    .form-select,
+    .form-textarea {
+      font-size: 16px;
+      padding: 0.75rem 1rem;
+    }
+    
+    .card-header-hl {
+      padding: 1rem;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rh-container {
+      padding: 0.75rem;
+    }
+    
+    .form-grid {
+      padding: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rh-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}" 
+             style="padding: var(--space-md); border-radius: var(--radius-md); 
+                    background: {% if category == 'error' %}#fee2e2{% elif category == 'success' %}#d1fae5{% else %}#dbeafe{% endif %};
+                    color: {% if category == 'error' %}#991b1b{% elif category == 'success' %}#065f46{% else %}#1e40af{% endif %};
+                    border-left: 4px solid {% if category == 'error' %}#dc2626{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};
+                    margin-bottom: var(--space-lg);">
+          <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  <div style="margin-bottom: var(--space-xl);">
+    <a href="{% if evaluation %}{{ url_for('rh.employee_evaluations_list', employee_id=evaluation.employee_id) }}{% else %}{{ url_for('rh.employee_evaluations_list', employee_id=employee.id) }}{% endif %}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    <h1 class="page-title-hl" style="margin-top: var(--space-md);">
+      <i class="fas fa-{{ 'edit' if evaluation else 'plus' }} me-2"></i>
+      {{ 'Modifier' if evaluation else 'Nouvelle' }} Évaluation - {{ employee.full_name }}
+    </h1>
+  </div>
+
+  <div class="card-hl">
+    <div class="card-header-hl">
+      <h3 style="margin: 0; color: var(--text-primary);">
+        <i class="fas fa-star me-2"></i>Informations de l'Évaluation
+      </h3>
+    </div>
+    <form method="POST" action="{% if evaluation %}{{ url_for('rh.evaluation_edit', evaluation_id=evaluation.id) }}{% else %}{{ url_for('rh.evaluation_new', employee_id=employee.id) }}{% endif %}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Type d'évaluation *</label>
+          <select name="evaluation_type" class="form-select" required>
+            <option value="">Sélectionner</option>
+            <option value="annual" {% if evaluation and evaluation.evaluation_type == 'annual' %}selected{% endif %}>Annuelle</option>
+            <option value="probation" {% if evaluation and evaluation.evaluation_type == 'probation' %}selected{% endif %}>Période d'essai</option>
+            <option value="mid_year" {% if evaluation and evaluation.evaluation_type == 'mid_year' %}selected{% endif %}>Mi-année</option>
+            <option value="project" {% if evaluation and evaluation.evaluation_type == 'project' %}selected{% endif %}>Projet</option>
+            <option value="custom" {% if evaluation and evaluation.evaluation_type == 'custom' %}selected{% endif %}>Personnalisée</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Date d'évaluation *</label>
+          <input type="date" name="evaluation_date" value="{{ evaluation.evaluation_date.strftime('%Y-%m-%d') if evaluation and evaluation.evaluation_date else '' }}" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Évaluateur</label>
+          <select name="evaluator_id" class="form-select">
+            <option value="">Aucun</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if evaluation and evaluation.evaluator_id == user.id %}selected{% endif %}>
+              {{ user.username }} ({{ user.full_name or '' }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Note globale</label>
+          <select name="overall_rating" class="form-select">
+            <option value="">Non évalué</option>
+            <option value="excellent" {% if evaluation and evaluation.overall_rating == 'excellent' %}selected{% endif %}>Excellent</option>
+            <option value="very_good" {% if evaluation and evaluation.overall_rating == 'very_good' %}selected{% endif %}>Très bien</option>
+            <option value="good" {% if evaluation and evaluation.overall_rating == 'good' %}selected{% endif %}>Bien</option>
+            <option value="satisfactory" {% if evaluation and evaluation.overall_rating == 'satisfactory' %}selected{% endif %}>Satisfaisant</option>
+            <option value="needs_improvement" {% if evaluation and evaluation.overall_rating == 'needs_improvement' %}selected{% endif %}>À améliorer</option>
+            <option value="unsatisfactory" {% if evaluation and evaluation.overall_rating == 'unsatisfactory' %}selected{% endif %}>Insatisfaisant</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Score (/100)</label>
+          <input type="number" name="overall_score" value="{{ evaluation.overall_score if evaluation and evaluation.overall_score else '' }}" min="0" max="100" step="0.01" class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select name="status" class="form-select">
+            <option value="draft" {% if not evaluation or evaluation.status == 'draft' %}selected{% endif %}>Brouillon</option>
+            <option value="submitted" {% if evaluation and evaluation.status == 'submitted' %}selected{% endif %}>Soumis</option>
+            <option value="reviewed" {% if evaluation and evaluation.status == 'reviewed' %}selected{% endif %}>Révisé</option>
+            <option value="approved" {% if evaluation and evaluation.status == 'approved' %}selected{% endif %}>Approuvé</option>
+          </select>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Points forts</label>
+          <textarea name="strengths" class="form-textarea">{{ evaluation.strengths if evaluation else '' }}</textarea>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Axes d'amélioration</label>
+          <textarea name="areas_for_improvement" class="form-textarea">{{ evaluation.areas_for_improvement if evaluation else '' }}</textarea>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Objectifs</label>
+          <textarea name="goals" class="form-textarea">{{ evaluation.goals if evaluation else '' }}</textarea>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Commentaires</label>
+          <textarea name="comments" class="form-textarea">{{ evaluation.comments if evaluation else '' }}</textarea>
+        </div>
+      </div>
+      
+      <div style="padding: var(--space-lg); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-sm);">
+        <a href="{% if evaluation %}{{ url_for('rh.employee_evaluations_list', employee_id=evaluation.employee_id) }}{% else %}{{ url_for('rh.employee_evaluations_list', employee_id=employee.id) }}{% endif %}" class="btn-hl btn-hl-outline">
+          Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
