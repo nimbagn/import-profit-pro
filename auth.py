@@ -100,7 +100,7 @@ def login():
             
             # Logger la connexion
             try:
-                from flask import request
+                # request est déjà importé en haut du fichier
                 activity = UserActivityLog(
                     user_id=user.id,
                     action='login',
@@ -300,7 +300,7 @@ def logout():
     """Déconnexion"""
     # Logger la déconnexion avant de déconnecter
     try:
-        from flask import request
+        # request est déjà importé en haut du fichier
         activity = UserActivityLog(
             user_id=current_user.id,
             action='logout',
