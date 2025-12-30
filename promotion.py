@@ -4027,11 +4027,20 @@ def sale_new():
                                     'created_at': datetime.now(UTC)
                                 }
                             
-                            result = db.session.execute(text(sql), params)
-                            db.session.flush()
+                            # Utiliser RETURNING pour PostgreSQL, lastrowid pour MySQL
+                            from config import SQLALCHEMY_DATABASE_URI
+                            is_postgresql = SQLALCHEMY_DATABASE_URI.startswith('postgresql')
                             
-                            # Récupérer l'ID de la vente créée
-                            sale_id = result.lastrowid if hasattr(result, 'lastrowid') else None
+                            if is_postgresql:
+                                # Ajouter RETURNING id à la requête SQL
+                                sql = sql.rstrip(';') + " RETURNING id"
+                                result = db.session.execute(text(sql), params)
+                                db.session.flush()
+                                sale_id = result.scalar()
+                            else:
+                                result = db.session.execute(text(sql), params)
+                                db.session.flush()
+                                sale_id = result.lastrowid if hasattr(result, 'lastrowid') else None
                             
                             # Mettre à jour le stock avec référence à la vente
                             update_member_stock(member.id, sale_item['gamme_id'], sale_item['quantity'], transaction_type,

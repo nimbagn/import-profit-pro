@@ -441,18 +441,33 @@ with app.app_context():
                 sim_dict['created_at'] = datetime.now(UTC)
                 
                 # Construire et exécuter la requête SQL
-                sql = f"""
-                    INSERT INTO simulations ({cols_str})
-                    VALUES ({values_placeholders})
-                """
+                # Utiliser RETURNING pour PostgreSQL, LAST_INSERT_ID() pour MySQL
+                from config import SQLALCHEMY_DATABASE_URI
+                is_postgresql = SQLALCHEMY_DATABASE_URI.startswith('postgresql')
+                
+                if is_postgresql:
+                    sql = f"""
+                        INSERT INTO simulations ({cols_str})
+                        VALUES ({values_placeholders})
+                        RETURNING id
+                    """
+                else:
+                    sql = f"""
+                        INSERT INTO simulations ({cols_str})
+                        VALUES ({values_placeholders})
+                    """
                 
                 try:
-                    db.session.execute(text(sql), sim_dict)
+                    result = db.session.execute(text(sql), sim_dict)
                     db.session.flush()
                     
                     # Récupérer l'ID de la simulation créée
-                    result = db.session.execute(text("SELECT LAST_INSERT_ID() as id"))
-                    simulation_id = result.scalar()
+                    if is_postgresql:
+                        simulation_id = result.scalar()
+                    else:
+                        # MySQL
+                        id_result = db.session.execute(text("SELECT LAST_INSERT_ID() as id"))
+                        simulation_id = id_result.scalar()
                     
                     if simulation_id:
                         # Ajouter des articles à la simulation
@@ -2033,16 +2048,26 @@ def simulation_new():
                 print(f"📝 Paramètres: {list(params_dict.keys())}")
                 
                 # Exécuter l'insertion avec des paramètres nommés
-                result = db.session.execute(text(sql), params_dict)
-                # Pour MySQL, utiliser connection.inserted_primary_key ou lastrowid
-                try:
-                    simulation_id = result.lastrowid
-                except:
-                    # Si lastrowid n'est pas disponible, utiliser une requête SELECT
-                    db.session.flush()  # S'assurer que l'insertion est flushée
-                    # Récupérer le dernier ID inséré
-                    id_result = db.session.execute(text("SELECT LAST_INSERT_ID() as id"))
-                    simulation_id = id_result.fetchone()[0]
+                # Utiliser RETURNING pour PostgreSQL, LAST_INSERT_ID() pour MySQL
+                from config import SQLALCHEMY_DATABASE_URI
+                is_postgresql = SQLALCHEMY_DATABASE_URI.startswith('postgresql')
+                
+                if is_postgresql:
+                    # Ajouter RETURNING id à la requête SQL
+                    sql = sql.rstrip(';') + " RETURNING id"
+                    result = db.session.execute(text(sql), params_dict)
+                    db.session.flush()
+                    simulation_id = result.scalar()
+                else:
+                    # MySQL
+                    result = db.session.execute(text(sql), params_dict)
+                    db.session.flush()
+                    try:
+                        simulation_id = result.lastrowid
+                    except:
+                        # Si lastrowid n'est pas disponible, utiliser une requête SELECT
+                        id_result = db.session.execute(text("SELECT LAST_INSERT_ID() as id"))
+                        simulation_id = id_result.fetchone()[0]
                 
                 print(f"📝 Simulation ID récupéré: {simulation_id}")
                 
@@ -2960,13 +2985,26 @@ def forecast_new():
                         cols_str = ', '.join(insert_cols)
                         placeholders = ', '.join([f':{col}' for col in insert_cols])
                         
-                        result = db.session.execute(text(f"""
-                            INSERT INTO forecasts ({cols_str})
-                            VALUES ({placeholders})
-                        """), params)
+                        # Utiliser RETURNING pour PostgreSQL, lastrowid pour MySQL
+                        from config import SQLALCHEMY_DATABASE_URI
+                        is_postgresql = SQLALCHEMY_DATABASE_URI.startswith('postgresql')
                         
-                        db.session.flush()  # Ne pas commit ici, on commit à la fin
-                        forecast_id = result.lastrowid
+                        if is_postgresql:
+                            sql = f"""
+                                INSERT INTO forecasts ({cols_str})
+                                VALUES ({placeholders})
+                                RETURNING id
+                            """
+                            result = db.session.execute(text(sql), params)
+                            db.session.flush()
+                            forecast_id = result.scalar()
+                        else:
+                            result = db.session.execute(text(f"""
+                                INSERT INTO forecasts ({cols_str})
+                                VALUES ({placeholders})
+                            """), params)
+                            db.session.flush()
+                            forecast_id = result.lastrowid
                         
                         # Créer un objet minimal pour continuer
                         forecast = Forecast()
@@ -3950,13 +3988,26 @@ def forecast_quick_entry():
                     cols_str = ', '.join(insert_cols)
                     placeholders = ', '.join([f':{col}' for col in insert_cols])
                     
-                    result = db.session.execute(text(f"""
-                        INSERT INTO forecasts ({cols_str})
-                        VALUES ({placeholders})
-                    """), params)
+                    # Utiliser RETURNING pour PostgreSQL, lastrowid pour MySQL
+                    from config import SQLALCHEMY_DATABASE_URI
+                    is_postgresql = SQLALCHEMY_DATABASE_URI.startswith('postgresql')
                     
-                    db.session.flush()
-                    forecast_id = result.lastrowid
+                    if is_postgresql:
+                        sql = f"""
+                            INSERT INTO forecasts ({cols_str})
+                            VALUES ({placeholders})
+                            RETURNING id
+                        """
+                        result = db.session.execute(text(sql), params)
+                        db.session.flush()
+                        forecast_id = result.scalar()
+                    else:
+                        result = db.session.execute(text(f"""
+                            INSERT INTO forecasts ({cols_str})
+                            VALUES ({placeholders})
+                        """), params)
+                        db.session.flush()
+                        forecast_id = result.lastrowid
                     forecast = Forecast()
                     forecast.id = forecast_id
                     forecast.name = name
@@ -4169,13 +4220,26 @@ def forecast_import():
                     cols_str = ', '.join(insert_cols)
                     placeholders = ', '.join([f':{col}' for col in insert_cols])
                     
-                    result = db.session.execute(text(f"""
-                        INSERT INTO forecasts ({cols_str})
-                        VALUES ({placeholders})
-                    """), params)
+                    # Utiliser RETURNING pour PostgreSQL, lastrowid pour MySQL
+                    from config import SQLALCHEMY_DATABASE_URI
+                    is_postgresql = SQLALCHEMY_DATABASE_URI.startswith('postgresql')
                     
-                    db.session.flush()
-                    forecast_id = result.lastrowid
+                    if is_postgresql:
+                        sql = f"""
+                            INSERT INTO forecasts ({cols_str})
+                            VALUES ({placeholders})
+                            RETURNING id
+                        """
+                        result = db.session.execute(text(sql), params)
+                        db.session.flush()
+                        forecast_id = result.scalar()
+                    else:
+                        result = db.session.execute(text(f"""
+                            INSERT INTO forecasts ({cols_str})
+                            VALUES ({placeholders})
+                        """), params)
+                        db.session.flush()
+                        forecast_id = result.lastrowid
                     forecast = Forecast()
                     forecast.id = forecast_id
                     forecast.name = name
