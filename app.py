@@ -745,6 +745,32 @@ def index():
             stats['price_lists_count'] = PriceList.query.count()
             stats['price_lists_active'] = PriceList.query.filter_by(is_active=True).count()
             
+            # Statistiques RH (si l'utilisateur a un rôle RH)
+            try:
+                from models import User, Employee, EmployeeContract, EmployeeTraining, EmployeeAbsence
+                stats['total_users'] = User.query.count()
+                stats['active_users'] = User.query.filter_by(is_active=True).count()
+                stats['total_employees'] = Employee.query.count()
+                stats['active_employees'] = Employee.query.filter_by(employment_status='active').count()
+                stats['active_contracts'] = EmployeeContract.query.filter(
+                    or_(
+                        EmployeeContract.status == 'active',
+                        and_(
+                            EmployeeContract.end_date.is_(None),
+                            EmployeeContract.status != 'terminated'
+                        )
+                    )
+                ).count()
+                stats['pending_absences'] = EmployeeAbsence.query.filter_by(status='pending').count()
+            except Exception as e:
+                print(f"⚠️ Erreur lors du calcul des statistiques RH: {e}")
+                stats['total_users'] = 0
+                stats['active_users'] = 0
+                stats['total_employees'] = 0
+                stats['active_employees'] = 0
+                stats['active_contracts'] = 0
+                stats['pending_absences'] = 0
+            
             # Statistiques récentes (7 derniers jours) avec filtrage par région
             seven_days_ago = datetime.now(UTC) - timedelta(days=7)
             recent_movements_query = StockMovement.query.filter(StockMovement.movement_date >= seven_days_ago)
