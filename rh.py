@@ -581,6 +581,9 @@ def has_rh_permission(user, permission):
     """
     Vérifier si l'utilisateur a une permission RH
     
+    IMPORTANT: Le rôle 'admin' a TOUS les droits RH et passe toutes les vérifications.
+    L'admin peut accéder à toutes les fonctionnalités RH sans exception.
+    
     Args:
         user: L'utilisateur à vérifier
         permission: Permission au format 'module.action' (ex: 'employees.read', 'contracts.create')
@@ -593,9 +596,10 @@ def has_rh_permission(user, permission):
     if not hasattr(user, 'role') or not user.role:
         return False
     
-    # Admin a tous les droits
+    # ⚠️ RÈGLE FONDAMENTALE : L'admin a TOUS les droits RH
+    # L'admin passe toutes les vérifications de permissions RH, peu importe la permission demandée
     if user.role.code == 'admin':
-        return True
+        return True  # Admin a tous les droits RH - accès à toutes les fonctionnalités RH
     
     # Vérifier les rôles RH
     rh_roles = ['rh', 'rh_manager', 'rh_assistant', 'rh_recruiter', 'rh_analyst']

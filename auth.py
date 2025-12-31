@@ -708,7 +708,19 @@ def profile_change_password():
 
 # Fonctions utilitaires pour les permissions
 def has_permission(user, permission):
-    """Vérifier si l'utilisateur a une permission"""
+    """
+    Vérifier si l'utilisateur a une permission
+    
+    IMPORTANT: Le rôle 'admin' a TOUS les droits et passe toutes les vérifications.
+    L'admin peut accéder à toutes les fonctionnalités de la plateforme sans exception.
+    
+    Args:
+        user: L'utilisateur à vérifier
+        permission: Permission au format 'module.action' (ex: 'stocks.read', 'orders.write')
+    
+    Returns:
+        bool: True si l'utilisateur a la permission, False sinon
+    """
     # Vérifier si l'utilisateur est authentifié
     if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
         return False
@@ -717,8 +729,10 @@ def has_permission(user, permission):
     if not hasattr(user, 'role') or not user.role:
         return False
     
+    # ⚠️ RÈGLE FONDAMENTALE : L'admin a TOUS les droits
+    # L'admin passe toutes les vérifications de permissions, peu importe la permission demandée
     if user.role.code == 'admin':
-        return True  # Admin a tous les droits
+        return True  # Admin a tous les droits - accès à toutes les fonctionnalités
     
     # Vérifier d'abord les permissions supplémentaires de l'utilisateur (pour RH notamment)
     if hasattr(user, 'additional_permissions') and user.additional_permissions:

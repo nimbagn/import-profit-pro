@@ -10,14 +10,18 @@ def get_user_region_id():
     """
     Retourne l'ID de la région de l'utilisateur connecté
     Retourne None si l'utilisateur n'a pas de région ou est admin
+    
+    IMPORTANT: Les admins voient TOUT (pas de filtre par région).
+    Cette fonction retourne None pour les admins, ce qui désactive tous les filtres de région.
     """
     if not current_user or not current_user.is_authenticated:
         return None
     
-    # Les admins voient tout (pas de filtre)
+    # ⚠️ RÈGLE FONDAMENTALE : Les admins voient TOUT (pas de filtre par région)
+    # Retourner None désactive tous les filtres de région pour l'admin
     if hasattr(current_user, 'role') and current_user.role:
         if current_user.role.code in ['admin', 'superadmin']:
-            return None
+            return None  # Admin voit toutes les régions - aucun filtre appliqué
     
     return current_user.region_id if hasattr(current_user, 'region_id') else None
 
