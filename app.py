@@ -767,6 +767,12 @@ def index():
             # Statistiques RH (toujours calculées pour l'admin)
             try:
                 from models import User, Employee, EmployeeContract, EmployeeTraining, EmployeeAbsence
+                from sqlalchemy.exc import SQLAlchemyError
+                from sqlalchemy import or_, and_
+                
+                # Annuler toute transaction en cours en cas d'erreur précédente
+                db.session.rollback()
+                
                 stats['total_users'] = User.query.count()
                 stats['active_users'] = User.query.filter_by(is_active=True).count()
                 stats['total_employees'] = Employee.query.count()
@@ -782,8 +788,9 @@ def index():
                 ).count()
                 stats['pending_absences'] = EmployeeAbsence.query.filter_by(status='pending').count()
                 stats['ongoing_trainings'] = EmployeeTraining.query.filter_by(status='in_progress').count()
-            except Exception as e:
+            except (Exception, SQLAlchemyError) as e:
                 print(f"⚠️ Erreur lors du calcul des statistiques RH: {e}")
+                db.session.rollback()  # Annuler la transaction en cas d'erreur
                 stats['total_users'] = 0
                 stats['active_users'] = 0
                 stats['total_employees'] = 0
@@ -796,23 +803,36 @@ def index():
             try:
                 from models import CommercialOrder
                 from utils_region_filter import filter_commercial_orders_by_region
+                from sqlalchemy.exc import SQLAlchemyError
+                
+                # Annuler toute transaction en cours en cas d'erreur précédente
+                db.session.rollback()
+                
                 orders_query = CommercialOrder.query
                 orders_query = filter_commercial_orders_by_region(orders_query)
                 stats['orders_count'] = orders_query.count()
                 stats['orders_pending'] = orders_query.filter_by(status='draft').count()
                 stats['orders_validated'] = orders_query.filter_by(status='validated').count()
-                stats['orders_cancelled'] = orders_query.filter_by(status='cancelled').count()
-            except Exception as e:
+                # Note: l'enum order_status n'a pas "cancelled", mais "rejected" à la place
+                stats['orders_rejected'] = orders_query.filter_by(status='rejected').count()
+                stats['orders_completed'] = orders_query.filter_by(status='completed').count()
+            except (Exception, SQLAlchemyError) as e:
                 print(f"⚠️ Erreur lors du calcul des statistiques commandes: {e}")
+                db.session.rollback()  # Annuler la transaction en cas d'erreur
                 stats['orders_count'] = 0
                 stats['orders_pending'] = 0
                 stats['orders_validated'] = 0
-                stats['orders_cancelled'] = 0
+                stats['orders_rejected'] = 0
+                stats['orders_completed'] = 0
             
             # Statistiques Promotion (toujours calculées pour l'admin)
             try:
                 from models import PromotionTeam, PromotionMember, PromotionSale, PromotionGamme, PromotionReturn
                 from utils_region_filter import filter_teams_by_region, filter_members_by_region, filter_sales_by_region
+                from sqlalchemy.exc import SQLAlchemyError
+                
+                # Annuler toute transaction en cours en cas d'erreur précédente
+                db.session.rollback()
                 
                 # Équipes
                 teams_query = PromotionTeam.query.filter_by(is_active=True)
@@ -835,8 +855,9 @@ def index():
                 
                 # Retours en attente
                 stats['promotion_returns_pending'] = PromotionReturn.query.filter_by(status='pending').count()
-            except Exception as e:
+            except (Exception, SQLAlchemyError) as e:
                 print(f"⚠️ Erreur lors du calcul des statistiques promotion: {e}")
+                db.session.rollback()  # Annuler la transaction en cas d'erreur
                 stats['promotion_teams'] = 0
                 stats['promotion_members'] = 0
                 stats['promotion_gammes'] = 0
@@ -1091,7 +1112,7 @@ def index():
                                  'recent_movements': 0, 'recent_receptions': 0, 'recent_sessions': 0,
                                  'total_users': 0, 'active_users': 0, 'total_employees': 0,
                                  'active_employees': 0, 'active_contracts': 0, 'pending_absences': 0,
-                                 'orders_count': 0, 'orders_pending': 0, 'orders_validated': 0,
+                                 'orders_count': 0, 'orders_pending': 0, 'orders_validated': 0, 'orders_rejected': 0, 'orders_completed': 0,
                                  'promotion_teams': 0, 'promotion_members': 0, 'promotion_sales_today': 0
                              },
                              recent_simulations=[],
