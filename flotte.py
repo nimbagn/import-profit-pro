@@ -56,21 +56,40 @@ def dashboard():
                 return render_template('flotte/dashboard.html', **cached_data)
         
         # Calculer les données si pas en cache
-        # Statistiques globales
-        total_vehicles = Vehicle.query.count()
-        active_vehicles = Vehicle.query.filter_by(status='active').count()
-        inactive_vehicles = Vehicle.query.filter_by(status='inactive').count()
-        maintenance_vehicles = Vehicle.query.filter_by(status='maintenance').count()
+        # Filtrage par région
+        from utils_region_filter import filter_vehicles_by_region
         
-        # Véhicules sans conducteur
-        vehicles_without_driver = Vehicle.query.filter(
+        # Statistiques globales avec filtrage par région
+        vehicles_query = Vehicle.query
+        vehicles_query = filter_vehicles_by_region(vehicles_query)
+        total_vehicles = vehicles_query.count()
+        
+        # Récupérer les IDs des véhicules accessibles pour les filtres suivants
+        accessible_vehicle_ids = [v.id for v in vehicles_query.all()]
+        
+        active_vehicles_query = Vehicle.query.filter_by(status='active')
+        active_vehicles_query = filter_vehicles_by_region(active_vehicles_query)
+        active_vehicles = active_vehicles_query.count()
+        
+        inactive_vehicles_query = Vehicle.query.filter_by(status='inactive')
+        inactive_vehicles_query = filter_vehicles_by_region(inactive_vehicles_query)
+        inactive_vehicles = inactive_vehicles_query.count()
+        
+        maintenance_vehicles_query = Vehicle.query.filter_by(status='maintenance')
+        maintenance_vehicles_query = filter_vehicles_by_region(maintenance_vehicles_query)
+        maintenance_vehicles = maintenance_vehicles_query.count()
+        
+        # Véhicules sans conducteur avec filtrage par région
+        vehicles_without_driver_query = Vehicle.query.filter(
             (Vehicle.current_user_id == None) & (Vehicle.status == 'active')
-        ).count()
+        )
+        vehicles_without_driver_query = filter_vehicles_by_region(vehicles_without_driver_query)
+        vehicles_without_driver = vehicles_without_driver_query.count()
         
         # Calculer le kilométrage total (somme du dernier km de chaque véhicule)
         # Optimisation N+1 : charger les odomètres en une seule requête
         from sqlalchemy import func
-        active_vehicles_list = Vehicle.query.filter_by(status='active').all()
+        active_vehicles_list = active_vehicles_query.all()
         vehicle_ids = [v.id for v in active_vehicles_list]
         
         # Récupérer le dernier odomètre pour chaque véhicule en une seule requête
@@ -104,10 +123,16 @@ def dashboard():
                 total_km += last_odo.odometer_km
         
         # Alertes - Documents expirés ou expirant bientôt
-        # Optimisation N+1 : charger vehicle en une seule requête
-        all_documents = VehicleDocument.query.options(
-            joinedload(VehicleDocument.vehicle)
-        ).all()
+        # Optimisation N+1 : charger vehicle en une seule requête avec filtrage par région
+        # Utiliser les IDs des véhicules accessibles déjà récupérés (ligne 68)
+        if accessible_vehicle_ids:
+            all_documents = VehicleDocument.query.filter(
+                VehicleDocument.vehicle_id.in_(accessible_vehicle_ids)
+            ).options(
+                joinedload(VehicleDocument.vehicle)
+            ).all()
+        else:
+            all_documents = []
         expired_documents = []
         expiring_soon_documents = []
         
@@ -122,11 +147,16 @@ def dashboard():
                 elif 0 <= days <= 15:
                     expiring_soon_documents.append(doc)
         
-        # Alertes - Maintenances dues
+        # Alertes - Maintenances dues avec filtrage par région
         # Optimisation N+1 : charger vehicle et odomètres en une seule requête
-        all_maintenances = VehicleMaintenance.query.filter_by(status='planned').options(
-            joinedload(VehicleMaintenance.vehicle)
-        ).all()
+        if accessible_vehicle_ids:
+            all_maintenances = VehicleMaintenance.query.filter_by(status='planned').filter(
+                VehicleMaintenance.vehicle_id.in_(accessible_vehicle_ids)
+            ).options(
+                joinedload(VehicleMaintenance.vehicle)
+            ).all()
+        else:
+            all_maintenances = []
         
         # Récupérer tous les odomètres nécessaires en une seule requête
         maintenance_vehicle_ids = [m.vehicle_id for m in all_maintenances if m.vehicle_id]
@@ -184,22 +214,29 @@ def dashboard():
                     'reason': reason
                 })
         
-        # Véhicules récents (créés dans les 30 derniers jours)
+        # Véhicules récents (créés dans les 30 derniers jours) avec filtrage par région
         thirty_days_ago = today - timedelta(days=30)
-        recent_vehicles = Vehicle.query.filter(
+        recent_vehicles_query = Vehicle.query.filter(
             Vehicle.created_at >= datetime.combine(thirty_days_ago, datetime.min.time())
-        ).options(
+        )
+        recent_vehicles_query = filter_vehicles_by_region(recent_vehicles_query)
+        recent_vehicles = recent_vehicles_query.options(
             joinedload(Vehicle.current_user)
         ).order_by(Vehicle.created_at.desc()).limit(5).all()
         
-        # Maintenances récentes (réalisées dans les 30 derniers jours)
-        recent_maintenances = VehicleMaintenance.query.filter(
-            VehicleMaintenance.status == 'completed'
-        ).filter(
-            VehicleMaintenance.completed_date >= thirty_days_ago
-        ).options(
-            joinedload(VehicleMaintenance.vehicle)
-        ).order_by(VehicleMaintenance.completed_date.desc()).limit(5).all()
+        # Maintenances récentes (réalisées dans les 30 derniers jours) avec filtrage par région
+        if accessible_vehicle_ids:
+            recent_maintenances = VehicleMaintenance.query.filter(
+                VehicleMaintenance.status == 'completed'
+            ).filter(
+                VehicleMaintenance.completed_date >= thirty_days_ago
+            ).filter(
+                VehicleMaintenance.vehicle_id.in_(accessible_vehicle_ids)
+            ).options(
+                joinedload(VehicleMaintenance.vehicle)
+            ).order_by(VehicleMaintenance.completed_date.desc()).limit(5).all()
+        else:
+            recent_maintenances = []
         
         # Répartition par statut pour graphique
         status_distribution = {
@@ -240,7 +277,18 @@ def dashboard():
     
     except Exception as e:
         # Gestion d'erreur avec logging
+        import traceback
+        from sqlalchemy.exc import SQLAlchemyError
+        
+        # Annuler toute transaction en échec pour PostgreSQL
+        try:
+            db.session.rollback()
+        except:
+            pass
+        
         current_app.logger.error(f"Erreur lors du chargement du dashboard flotte: {e}", exc_info=True)
+        print(f"⚠️ Erreur dashboard flotte: {e}")
+        traceback.print_exc()
         flash('Une erreur est survenue lors du chargement du dashboard. Veuillez réessayer.', 'error')
         
         # Retourner un dashboard minimal en cas d'erreur
