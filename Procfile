@@ -1,2 +1,2 @@
-web: gunicorn --workers 3 --bind 0.0.0.0:$PORT wsgi:app
+web: gunicorn --config gunicorn.conf.py --bind 0.0.0.0:$PORT wsgi:app
 

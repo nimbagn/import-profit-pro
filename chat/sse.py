@@ -143,35 +143,52 @@ def stream_rooms():
             while True:
                 time.sleep(2)  # Vérifier toutes les 2 secondes
                 
-                # Récupérer toutes les conversations de l'utilisateur
+                # Récupérer toutes les conversations de l'utilisateur (optimisé)
+                from sqlalchemy.orm import joinedload
                 memberships = ChatRoomMember.query.filter_by(user_id=current_user.id).all()
                 room_ids = [m.room_id for m in memberships]
                 
                 if not room_ids:
                     continue
                 
-                # Vérifier les nouveaux messages dans chaque conversation
+                # OPTIMISATION: Récupérer tous les derniers messages en une seule requête
+                from sqlalchemy import func, and_
+                last_msg_subq = db.session.query(
+                    ChatMessage.room_id,
+                    func.max(ChatMessage.id).label('max_id')
+                ).filter_by(is_deleted=False)\
+                 .filter(ChatMessage.sender_id != current_user.id)\
+                 .filter(ChatMessage.room_id.in_(room_ids))\
+                 .group_by(ChatMessage.room_id).subquery()
+                
+                # Récupérer les derniers messages avec sender en une seule requête
+                latest_messages = db.session.query(ChatMessage).join(
+                    last_msg_subq,
+                    and_(
+                        ChatMessage.room_id == last_msg_subq.c.room_id,
+                        ChatMessage.id == last_msg_subq.c.max_id
+                    )
+                ).options(joinedload(ChatMessage.sender)).all()
+                
+                latest_message_map = {msg.room_id: msg for msg in latest_messages}
+                
+                # OPTIMISATION: Récupérer tous les membres avec last_read_at en une seule requête
+                memberships_map = {m.room_id: m for m in memberships}
+                
+                # OPTIMISATION: Compter les non lus pour toutes les rooms en une seule requête
+                # Utiliser une sous-requête pour compter les non lus par room
                 for room_id in room_ids:
                     last_message_id = last_room_updates.get(room_id, 0)
+                    latest_message = latest_message_map.get(room_id)
                     
-                    # Récupérer les nouveaux messages
-                    new_messages = ChatMessage.query.filter_by(room_id=room_id, is_deleted=False)\
-                        .filter(ChatMessage.id > last_message_id)\
-                        .filter(ChatMessage.sender_id != current_user.id)\
-                        .order_by(ChatMessage.created_at.desc())\
-                        .limit(10)\
-                        .all()
-                    
-                    if new_messages:
-                        # Prendre le dernier message pour cette room
-                        latest_message = new_messages[0]
+                    # Vérifier s'il y a de nouveaux messages
+                    if latest_message and latest_message.id > last_message_id:
                         last_room_updates[room_id] = latest_message.id
                         
-                        # Compter les non lus
-                        membership = ChatRoomMember.query.filter_by(room_id=room_id, user_id=current_user.id).first()
+                        # Compter les non lus (optimisé)
+                        membership = memberships_map.get(room_id)
                         last_read = membership.last_read_at if membership else None
                         
-                        unread_count = 0
                         if last_read:
                             unread_count = ChatMessage.query.filter_by(room_id=room_id)\
                                 .filter(ChatMessage.created_at > last_read)\
