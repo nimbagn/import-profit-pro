@@ -952,6 +952,56 @@ def get_available_permissions():
                 'read': 'Consulter',
                 'export': 'Exporter'
             }
+        },
+        'employees': {
+            'name': 'Employés Externes',
+            'description': 'Gestion des employés sans accès à la plateforme',
+            'actions': {
+                'read': 'Consulter',
+                'create': 'Créer',
+                'update': 'Modifier',
+                'delete': 'Supprimer'
+            }
+        },
+        'contracts': {
+            'name': 'Contrats',
+            'description': 'Gestion des contrats de travail',
+            'actions': {
+                'read': 'Consulter',
+                'create': 'Créer',
+                'update': 'Modifier',
+                'delete': 'Supprimer'
+            }
+        },
+        'trainings': {
+            'name': 'Formations',
+            'description': 'Gestion des formations et certifications',
+            'actions': {
+                'read': 'Consulter',
+                'create': 'Créer',
+                'update': 'Modifier',
+                'delete': 'Supprimer'
+            }
+        },
+        'evaluations': {
+            'name': 'Évaluations',
+            'description': 'Gestion des évaluations de performance',
+            'actions': {
+                'read': 'Consulter',
+                'create': 'Créer',
+                'update': 'Modifier',
+                'delete': 'Supprimer'
+            }
+        },
+        'absences': {
+            'name': 'Absences',
+            'description': 'Gestion des absences et congés',
+            'actions': {
+                'read': 'Consulter',
+                'create': 'Créer',
+                'update': 'Modifier',
+                'delete': 'Supprimer'
+            }
         }
     }
 
