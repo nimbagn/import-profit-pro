@@ -4,14 +4,22 @@
 {% block extra_css %}
 <style>
   /* =========================================================
-     CONTAINER PRINCIPAL - CENTRAGE PARFAIT
+     CONTAINER PRINCIPAL - CENTRAGE PARFAIT SANS SCROLL
      ========================================================= */
+  body, html {
+    height: 100% !important;
+    overflow: hidden !important;
+    margin: 0;
+    padding: 0;
+  }
+  
   .login-container {
-    min-height: 100vh;
+    height: 100vh !important;
+    max-height: 100vh !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1rem;
+    padding: 1rem;
     background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
     background-image: 
       radial-gradient(at 0% 0%, rgba(0, 56, 101, 0.08) 0px, transparent 50%),
@@ -21,6 +29,7 @@
     background-attachment: fixed;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   .login-container::before {
@@ -35,15 +44,16 @@
   }
 
   /* =========================================================
-     CARTE DE CONNEXION
+     CARTE DE CONNEXION - COMPACTE SANS SCROLL
      ========================================================= */
   .login-card {
     background: white;
     border: 2px solid rgba(0, 56, 101, 0.1);
-    border-radius: 24px;
-    padding: 3rem 2.5rem;
-    max-width: 480px;
+    border-radius: 20px;
+    padding: 2rem 2rem;
+    max-width: 450px;
     width: 100%;
+    max-height: calc(100vh - 2rem);
     box-shadow: 
       0 20px 60px rgba(0, 0, 0, 0.1),
       0 0 0 1px rgba(0, 0, 0, 0.05);
@@ -51,6 +61,20 @@
     z-index: 1;
     backdrop-filter: blur(10px);
     animation: slideInUp 0.5s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
+  /* Masquer complètement toute scrollbar */
+  .login-card::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .login-card {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .login-card::before {
@@ -67,40 +91,41 @@
   }
 
   /* =========================================================
-     HEADER
+     HEADER - COMPACT
      ========================================================= */
   .login-header {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
   }
 
   .login-logo {
-    font-size: 4rem;
-    margin-bottom: 1rem;
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
     color: #003865;
     display: inline-block;
     animation: bounce 1s ease-out;
   }
 
   .login-title {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: #003865;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     line-height: 1.2;
   }
 
   .login-subtitle {
     color: #6b7280;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 400;
   }
 
   /* =========================================================
-     FORMULAIRE
+     FORMULAIRE - COMPACT
      ========================================================= */
   .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
 
   .form-label {
@@ -109,23 +134,23 @@
     gap: 0.5rem;
     color: #374151;
     font-weight: 600;
-    margin-bottom: 0.75rem;
-    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
   }
 
   .form-label i {
     color: #003865;
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .form-control {
     width: 100%;
-    padding: 1rem 1.25rem;
+    padding: 0.875rem 1rem;
     background: #f9fafb;
     border: 2px solid #e5e7eb;
-    border-radius: 12px;
+    border-radius: 10px;
     color: #111827;
-    font-size: 1rem;
+    font-size: 0.95rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
   }
@@ -146,7 +171,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
 
   .form-check-input {
@@ -164,17 +189,17 @@
   }
 
   /* =========================================================
-     BOUTON DE CONNEXION
+     BOUTON DE CONNEXION - COMPACT
      ========================================================= */
   .btn-login {
     width: 100%;
-    padding: 1rem 2rem;
+    padding: 0.875rem 1.5rem;
     background: linear-gradient(135deg, #003865 0%, #0052a5 100%);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 16px rgba(0, 56, 101, 0.3);
@@ -212,17 +237,18 @@
   }
 
   /* =========================================================
-     ALERTES
+     ALERTES - COMPACT
      ========================================================= */
   .alert {
-    padding: 1rem 1.25rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
+    padding: 0.875rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
     border: 2px solid;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     animation: slideInDown 0.3s ease-out;
+    font-size: 0.9rem;
   }
 
   .alert-error {
@@ -242,18 +268,19 @@
   }
 
   /* =========================================================
-     FOOTER
+     FOOTER - COMPACT
      ========================================================= */
   .login-footer {
     text-align: center;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
     border-top: 2px solid #e5e7eb;
+    flex-shrink: 0;
   }
 
   .login-footer p {
     color: #6b7280;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -323,88 +350,137 @@
   }
 
   /* =========================================================
-     RESPONSIVE - MOBILE
+     RESPONSIVE - MOBILE SANS SCROLL
      ========================================================= */
   @media (max-width: 768px) {
     .login-container {
-      padding: 1rem;
-      min-height: 100vh;
+      padding: 0.75rem;
+      height: 100vh;
+      max-height: 100vh;
       align-items: center;
     }
     
     .login-card {
-      padding: 2rem 1.5rem;
-      max-width: 100%;
-      border-radius: 20px;
-    }
-
-    .login-title {
-      font-size: 1.75rem;
-    }
-    
-    .login-logo {
-      font-size: 3rem;
-    }
-
-    .login-subtitle {
-      font-size: 0.9rem;
-    }
-
-    .form-control {
-      padding: 0.875rem 1rem;
-      font-size: 16px; /* Évite le zoom sur iOS */
-    }
-
-    .btn-login {
-      padding: 0.875rem 1.5rem;
-      font-size: 1rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .login-container {
-      padding: 0.75rem;
-    }
-
-    .login-card {
       padding: 1.5rem 1.25rem;
+      max-width: 100%;
       border-radius: 16px;
+      max-height: calc(100vh - 1.5rem);
+    }
+
+    .login-header {
+      margin-bottom: 1.25rem;
     }
 
     .login-title {
       font-size: 1.5rem;
     }
-
+    
     .login-logo {
       font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      font-size: 0.85rem;
     }
 
     .form-group {
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
 
     .form-control {
       padding: 0.75rem 0.875rem;
+      font-size: 16px; /* Évite le zoom sur iOS */
+    }
+
+    .btn-login {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.95rem;
+    }
+
+    .form-check {
+      margin-bottom: 1rem;
+    }
+
+    .login-footer {
+      margin-top: 1rem;
+      padding-top: 0.875rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .login-container {
+      padding: 0.5rem;
+      height: 100vh;
+      max-height: 100vh;
+    }
+
+    .login-card {
+      padding: 1.25rem 1rem;
+      border-radius: 16px;
+      max-height: calc(100vh - 1rem);
+    }
+
+    .login-header {
+      margin-bottom: 1rem;
+    }
+
+    .login-title {
+      font-size: 1.35rem;
+    }
+
+    .login-logo {
+      font-size: 2.25rem;
+      margin-bottom: 0.375rem;
+    }
+
+    .login-subtitle {
+      font-size: 0.8rem;
+    }
+
+    .form-group {
+      margin-bottom: 0.875rem;
+    }
+
+    .form-control {
+      padding: 0.7rem 0.8rem;
+      font-size: 16px;
+    }
+
+    .form-check {
+      margin-bottom: 0.875rem;
+    }
+
+    .btn-login {
+      padding: 0.7rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .login-footer {
+      margin-top: 0.875rem;
+      padding-top: 0.75rem;
     }
   }
 
   /* =========================================================
-     RESPONSIVE - TABLETTE
+     RESPONSIVE - TABLETTE SANS SCROLL
      ========================================================= */
   @media (min-width: 769px) and (max-width: 1024px) {
     .login-card {
-      max-width: 520px;
-      padding: 3rem 2.5rem;
+      max-width: 480px;
+      padding: 2rem 2rem;
+      max-height: calc(100vh - 2rem);
     }
   }
 
   /* =========================================================
-     RESPONSIVE - GRAND ÉCRAN
+     RESPONSIVE - GRAND ÉCRAN SANS SCROLL
      ========================================================= */
   @media (min-width: 1440px) {
     .login-card {
-      max-width: 520px;
-      padding: 3.5rem 3rem;
+      max-width: 480px;
+      padding: 2.25rem 2rem;
+      max-height: calc(100vh - 2rem);
     }
   }
 
@@ -500,8 +576,8 @@
       </button>
     </form>
 
-    <div style="text-align: center; margin-top: 1.5rem;">
-      <a href="{{ url_for('auth.forgot_password') }}" style="color: #003865; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: color 0.2s;">
+    <div style="text-align: center; margin-top: 1.25rem;">
+      <a href="{{ url_for('auth.forgot_password') }}" style="color: #003865; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: color 0.2s;">
         <i class="fas fa-key"></i>
         <span>Mot de passe oublié ?</span>
       </a>

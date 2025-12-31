@@ -25,6 +25,9 @@
         {{ team.name }}
       </h1>
       <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('promotion.workflow') }}" class="btn btn-promo" style="background: linear-gradient(135deg, #003865 0%, #005a9f 100%); color: white; border: none;">
+          <i class="fas fa-sitemap me-2"></i>Workflow Processus
+        </a>
         {% if has_permission(current_user, 'promotion.write') %}
         <a href="{{ url_for('promotion.team_supply', team_id=team.id) }}" class="btn btn-promo btn-promo-primary">
           <i class="fas fa-truck-loading me-2"></i>Approvisionner

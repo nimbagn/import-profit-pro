@@ -35,6 +35,9 @@
       </h1>
       {% if has_permission(current_user, 'promotion.write') %}
       <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('promotion.workflow') }}" class="btn btn-promo" style="background: linear-gradient(135deg, #003865 0%, #005a9f 100%); color: white; border: none;">
+          <i class="fas fa-sitemap me-2"></i>Workflow Processus
+        </a>
         <a href="{{ url_for('promotion.quick_entry') }}" class="btn btn-promo btn-promo-success">
           <i class="fas fa-bolt me-2"></i>Saisie Rapide ⚡
         </a>

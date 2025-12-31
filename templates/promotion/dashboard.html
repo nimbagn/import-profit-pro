@@ -327,6 +327,9 @@ document.addEventListener('DOMContentLoaded', function() {
       Dashboard Équipe de Promotion
     </h1>
     <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center;">
+      <a href="{{ url_for('promotion.workflow') }}" class="btn-hl btn-hl-primary" style="background: linear-gradient(135deg, #003865 0%, #005a9f 100%); border: none;">
+        <i class="fas fa-sitemap me-2"></i>Workflow Processus
+      </a>
       <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-primary">
         <i class="fas fa-shopping-cart me-2"></i>Ventes
       </a>
