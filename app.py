@@ -64,7 +64,7 @@ db.init_app(app)
 
 # Configuration du middleware d'adaptation MySQL → PostgreSQL
 try:
-    from utils.db_adapter import setup_sqlalchemy_middleware
+    from db_utils.db_adapter import setup_sqlalchemy_middleware
     setup_sqlalchemy_middleware(db.engine)
     print("✅ Middleware d'adaptation MySQL/PostgreSQL activé")
 except Exception as e:

@@ -115,13 +115,17 @@ def check_column_exists(table_name, column_name, db_session=None, use_cache=True
         if time.time() - _cache_timestamps.get(cache_key, 0) < 3600:
             return _column_cache[cache_key]
     
-    if not db_session:
-        try:
-            from app import app, db
-            db_session = db.session
-        except:
-            logger.error("Impossible d'obtenir la session de base de données")
-            return False
+        if not db_session:
+            try:
+                from app import app, db
+                db_session = db.session
+            except:
+                try:
+                    from models import db
+                    db_session = db.session
+                except:
+                    logger.error("Impossible d'obtenir la session de base de données")
+                    return False
     
     try:
         db_type = get_db_type(db_session)
@@ -185,13 +189,17 @@ def check_table_exists(table_name, db_session=None, use_cache=True):
         if time.time() - _cache_timestamps.get(cache_key, 0) < 3600:
             return _table_cache[cache_key]
     
-    if not db_session:
-        try:
-            from app import app, db
-            db_session = db.session
-        except:
-            logger.error("Impossible d'obtenir la session de base de données")
-            return False
+        if not db_session:
+            try:
+                from app import app, db
+                db_session = db.session
+            except:
+                try:
+                    from models import db
+                    db_session = db.session
+                except:
+                    logger.error("Impossible d'obtenir la session de base de données")
+                    return False
     
     try:
         db_type = get_db_type(db_session)

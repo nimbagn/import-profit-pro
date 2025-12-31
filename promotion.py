@@ -104,7 +104,7 @@ _column_cache_time = {}
 
 # Import des fonctions d'adaptation de base de données
 try:
-    from utils.db_adapter import check_column_exists, is_postgresql
+    from db_utils.db_adapter import check_column_exists, is_postgresql
 except ImportError:
     # Fallback si le module n'est pas disponible
     def _is_postgresql_fallback(db_session=None):

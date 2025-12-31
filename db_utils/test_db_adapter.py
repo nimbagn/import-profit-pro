@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app import app, db
-from utils.db_adapter import (
+from db_utils.db_adapter import (
     get_db_type,
     is_postgresql,
     is_mysql,
