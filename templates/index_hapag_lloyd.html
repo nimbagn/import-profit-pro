@@ -364,6 +364,32 @@
         <div class="stat-card-hl-label">Employés Externes</div>
       </div>
       {% endif %}
+      
+      {% if has_permission(current_user, 'orders.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.orders_count or 0 }}</div>
+        <div class="stat-card-hl-label">Commandes</div>
+      </div>
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.orders_pending or 0 }}</div>
+        <div class="stat-card-hl-label">Commandes en Attente</div>
+      </div>
+      {% endif %}
+      
+      {% if has_permission(current_user, 'promotion.read') %}
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.promotion_teams or 0 }}</div>
+        <div class="stat-card-hl-label">Équipes Promotion</div>
+      </div>
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.promotion_members or 0 }}</div>
+        <div class="stat-card-hl-label">Membres Promotion</div>
+      </div>
+      <div class="stat-card-hl">
+        <div class="stat-card-hl-value">{{ counts.promotion_sales_today or 0 }}</div>
+        <div class="stat-card-hl-label">Ventes Aujourd'hui</div>
+      </div>
+      {% endif %}
     </div>
   </div>
 
@@ -705,6 +731,80 @@
                 </span>
               </td>
               <td>{{ price_list.items|length }} article{{ 's' if price_list.items|length > 1 else '' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if has_permission(current_user, 'orders.read') %}
+    {% if recent_orders %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-shopping-cart me-2"></i>Commandes Récentes</h3>
+        <a href="{{ url_for('orders.orders_list') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in recent_orders[:5] %}
+            <tr>
+              <td><a href="{{ url_for('orders.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
+              <td>{{ order.client.name if order.client else '-' }}</td>
+              <td>{{ order.created_at.strftime('%d/%m/%Y') if order.created_at else '-' }}</td>
+              <td>
+                <span class="badge-hl badge-hl-{{ 'success' if order.status == 'validated' else 'warning' if order.status == 'draft' else 'danger' }}">
+                  {{ order.status|replace('_', ' ')|title }}
+                </span>
+              </td>
+              <td>{{ "{:,.0f}".format(order.total_amount_gnf) if order.total_amount_gnf else '0' }} GNF</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if has_permission(current_user, 'promotion.read') %}
+    {% if recent_promotion_sales %}
+    <div class="activity-card">
+      <div class="activity-header">
+        <h3 class="activity-title"><i class="fas fa-chart-line me-2"></i>Ventes Promotion Récentes</h3>
+        <a href="{{ url_for('promotion.sales_list') }}" class="btn-hl btn-hl-outline">Voir tout</a>
+      </div>
+      <div class="table-hl">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Membre</th>
+              <th>Gamme</th>
+              <th>Quantité</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in recent_promotion_sales[:5] %}
+            <tr>
+              <td>{{ sale.sale_date.strftime('%d/%m/%Y') if sale.sale_date else '-' }}</td>
+              <td>{{ sale.member.full_name if sale.member else '-' }}</td>
+              <td>{{ sale.gamme.name if sale.gamme else '-' }}</td>
+              <td>{{ sale.quantity or 0 }}</td>
+              <td>{{ "{:,.0f}".format(sale.total_amount_gnf) if sale.total_amount_gnf else '0' }} GNF</td>
             </tr>
             {% endfor %}
           </tbody>

@@ -764,7 +764,7 @@ def index():
             stats['price_lists_count'] = PriceList.query.count()
             stats['price_lists_active'] = PriceList.query.filter_by(is_active=True).count()
             
-            # Statistiques RH (si l'utilisateur a un rôle RH)
+            # Statistiques RH (toujours calculées pour l'admin)
             try:
                 from models import User, Employee, EmployeeContract, EmployeeTraining, EmployeeAbsence
                 stats['total_users'] = User.query.count()
@@ -781,6 +781,7 @@ def index():
                     )
                 ).count()
                 stats['pending_absences'] = EmployeeAbsence.query.filter_by(status='pending').count()
+                stats['ongoing_trainings'] = EmployeeTraining.query.filter_by(status='in_progress').count()
             except Exception as e:
                 print(f"⚠️ Erreur lors du calcul des statistiques RH: {e}")
                 stats['total_users'] = 0
@@ -789,6 +790,58 @@ def index():
                 stats['active_employees'] = 0
                 stats['active_contracts'] = 0
                 stats['pending_absences'] = 0
+                stats['ongoing_trainings'] = 0
+            
+            # Statistiques Commandes Commerciales (toujours calculées pour l'admin)
+            try:
+                from models import CommercialOrder
+                from utils_region_filter import filter_commercial_orders_by_region
+                orders_query = CommercialOrder.query
+                orders_query = filter_commercial_orders_by_region(orders_query)
+                stats['orders_count'] = orders_query.count()
+                stats['orders_pending'] = orders_query.filter_by(status='draft').count()
+                stats['orders_validated'] = orders_query.filter_by(status='validated').count()
+                stats['orders_cancelled'] = orders_query.filter_by(status='cancelled').count()
+            except Exception as e:
+                print(f"⚠️ Erreur lors du calcul des statistiques commandes: {e}")
+                stats['orders_count'] = 0
+                stats['orders_pending'] = 0
+                stats['orders_validated'] = 0
+                stats['orders_cancelled'] = 0
+            
+            # Statistiques Promotion (toujours calculées pour l'admin)
+            try:
+                from models import PromotionTeam, PromotionMember, PromotionSale, PromotionGamme, PromotionReturn
+                from utils_region_filter import filter_teams_by_region, filter_members_by_region, filter_sales_by_region
+                
+                # Équipes
+                teams_query = PromotionTeam.query.filter_by(is_active=True)
+                teams_query = filter_teams_by_region(teams_query)
+                stats['promotion_teams'] = teams_query.count()
+                
+                # Membres
+                members_query = PromotionMember.query.filter_by(is_active=True)
+                members_query = filter_members_by_region(members_query)
+                stats['promotion_members'] = members_query.count()
+                
+                # Gammes
+                stats['promotion_gammes'] = PromotionGamme.query.filter_by(is_active=True).count()
+                
+                # Ventes (aujourd'hui)
+                today = date.today()
+                sales_query = PromotionSale.query.filter(PromotionSale.sale_date == today)
+                sales_query = filter_sales_by_region(sales_query)
+                stats['promotion_sales_today'] = sales_query.count()
+                
+                # Retours en attente
+                stats['promotion_returns_pending'] = PromotionReturn.query.filter_by(status='pending').count()
+            except Exception as e:
+                print(f"⚠️ Erreur lors du calcul des statistiques promotion: {e}")
+                stats['promotion_teams'] = 0
+                stats['promotion_members'] = 0
+                stats['promotion_gammes'] = 0
+                stats['promotion_sales_today'] = 0
+                stats['promotion_returns_pending'] = 0
             
             # Statistiques récentes (7 derniers jours) avec filtrage par région
             seven_days_ago = datetime.now(UTC) - timedelta(days=7)
@@ -982,6 +1035,32 @@ def index():
         if has_permission(current_user, 'stock_items.read'):
             recent_price_lists = PriceList.query.order_by(PriceList.created_at.desc()).limit(3).all()
         
+        # Récupérer les commandes récentes (seulement si l'utilisateur a la permission)
+        recent_orders = []
+        if has_permission(current_user, 'orders.read'):
+            try:
+                from models import CommercialOrder
+                from utils_region_filter import filter_commercial_orders_by_region
+                recent_orders_query = CommercialOrder.query.order_by(CommercialOrder.created_at.desc())
+                recent_orders_query = filter_commercial_orders_by_region(recent_orders_query)
+                recent_orders = recent_orders_query.limit(5).all()
+            except Exception as e:
+                print(f"⚠️ Erreur lors de la récupération des commandes récentes: {e}")
+                recent_orders = []
+        
+        # Récupérer les ventes promotion récentes (seulement si l'utilisateur a la permission)
+        recent_promotion_sales = []
+        if has_permission(current_user, 'promotion.read'):
+            try:
+                from models import PromotionSale
+                from utils_region_filter import filter_sales_by_region
+                recent_sales_query = PromotionSale.query.order_by(PromotionSale.sale_date.desc(), PromotionSale.created_at.desc())
+                recent_sales_query = filter_sales_by_region(recent_sales_query)
+                recent_promotion_sales = recent_sales_query.limit(5).all()
+            except Exception as e:
+                print(f"⚠️ Erreur lors de la récupération des ventes promotion récentes: {e}")
+                recent_promotion_sales = []
+        
         # Mettre en cache les statistiques si elles ont été recalculées (cache 5 minutes)
         if app.cache and not app.cache.get(cache_key):
             app.cache.set(cache_key, stats, timeout=300)  # 5 minutes
@@ -991,27 +1070,36 @@ def index():
                              recent_simulations=recent_simulations_with_margin,
                              recent_movements=recent_movements,
                              recent_inventories=recent_inventories,
-                             recent_price_lists=recent_price_lists)
+                             recent_price_lists=recent_price_lists,
+                             recent_orders=recent_orders,
+                             recent_promotion_sales=recent_promotion_sales)
     except Exception as e:
         print(f"Erreur lors du chargement de l'index: {e}")
         import traceback
         traceback.print_exc()
-        # Fallback avec données de démonstration
+        # Fallback avec données vides (pas de données de démonstration)
+        # En cas d'erreur, on affiche des zéros pour éviter d'afficher de fausses données
         return render_template('index_hapag_lloyd.html',
                              counts={
-                                 'categories_count': 8, 'articles_count': 4, 
-                                 'simulations_count': 3, 'completed_simulations': 1,
+                                 'categories_count': 0, 'articles_count': 0, 
+                                 'simulations_count': 0, 'completed_simulations': 0,
                                  'regions_count': 0, 'depots_count': 0, 'vehicles_count': 0,
                                  'families_count': 0, 'stock_items_count': 0,
                                  'movements_count': 0, 'receptions_count': 0,
                                  'inventory_sessions_count': 0, 'inventory_pending': 0,
                                  'documents_count': 0, 'maintenances_planned': 0,
-                                 'recent_movements': 0, 'recent_receptions': 0, 'recent_sessions': 0
+                                 'recent_movements': 0, 'recent_receptions': 0, 'recent_sessions': 0,
+                                 'total_users': 0, 'active_users': 0, 'total_employees': 0,
+                                 'active_employees': 0, 'active_contracts': 0, 'pending_absences': 0,
+                                 'orders_count': 0, 'orders_pending': 0, 'orders_validated': 0,
+                                 'promotion_teams': 0, 'promotion_members': 0, 'promotion_sales_today': 0
                              },
                              recent_simulations=[],
                              recent_movements=[],
                              recent_inventories=[],
-                             recent_price_lists=[])
+                             recent_price_lists=[],
+                             recent_orders=[],
+                             recent_promotion_sales=[])
 
 @app.route('/simulations')
 @login_required
