@@ -17,6 +17,7 @@ redis>=5.0.0
 Flask-WTF>=1.2.1
 WTForms>=3.1.1
 Flask-Mail>=0.9.1
+Flask-Compress>=1.14
 gunicorn>=21.2.0
 setuptools>=65.0.0
 wheel>=0.40.0

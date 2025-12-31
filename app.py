@@ -97,6 +97,17 @@ except Exception as e:
     print(f"⚠️  Erreur lors de l'initialisation du cache: {e}")
     app.cache = None
 
+# Compression Gzip pour les réponses HTTP
+try:
+    from flask_compress import Compress
+    Compress(app)
+    print("✅ Compression Gzip activée")
+except ImportError:
+    print("⚠️  Flask-Compress non installé. Compression désactivée.")
+    print("   Installez avec: pip install Flask-Compress")
+except Exception as e:
+    print(f"⚠️  Erreur lors de l'initialisation de la compression: {e}")
+
 # Initialisation de la protection CSRF (Flask-WTF)
 try:
     from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -790,7 +801,7 @@ def index():
             
             # Mettre en cache les statistiques (cache 5 minutes)
             if app.cache:
-                app.cache.set(cache_key, stats, timeout=300)  # 5 minutes
+                app.cache.set(cache_key, stats, timeout=600)  # 10 minutes pour meilleure performance
         
         # Récupérer les simulations récentes (seulement si l'utilisateur a la permission)
         recent_simulations = []
