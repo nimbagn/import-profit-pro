@@ -503,6 +503,16 @@ def user_edit(user_id):
                 regions = Region.query.order_by(Region.name).all()
                 return render_template('auth/user_edit.html', user=user, roles=roles, regions=regions)
         
+        # Gérer les permissions supplémentaires (pour les utilisateurs RH notamment)
+        additional_permissions = {}
+        # Récupérer les permissions supplémentaires depuis le formulaire
+        # Format: permissions[module][action] = 'on'
+        permissions_map = get_available_permissions()
+        for module_key in permissions_map.keys():
+            module_perms = request.form.getlist(f'additional_permissions[{module_key}]')
+            if module_perms:
+                additional_permissions[module_key] = module_perms
+        
         # Mettre à jour l'utilisateur
         user.username = username
         user.email = email
@@ -511,6 +521,7 @@ def user_edit(user_id):
         user.role_id = int(role_id)
         user.region_id = int(region_id) if region_id else None
         user.is_active = is_active
+        user.additional_permissions = additional_permissions if additional_permissions else None
         user.updated_at = datetime.now(UTC)
         
         db.session.commit()
@@ -520,7 +531,8 @@ def user_edit(user_id):
     
     roles = Role.query.all()
     regions = Region.query.order_by(Region.name).all()
-    return render_template('auth/user_edit.html', user=user, roles=roles, regions=regions)
+    permissions_map = get_available_permissions()
+    return render_template('auth/user_edit.html', user=user, roles=roles, regions=regions, permissions_map=permissions_map)
 
 @auth_bp.route('/users/<int:user_id>/delete', methods=['POST'])
 @login_required
@@ -708,6 +720,22 @@ def has_permission(user, permission):
     if user.role.code == 'admin':
         return True  # Admin a tous les droits
     
+    # Vérifier d'abord les permissions supplémentaires de l'utilisateur (pour RH notamment)
+    if hasattr(user, 'additional_permissions') and user.additional_permissions:
+        additional_perms = user.additional_permissions
+        if isinstance(additional_perms, dict):
+            # Permissions structurées : {'module': ['action1', 'action2']}
+            parts = permission.split('.')
+            if len(parts) == 2:
+                module, action = parts
+                if module in additional_perms and action in additional_perms[module]:
+                    return True
+        elif isinstance(additional_perms, list):
+            # Liste simple de permissions
+            if permission in additional_perms:
+                return True
+    
+    # Vérifier les permissions du rôle
     if not user.role.permissions:
         return False
     

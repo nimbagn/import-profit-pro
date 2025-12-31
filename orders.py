@@ -121,6 +121,7 @@ def orders_list():
     commercial_filter = request.args.get('commercial_id', type=int)
     region_filter = request.args.get('region_id', type=int)
     search_query = request.args.get('search', '')
+    sort_order = request.args.get('sort', 'arrival')  # 'arrival' pour ordre d'arrivée, 'date' pour date décroissante
     
     # #region agent log
     try:
@@ -206,15 +207,27 @@ def orders_list():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
+    # Tri : par défaut, ordre d'arrivée (created_at ASC) pour gérer les commandes dans l'ordre chronologique
+    # Le magasinier voit toujours par ordre d'arrivée pour traiter dans l'ordre
+    if current_user.role and current_user.role.code == 'warehouse':
+        # Magasinier : toujours par ordre d'arrivée (plus anciennes en premier)
+        order_by = CommercialOrder.created_at.asc()
+    elif sort_order == 'arrival':
+        # Ordre d'arrivée : plus anciennes en premier
+        order_by = CommercialOrder.created_at.asc()
+    else:
+        # Date décroissante : plus récentes en premier
+        order_by = CommercialOrder.created_at.desc()
+    
     # #region agent log
     try:
         with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:150","message":"before pagination","data":{"page":page,"per_page":per_page},"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}) + "\n")
+            f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:150","message":"before pagination","data":{"page":page,"per_page":per_page,"sort_order":sort_order},"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}) + "\n")
     except: pass
     # #endregion
     
     try:
-        orders = query.order_by(CommercialOrder.created_at.desc()).paginate(
+        orders = query.order_by(order_by).paginate(
             page=page, per_page=per_page, error_out=False
         )
         # Protection : s'assurer que orders n'est jamais None
@@ -289,6 +302,7 @@ def orders_list():
                              commercial_filter=commercial_filter,
                              region_filter=region_filter,
                              search_query=search_query,
+                             sort_order=sort_order,
                              commercials=commercials,
                              regions=regions)
         # #region agent log

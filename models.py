@@ -172,6 +172,7 @@ class User(db.Model, UserMixin):
     region_id = FK("regions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     last_login = db.Column(db.DateTime, nullable=True)
+    additional_permissions = db.Column(db.JSON, nullable=True)  # Permissions supplémentaires (ex: stocks.read pour RH)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
     
