@@ -98,8 +98,51 @@ def get_low_stock_alerts(threshold=10):
     return alerts
 
 # Cache pour les vérifications de colonnes (durée: 1 heure)
+# Note: Utilise maintenant utils.db_adapter qui gère le cache automatiquement
 _column_cache = {}
 _column_cache_time = {}
+
+# Import des fonctions d'adaptation de base de données
+try:
+    from utils.db_adapter import check_column_exists, is_postgresql
+except ImportError:
+    # Fallback si le module n'est pas disponible
+    def _is_postgresql_fallback(db_session=None):
+        """Fallback: détecte si on utilise PostgreSQL"""
+        try:
+            uri = str(db.engine.url)
+            return uri.startswith('postgresql://') or uri.startswith('postgresql+psycopg2://')
+        except:
+            return False
+    
+    def check_column_exists(table_name, column_name, db_session=None):
+        """Fallback: vérifie si une colonne existe (compatible MySQL et PostgreSQL)"""
+        try:
+            if _is_postgresql_fallback(db_session):
+                check_sql = text("""
+                    SELECT COUNT(*) 
+                    FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = :table_name 
+                    AND column_name = :column_name
+                """)
+            else:
+                check_sql = text("""
+                    SELECT COUNT(*) 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                    AND TABLE_NAME = :table_name 
+                    AND COLUMN_NAME = :column_name
+                """)
+            result = db.session.execute(check_sql, {'table_name': table_name, 'column_name': column_name}).scalar() > 0
+            return result
+        except Exception as e:
+            print(f"Erreur vérification colonne {column_name} dans {table_name}: {e}")
+            return False
+    
+    def is_postgresql(db_session=None):
+        """Fallback: détecte si on utilise PostgreSQL"""
+        return _is_postgresql_fallback(db_session)
 
 def has_transaction_type_column_cached():
     """Vérifie si la colonne transaction_type existe (avec cache)"""
@@ -111,13 +154,9 @@ def has_transaction_type_column_cached():
         if current_time - _column_cache_time.get(cache_key, 0) < 3600:
             return _column_cache[cache_key]
     
-    # Requête à la base de données
+    # Requête à la base de données (utilise la fonction d'adaptation)
     try:
-        check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                           WHERE TABLE_SCHEMA = DATABASE() 
-                           AND TABLE_NAME = 'promotion_sales' 
-                           AND COLUMN_NAME = 'transaction_type'"""
-        result = db.session.execute(text(check_type_sql)).scalar() > 0
+        result = check_column_exists('promotion_sales', 'transaction_type', db.session)
         
         # Mettre en cache
         _column_cache[cache_key] = result
@@ -764,37 +803,70 @@ def workflow():
     
     # Récupérer les équipes actives avec leurs responsables (filtrées par région)
     from utils_region_filter import filter_teams_by_region
+    teams = []
     try:
         teams_query = PromotionTeam.query.filter_by(is_active=True)
-        teams_query = filter_teams_by_region(teams_query)
-        teams = teams_query.options(
-            joinedload(PromotionTeam.team_leader)
-        ).all()
+        try:
+            teams_query = filter_teams_by_region(teams_query)
+        except Exception as e:
+            print(f"DEBUG workflow filter_teams_by_region error: {e}")
+            # Si le filtrage échoue, continuer sans filtre
+        
+        try:
+            teams = teams_query.options(
+                joinedload(PromotionTeam.team_leader)
+            ).all()
+        except Exception as e:
+            print(f"DEBUG workflow teams query error: {e}")
+            # Fallback: charger sans joinedload
+            teams = teams_query.all()
+        
         # S'assurer que team_leader est chargé
         for team in teams:
-            if team.team_leader_id and not hasattr(team, '_team_leader_loaded'):
+            if team.team_leader_id and not hasattr(team, 'team_leader'):
                 try:
                     team.team_leader = User.query.options(
                         load_only(User.id, User.username, User.full_name)
                     ).get(team.team_leader_id)
                 except Exception:
                     team.team_leader = None
+            elif not team.team_leader_id:
+                team.team_leader = None
     except Exception as e:
         print(f"DEBUG workflow teams error: {e}")
-        teams = PromotionTeam.query.filter_by(is_active=True).all()
-        for team in teams:
-            team.team_leader = None
+        import traceback
+        traceback.print_exc()
+        # Fallback absolu
+        try:
+            teams = PromotionTeam.query.filter_by(is_active=True).all()
+            for team in teams:
+                team.team_leader = None
+        except Exception:
+            teams = []
     
     # Récupérer les membres actifs avec leurs stocks (filtrés par région)
     from utils_region_filter import filter_members_by_region
     members = []
     try:
         members_query = PromotionMember.query.filter_by(is_active=True)
-        members_query = filter_members_by_region(members_query)
-        members_query = members_query.options(
-            load_only(PromotionMember.id, PromotionMember.full_name, PromotionMember.team_id, PromotionMember.is_active)
-        )
-        members_list = members_query.all()
+        try:
+            members_query = filter_members_by_region(members_query)
+        except Exception as e:
+            print(f"DEBUG workflow filter_members_by_region error: {e}")
+            # Si le filtrage échoue, continuer sans filtre mais avec load_only
+            try:
+                members_query = members_query.options(
+                    load_only(PromotionMember.id, PromotionMember.full_name, PromotionMember.team_id, PromotionMember.is_active)
+                )
+            except Exception:
+                pass
+        
+        try:
+            members_list = members_query.all()
+        except Exception as e:
+            print(f"DEBUG workflow members query error: {e}")
+            # Fallback: charger sans options
+            members_list = PromotionMember.query.filter_by(is_active=True).all()
         
         for member in members_list:
             # Charger l'équipe du membre
@@ -814,11 +886,7 @@ def workflow():
             
             # Récupérer les ventes du jour (enlèvements - retours)
             try:
-                check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                                   WHERE TABLE_SCHEMA = DATABASE() 
-                                   AND TABLE_NAME = 'promotion_sales' 
-                                   AND COLUMN_NAME = 'transaction_type'"""
-                has_transaction_type = db.session.execute(text(check_type_sql)).scalar() > 0
+                has_transaction_type = _check_column_exists('promotion_sales', 'transaction_type')
                 
                 if has_transaction_type:
                     enlevements = db.session.query(func.sum(PromotionSale.quantity)).filter(
@@ -857,15 +925,13 @@ def workflow():
             })
     except Exception as e:
         print(f"DEBUG workflow members error: {e}")
+        import traceback
+        traceback.print_exc()
         members = []
     
     # Statistiques du jour
     try:
-        check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                          WHERE TABLE_SCHEMA = DATABASE() 
-                          AND TABLE_NAME = 'promotion_sales' 
-                          AND COLUMN_NAME = 'transaction_type'"""
-        has_transaction_type = db.session.execute(text(check_type_sql)).scalar() > 0
+        has_transaction_type = _check_column_exists('promotion_sales', 'transaction_type')
         
         if has_transaction_type:
             enlevements_today = db.session.query(func.sum(PromotionSale.quantity)).filter(
@@ -891,12 +957,20 @@ def workflow():
         retours_today = 0
     
     # Récupérer les gammes actives
-    gammes = PromotionGamme.query.filter_by(is_active=True).order_by(PromotionGamme.name).all()
+    try:
+        gammes = PromotionGamme.query.filter_by(is_active=True).order_by(PromotionGamme.name).all()
+    except Exception as e:
+        print(f"DEBUG workflow gammes error: {e}")
+        gammes = []
     
     # Récupérer le stock de chaque équipe
     teams_stock = {}
     for team in teams:
-        teams_stock[team.id] = get_team_stock(team.id)
+        try:
+            teams_stock[team.id] = get_team_stock(team.id)
+        except Exception as e:
+            print(f"DEBUG workflow get_team_stock({team.id}) error: {e}")
+            teams_stock[team.id] = {}
     
     return render_template('promotion/workflow.html',
                          teams=teams,
@@ -1024,12 +1098,8 @@ def dashboard():
         is_day_closed = False
         daily_closure = None
     
-    # Vérifier si transaction_type existe
-    check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                       WHERE TABLE_SCHEMA = DATABASE() 
-                       AND TABLE_NAME = 'promotion_sales' 
-                       AND COLUMN_NAME = 'transaction_type'"""
-    has_transaction_type = db.session.execute(text(check_type_sql)).scalar() > 0
+    # Vérifier si transaction_type existe (utilise la fonction d'adaptation)
+    has_transaction_type = check_column_exists('promotion_sales', 'transaction_type', db.session)
     
     # Statistiques de base avec filtrage par région
     from utils_region_filter import filter_teams_by_region
@@ -3277,12 +3347,8 @@ def sales_list():
     query = PromotionSale.query
     query = filter_sales_by_region(query)
     
-    # Vérifier si transaction_type existe
-    check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                       WHERE TABLE_SCHEMA = DATABASE() 
-                       AND TABLE_NAME = 'promotion_sales' 
-                       AND COLUMN_NAME = 'transaction_type'"""
-    has_transaction_type = db.session.execute(text(check_type_sql)).scalar() > 0
+    # Vérifier si transaction_type existe (utilise la fonction d'adaptation)
+    has_transaction_type = check_column_exists('promotion_sales', 'transaction_type', db.session)
     
     # Appliquer les filtres
     if member_id:
@@ -3828,18 +3894,9 @@ def sale_new():
             sale_date_str = request.form.get('sale_date', '')
             sale_date = datetime.strptime(sale_date_str, '%Y-%m-%d').date() if sale_date_str else date.today()
             
-            # Vérifier si les colonnes existent
-            check_ref_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                              WHERE TABLE_SCHEMA = DATABASE() 
-                              AND TABLE_NAME = 'promotion_sales' 
-                              AND COLUMN_NAME = 'reference'"""
-            has_reference = db.session.execute(text(check_ref_sql)).scalar() > 0
-            
-            check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                               WHERE TABLE_SCHEMA = DATABASE() 
-                               AND TABLE_NAME = 'promotion_sales' 
-                               AND COLUMN_NAME = 'transaction_type'"""
-            has_transaction_type = db.session.execute(text(check_type_sql)).scalar() > 0
+            # Vérifier si les colonnes existent (utilise les fonctions d'adaptation)
+            has_reference = check_column_exists('promotion_sales', 'reference', db.session)
+            has_transaction_type = check_column_exists('promotion_sales', 'transaction_type', db.session)
             
             # Récupérer toutes les ventes (plusieurs gammes/pièces)
             sales_data = []
@@ -3911,18 +3968,9 @@ def sale_new():
             # Générer une référence pour chaque vente
             reference = generate_sale_reference(transaction_type)
             
-            # Vérifier si les colonnes existent
-            check_ref_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                              WHERE TABLE_SCHEMA = DATABASE() 
-                              AND TABLE_NAME = 'promotion_sales' 
-                              AND COLUMN_NAME = 'reference'"""
-            has_reference = db.session.execute(text(check_ref_sql)).scalar() > 0
-            
-            check_type_sql = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-                               WHERE TABLE_SCHEMA = DATABASE() 
-                               AND TABLE_NAME = 'promotion_sales' 
-                               AND COLUMN_NAME = 'transaction_type'"""
-            has_transaction_type = db.session.execute(text(check_type_sql)).scalar() > 0
+            # Vérifier si les colonnes existent (utilise les fonctions d'adaptation)
+            has_reference = check_column_exists('promotion_sales', 'reference', db.session)
+            has_transaction_type = check_column_exists('promotion_sales', 'transaction_type', db.session)
             
             # Traiter toutes les ventes
             saved_count = 0

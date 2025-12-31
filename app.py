@@ -62,6 +62,14 @@ else:
 from models import db
 db.init_app(app)
 
+# Configuration du middleware d'adaptation MySQL → PostgreSQL
+try:
+    from utils.db_adapter import setup_sqlalchemy_middleware
+    setup_sqlalchemy_middleware(db.engine)
+    print("✅ Middleware d'adaptation MySQL/PostgreSQL activé")
+except Exception as e:
+    print(f"⚠️  Erreur lors de l'initialisation du middleware d'adaptation: {e}")
+
 # Initialisation de Flask-Login
 from auth import login_manager, init_rate_limiter
 login_manager.init_app(app)
