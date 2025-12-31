@@ -318,6 +318,12 @@ def vehicle_documents(vehicle_id):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     # Paramètres de pagination
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
@@ -370,6 +376,12 @@ def document_new(vehicle_id):
         flash('Vous n\'avez pas la permission d\'ajouter un document', 'error')
         return redirect(url_for('flotte.vehicle_documents', vehicle_id=vehicle_id))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     
     if request.method == 'POST':
@@ -407,6 +419,12 @@ def document_edit(vehicle_id, doc_id):
         flash('Vous n\'avez pas la permission de modifier ce document', 'error')
         return redirect(url_for('flotte.vehicle_documents', vehicle_id=vehicle_id))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     document = VehicleDocument.query.filter_by(id=doc_id, vehicle_id=vehicle_id).first_or_404()
     
@@ -440,6 +458,12 @@ def vehicle_maintenances(vehicle_id):
     """Liste des maintenances d'un véhicule"""
     if not has_permission(current_user, 'vehicles.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('index'))
+    
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
         return redirect(url_for('index'))
     
     # Paramètres de pagination
@@ -500,6 +524,12 @@ def maintenance_new(vehicle_id):
         flash('Vous n\'avez pas la permission d\'ajouter une maintenance', 'error')
         return redirect(url_for('flotte.vehicle_maintenances', vehicle_id=vehicle_id))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     
     if request.method == 'POST':
@@ -538,6 +568,12 @@ def maintenance_complete(vehicle_id, maint_id):
         flash('Vous n\'avez pas la permission de modifier cette maintenance', 'error')
         return redirect(url_for('flotte.vehicle_maintenances', vehicle_id=vehicle_id))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     maintenance = VehicleMaintenance.query.filter_by(id=maint_id, vehicle_id=vehicle_id).first_or_404()
     
@@ -565,6 +601,12 @@ def vehicle_odometer(vehicle_id):
     """Historique des relevés odomètre d'un véhicule"""
     if not has_permission(current_user, 'vehicles.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('index'))
+    
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
         return redirect(url_for('index'))
     
     # Paramètres de pagination
@@ -614,6 +656,12 @@ def vehicle_detail(vehicle_id):
     """Fiche complète d'un véhicule avec tous les onglets"""
     if not has_permission(current_user, 'vehicles.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('index'))
+    
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
         return redirect(url_for('index'))
     
     vehicle = Vehicle.query.get_or_404(vehicle_id)
@@ -727,6 +775,12 @@ def odometer_new(vehicle_id):
         flash('Vous n\'avez pas la permission d\'ajouter un relevé', 'error')
         return redirect(url_for('flotte.vehicle_odometer', vehicle_id=vehicle_id))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     
     if request.method == 'POST':
@@ -777,6 +831,12 @@ def vehicle_assignments(vehicle_id):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     assignments = VehicleAssignment.query.filter_by(vehicle_id=vehicle_id)\
         .order_by(VehicleAssignment.start_date.desc()).all()
@@ -803,6 +863,12 @@ def assignment_new(vehicle_id):
     if not has_permission(current_user, 'vehicles.update'):
         flash('Vous n\'avez pas la permission de créer une assignation', 'error')
         return redirect(url_for('flotte.vehicle_assignments', vehicle_id=vehicle_id))
+    
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
     
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     users = User.query.filter_by(is_active=True).all()
@@ -874,6 +940,12 @@ def assignment_end(vehicle_id, assignment_id):
         flash('Vous n\'avez pas la permission de modifier cette assignation', 'error')
         return redirect(url_for('flotte.vehicle_assignments', vehicle_id=vehicle_id))
     
+    # Vérifier l'accès au véhicule par région
+    from utils_region_filter import can_access_vehicle
+    if not can_access_vehicle(vehicle_id):
+        flash('Vous n\'avez pas accès à ce véhicule', 'error')
+        return redirect(url_for('index'))
+    
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     assignment = VehicleAssignment.query.filter_by(
         id=assignment_id,
@@ -904,6 +976,14 @@ def user_vehicles(user_id):
         return redirect(url_for('index'))
     
     user = User.query.get_or_404(user_id)
+    
+    # Vérifier l'accès : admin peut voir tous les utilisateurs, sinon même région
+    from utils_region_filter import get_user_region_id
+    user_region_id = get_user_region_id()
+    if user_region_id is not None:  # Utilisateur non-admin
+        if not hasattr(user, 'region_id') or user.region_id != user_region_id:
+            flash('Vous n\'avez pas accès aux véhicules de cet utilisateur', 'error')
+            return redirect(url_for('index'))
     
     # Assignations actives
     active_assignments = VehicleAssignment.query.filter_by(
