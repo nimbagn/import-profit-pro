@@ -407,6 +407,16 @@
           <i class="fas fa-eye me-2"></i>
           Prévisualiser
         </a>
+        {% if current_user.role and current_user.role.code == 'admin' %}
+        <form method="POST" action="{{ url_for('simulation_delete', id=simulation.id) }}" 
+              style="display: inline;" 
+              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette simulation ? Cette action est irréversible.');">
+          <button type="submit" class="btn-hl" style="background: var(--color-danger); color: var(--white); border-color: var(--color-danger);">
+            <i class="fas fa-trash me-2"></i>
+            Supprimer
+          </button>
+        </form>
+        {% endif %}
       </div>
     </div>
   </div>

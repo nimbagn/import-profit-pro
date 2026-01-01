@@ -2162,6 +2162,41 @@ def simulation_edit(id):
     categories = Category.query.all()
     return render_template('simulation_edit.html', simulation=simulation, items=items, articles=articles, categories=categories)
 
+@app.route('/simulations/<int:id>/delete', methods=['POST'])
+@login_required
+def simulation_delete(id):
+    """Supprimer une simulation (admin uniquement)"""
+    from auth import is_admin
+    
+    # Vérifier que l'utilisateur est admin
+    if not is_admin(current_user):
+        flash('Vous n\'avez pas la permission de supprimer des simulations. Seuls les administrateurs peuvent supprimer.', 'error')
+        return redirect(url_for('simulations_list'))
+    
+    try:
+        from models import Simulation, SimulationItem
+        
+        # Récupérer la simulation
+        simulation = Simulation.query.get_or_404(id)
+        
+        # Supprimer d'abord tous les items associés
+        SimulationItem.query.filter_by(simulation_id=id).delete()
+        
+        # Supprimer la simulation
+        db.session.delete(simulation)
+        db.session.commit()
+        
+        flash(f'Simulation #{id} supprimée avec succès', 'success')
+        return redirect(url_for('simulations_list'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Erreur lors de la suppression de la simulation: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Erreur lors de la suppression: {str(e)}', 'error')
+        return redirect(url_for('simulation_detail', id=id))
+
 @app.route('/simulations/new', methods=['GET', 'POST'])
 @login_required
 def simulation_new():
