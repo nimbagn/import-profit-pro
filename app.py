@@ -243,13 +243,15 @@ with app.app_context():
                         'stocks': ['read', 'create', 'update'],
                         'movements': ['read', 'create'],
                         'inventory': ['read', 'create', 'update'],
+                        'receptions': ['read', 'create', 'update'],
+                        'outgoings': ['read', 'create', 'update'],
+                        'returns': ['read', 'create', 'update'],
                         'vehicles': ['read'],
                         'regions': ['read'],
                         'depots': ['read'],
                         'families': ['read'],
                         'stock_items': ['read'],
                         'orders': ['read'],
-                        'outgoings': ['read', 'create', 'update'],
                         'stock_loading': ['read', 'verify', 'load']
                     }
                 },
