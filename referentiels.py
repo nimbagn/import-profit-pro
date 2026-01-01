@@ -777,16 +777,43 @@ def stock_items_import():
                 'prix_achat_unitaire', 'prix_achat_unitaire_gnf', 'prix_dachat', 'prix_d_achat_gnf'
             ]
             price_col = next((col for col in price_variants if col in df.columns), None)
-            # Si pas trouvé, chercher des colonnes qui contiennent "prix" ou "price"
+            # Si pas trouvé, chercher des colonnes qui contiennent "prix" ou "price" (gère les parenthèses)
             if not price_col:
                 for col in df.columns:
-                    if 'prix' in col.lower() or 'price' in col.lower():
+                    col_lower = col.lower().replace('(', '').replace(')', '').replace('_', '')
+                    if 'prix' in col_lower or 'price' in col_lower:
                         price_col = col
                         break
-            weight_col = next((col for col in ['poids', 'weight', 'unit_weight_kg', 'poids_kg', 'poids_en_kg'] if col in df.columns), None)
+            
+            # Recherche pour poids (gère les parenthèses comme "poids_(kg)")
+            weight_variants = ['poids', 'weight', 'unit_weight_kg', 'poids_kg', 'poids_en_kg']
+            weight_col = next((col for col in weight_variants if col in df.columns), None)
+            if not weight_col:
+                for col in df.columns:
+                    col_lower = col.lower().replace('(', '').replace(')', '').replace('_', '')
+                    if 'poids' in col_lower or ('weight' in col_lower and 'kg' in col_lower):
+                        weight_col = col
+                        break
             description_col = next((col for col in ['description', 'desc', 'description_article'] if col in df.columns), None)
-            min_depot_col = next((col for col in ['stock_min_depot', 'min_stock_depot', 'seuil_depot', 'stock_minimum_depot'] if col in df.columns), None)
-            min_vehicle_col = next((col for col in ['stock_min_vehicle', 'min_stock_vehicle', 'seuil_vehicle', 'stock_minimum_vehicle'] if col in df.columns), None)
+            # Recherche pour stock min dépôt (gère les accents et variantes)
+            min_depot_variants = ['stock_min_depot', 'min_stock_depot', 'seuil_depot', 'stock_minimum_depot', 'stock_min_depôt', 'min_stock_depôt']
+            min_depot_col = next((col for col in min_depot_variants if col in df.columns), None)
+            if not min_depot_col:
+                for col in df.columns:
+                    col_lower = col.lower().replace('(', '').replace(')', '').replace('é', 'e').replace('è', 'e')
+                    if ('stock' in col_lower and 'min' in col_lower and 'depot' in col_lower) or ('seuil' in col_lower and 'depot' in col_lower):
+                        min_depot_col = col
+                        break
+            
+            # Recherche pour stock min véhicule (gère les accents et variantes)
+            min_vehicle_variants = ['stock_min_vehicle', 'min_stock_vehicle', 'seuil_vehicle', 'stock_minimum_vehicle', 'stock_min_vehicule', 'min_stock_vehicule']
+            min_vehicle_col = next((col for col in min_vehicle_variants if col in df.columns), None)
+            if not min_vehicle_col:
+                for col in df.columns:
+                    col_lower = col.lower().replace('(', '').replace(')', '').replace('é', 'e').replace('è', 'e')
+                    if ('stock' in col_lower and 'min' in col_lower and ('vehicle' in col_lower or 'vehicule' in col_lower)) or ('seuil' in col_lower and ('vehicle' in col_lower or 'vehicule' in col_lower)):
+                        min_vehicle_col = col
+                        break
             active_col = next((col for col in ['actif', 'active', 'is_active'] if col in df.columns), None)
             
             # Debug: Afficher les colonnes détectées
@@ -869,23 +896,43 @@ def stock_items_import():
                     
                     # Prix
                     purchase_price_gnf = Decimal('0')
-                    if price_col and pd.notna(row.get(price_col)):
+                    if price_col:
                         try:
-                            price_value = row[price_col]
-                            # Nettoyer la valeur (enlever les espaces, virgules, etc.)
-                            if isinstance(price_value, str):
-                                price_value = price_value.strip().replace(',', '.').replace(' ', '')
-                            # Convertir en Decimal
-                            purchase_price_gnf = Decimal(str(price_value))
-                            if purchase_price_gnf < 0:
-                                purchase_price_gnf = Decimal('0')
+                            # Accéder à la valeur de la colonne (gère les noms avec parenthèses)
+                            # Utiliser l'index de la colonne pour éviter les problèmes avec les parenthèses
+                            if price_col in df.columns:
+                                col_idx = df.columns.get_loc(price_col)
+                                price_value = row.iloc[col_idx] if hasattr(row, 'iloc') else row[price_col]
+                            else:
+                                price_value = row.get(price_col, None)
+                            
+                            if price_value is not None and pd.notna(price_value) and str(price_value).strip() != '' and str(price_value).lower() != 'nan':
+                                # Nettoyer la valeur (enlever les espaces, virgules, etc.)
+                                if isinstance(price_value, str):
+                                    price_value = price_value.strip().replace(',', '.').replace(' ', '').replace('\xa0', '').replace('\u00a0', '')
+                                    # Enlever les caractères non numériques sauf le point
+                                    import re
+                                    price_value = re.sub(r'[^\d.]', '', price_value)
+                                
+                                # Convertir en Decimal
+                                if price_value and str(price_value) != 'nan' and str(price_value) != '':
+                                    purchase_price_gnf = Decimal(str(price_value))
+                                    if purchase_price_gnf < 0:
+                                        purchase_price_gnf = Decimal('0')
+                                    # Log seulement pour les premières lignes pour éviter trop de logs
+                                    if idx < 3:
+                                        print(f"✅ Ligne {idx + 2}: Prix importé = {purchase_price_gnf} GNF depuis colonne '{price_col}'")
+                                else:
+                                    if idx < 3:
+                                        print(f"⚠️  Prix vide après nettoyage ligne {idx + 2}, colonne: {price_col}, valeur brute: {row.get(price_col)}")
+                            else:
+                                if idx < 3:
+                                    print(f"⚠️  Prix vide ou NaN ligne {idx + 2}, colonne: {price_col}, valeur: {price_value}")
                         except (ValueError, TypeError, Exception) as e:
-                            print(f"⚠️  Erreur conversion prix ligne {idx + 2}: {e}, valeur: {row.get(price_col)}")
+                            print(f"⚠️  Erreur conversion prix ligne {idx + 2}: {e}, colonne: {price_col}, valeur: {row.get(price_col, 'N/A')}")
                             purchase_price_gnf = Decimal('0')
                     else:
-                        if price_col:
-                            print(f"⚠️  Prix vide ou invalide ligne {idx + 2}, colonne: {price_col}, valeur: {row.get(price_col)}")
-                        else:
+                        if idx == 0:  # Log seulement pour la première ligne
                             print(f"⚠️  Colonne prix non trouvée. Colonnes disponibles: {list(df.columns)}")
                     
                     # Poids
