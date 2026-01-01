@@ -1,0 +1,51 @@
+═══════════════════════════════════════════════════════════════
+  VÉRIFICATION RAPIDE DES PRIX D'ACHAT SUR RENDER
+═══════════════════════════════════════════════════════════════
+
+Sur le Shell Render, exécutez :
+
+python3
+
+Puis collez ce code :
+
+═══════════════════════════════════════════════════════════════
+
+from app import app, db
+from models import StockItem
+
+with app.app_context():
+    # Récupérer les 10 premiers articles
+    items = StockItem.query.limit(10).all()
+    
+    print("🔍 Vérification des prix d'achat :")
+    print("")
+    print(f"{'SKU':<20} {'Nom':<30} {'Prix (GNF)':<15} {'Présent':<10}")
+    print("-" * 75)
+    
+    for item in items:
+        prix = item.purchase_price_gnf
+        has_price = prix is not None and prix > 0
+        prix_str = f"{prix:,.0f}" if has_price else "Aucun"
+        status = "✅" if has_price else "❌"
+        
+        print(f"{item.sku:<20} {item.name[:28]:<30} {prix_str:<15} {status:<10}")
+    
+    print("-" * 75)
+    print("")
+    
+    # Statistiques
+    total = StockItem.query.count()
+    with_price = StockItem.query.filter(StockItem.purchase_price_gnf > 0).count()
+    without_price = total - with_price
+    
+    print(f"📊 Statistiques :")
+    print(f"   Total articles : {total}")
+    print(f"   Avec prix : {with_price}")
+    print(f"   Sans prix : {without_price}")
+
+═══════════════════════════════════════════════════════════════
+
+Cela affichera les prix des 10 premiers articles et les statistiques.
+
+═══════════════════════════════════════════════════════════════
+
