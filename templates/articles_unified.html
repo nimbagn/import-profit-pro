@@ -197,10 +197,22 @@
       <i class="fas fa-box me-2"></i>
       Articles
       </h1>
-    <a href="{{ url_for('article_new') }}" class="btn-hl btn-hl-primary">
-      <i class="fas fa-plus me-2"></i>
-          Nouvel Article
-        </a>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('articles_import') }}" class="btn-hl btn-hl-success">
+        <i class="fas fa-file-import me-2"></i>
+        Importer Excel
+      </a>
+      <a href="{{ url_for('articles_export_excel', search=search, category=category_filter, price_min=price_min, price_max=price_max) }}" 
+         class="btn-hl btn-hl-info" 
+         onclick="showLoading('Export Excel en cours...');">
+        <i class="fas fa-file-excel me-2"></i>
+        Exporter Excel
+      </a>
+      <a href="{{ url_for('article_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouvel Article
+      </a>
+    </div>
   </div>
 
   <!-- Statistiques -->

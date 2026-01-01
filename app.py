@@ -2700,6 +2700,307 @@ def article_detail(id):
         flash('Article non trouvé', 'error')
         return redirect(url_for('articles_list'))
 
+@app.route('/articles/export/excel')
+@login_required
+def articles_export_excel():
+    """Export Excel de la liste des articles avec filtres appliqués"""
+    from auth import has_permission
+    if not has_permission(current_user, 'articles.read'):
+        flash("Vous n'avez pas la permission d'exporter les données.", "error")
+        return redirect(url_for('articles_list'))
+    
+    import pandas as pd
+    from io import BytesIO
+    from flask import send_file
+    from sqlalchemy import or_
+    
+    # Récupérer les mêmes filtres que articles_list
+    search = request.args.get('search', '').strip()
+    category_filter = request.args.get('category', '').strip()
+    price_min = request.args.get('price_min', type=float)
+    price_max = request.args.get('price_max', type=float)
+    
+    try:
+        from models import Article, Category
+        from sqlalchemy.orm import joinedload
+        
+        # Construire la requête (même logique que articles_list)
+        query = Article.query.options(
+            joinedload(Article.category)
+        ).filter_by(is_active=True)
+        
+        # Appliquer les filtres
+        if search:
+            query = query.filter(
+                or_(
+                    Article.name.ilike(f'%{search}%'),
+                    Article.id.cast(db.String).ilike(f'%{search}%')
+                )
+            )
+        
+        if category_filter:
+            query = query.join(Category).filter(Category.name == category_filter)
+        
+        if price_min is not None:
+            query = query.filter(Article.purchase_price >= price_min)
+        
+        if price_max is not None:
+            query = query.filter(Article.purchase_price <= price_max)
+        
+        # Récupérer tous les articles (sans pagination pour l'export)
+        articles = query.order_by(Article.name).all()
+        
+        # Préparer les données pour Excel
+        data = []
+        for article in articles:
+            data.append({
+                'ID': article.id,
+                'Nom': article.name,
+                'Catégorie': article.category.name if article.category else '',
+                'Prix d\'achat': float(article.purchase_price) if article.purchase_price else 0,
+                'Devise': article.purchase_currency or 'USD',
+                'Poids (kg)': float(article.unit_weight_kg) if article.unit_weight_kg else 0,
+                'Actif': 'Oui' if article.is_active else 'Non',
+                'Date de création': article.created_at.strftime('%Y-%m-%d %H:%M:%S') if article.created_at else '',
+                'Date de modification': article.updated_at.strftime('%Y-%m-%d %H:%M:%S') if article.updated_at else ''
+            })
+        
+        # Créer le DataFrame
+        df = pd.DataFrame(data)
+        
+        # Créer le fichier Excel en mémoire
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Articles', index=False)
+            
+            # Ajuster la largeur des colonnes
+            worksheet = writer.sheets['Articles']
+            for idx, col in enumerate(df.columns):
+                max_length = max(
+                    df[col].astype(str).map(len).max(),
+                    len(col)
+                )
+                worksheet.column_dimensions[chr(65 + idx)].width = min(max_length + 2, 50)
+        
+        output.seek(0)
+        
+        # Générer le nom du fichier avec la date
+        filename = f'articles_export_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+    
+    except Exception as e:
+        print(f"❌ Erreur lors de l'export Excel: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Erreur lors de l\'export Excel: {str(e)}', 'error')
+        return redirect(url_for('articles_list'))
+
+@app.route('/articles/import', methods=['GET', 'POST'])
+@login_required
+def articles_import():
+    """Import de articles depuis Excel/CSV"""
+    from auth import has_permission, is_admin
+    if not has_permission(current_user, 'articles.create') and not is_admin(current_user):
+        flash('Vous n\'avez pas la permission d\'importer des articles. Seuls les administrateurs et utilisateurs avec la permission articles.create peuvent importer.', 'error')
+        return redirect(url_for('articles_list'))
+    
+    from models import Article, Category
+    import pandas as pd
+    import os
+    from werkzeug.utils import secure_filename
+    from decimal import Decimal
+    
+    if request.method == 'GET':
+        return render_template('articles_import.html')
+    
+    if request.method == 'POST':
+        try:
+            file = request.files.get('file')
+            if not file or file.filename == '':
+                flash('Veuillez sélectionner un fichier', 'error')
+                return redirect(url_for('articles_import'))
+            
+            # Sauvegarder le fichier temporairement
+            upload_dir = os.path.join(app.instance_path, 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(upload_dir, filename)
+            file.save(filepath)
+            
+            # Lire le fichier
+            try:
+                if filename.endswith('.csv'):
+                    df = pd.read_csv(filepath, encoding='utf-8')
+                elif filename.endswith(('.xlsx', '.xls')):
+                    df = pd.read_excel(filepath)
+                else:
+                    flash('Format de fichier non supporté. Utilisez .xlsx, .xls ou .csv', 'error')
+                    os.remove(filepath)
+                    return redirect(url_for('articles_import'))
+            except Exception as e:
+                flash(f'Erreur lors de la lecture du fichier: {str(e)}', 'error')
+                os.remove(filepath)
+                return redirect(url_for('articles_import'))
+            
+            # Normaliser les noms de colonnes (minuscules, espaces remplacés par underscores)
+            df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('é', 'e').str.replace('è', 'e')
+            
+            # Colonnes requises (flexibles)
+            required_cols = ['nom', 'name']
+            has_name = any(col in df.columns for col in required_cols)
+            if not has_name:
+                flash('Colonne "Nom" ou "Name" manquante. Le fichier doit contenir au moins le nom de l\'article.', 'error')
+                os.remove(filepath)
+                return redirect(url_for('articles_import'))
+            
+            # Mapper les colonnes possibles
+            name_col = next((col for col in ['nom', 'name', 'article', 'article_name'] if col in df.columns), None)
+            category_col = next((col for col in ['categorie', 'category', 'categorie_name', 'category_name'] if col in df.columns), None)
+            price_col = next((col for col in ['prix', 'price', 'purchase_price', 'prix_achat', 'prix_d_achat'] if col in df.columns), None)
+            currency_col = next((col for col in ['devise', 'currency', 'purchase_currency', 'monnaie'] if col in df.columns), None)
+            weight_col = next((col for col in ['poids', 'weight', 'unit_weight_kg', 'poids_kg', 'poids_en_kg'] if col in df.columns), None)
+            active_col = next((col for col in ['actif', 'active', 'is_active'] if col in df.columns), None)
+            
+            # Mode de traitement
+            update_mode = request.form.get('update_mode', 'skip')  # 'skip', 'update', 'create_new'
+            
+            success_count = 0
+            error_count = 0
+            errors = []
+            
+            # Traiter chaque ligne
+            for idx, row in df.iterrows():
+                try:
+                    # Récupérer les valeurs
+                    name = str(row[name_col]).strip() if name_col and pd.notna(row.get(name_col)) else None
+                    if not name or name == 'nan':
+                        error_count += 1
+                        errors.append(f"Ligne {idx + 2}: Nom d'article manquant")
+                        continue
+                    
+                    # Catégorie
+                    category_name = None
+                    if category_col and pd.notna(row.get(category_col)):
+                        category_name = str(row[category_col]).strip()
+                    
+                    category_id = None
+                    if category_name:
+                        category = Category.query.filter_by(name=category_name).first()
+                        if not category:
+                            # Créer la catégorie si elle n'existe pas
+                            category = Category(name=category_name)
+                            db.session.add(category)
+                            db.session.flush()
+                        category_id = category.id
+                    
+                    # Prix
+                    purchase_price = Decimal('0')
+                    if price_col and pd.notna(row.get(price_col)):
+                        try:
+                            purchase_price = Decimal(str(row[price_col]))
+                        except:
+                            purchase_price = Decimal('0')
+                    
+                    # Devise
+                    purchase_currency = 'USD'
+                    if currency_col and pd.notna(row.get(currency_col)):
+                        currency_val = str(row[currency_col]).strip().upper()
+                        if currency_val in ['USD', 'EUR', 'GNF', 'XOF', 'FCFA']:
+                            purchase_currency = currency_val
+                    
+                    # Poids
+                    unit_weight_kg = Decimal('0')
+                    if weight_col and pd.notna(row.get(weight_col)):
+                        try:
+                            unit_weight_kg = Decimal(str(row[weight_col]))
+                        except:
+                            unit_weight_kg = Decimal('0')
+                    
+                    # Actif
+                    is_active = True
+                    if active_col and pd.notna(row.get(active_col)):
+                        active_val = str(row[active_col]).strip().lower()
+                        is_active = active_val in ['oui', 'yes', 'true', '1', 'actif', 'active']
+                    
+                    # Vérifier si l'article existe déjà
+                    existing = Article.query.filter_by(name=name).first()
+                    
+                    if existing:
+                        if update_mode == 'skip':
+                            continue  # Ignorer les articles existants
+                        elif update_mode == 'update':
+                            # Mettre à jour l'article existant
+                            existing.category_id = category_id
+                            existing.purchase_price = purchase_price
+                            existing.purchase_currency = purchase_currency
+                            existing.unit_weight_kg = unit_weight_kg
+                            existing.is_active = is_active
+                            existing.updated_at = datetime.now(UTC)
+                            success_count += 1
+                        elif update_mode == 'create_new':
+                            # Créer un nouvel article avec un nom modifié
+                            name = f"{name} (Import {datetime.now(UTC).strftime('%Y%m%d')})"
+                            article = Article(
+                                name=name,
+                                category_id=category_id,
+                                purchase_price=purchase_price,
+                                purchase_currency=purchase_currency,
+                                unit_weight_kg=unit_weight_kg,
+                                is_active=is_active
+                            )
+                            db.session.add(article)
+                            success_count += 1
+                    else:
+                        # Créer un nouvel article
+                        article = Article(
+                            name=name,
+                            category_id=category_id,
+                            purchase_price=purchase_price,
+                            purchase_currency=purchase_currency,
+                            unit_weight_kg=unit_weight_kg,
+                            is_active=is_active
+                        )
+                        db.session.add(article)
+                        success_count += 1
+                
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"Ligne {idx + 2}: {str(e)}")
+                    continue
+            
+            # Commit toutes les modifications
+            db.session.commit()
+            
+            # Nettoyer le fichier temporaire
+            try:
+                os.remove(filepath)
+            except:
+                pass
+            
+            # Message de succès
+            if success_count > 0:
+                flash(f'Import réussi : {success_count} article(s) traité(s) avec succès.', 'success')
+            if error_count > 0:
+                flash(f'Import terminé avec {error_count} erreur(s). Voir les détails ci-dessous.', 'warning')
+                if errors:
+                    flash(f'Erreurs: {"; ".join(errors[:10])}', 'warning')  # Afficher les 10 premières erreurs
+            
+            return redirect(url_for('articles_list'))
+        
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Erreur lors de l'import: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Erreur lors de l\'import: {str(e)}', 'error')
+            return redirect(url_for('articles_import'))
+
 @app.route('/articles/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def article_edit(id):
