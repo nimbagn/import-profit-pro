@@ -257,49 +257,49 @@
         <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; align-items: center;">
           <!-- Recherche -->
           <div style="position: relative;">
-            <input type="text" id="searchInput" placeholder="Rechercher un article..." 
+            <input type="text" id="searchInput" placeholder="Rechercher un article de stock..." 
                    style="padding: var(--space-sm) var(--space-md) var(--space-sm) 2.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); width: 250px;"
-                   onkeyup="filterArticles()">
+                   onkeyup="filterStockItems()">
             <i class="fas fa-search" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
           </div>
           
-          <!-- Filtre par catégorie -->
-          <select id="categoryFilter" onchange="filterArticles()" 
+          <!-- Filtre par famille -->
+          <select id="familyFilter" onchange="filterStockItems()" 
                   style="padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--text-primary);">
-            <option value="">Toutes les catégories</option>
-            {% for category in categories %}
-            <option value="{{ category.name }}">{{ category.name }}</option>
+            <option value="">Toutes les familles</option>
+            {% for family in families %}
+            <option value="{{ family.name }}">{{ family.name }}</option>
             {% endfor %}
           </select>
           
-          <!-- Bouton pour afficher/masquer les catégories -->
-          <button type="button" onclick="toggleCategoryView()" class="btn-hl btn-hl-outline" style="white-space: nowrap;">
+          <!-- Bouton pour afficher/masquer les familles -->
+          <button type="button" onclick="toggleFamilyView()" class="btn-hl btn-hl-outline" style="white-space: nowrap;">
             <i class="fas fa-layer-group me-2"></i>
-            <span id="viewModeText">Vue par catégorie</span>
+            <span id="viewModeText">Vue par famille</span>
           </button>
         </div>
       </div>
     </div>
     
-    <!-- Vue par catégorie (par défaut) -->
-    <div id="categoryView">
-      {% for category_name, category_items in items_by_category.items() %}
-      <div class="category-section" data-category="{{ category_name }}" style="margin-bottom: var(--space-2xl);">
+    <!-- Vue par famille (par défaut) -->
+    <div id="familyView">
+      {% for family_name, family_items in items_by_family.items() %}
+      <div class="family-section" data-family="{{ family_name }}" style="margin-bottom: var(--space-2xl);">
         <div style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%); color: var(--white); padding: var(--space-md) var(--space-lg); border-radius: var(--radius-md) var(--radius-md) 0 0; margin-bottom: 0;">
           <h4 style="margin: 0; display: flex; align-items: center; justify-content: space-between;">
             <span>
               <i class="fas fa-folder me-2"></i>
-              {{ category_name }}
-              <span style="opacity: 0.8; font-size: 0.875rem; margin-left: var(--space-sm);">({{ category_items|length }} article{{ 's' if category_items|length > 1 else '' }})</span>
+              {{ family_name }}
+              <span style="opacity: 0.8; font-size: 0.875rem; margin-left: var(--space-sm);">({{ family_items|length }} article{{ 's' if family_items|length > 1 else '' }})</span>
             </span>
-            <button type="button" onclick="toggleCategory('{{ category_name }}')" 
+            <button type="button" onclick="toggleFamily('{{ family_name }}')" 
                     style="background: rgba(255,255,255,0.2); border: none; color: var(--white); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-md); cursor: pointer;">
-              <i class="fas fa-chevron-down" id="icon-{{ category_name|replace(' ', '-') }}"></i>
+              <i class="fas fa-chevron-down" id="icon-{{ family_name|replace(' ', '-') }}"></i>
             </button>
           </h4>
         </div>
         
-        <div class="category-content" id="content-{{ category_name|replace(' ', '-') }}" style="display: block;">
+        <div class="family-content" id="content-{{ family_name|replace(' ', '-') }}" style="display: block;">
           <div style="overflow-x: auto; border: 1px solid var(--gray-200); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md);">
             <table class="table-hl" style="margin: 0;">
               <thead>
@@ -312,13 +312,13 @@
                 </tr>
               </thead>
               <tbody>
-                {% for item in category_items %}
-                <tr class="article-row" data-category="{{ category_name }}" data-article-name="{{ item.article.name|lower }}">
+                {% for item in family_items %}
+                <tr class="stock-item-row" data-family="{{ family_name }}" data-stock-item-name="{{ item.stock_item.name|lower }}">
                   <td>
-                    <strong>{{ item.article.name }}</strong>
-                    {% if item.article.sku %}
+                    <strong>{{ item.stock_item.name }}</strong>
+                    {% if item.stock_item.sku %}
                     <br>
-                    <small style="color: var(--text-muted);">SKU: {{ item.article.sku }}</small>
+                    <small style="color: var(--text-muted);">SKU: {{ item.stock_item.sku }}</small>
                     {% endif %}
                   </td>
                   <td class="price-value">
@@ -367,7 +367,7 @@
         <table class="table-hl">
           <thead>
             <tr>
-              <th>Catégorie</th>
+              <th>Famille</th>
               <th>Article</th>
               <th style="text-align: right;">Prix Grossiste (GNF)</th>
               <th style="text-align: right;">Prix Détaillant (GNF)</th>
@@ -377,17 +377,17 @@
           </thead>
           <tbody>
             {% for item in items %}
-            <tr class="article-row" data-category="{{ item.article.category.name if item.article.category else 'Sans catégorie' }}" data-article-name="{{ item.article.name|lower }}">
+            <tr class="stock-item-row" data-family="{{ item.stock_item.family.name if item.stock_item and item.stock_item.family else 'Sans famille' }}" data-stock-item-name="{{ item.stock_item.name|lower }}">
               <td>
                 <span class="badge-hl badge-hl-info">
-                  {{ item.article.category.name if item.article.category else 'Sans catégorie' }}
+                  {{ item.stock_item.family.name if item.stock_item and item.stock_item.family else 'Sans famille' }}
                 </span>
               </td>
               <td>
-                <strong>{{ item.article.name }}</strong>
-                {% if item.article.sku %}
+                <strong>{{ item.stock_item.name }}</strong>
+                {% if item.stock_item.sku %}
                 <br>
-                <small style="color: var(--text-muted);">SKU: {{ item.article.sku }}</small>
+                <small style="color: var(--text-muted);">SKU: {{ item.stock_item.sku }}</small>
                 {% endif %}
               </td>
               <td class="price-value">
@@ -441,68 +441,68 @@
 
 {% block extra_js %}
 <script>
-  let currentView = 'category'; // 'category' ou 'list'
+  let currentView = 'family'; // 'family' ou 'list'
   
-  // Filtrer les articles par recherche et catégorie
-  function filterArticles() {
+  // Filtrer les articles de stock par recherche et famille
+  function filterStockItems() {
     const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    const categoryFilter = document.getElementById('categoryFilter')?.value || '';
-    const rows = document.querySelectorAll('.article-row');
+    const familyFilter = document.getElementById('familyFilter')?.value || '';
+    const rows = document.querySelectorAll('.stock-item-row');
     
     rows.forEach(row => {
-      const articleName = row.getAttribute('data-article-name') || '';
-      const category = row.getAttribute('data-category') || '';
+      const stockItemName = row.getAttribute('data-stock-item-name') || '';
+      const family = row.getAttribute('data-family') || '';
       
-      const matchesSearch = articleName.includes(searchTerm);
-      const matchesCategory = !categoryFilter || category === categoryFilter;
+      const matchesSearch = stockItemName.includes(searchTerm);
+      const matchesFamily = !familyFilter || family === familyFilter;
       
-      if (matchesSearch && matchesCategory) {
+      if (matchesSearch && matchesFamily) {
         row.style.display = '';
-        // Afficher la section catégorie si elle contient des résultats
-        const categorySection = row.closest('.category-section');
-        if (categorySection) {
-          categorySection.style.display = '';
+        // Afficher la section famille si elle contient des résultats
+        const familySection = row.closest('.family-section');
+        if (familySection) {
+          familySection.style.display = '';
         }
       } else {
         row.style.display = 'none';
-        // Masquer la section catégorie si elle n'a plus de résultats visibles
-        const categorySection = row.closest('.category-section');
-        if (categorySection) {
-          const visibleRows = categorySection.querySelectorAll('.article-row:not([style*="display: none"])');
+        // Masquer la section famille si elle n'a plus de résultats visibles
+        const familySection = row.closest('.family-section');
+        if (familySection) {
+          const visibleRows = familySection.querySelectorAll('.stock-item-row:not([style*="display: none"])');
           if (visibleRows.length === 0) {
-            categorySection.style.display = 'none';
+            familySection.style.display = 'none';
           }
         }
       }
     });
   }
   
-  // Basculer entre vue par catégorie et vue liste
-  function toggleCategoryView() {
-    currentView = currentView === 'category' ? 'list' : 'category';
-    const categoryView = document.getElementById('categoryView');
+  // Basculer entre vue par famille et vue liste
+  function toggleFamilyView() {
+    currentView = currentView === 'family' ? 'list' : 'family';
+    const familyView = document.getElementById('familyView');
     const listView = document.getElementById('listView');
     const viewModeText = document.getElementById('viewModeText');
     
-    if (!categoryView || !listView || !viewModeText) return;
+    if (!familyView || !listView || !viewModeText) return;
     
-    if (currentView === 'category') {
-      categoryView.style.display = 'block';
+    if (currentView === 'family') {
+      familyView.style.display = 'block';
       listView.style.display = 'none';
       viewModeText.textContent = 'Vue liste';
     } else {
-      categoryView.style.display = 'none';
+      familyView.style.display = 'none';
       listView.style.display = 'block';
-      viewModeText.textContent = 'Vue par catégorie';
+      viewModeText.textContent = 'Vue par famille';
     }
     
     // Réappliquer les filtres
-    filterArticles();
+    filterStockItems();
   }
   
-  // Afficher/masquer une catégorie
-  function toggleCategory(categoryName) {
-    const safeName = categoryName.replace(/ /g, '-');
+  // Afficher/masquer une famille
+  function toggleFamily(familyName) {
+    const safeName = familyName.replace(/ /g, '-');
     const content = document.getElementById('content-' + safeName);
     const icon = document.getElementById('icon-' + safeName);
     

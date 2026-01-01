@@ -1208,7 +1208,7 @@ class PriceList(db.Model):
     created_by = db.relationship("User", backref=db.backref("price_lists", lazy="select"))
     items = db.relationship("PriceListItem", backref="price_list",
                             cascade="all, delete-orphan", lazy="selectin",
-                            order_by="PriceListItem.article_id")
+                            order_by="PriceListItem.stock_item_id")
     
     __table_args__ = (
         db.Index("idx_pricelist_dates", "start_date", "end_date"),
@@ -1231,11 +1231,11 @@ class PriceList(db.Model):
         return f"<PriceList {self.name} ({self.start_date} - {self.end_date or '∞'})>"
 
 class PriceListItem(db.Model):
-    """Prix d'un article dans une fiche de prix"""
+    """Prix d'un article de stock dans une fiche de prix"""
     __tablename__ = "price_list_items"
     id = PK()
     price_list_id = FK("price_lists.id", onupdate="CASCADE", ondelete="CASCADE")
-    article_id = FK("articles.id", onupdate="CASCADE", ondelete="CASCADE")
+    stock_item_id = FK("stock_items.id", onupdate="CASCADE", ondelete="CASCADE")
     
     # Prix en GNF
     wholesale_price = db.Column(N18_2, nullable=True)  # Prix grossiste
@@ -1248,11 +1248,11 @@ class PriceListItem(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
     
-    article = db.relationship("Article", backref=db.backref("price_list_items", lazy="select"))
+    stock_item = db.relationship("StockItem", backref=db.backref("price_list_items", lazy="select"))
     
     __table_args__ = (
-        db.UniqueConstraint("price_list_id", "article_id", name="uk_pricelistitem_unique"),
-        db.Index("idx_pricelistitem_article", "article_id"),
+        db.UniqueConstraint("price_list_id", "stock_item_id", name="uk_pricelistitem_unique"),
+        db.Index("idx_pricelistitem_stock_item", "stock_item_id"),
     )
     
     def parse_freebies(self):
@@ -1280,7 +1280,7 @@ class PriceListItem(db.Model):
         return ", ".join([f"{f['quantity']}+{f['free']}" for f in freebies])
     
     def __repr__(self):
-        return f"<PriceListItem price_list={self.price_list_id} article={self.article_id}>"
+        return f"<PriceListItem price_list={self.price_list_id} stock_item={self.stock_item_id}>"
 
 # =========================================================
 # PRÉVISIONS & VENTES — FORECAST

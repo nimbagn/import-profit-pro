@@ -144,28 +144,28 @@
 
 {% block extra_js %}
 <script>
-  // Données des articles disponibles
-  const allArticlesData = {};
-  const selectedArticles = [];
+  // Données des articles de stock disponibles
+  const allStockItemsData = {};
+  const selectedStockItems = [];
   
-  {% if articles %}
-  {% for article in articles %}
-  allArticlesData[{{ article.id }}] = {
-    id: {{ article.id }},
-    name: {{ article.name|tojson }},
-    category: {{ (article.category.name if article.category else 'Sans catégorie')|tojson }},
-    purchase_price: {{ article.purchase_price or 0 }},
-    purchase_currency: {{ (article.purchase_currency or 'USD')|tojson }},
-    unit_weight_kg: {{ article.unit_weight_kg or 0 }}
+  {% if stock_items %}
+  {% for stock_item in stock_items %}
+  allStockItemsData[{{ stock_item.id }}] = {
+    id: {{ stock_item.id }},
+    sku: {{ stock_item.sku|tojson }},
+    name: {{ stock_item.name|tojson }},
+    family: {{ (stock_item.family.name if stock_item.family else 'Sans famille')|tojson }},
+    purchase_price_gnf: {{ stock_item.purchase_price_gnf or 0 }},
+    unit_weight_kg: {{ stock_item.unit_weight_kg or 0 }}
   };
   {% endfor %}
   {% endif %}
   
   {% if price_list and price_list.items %}
-  // Charger les articles existants pour l'édition
+  // Charger les articles de stock existants pour l'édition
   {% for item in price_list.items %}
-  selectedArticles.push({
-    id: {{ item.article_id }},
+  selectedStockItems.push({
+    id: {{ item.stock_item_id }},
     wholesale_price: {{ item.wholesale_price if item.wholesale_price else 'null' }},
     retail_price: {{ item.retail_price if item.retail_price else 'null' }},
     freebies: {{ item.freebies|tojson if item.freebies else 'null' }},
@@ -176,60 +176,55 @@
   
   // Initialiser l'affichage
   document.addEventListener('DOMContentLoaded', function() {
-    renderArticlesTable();
+    renderStockItemsTable();
   });
   
-  function showArticleSelector() {
-    // Construire la liste des catégories uniques
-    const categoriesSet = new Set();
-    for (const articleId in allArticlesData) {
-      const cat = allArticlesData[articleId].category || 'Sans catégorie';
-      categoriesSet.add(cat);
+  function showStockItemSelector() {
+    // Construire la liste des familles uniques
+    const familiesSet = new Set();
+    for (const stockItemId in allStockItemsData) {
+      const fam = allStockItemsData[stockItemId].family || 'Sans famille';
+      familiesSet.add(fam);
     }
-    const categoriesList = Array.from(categoriesSet).sort();
+    const familiesList = Array.from(familiesSet).sort();
     
-    // Construire la liste des devises uniques
-    const currenciesSet = new Set();
-    for (const articleId in allArticlesData) {
-      const curr = allArticlesData[articleId].purchase_currency || 'USD';
-      currenciesSet.add(curr);
-    }
-    const currenciesList = Array.from(currenciesSet).sort();
-    
-    // Créer la liste des articles HTML avec checkboxes
-    let articlesListHtml = '';
-    for (const articleId in allArticlesData) {
-      const article = allArticlesData[articleId];
-      const isSelected = selectedArticles.find(a => a.id == articleId);
+    // Créer la liste des articles de stock HTML avec checkboxes
+    let stockItemsListHtml = '';
+    for (const stockItemId in allStockItemsData) {
+      const stockItem = allStockItemsData[stockItemId];
+      const isSelected = selectedStockItems.find(a => a.id == stockItemId);
       
-      const purchasePrice = article.purchase_price || 0;
-      const purchaseCurrency = article.purchase_currency || 'USD';
-      const unitWeight = article.unit_weight_kg || 0;
-      const category = article.category || 'Sans catégorie';
+      const purchasePrice = stockItem.purchase_price_gnf || 0;
+      const unitWeight = stockItem.unit_weight_kg || 0;
+      const family = stockItem.family || 'Sans famille';
+      const sku = stockItem.sku || '';
       
-      articlesListHtml += `
-        <div class="article-option" data-article-id="${articleId}" 
+      stockItemsListHtml += `
+        <div class="stock-item-option" data-stock-item-id="${stockItemId}" 
              style="padding: 1rem; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s; background: var(--white); ${isSelected ? 'border-color: var(--color-primary); background: rgba(0,56,101,0.05);' : ''}"
              onmouseover="if (!this.querySelector('input[type=checkbox]').checked) { this.style.borderColor='var(--color-primary)'; this.style.background='rgba(0,56,101,0.02)'; }"
              onmouseout="if (!this.querySelector('input[type=checkbox]').checked) { this.style.borderColor='var(--gray-200)'; this.style.background='var(--white)'; }"
-             onclick="toggleArticleSelection(${articleId}, this)">
+             onclick="toggleStockItemSelection(${stockItemId}, this)">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <input type="checkbox" ${isSelected ? 'checked' : ''} 
-                   onclick="event.stopPropagation(); toggleArticleSelection(${articleId}, this.closest('.article-option'))"
+                   onclick="event.stopPropagation(); toggleStockItemSelection(${stockItemId}, this.closest('.stock-item-option'))"
                    style="width: 20px; height: 20px; cursor: pointer;">
             <div style="flex: 1;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                 <div style="flex: 1;">
                   <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1rem;">
-                    ${article.name}
+                    ${stockItem.name}
                   </div>
+                  ${sku ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                    <i class="fas fa-barcode me-1"></i>SKU: ${sku}
+                  </div>` : ''}
                   <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                    <i class="fas fa-tag me-1"></i>${category}
+                    <i class="fas fa-tag me-1"></i>${family}
                   </div>
                 </div>
                 <div style="text-align: right; margin-left: 1rem;">
                   <div style="font-weight: 600; color: var(--color-primary); font-size: 1rem;">
-                    ${purchasePrice.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${purchaseCurrency}
+                    ${purchasePrice.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} GNF
                   </div>
                   ${unitWeight > 0 ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
                     <i class="fas fa-weight me-1"></i>${unitWeight} kg
@@ -243,21 +238,21 @@
     }
     
     // Supprimer le modal existant s'il y en a un
-    const existingModal = document.getElementById('articleSelectorModal');
+    const existingModal = document.getElementById('stockItemSelectorModal');
     if (existingModal) existingModal.remove();
     
     // Créer le modal
     const modal = document.createElement('div');
-    modal.id = 'articleSelectorModal';
+    modal.id = 'stockItemSelectorModal';
     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
     
     modal.innerHTML = `
       <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 800px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h3 style="margin: 0; color: var(--color-primary); font-size: 1.5rem;">
-            <i class="fas fa-box-open me-2"></i>Sélectionner les Articles
+            <i class="fas fa-box-open me-2"></i>Sélectionner les Articles de Stock
           </h3>
-          <button onclick="document.getElementById('articleSelectorModal').remove()" 
+          <button onclick="document.getElementById('stockItemSelectorModal').remove()" 
                   style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem 0.5rem;"
                   title="Fermer">
             <i class="fas fa-times"></i>
@@ -270,33 +265,23 @@
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
               <i class="fas fa-search me-1"></i>Recherche
             </label>
-            <input type="text" id="articleSearch" placeholder="Nom d'article..." 
+            <input type="text" id="stockItemSearch" placeholder="Nom ou SKU..." 
                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem;"
-                   onkeyup="filterArticles()">
+                   onkeyup="filterStockItems()">
           </div>
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
-              <i class="fas fa-tags me-1"></i>Catégorie
+              <i class="fas fa-tags me-1"></i>Famille
             </label>
-            <select id="categoryFilter" onchange="filterArticles()"
+            <select id="familyFilter" onchange="filterStockItems()"
                     style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
-              <option value="">Toutes les catégories</option>
-              ${categoriesList.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+              <option value="">Toutes les familles</option>
+              ${familiesList.map(fam => `<option value="${fam}">${fam}</option>`).join('')}
             </select>
           </div>
         </div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-          <div>
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">
-              <i class="fas fa-coins me-1"></i>Devise d'achat
-            </label>
-            <select id="currencyFilter" onchange="filterArticles()"
-                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
-              <option value="">Toutes les devises</option>
-              ${currenciesList.map(curr => `<option value="${curr}">${curr}</option>`).join('')}
-            </select>
-          </div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
             <button onclick="selectAllVisible()" 
                     style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--text-primary); cursor: pointer; font-weight: 500; font-size: 0.95rem;"
@@ -319,21 +304,21 @@
         <!-- Compteur de résultats -->
         <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.9rem; color: var(--text-secondary);">
           <i class="fas fa-info-circle me-1"></i>
-          <span id="articlesCount">${Object.keys(allArticlesData).length}</span> article(s) disponible(s) | 
-          <span id="selectedCount" style="font-weight: 600; color: var(--color-primary);">${selectedArticles.length}</span> sélectionné(s)
+          <span id="stockItemsCount">${Object.keys(allStockItemsData).length}</span> article(s) de stock disponible(s) | 
+          <span id="selectedCount" style="font-weight: 600; color: var(--color-primary);">${selectedStockItems.length}</span> sélectionné(s)
         </div>
         
-        <div id="articlesList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 8px; padding: 0.5rem;">
-          ${articlesListHtml || '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Aucun article disponible</p>'}
+        <div id="stockItemsList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 8px; padding: 0.5rem;">
+          ${stockItemsListHtml || '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Aucun article de stock disponible</p>'}
         </div>
         
         <div style="margin-top: 1.5rem; text-align: right;">
-          <button onclick="applyArticleSelection()" 
+          <button onclick="applyStockItemSelection()" 
                   class="btn-hl btn-hl-primary"
                   style="padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">
             <i class="fas fa-check me-2"></i>Valider la Sélection
           </button>
-          <button onclick="document.getElementById('articleSelectorModal').remove()" 
+          <button onclick="document.getElementById('stockItemSelectorModal').remove()" 
                   class="btn-hl btn-hl-secondary"
                   style="padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; margin-left: 0.5rem;">
             Annuler
@@ -358,25 +343,25 @@
     }
   }
   
-  function toggleArticleSelection(articleId, element) {
+  function toggleStockItemSelection(stockItemId, element) {
     const checkbox = element.querySelector('input[type=checkbox]');
     const isChecked = checkbox.checked;
     
     if (isChecked) {
       // Désélectionner
       checkbox.checked = false;
-      const index = selectedArticles.findIndex(a => a.id == articleId);
+      const index = selectedStockItems.findIndex(a => a.id == stockItemId);
       if (index > -1) {
-        selectedArticles.splice(index, 1);
+        selectedStockItems.splice(index, 1);
       }
       element.style.borderColor = 'var(--gray-200)';
       element.style.background = 'var(--white)';
     } else {
       // Sélectionner
       checkbox.checked = true;
-      if (!selectedArticles.find(a => a.id == articleId)) {
-        selectedArticles.push({
-          id: articleId,
+      if (!selectedStockItems.find(a => a.id == stockItemId)) {
+        selectedStockItems.push({
+          id: stockItemId,
           wholesale_price: null,
           retail_price: null,
           freebies: null,
@@ -391,133 +376,126 @@
   }
   
   function selectAllVisible() {
-    const modal = document.getElementById('articleSelectorModal');
+    const modal = document.getElementById('stockItemSelectorModal');
     if (!modal) return;
     
-    const visibleOptions = modal.querySelectorAll('.article-option[style*="block"], .article-option:not([style*="none"])');
+    const visibleOptions = modal.querySelectorAll('.stock-item-option[style*="block"], .stock-item-option:not([style*="none"])');
     visibleOptions.forEach(opt => {
       const checkbox = opt.querySelector('input[type=checkbox]');
       if (!checkbox.checked) {
-        const articleId = parseInt(opt.dataset.articleId);
-        toggleArticleSelection(articleId, opt);
+        const stockItemId = parseInt(opt.dataset.stockItemId);
+        toggleStockItemSelection(stockItemId, opt);
       }
     });
   }
   
   function deselectAllVisible() {
-    const modal = document.getElementById('articleSelectorModal');
+    const modal = document.getElementById('stockItemSelectorModal');
     if (!modal) return;
     
-    const visibleOptions = modal.querySelectorAll('.article-option[style*="block"], .article-option:not([style*="none"])');
+    const visibleOptions = modal.querySelectorAll('.stock-item-option[style*="block"], .stock-item-option:not([style*="none"])');
     visibleOptions.forEach(opt => {
       const checkbox = opt.querySelector('input[type=checkbox]');
       if (checkbox.checked) {
-        const articleId = parseInt(opt.dataset.articleId);
-        toggleArticleSelection(articleId, opt);
+        const stockItemId = parseInt(opt.dataset.stockItemId);
+        toggleStockItemSelection(stockItemId, opt);
       }
     });
   }
   
-  function filterArticles() {
-    const modal = document.getElementById('articleSelectorModal');
+  function filterStockItems() {
+    const modal = document.getElementById('stockItemSelectorModal');
     if (!modal) return;
     
-    const searchInput = modal.querySelector('#articleSearch');
-    const categoryFilter = modal.querySelector('#categoryFilter');
-    const currencyFilter = modal.querySelector('#currencyFilter');
-    const articlesCount = modal.querySelector('#articlesCount');
+    const searchInput = modal.querySelector('#stockItemSearch');
+    const familyFilter = modal.querySelector('#familyFilter');
+    const stockItemsCount = modal.querySelector('#stockItemsCount');
     const selectedCount = modal.querySelector('#selectedCount');
     
     const searchTerm = (searchInput ? searchInput.value : '').toLowerCase();
-    const categoryValue = categoryFilter ? categoryFilter.value : '';
-    const currencyValue = currencyFilter ? currencyFilter.value : '';
+    const familyValue = familyFilter ? familyFilter.value : '';
     
-    const options = modal.querySelectorAll('.article-option');
+    const options = modal.querySelectorAll('.stock-item-option');
     let visibleCount = 0;
     
     options.forEach(opt => {
-      const articleId = opt.dataset.articleId;
-      const article = allArticlesData[articleId];
+      const stockItemId = opt.dataset.stockItemId;
+      const stockItem = allStockItemsData[stockItemId];
       
-      if (!article) {
+      if (!stockItem) {
         opt.style.display = 'none';
         return;
       }
       
-      // Filtrer par recherche (nom)
+      // Filtrer par recherche (nom ou SKU)
       const matchesSearch = !searchTerm || 
-        article.name.toLowerCase().includes(searchTerm);
+        stockItem.name.toLowerCase().includes(searchTerm) ||
+        (stockItem.sku && stockItem.sku.toLowerCase().includes(searchTerm));
       
-      // Filtrer par catégorie
-      const matchesCategory = !categoryValue || 
-        (article.category || 'Sans catégorie') === categoryValue;
+      // Filtrer par famille
+      const matchesFamily = !familyValue || 
+        (stockItem.family || 'Sans famille') === familyValue;
       
-      // Filtrer par devise
-      const matchesCurrency = !currencyValue || 
-        (article.purchase_currency || 'USD') === currencyValue;
-      
-      const shouldShow = matchesSearch && matchesCategory && matchesCurrency;
+      const shouldShow = matchesSearch && matchesFamily;
       opt.style.display = shouldShow ? 'block' : 'none';
       
       if (shouldShow) visibleCount++;
     });
     
     // Mettre à jour les compteurs
-    if (articlesCount) {
-      articlesCount.textContent = visibleCount;
+    if (stockItemsCount) {
+      stockItemsCount.textContent = visibleCount;
     }
     if (selectedCount) {
-      selectedCount.textContent = selectedArticles.length;
+      selectedCount.textContent = selectedStockItems.length;
     }
     
     // Afficher un message si aucun résultat
-    const articlesList = modal.querySelector('#articlesList');
-    if (articlesList && visibleCount === 0) {
-      const noResults = articlesList.querySelector('.no-results-message');
+    const stockItemsList = modal.querySelector('#stockItemsList');
+    if (stockItemsList && visibleCount === 0) {
+      const noResults = stockItemsList.querySelector('.no-results-message');
       if (!noResults) {
         const msg = document.createElement('p');
         msg.className = 'no-results-message';
         msg.style.cssText = 'text-align: center; color: var(--text-muted); padding: 2rem; font-style: italic;';
-        msg.textContent = 'Aucun article ne correspond aux critères de recherche.';
-        articlesList.appendChild(msg);
+        msg.textContent = 'Aucun article de stock ne correspond aux critères de recherche.';
+        stockItemsList.appendChild(msg);
       }
     } else {
-      const noResults = articlesList ? articlesList.querySelector('.no-results-message') : null;
+      const noResults = stockItemsList ? stockItemsList.querySelector('.no-results-message') : null;
       if (noResults) noResults.remove();
     }
   }
   
   function resetFilters() {
-    const modal = document.getElementById('articleSelectorModal');
+    const modal = document.getElementById('stockItemSelectorModal');
     if (!modal) return;
     
-    const searchInput = modal.querySelector('#articleSearch');
-    const categoryFilter = modal.querySelector('#categoryFilter');
-    const currencyFilter = modal.querySelector('#currencyFilter');
+    const searchInput = modal.querySelector('#stockItemSearch');
+    const familyFilter = modal.querySelector('#familyFilter');
     
     if (searchInput) searchInput.value = '';
-    if (categoryFilter) categoryFilter.value = '';
-    if (currencyFilter) currencyFilter.value = '';
+    if (familyFilter) familyFilter.value = '';
     
-    filterArticles();
+    filterStockItems();
   }
   
   function updateSelectionCount() {
-    const modal = document.getElementById('articleSelectorModal');
+    const modal = document.getElementById('stockItemSelectorModal');
     if (modal) {
       const selectedCount = modal.querySelector('#selectedCount');
       if (selectedCount) {
-        selectedCount.textContent = selectedArticles.length;
+        selectedCount.textContent = selectedStockItems.length;
       }
     }
   }
   
-  function applyArticleSelection() {
-    renderArticlesTable();
-    document.getElementById('articleSelectorModal').remove();
+  function applyStockItemSelection() {
+    renderStockItemsTable();
+    document.getElementById('stockItemSelectorModal').remove();
   }
   
-  function renderArticlesTable() {
+  function renderStockItemsTable() {
     const tableBody = document.getElementById('articlesTableBody');
     const tableContainer = document.getElementById('articlesTableContainer');
     const noArticlesMessage = document.getElementById('noArticlesMessage');
@@ -529,7 +507,7 @@
     // Vider le tableau
     tableBody.innerHTML = '';
     
-    if (selectedArticles.length === 0) {
+    if (selectedStockItems.length === 0) {
       tableContainer.style.display = 'none';
       noArticlesMessage.style.display = 'block';
       selectedArticlesInfo.style.display = 'none';
@@ -539,40 +517,41 @@
     tableContainer.style.display = 'block';
     noArticlesMessage.style.display = 'none';
     selectedArticlesInfo.style.display = 'block';
-    selectedArticlesCount.textContent = selectedArticles.length;
+    selectedArticlesCount.textContent = selectedStockItems.length;
     
-    // Ajouter chaque article sélectionné au tableau
-    selectedArticles.forEach((selectedArticle, index) => {
-      const article = allArticlesData[selectedArticle.id];
-      if (!article) return;
+    // Ajouter chaque article de stock sélectionné au tableau
+    selectedStockItems.forEach((selectedStockItem, index) => {
+      const stockItem = allStockItemsData[selectedStockItem.id];
+      if (!stockItem) return;
       
       const row = document.createElement('tr');
       row.className = 'article-row-selected';
       row.innerHTML = `
         <td style="text-align: center;">
-          <button type="button" class="remove-article-btn" onclick="removeArticle(${index})" title="Retirer cet article">
+          <button type="button" class="remove-article-btn" onclick="removeStockItem(${index})" title="Retirer cet article">
             <i class="fas fa-times"></i>
           </button>
         </td>
         <td>
-          <strong>${article.name}</strong>
+          <strong>${stockItem.name}</strong>
+          ${stockItem.sku ? `<br><small style="color: var(--text-muted);">SKU: ${stockItem.sku}</small>` : ''}
           <br>
-          <small style="color: var(--text-muted);">${article.category}</small>
-          <input type="hidden" name="article_ids[]" value="${article.id}">
+          <small style="color: var(--text-muted);">${stockItem.family}</small>
+          <input type="hidden" name="stock_item_ids[]" value="${stockItem.id}">
         </td>
         <td>
           <input type="number" name="wholesale_prices[]" 
-                 value="${selectedArticle.wholesale_price || ''}"
+                 value="${selectedStockItem.wholesale_price || ''}"
                  step="0.01" min="0" placeholder="0.00" style="text-align: right; width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
         </td>
         <td>
           <input type="number" name="retail_prices[]"
-                 value="${selectedArticle.retail_price || ''}"
+                 value="${selectedStockItem.retail_price || ''}"
                  step="0.01" min="0" placeholder="0.00" style="text-align: right; width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
         </td>
         <td>
           <input type="text" name="freebies[]"
-                 value="${selectedArticle.freebies || ''}"
+                 value="${selectedStockItem.freebies || ''}"
                  placeholder="25+1,50+2,100+5" style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
           <div class="freebies-help">
             Format: quantité+gratuit (ex: 25+1,50+2)
@@ -580,7 +559,7 @@
         </td>
         <td>
           <input type="text" name="notes[]"
-                 value="${selectedArticle.notes || ''}"
+                 value="${selectedStockItem.notes || ''}"
                  placeholder="Notes..." style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
         </td>
       `;
@@ -589,9 +568,9 @@
     });
   }
   
-  function removeArticle(index) {
-    selectedArticles.splice(index, 1);
-    renderArticlesTable();
+  function removeStockItem(index) {
+    selectedStockItems.splice(index, 1);
+    renderStockItemsTable();
   }
 </script>
 {% endblock %}
@@ -667,9 +646,9 @@
             <i class="fas fa-box me-2"></i>
             Articles et Prix
           </h3>
-          <button type="button" onclick="showArticleSelector()" class="btn-hl btn-hl-primary" style="white-space: nowrap;">
+          <button type="button" onclick="showStockItemSelector()" class="btn-hl btn-hl-primary" style="white-space: nowrap;">
             <i class="fas fa-plus me-2"></i>
-            Ajouter des Articles
+            Ajouter des Articles de Stock
           </button>
         </div>
         
@@ -681,9 +660,9 @@
           <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.5;"></i>
           <p style="font-size: 1.1rem; margin-bottom: var(--space-md);">Aucun article sélectionné</p>
           <p style="margin-bottom: var(--space-lg);">Cliquez sur "Ajouter des Articles" pour commencer</p>
-          <button type="button" onclick="showArticleSelector()" class="btn-hl btn-hl-primary">
+          <button type="button" onclick="showStockItemSelector()" class="btn-hl btn-hl-primary">
             <i class="fas fa-plus me-2"></i>
-            Ajouter des Articles
+            Ajouter des Articles de Stock
           </button>
         </div>
         

@@ -9,7 +9,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from datetime import datetime, date
 from decimal import Decimal
-from models import db, PriceList, PriceListItem, Article, Category
+from models import db, PriceList, PriceListItem, StockItem, Family
 from auth import has_permission
 
 # Créer le blueprint
@@ -42,26 +42,26 @@ def detail(price_list_id):
     
     price_list = PriceList.query.get_or_404(price_list_id)
     
-    # Charger les items avec les articles, groupés par catégorie
+    # Charger les items avec les articles de stock, groupés par famille
     items = PriceListItem.query.filter_by(price_list_id=price_list_id)\
-        .join(Article).outerjoin(Category).order_by(Category.name, Article.name).all()
+        .join(StockItem).outerjoin(Family).order_by(Family.name, StockItem.name).all()
     
-    # Grouper les items par catégorie
-    items_by_category = {}
+    # Grouper les items par famille
+    items_by_family = {}
     for item in items:
-        category_name = item.article.category.name if item.article.category else 'Sans catégorie'
-        if category_name not in items_by_category:
-            items_by_category[category_name] = []
-        items_by_category[category_name].append(item)
+        family_name = item.stock_item.family.name if item.stock_item and item.stock_item.family else 'Sans famille'
+        if family_name not in items_by_family:
+            items_by_family[family_name] = []
+        items_by_family[family_name].append(item)
     
-    # Récupérer toutes les catégories pour les filtres
-    categories = Category.query.order_by(Category.name).all()
+    # Récupérer toutes les familles pour les filtres
+    families = Family.query.order_by(Family.name).all()
     
     return render_template('price_lists/detail.html', 
                          price_list=price_list, 
                          items=items,
-                         items_by_category=items_by_category,
-                         categories=categories)
+                         items_by_family=items_by_family,
+                         families=families)
 
 # =========================================================
 # ROUTES - CRÉATION / ÉDITION
@@ -109,19 +109,19 @@ def new():
             db.session.add(price_list)
             db.session.flush()  # Pour obtenir l'ID
             
-            # Traiter les articles
-            article_ids = request.form.getlist('article_ids[]')
+            # Traiter les articles de stock
+            stock_item_ids = request.form.getlist('stock_item_ids[]')
             wholesale_prices = request.form.getlist('wholesale_prices[]')
             retail_prices = request.form.getlist('retail_prices[]')
             freebies_list = request.form.getlist('freebies[]')
             notes_list = request.form.getlist('notes[]')
             
-            for i, article_id in enumerate(article_ids):
-                if not article_id:
+            for i, stock_item_id in enumerate(stock_item_ids):
+                if not stock_item_id:
                     continue
                 
                 try:
-                    article_id = int(article_id)
+                    stock_item_id = int(stock_item_id)
                     wholesale_price = Decimal(wholesale_prices[i]) if wholesale_prices[i] else None
                     retail_price = Decimal(retail_prices[i]) if retail_prices[i] else None
                     freebies = freebies_list[i].strip() if i < len(freebies_list) and freebies_list[i] else None
@@ -131,7 +131,7 @@ def new():
                     if wholesale_price or retail_price:
                         item = PriceListItem(
                             price_list_id=price_list.id,
-                            article_id=article_id,
+                            stock_item_id=stock_item_id,
                             wholesale_price=wholesale_price,
                             retail_price=retail_price,
                             freebies=freebies,
@@ -151,20 +151,20 @@ def new():
             return render_template('price_lists/form.html')
     
     # GET - Afficher le formulaire
-    articles = Article.query.filter_by(is_active=True).outerjoin(Category).order_by(Category.name, Article.name).all()
+    stock_items = StockItem.query.filter_by(is_active=True).outerjoin(Family).order_by(Family.name, StockItem.name).all()
     
-    # Grouper les articles par catégorie
-    articles_by_category = {}
-    for article in articles:
-        category_name = article.category.name if article.category else 'Sans catégorie'
-        if category_name not in articles_by_category:
-            articles_by_category[category_name] = []
-        articles_by_category[category_name].append(article)
+    # Grouper les articles de stock par famille
+    stock_items_by_family = {}
+    for stock_item in stock_items:
+        family_name = stock_item.family.name if stock_item.family else 'Sans famille'
+        if family_name not in stock_items_by_family:
+            stock_items_by_family[family_name] = []
+        stock_items_by_family[family_name].append(stock_item)
     
     return render_template('price_lists/form.html', 
                          price_list=None, 
-                         articles=articles,
-                         articles_by_category=articles_by_category)
+                         stock_items=stock_items,
+                         stock_items_by_family=stock_items_by_family)
 
 @price_lists_bp.route('/<int:price_list_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -209,19 +209,19 @@ def edit(price_list_id):
             # Supprimer les anciens items
             PriceListItem.query.filter_by(price_list_id=price_list.id).delete()
             
-            # Traiter les nouveaux articles
-            article_ids = request.form.getlist('article_ids[]')
+            # Traiter les nouveaux articles de stock
+            stock_item_ids = request.form.getlist('stock_item_ids[]')
             wholesale_prices = request.form.getlist('wholesale_prices[]')
             retail_prices = request.form.getlist('retail_prices[]')
             freebies_list = request.form.getlist('freebies[]')
             notes_list = request.form.getlist('notes[]')
             
-            for i, article_id in enumerate(article_ids):
-                if not article_id:
+            for i, stock_item_id in enumerate(stock_item_ids):
+                if not stock_item_id:
                     continue
                 
                 try:
-                    article_id = int(article_id)
+                    stock_item_id = int(stock_item_id)
                     wholesale_price = Decimal(wholesale_prices[i]) if wholesale_prices[i] else None
                     retail_price = Decimal(retail_prices[i]) if retail_prices[i] else None
                     freebies = freebies_list[i].strip() if i < len(freebies_list) and freebies_list[i] else None
@@ -231,7 +231,7 @@ def edit(price_list_id):
                     if wholesale_price or retail_price:
                         item = PriceListItem(
                             price_list_id=price_list.id,
-                            article_id=article_id,
+                            stock_item_id=stock_item_id,
                             wholesale_price=wholesale_price,
                             retail_price=retail_price,
                             freebies=freebies,
@@ -251,21 +251,21 @@ def edit(price_list_id):
             return render_template('price_lists/form.html', price_list=price_list)
     
     # GET - Afficher le formulaire
-    articles = Article.query.filter_by(is_active=True).outerjoin(Category).order_by(Category.name, Article.name).all()
+    stock_items = StockItem.query.filter_by(is_active=True).outerjoin(Family).order_by(Family.name, StockItem.name).all()
     
-    # Grouper les articles par catégorie
-    articles_by_category = {}
-    for article in articles:
-        category_name = article.category.name if article.category else 'Sans catégorie'
-        if category_name not in articles_by_category:
-            articles_by_category[category_name] = []
-        articles_by_category[category_name].append(article)
+    # Grouper les articles de stock par famille
+    stock_items_by_family = {}
+    for stock_item in stock_items:
+        family_name = stock_item.family.name if stock_item.family else 'Sans famille'
+        if family_name not in stock_items_by_family:
+            stock_items_by_family[family_name] = []
+        stock_items_by_family[family_name].append(stock_item)
     
-    existing_items = {item.article_id: item for item in price_list.items}
+    existing_items = {item.stock_item_id: item for item in price_list.items}
     return render_template('price_lists/form.html', 
                          price_list=price_list, 
-                         articles=articles,
-                         articles_by_category=articles_by_category,
+                         stock_items=stock_items,
+                         stock_items_by_family=stock_items_by_family,
                          existing_items=existing_items)
 
 @price_lists_bp.route('/<int:price_list_id>/delete', methods=['POST'])
