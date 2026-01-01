@@ -40,6 +40,10 @@
     <link href="{{ url_for('static', filename='css/promotion_responsive.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/promotion_ergonomic.css') }}" rel="stylesheet">
     {% endif %}
+    <!-- CSS Responsive Stocks Mobile - Optimisé pour les magasiniers -->
+    {% if request.endpoint and 'stocks' in request.endpoint %}
+    <link href="{{ url_for('static', filename='css/stocks_mobile_responsive.css') }}" rel="stylesheet">
+    {% endif %}
     
     {% block extra_css %}{% endblock %}
     
@@ -1195,5 +1199,10 @@
     <script src="{{ url_for('static', filename='js/ux/animations.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
+    
+    <!-- JavaScript Responsive Stocks Mobile - Conversion tableaux en cartes -->
+    {% if request.endpoint and 'stocks' in request.endpoint %}
+    <script src="{{ url_for('static', filename='js/stocks_mobile_table_to_cards.js') }}"></script>
+    {% endif %}
 </body>
 </html>
