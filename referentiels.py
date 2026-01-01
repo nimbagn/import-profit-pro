@@ -770,12 +770,37 @@ def stock_items_import():
             sku_col = 'sku'
             name_col = next((col for col in ['nom', 'name', 'article', 'article_name'] if col in df.columns), None)
             family_col = next((col for col in ['famille', 'family', 'famille_name', 'family_name'] if col in df.columns), None)
-            price_col = next((col for col in ['prix', 'price', 'purchase_price_gnf', 'prix_achat', 'prix_d_achat'] if col in df.columns), None)
+            # Recherche plus large pour la colonne de prix (avec plus de variantes)
+            price_variants = [
+                'prix', 'price', 'purchase_price_gnf', 'prix_achat', 'prix_d_achat', 
+                'prix_achat_gnf', 'prix_gnf', 'price_gnf', 'prix_unitaire', 'prix_unitaire_gnf',
+                'prix_achat_unitaire', 'prix_achat_unitaire_gnf', 'prix_dachat', 'prix_d_achat_gnf'
+            ]
+            price_col = next((col for col in price_variants if col in df.columns), None)
+            # Si pas trouvé, chercher des colonnes qui contiennent "prix" ou "price"
+            if not price_col:
+                for col in df.columns:
+                    if 'prix' in col.lower() or 'price' in col.lower():
+                        price_col = col
+                        break
             weight_col = next((col for col in ['poids', 'weight', 'unit_weight_kg', 'poids_kg', 'poids_en_kg'] if col in df.columns), None)
             description_col = next((col for col in ['description', 'desc', 'description_article'] if col in df.columns), None)
             min_depot_col = next((col for col in ['stock_min_depot', 'min_stock_depot', 'seuil_depot', 'stock_minimum_depot'] if col in df.columns), None)
             min_vehicle_col = next((col for col in ['stock_min_vehicle', 'min_stock_vehicle', 'seuil_vehicle', 'stock_minimum_vehicle'] if col in df.columns), None)
             active_col = next((col for col in ['actif', 'active', 'is_active'] if col in df.columns), None)
+            
+            # Debug: Afficher les colonnes détectées
+            print(f"🔍 Colonnes détectées:")
+            print(f"   - SKU: {sku_col}")
+            print(f"   - Nom: {name_col}")
+            print(f"   - Famille: {family_col}")
+            print(f"   - Prix: {price_col}")
+            print(f"   - Poids: {weight_col}")
+            print(f"   - Description: {description_col}")
+            print(f"   - Stock Min Dépôt: {min_depot_col}")
+            print(f"   - Stock Min Véhicule: {min_vehicle_col}")
+            print(f"   - Actif: {active_col}")
+            print(f"   - Colonnes disponibles: {list(df.columns)}")
             
             # Mode de traitement
             update_mode = request.form.get('update_mode', 'skip')  # 'skip', 'update', 'create_new'
@@ -783,6 +808,16 @@ def stock_items_import():
             success_count = 0
             error_count = 0
             errors = []
+            
+            # Set pour tracker les SKUs déjà traités dans ce fichier (éviter les doublons dans le fichier)
+            processed_skus_in_file = set()
+            
+            # Vérifier les doublons dans le fichier avant traitement
+            sku_counts = df[sku_col].value_counts()
+            duplicate_skus_in_file = sku_counts[sku_counts > 1].index.tolist()
+            if duplicate_skus_in_file:
+                flash(f'⚠️  Attention: {len(duplicate_skus_in_file)} SKU(s) en double détecté(s) dans le fichier. Seule la première occurrence sera traitée.', 'warning')
+                print(f"⚠️  SKUs en double dans le fichier: {duplicate_skus_in_file}")
             
             # Traiter chaque ligne
             for idx, row in df.iterrows():
@@ -793,6 +828,18 @@ def stock_items_import():
                         error_count += 1
                         errors.append(f"Ligne {idx + 2}: SKU manquant")
                         continue
+                    
+                    # Normaliser le SKU (uppercase, trim)
+                    sku = sku.upper().strip()
+                    
+                    # Vérifier si ce SKU a déjà été traité dans ce fichier (doublon dans le fichier)
+                    if sku in processed_skus_in_file:
+                        error_count += 1
+                        errors.append(f"Ligne {idx + 2}: SKU '{sku}' déjà traité dans ce fichier (doublon ignoré)")
+                        continue
+                    
+                    # Marquer ce SKU comme traité
+                    processed_skus_in_file.add(sku)
                     
                     name = str(row[name_col]).strip() if name_col and pd.notna(row.get(name_col)) else None
                     if not name or name == 'nan':
@@ -824,9 +871,22 @@ def stock_items_import():
                     purchase_price_gnf = Decimal('0')
                     if price_col and pd.notna(row.get(price_col)):
                         try:
-                            purchase_price_gnf = Decimal(str(row[price_col]))
-                        except:
+                            price_value = row[price_col]
+                            # Nettoyer la valeur (enlever les espaces, virgules, etc.)
+                            if isinstance(price_value, str):
+                                price_value = price_value.strip().replace(',', '.').replace(' ', '')
+                            # Convertir en Decimal
+                            purchase_price_gnf = Decimal(str(price_value))
+                            if purchase_price_gnf < 0:
+                                purchase_price_gnf = Decimal('0')
+                        except (ValueError, TypeError, Exception) as e:
+                            print(f"⚠️  Erreur conversion prix ligne {idx + 2}: {e}, valeur: {row.get(price_col)}")
                             purchase_price_gnf = Decimal('0')
+                    else:
+                        if price_col:
+                            print(f"⚠️  Prix vide ou invalide ligne {idx + 2}, colonne: {price_col}, valeur: {row.get(price_col)}")
+                        else:
+                            print(f"⚠️  Colonne prix non trouvée. Colonnes disponibles: {list(df.columns)}")
                     
                     # Poids
                     unit_weight_kg = Decimal('0')
@@ -863,8 +923,9 @@ def stock_items_import():
                         active_val = str(row[active_col]).strip().lower()
                         is_active = active_val in ['oui', 'yes', 'true', '1', 'actif', 'active']
                     
-                    # Vérifier si l'article existe déjà (par SKU)
-                    existing = StockItem.query.filter_by(sku=sku).first()
+                    # Vérifier si l'article existe déjà (par SKU) - recherche insensible à la casse
+                    from sqlalchemy import func
+                    existing = StockItem.query.filter(func.upper(StockItem.sku) == sku).first()
                     
                     if existing:
                         if update_mode == 'skip':
