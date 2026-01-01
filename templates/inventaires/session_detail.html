@@ -416,7 +416,7 @@
       </div>
       <div class="info-item">
         <div class="info-label">Valeur écarts</div>
-        <div class="info-value" style="color: {% if total_value_variances > 0 %}#10b981{% elif total_value_variances < 0 %}#ef4444{% else %}var(--text-primary){% endif %};">
+        <div class="info-value" style="color: {% if total_value_variances == 0 %}#10b981{% elif total_value_variances > 0 %}#ef4444{% else %}#ea580c{% endif %};">
           {{ total_value_variances|format_number(0) }} GNF
         </div>
       </div>
@@ -535,8 +535,8 @@
           datasets: [{
             label: 'Écarts',
             data: topVariances.map(d => d.variance),
-            backgroundColor: topVariances.map(d => d.variance > 0 ? '#10b981' : d.variance < 0 ? '#ef4444' : '#6b7280'),
-            borderColor: topVariances.map(d => d.variance > 0 ? '#059669' : d.variance < 0 ? '#dc2626' : '#4b5563'),
+            backgroundColor: topVariances.map(d => d.variance == 0 ? '#10b981' : d.variance > 0 ? '#ef4444' : '#ea580c'),
+            borderColor: topVariances.map(d => d.variance == 0 ? '#059669' : d.variance > 0 ? '#dc2626' : '#c2410c'),
             borderWidth: 1
           }]
         },
@@ -624,9 +624,9 @@
           <label class="form-hl-label">Type d'écart</label>
           <select name="variance_filter" class="form-hl-select">
             <option value="">Tous les écarts</option>
-            <option value="positive" {% if variance_filter == 'positive' %}selected{% endif %}>Surplus uniquement</option>
-            <option value="negative" {% if variance_filter == 'negative' %}selected{% endif %}>Manquants uniquement</option>
-            <option value="zero" {% if variance_filter == 'zero' %}selected{% endif %}>Conformes uniquement</option>
+            <option value="positive" {% if variance_filter == 'positive' %}selected{% endif %}>Manquants uniquement (rouge)</option>
+            <option value="negative" {% if variance_filter == 'negative' %}selected{% endif %}>Surplus uniquement (orange)</option>
+            <option value="zero" {% if variance_filter == 'zero' %}selected{% endif %}>Conformes uniquement (vert)</option>
           </select>
         </div>
         <div class="form-group">
@@ -684,14 +684,14 @@
             <td data-sort-value="{{ detail.system_quantity }}">{{ "{:.2f}".format(detail.system_quantity) }}</td>
             <td data-sort-value="{{ detail.counted_quantity }}">{{ "{:.2f}".format(detail.counted_quantity) }}</td>
             <td data-sort-value="{{ detail.variance }}">
-              <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.875rem; {% if detail.variance > 0 %}background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #10b981;{% elif detail.variance < 0 %}background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #ef4444;{% else %}background: #f3f4f6; color: #6b7280;{% endif %}">
-                {% if detail.variance > 0 %}<i class="fas fa-arrow-up"></i>{% elif detail.variance < 0 %}<i class="fas fa-arrow-down"></i>{% else %}<i class="fas fa-equals"></i>{% endif %}
+              <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.875rem; {% if detail.variance == 0 %}background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #10b981;{% elif detail.variance > 0 %}background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #ef4444;{% else %}background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #ea580c;{% endif %}">
+                {% if detail.variance == 0 %}<i class="fas fa-check-circle"></i>{% elif detail.variance > 0 %}<i class="fas fa-exclamation-triangle"></i>{% else %}<i class="fas fa-plus-circle"></i>{% endif %}
                 {{ "{:+.2f}".format(detail.variance) }}
               </span>
             </td>
             <td data-sort-value="{{ item.value_variance }}">
               {% if item.has_price %}
-              <span style="color: {% if detail.variance > 0 %}#10b981{% elif detail.variance < 0 %}#ef4444{% else %}#6b7280{% endif %}; font-weight: 600;">
+              <span style="color: {% if detail.variance == 0 %}#10b981{% elif detail.variance > 0 %}#ef4444{% else %}#ea580c{% endif %}; font-weight: 600;">
                 {{ item.value_variance|format_number(0) }} GNF
               </span>
               {% else %}
