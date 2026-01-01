@@ -141,8 +141,20 @@
             <td><strong>{{ item.sku }}</strong></td>
             <td>{{ item.name }}</td>
             <td>{{ item.family.name if item.family else '-' }}</td>
-            <td>{{ "{:,.0f}".format(item.purchase_price_gnf) }}</td>
-            <td>{{ "{:.2f}".format(item.unit_weight_kg) }}</td>
+            <td>
+              {% if item.purchase_price_gnf %}
+                {{ "{:,.0f}".format(item.purchase_price_gnf) }} GNF
+              {% else %}
+                <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if item.unit_weight_kg %}
+                {{ "{:.2f}".format(item.unit_weight_kg) }} kg
+              {% else %}
+                <span style="color: var(--text-muted);">-</span>
+              {% endif %}
+            </td>
             <td>
               {% if item.is_active %}
               <span class="badge badge-promo badge-promo-success">Actif</span>
