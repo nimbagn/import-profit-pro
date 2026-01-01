@@ -197,7 +197,11 @@
       <i class="fas fa-box me-2"></i>
       Articles
       </h1>
-    <div style="display: flex; gap: var(--space-sm);">
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+      <a href="{{ url_for('categories_list') }}" class="btn-hl btn-hl-secondary">
+        <i class="fas fa-folder me-2"></i>
+        Catégories
+      </a>
       <a href="{{ url_for('articles_import') }}" class="btn-hl btn-hl-success">
         <i class="fas fa-file-import me-2"></i>
         Importer Excel

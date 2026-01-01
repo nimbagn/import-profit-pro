@@ -12,9 +12,20 @@
           <i class="fas fa-boxes icon-promo"></i>
           Articles de Stock
         </h1>
-        <a href="{{ url_for('referentiels.stock_item_new') }}" class="btn btn-promo btn-promo-primary">
-          <i class="fas fa-plus me-2"></i>Nouvel Article
-        </a>
+        <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+          <a href="{{ url_for('referentiels.stock_items_import') }}" class="btn btn-promo" style="background: #10b981; color: white;">
+            <i class="fas fa-file-import me-2"></i>Importer Excel
+          </a>
+          <a href="{{ url_for('referentiels.stock_items_export_excel', search=search, family=family_filter, status=status_filter) }}" 
+             class="btn btn-promo" 
+             style="background: #3b82f6; color: white;"
+             onclick="showLoading('Export Excel en cours...');">
+            <i class="fas fa-file-excel me-2"></i>Exporter Excel
+          </a>
+          <a href="{{ url_for('referentiels.stock_item_new') }}" class="btn btn-promo btn-promo-primary">
+            <i class="fas fa-plus me-2"></i>Nouvel Article
+          </a>
+        </div>
       </div>
     </div>
 

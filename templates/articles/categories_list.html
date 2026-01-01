@@ -1,0 +1,175 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Catégories d'Articles - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-lg);
+  }
+  
+  .category-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+  }
+  
+  .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+  
+  .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .category-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .category-actions {
+    display: flex;
+    gap: var(--space-xs);
+  }
+  
+  .category-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: var(--space-xxl);
+    color: var(--text-muted);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-folder me-2"></i>
+      Catégories d'Articles
+    </h1>
+    <div style="display: flex; gap: var(--space-sm);">
+      <a href="{{ url_for('articles_list') }}" class="btn-hl btn-hl-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour aux Articles
+      </a>
+      {% if has_permission(current_user, 'articles.create') %}
+      <a href="{{ url_for('category_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouvelle Catégorie
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card-hl">
+    {% if categories %}
+    <div class="categories-grid">
+      {% for item in categories %}
+      <div class="category-card">
+        <div class="category-header">
+          <div>
+            <div class="category-name">
+              <i class="fas fa-folder-open me-2" style="color: var(--color-primary);"></i>
+              {{ item.category.name }}
+            </div>
+          </div>
+          <div class="category-actions">
+            {% if has_permission(current_user, 'articles.update') %}
+            <a href="{{ url_for('category_edit', id=item.category.id) }}" 
+               class="btn-hl btn-hl-sm btn-hl-outline" 
+               title="Modifier">
+              <i class="fas fa-edit"></i>
+            </a>
+            {% endif %}
+            {% if has_permission(current_user, 'articles.delete') %}
+            <form method="POST" 
+                  action="{{ url_for('category_delete', id=item.category.id) }}" 
+                  style="display: inline;"
+                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer la catégorie \'{{ item.category.name }}\' ?');">
+              <button type="submit" 
+                      class="btn-hl btn-hl-sm btn-hl-danger" 
+                      title="Supprimer"
+                      {% if item.articles_count > 0 %}disabled title="Impossible de supprimer : {{ item.articles_count }} article(s) associé(s)"{% endif %}>
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        <div class="category-stats">
+          <i class="fas fa-box"></i>
+          <span>{{ item.articles_count }} article(s)</span>
+        </div>
+        <div style="margin-top: var(--space-sm); font-size: 0.75rem; color: var(--text-muted);">
+          <i class="fas fa-calendar me-1"></i>
+          Créée le {{ item.category.created_at.strftime('%d/%m/%Y') if item.category.created_at else 'N/A' }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-folder-open" style="font-size: 4rem; color: var(--gray-300); margin-bottom: var(--space-md);"></i>
+      <h3 style="color: var(--text-muted); margin-bottom: var(--space-sm);">Aucune catégorie</h3>
+      <p style="color: var(--text-muted); margin-bottom: var(--space-lg);">
+        Créez votre première catégorie pour organiser vos articles.
+      </p>
+      {% if has_permission(current_user, 'articles.create') %}
+      <a href="{{ url_for('category_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>
+        Créer une Catégorie
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

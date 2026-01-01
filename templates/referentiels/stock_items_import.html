@@ -1,0 +1,313 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Importer Articles de Stock - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-promo {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-promo {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    max-width: 900px;
+  }
+  
+  .upload-area {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xxl);
+    text-align: center;
+    background: var(--white);
+    transition: var(--transition-normal);
+    cursor: pointer;
+  }
+  
+  .upload-area:hover {
+    border-color: var(--color-primary);
+    background: var(--gray-50);
+  }
+  
+  .upload-area.dragover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+  
+  .file-info {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    display: none;
+  }
+  
+  .instructions {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .instructions h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+  }
+  
+  .instructions ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .instructions li {
+    padding: var(--space-sm) 0;
+    padding-left: var(--space-lg);
+    position: relative;
+  }
+  
+  .instructions li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--color-success);
+    font-weight: bold;
+  }
+  
+  .example-table {
+    margin-top: var(--space-md);
+    overflow-x: auto;
+  }
+  
+  .example-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .example-table th,
+  .example-table td {
+    padding: var(--space-sm);
+    border: 1px solid var(--gray-200);
+    text-align: left;
+  }
+  
+  .example-table th {
+    background: var(--gray-100);
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-promo">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1>
+        <i class="fas fa-file-import icon-promo"></i>
+        Importer des Articles de Stock depuis Excel/CSV
+      </h1>
+      <a href="{{ url_for('referentiels.stock_items_list') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour à la liste
+      </a>
+    </div>
+  </div>
+
+  <div class="card-promo section-spacing">
+    <div class="instructions">
+      <h3><i class="fas fa-info-circle me-2"></i>Instructions</h3>
+      <ul>
+        <li>Le fichier doit être au format Excel (.xlsx, .xls) ou CSV (.csv)</li>
+        <li>Les colonnes <strong>"SKU"</strong> et <strong>"Nom"</strong> ou <strong>"Name"</strong> sont obligatoires</li>
+        <li>Les autres colonnes sont optionnelles</li>
+        <li>Les colonnes acceptées sont : SKU, Nom, Famille, Prix Achat (GNF), Poids (kg), Description, Stock Min Dépôt, Stock Min Véhicule, Actif</li>
+        <li>Si un article existe déjà (même SKU), vous pouvez choisir de l'ignorer, le mettre à jour ou créer un nouveau</li>
+        <li>Si une famille n'existe pas, elle sera créée automatiquement</li>
+      </ul>
+      
+      <div class="example-table">
+        <h4 style="margin-bottom: var(--space-sm);">Exemple de format :</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Nom</th>
+              <th>Famille</th>
+              <th>Prix Achat (GNF)</th>
+              <th>Poids (kg)</th>
+              <th>Stock Min Dépôt</th>
+              <th>Stock Min Véhicule</th>
+              <th>Actif</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>RIZ-25KG</td>
+              <td>Riz 25 kg</td>
+              <td>Alimentaire</td>
+              <td>200000</td>
+              <td>25</td>
+              <td>10</td>
+              <td>5</td>
+              <td>Oui</td>
+            </tr>
+            <tr>
+              <td>HUILE-5L</td>
+              <td>Huile végétale 5L</td>
+              <td>Alimentaire</td>
+              <td>15000</td>
+              <td>5</td>
+              <td>20</td>
+              <td>10</td>
+              <td>Oui</td>
+            </tr>
+            <tr>
+              <td>JAVEL-1L</td>
+              <td>Javel 1L</td>
+              <td>Entretien</td>
+              <td>5000</td>
+              <td>1</td>
+              <td>30</td>
+              <td>15</td>
+              <td>Oui</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="importForm">
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label class="form-label" style="margin-bottom: var(--space-sm); color: var(--text-primary); font-weight: 600;">Fichier Excel/CSV</label>
+        <div class="upload-area" id="uploadArea">
+          <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--gray-400); margin-bottom: var(--space-md);"></i>
+          <p style="color: var(--text-muted); margin-bottom: var(--space-sm);">
+            Cliquez pour sélectionner un fichier ou glissez-déposez ici
+          </p>
+          <input type="file" 
+                 name="file" 
+                 id="fileInput" 
+                 accept=".xlsx,.xls,.csv" 
+                 required 
+                 style="display: none;">
+          <button type="button" class="btn btn-promo" style="background: #6c757d; color: white;" onclick="document.getElementById('fileInput').click();">
+            <i class="fas fa-folder-open me-2"></i>
+            Sélectionner un fichier
+          </button>
+        </div>
+        <div class="file-info" id="fileInfo">
+          <i class="fas fa-file me-2"></i>
+          <span id="fileName"></span>
+          <button type="button" class="btn btn-sm btn-promo" style="background: #ef4444; color: white; margin-left: var(--space-sm);" onclick="clearFile();">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label class="form-label" style="margin-bottom: var(--space-sm); color: var(--text-primary); font-weight: 600;">Mode de traitement des articles existants</label>
+        <select name="update_mode" class="form-control" required style="padding: var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <option value="skip">Ignorer les articles existants (même SKU)</option>
+          <option value="update">Mettre à jour les articles existants</option>
+          <option value="create_new">Créer de nouveaux articles (avec SKU modifié)</option>
+        </select>
+        <small style="color: var(--text-muted); display: block; margin-top: var(--space-xs);">
+          Choisissez comment traiter les articles qui existent déjà dans la base de données (identifiés par leur SKU)
+        </small>
+      </div>
+
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <button type="submit" class="btn btn-promo btn-promo-primary" id="submitBtn" disabled>
+          <i class="fas fa-upload me-2"></i>
+          Importer
+        </button>
+        <a href="{{ url_for('referentiels.stock_items_list') }}" class="btn btn-promo" style="background: #6c757d; color: white;">
+          <i class="fas fa-times me-2"></i>
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInfo = document.getElementById('fileInfo');
+  const fileName = document.getElementById('fileName');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Gestion du clic sur la zone de dépôt
+  uploadArea.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  // Gestion du changement de fichier
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      fileName.textContent = file.name;
+      fileInfo.style.display = 'block';
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Gestion du glisser-déposer
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      const file = e.dataTransfer.files[0];
+      fileName.textContent = file.name;
+      fileInfo.style.display = 'block';
+      submitBtn.disabled = false;
+    }
+  });
+
+  function clearFile() {
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+    submitBtn.disabled = true;
+  }
+
+  // Gestion de la soumission du formulaire
+  document.getElementById('importForm').addEventListener('submit', function(e) {
+    if (!fileInput.files.length) {
+      e.preventDefault();
+      alert('Veuillez sélectionner un fichier');
+      return false;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Import en cours...';
+  });
+</script>
+{% endblock %}
+

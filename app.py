@@ -3001,6 +3001,162 @@ def articles_import():
             flash(f'Erreur lors de l\'import: {str(e)}', 'error')
             return redirect(url_for('articles_import'))
 
+@app.route('/articles/categories')
+@login_required
+def categories_list():
+    """Liste des catégories d'articles"""
+    from auth import has_permission
+    if not has_permission(current_user, 'articles.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('articles_list'))
+    
+    try:
+        from models import Category, Article
+        from sqlalchemy import func
+        
+        # Récupérer toutes les catégories avec le nombre d'articles
+        categories = db.session.query(
+            Category,
+            func.count(Article.id).label('articles_count')
+        ).outerjoin(Article).group_by(Category.id).order_by(Category.name).all()
+        
+        # Formater les données
+        categories_data = []
+        for category, articles_count in categories:
+            categories_data.append({
+                'category': category,
+                'articles_count': articles_count
+            })
+        
+        return render_template('articles/categories_list.html', 
+                             categories=categories_data)
+    except Exception as e:
+        print(f"Erreur lors du chargement des catégories: {e}")
+        import traceback
+        traceback.print_exc()
+        return render_template('articles/categories_list.html', categories=[])
+
+@app.route('/articles/categories/new', methods=['GET', 'POST'])
+@login_required
+def category_new():
+    """Créer une nouvelle catégorie"""
+    from auth import has_permission
+    if not has_permission(current_user, 'articles.create'):
+        flash('Vous n\'avez pas la permission de créer une catégorie', 'error')
+        return redirect(url_for('categories_list'))
+    
+    from models import Category
+    
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name', '').strip()
+            
+            if not name:
+                flash('Le nom de la catégorie est obligatoire', 'error')
+                return render_template('articles/category_form.html')
+            
+            # Vérifier si la catégorie existe déjà
+            existing = Category.query.filter_by(name=name).first()
+            if existing:
+                flash(f'Une catégorie avec le nom "{name}" existe déjà', 'error')
+                return render_template('articles/category_form.html', category=None)
+            
+            # Créer la catégorie
+            category = Category(name=name)
+            db.session.add(category)
+            db.session.commit()
+            
+            flash(f'Catégorie "{name}" créée avec succès', 'success')
+            return redirect(url_for('categories_list'))
+        
+        except Exception as e:
+            db.session.rollback()
+            print(f"Erreur lors de la création de la catégorie: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Erreur lors de la création de la catégorie: {str(e)}', 'error')
+            return render_template('articles/category_form.html', category=None)
+    
+    # GET - Afficher le formulaire
+    return render_template('articles/category_form.html', category=None)
+
+@app.route('/articles/categories/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def category_edit(id):
+    """Modifier une catégorie"""
+    from auth import has_permission
+    if not has_permission(current_user, 'articles.update'):
+        flash('Vous n\'avez pas la permission de modifier une catégorie', 'error')
+        return redirect(url_for('categories_list'))
+    
+    from models import Category, Article
+    
+    category = Category.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name', '').strip()
+            
+            if not name:
+                flash('Le nom de la catégorie est obligatoire', 'error')
+                return render_template('articles/category_form.html', category=category)
+            
+            # Vérifier si une autre catégorie avec le même nom existe
+            existing = Category.query.filter_by(name=name).first()
+            if existing and existing.id != category.id:
+                flash(f'Une catégorie avec le nom "{name}" existe déjà', 'error')
+                return render_template('articles/category_form.html', category=category)
+            
+            # Mettre à jour la catégorie
+            category.name = name
+            category.updated_at = datetime.now(UTC)
+            db.session.commit()
+            
+            flash(f'Catégorie "{name}" modifiée avec succès', 'success')
+            return redirect(url_for('categories_list'))
+        
+        except Exception as e:
+            db.session.rollback()
+            print(f"Erreur lors de la modification de la catégorie: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Erreur lors de la modification de la catégorie: {str(e)}', 'error')
+            return render_template('articles/category_form.html', category=category)
+    
+    # GET - Afficher le formulaire
+    return render_template('articles/category_form.html', category=category)
+
+@app.route('/articles/categories/<int:id>/delete', methods=['POST'])
+@login_required
+def category_delete(id):
+    """Supprimer une catégorie"""
+    from auth import has_permission
+    if not has_permission(current_user, 'articles.delete'):
+        flash('Vous n\'avez pas la permission de supprimer une catégorie', 'error')
+        return redirect(url_for('categories_list'))
+    
+    from models import Category, Article
+    
+    category = Category.query.get_or_404(id)
+    
+    # Vérifier si la catégorie est utilisée par des articles
+    articles_count = Article.query.filter_by(category_id=category.id).count()
+    
+    if articles_count > 0:
+        flash(f'Impossible de supprimer la catégorie "{category.name}" car elle est utilisée par {articles_count} article(s). Veuillez d\'abord réassigner ou supprimer ces articles.', 'error')
+        return redirect(url_for('categories_list'))
+    
+    try:
+        db.session.delete(category)
+        db.session.commit()
+        flash(f'Catégorie "{category.name}" supprimée avec succès', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erreur lors de la suppression de la catégorie: {e}")
+        flash(f'Erreur lors de la suppression de la catégorie: {str(e)}', 'error')
+    
+    return redirect(url_for('categories_list'))
+
 @app.route('/articles/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def article_edit(id):

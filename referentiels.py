@@ -5,7 +5,8 @@ Module Référentiels - Import Profit Pro
 Gestion des régions, dépôts, véhicules, familles et stock-items
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
+from io import BytesIO
 from flask_login import login_required, current_user
 from datetime import datetime, UTC
 from models import db, Region, Depot, Vehicle, Family, StockItem, User
@@ -604,6 +605,345 @@ def stock_item_new():
         return redirect(url_for('referentiels.stock_items_list'))
     
     return render_template('referentiels/stock_item_form.html', families=families)
+
+@referentiels_bp.route('/stock-items/export/excel')
+@login_required
+def stock_items_export_excel():
+    """Export Excel de la liste des articles de stock avec filtres appliqués"""
+    if not has_permission(current_user, 'stock_items.read'):
+        flash("Vous n'avez pas la permission d'exporter les données.", "error")
+        return redirect(url_for('referentiels.stock_items_list'))
+    
+    import pandas as pd
+    from sqlalchemy import or_
+    
+    # Récupérer les mêmes filtres que stock_items_list
+    search = request.args.get('search', '').strip()
+    family_filter = request.args.get('family', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    
+    try:
+        # Construire la requête (même logique que stock_items_list)
+        query = StockItem.query.options(
+            joinedload(StockItem.family)
+        )
+        
+        # Appliquer les filtres
+        if search:
+            query = query.filter(
+                or_(
+                    StockItem.sku.ilike(f'%{search}%'),
+                    StockItem.name.ilike(f'%{search}%'),
+                    StockItem.description.ilike(f'%{search}%')
+                )
+            )
+        
+        if family_filter:
+            query = query.join(Family).filter(Family.name == family_filter)
+        
+        if status_filter == 'active':
+            query = query.filter_by(is_active=True)
+        elif status_filter == 'inactive':
+            query = query.filter_by(is_active=False)
+        
+        # Récupérer tous les articles (sans pagination pour l'export)
+        stock_items = query.order_by(StockItem.name).all()
+        
+        # Préparer les données pour Excel
+        data = []
+        for item in stock_items:
+            data.append({
+                'SKU': item.sku,
+                'Nom': item.name,
+                'Famille': item.family.name if item.family else '',
+                'Prix Achat (GNF)': float(item.purchase_price_gnf) if item.purchase_price_gnf else 0,
+                'Poids (kg)': float(item.unit_weight_kg) if item.unit_weight_kg else 0,
+                'Description': item.description or '',
+                'Stock Min Dépôt': float(item.min_stock_depot) if item.min_stock_depot else 0,
+                'Stock Min Véhicule': float(item.min_stock_vehicle) if item.min_stock_vehicle else 0,
+                'Actif': 'Oui' if item.is_active else 'Non',
+                'Date de création': item.created_at.strftime('%Y-%m-%d %H:%M:%S') if item.created_at else '',
+                'Date de modification': item.updated_at.strftime('%Y-%m-%d %H:%M:%S') if item.updated_at else ''
+            })
+        
+        # Créer le DataFrame
+        df = pd.DataFrame(data)
+        
+        # Créer le fichier Excel en mémoire
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Articles de Stock', index=False)
+            
+            # Ajuster la largeur des colonnes
+            worksheet = writer.sheets['Articles de Stock']
+            for idx, col in enumerate(df.columns):
+                max_length = max(
+                    df[col].astype(str).map(len).max(),
+                    len(col)
+                )
+                worksheet.column_dimensions[chr(65 + idx)].width = min(max_length + 2, 50)
+        
+        output.seek(0)
+        
+        # Générer le nom du fichier avec la date
+        filename = f'stock_items_export_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+    
+    except Exception as e:
+        print(f"❌ Erreur lors de l'export Excel: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Erreur lors de l\'export Excel: {str(e)}', 'error')
+        return redirect(url_for('referentiels.stock_items_list'))
+
+@referentiels_bp.route('/stock-items/import', methods=['GET', 'POST'])
+@login_required
+def stock_items_import():
+    """Import d'articles de stock depuis Excel/CSV"""
+    if not has_permission(current_user, 'stock_items.create'):
+        flash('Vous n\'avez pas la permission d\'importer des articles de stock. Seuls les utilisateurs avec la permission stock_items.create peuvent importer.', 'error')
+        return redirect(url_for('referentiels.stock_items_list'))
+    
+    import pandas as pd
+    import os
+    from werkzeug.utils import secure_filename
+    from decimal import Decimal
+    
+    if request.method == 'GET':
+        families = Family.query.order_by(Family.name).all()
+        return render_template('referentiels/stock_items_import.html', families=families)
+    
+    if request.method == 'POST':
+        try:
+            file = request.files.get('file')
+            if not file or file.filename == '':
+                flash('Veuillez sélectionner un fichier', 'error')
+                return redirect(url_for('referentiels.stock_items_import'))
+            
+            # Sauvegarder le fichier temporairement
+            upload_dir = os.path.join(current_app.instance_path, 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(upload_dir, filename)
+            file.save(filepath)
+            
+            # Lire le fichier
+            try:
+                if filename.endswith('.csv'):
+                    df = pd.read_csv(filepath, encoding='utf-8')
+                elif filename.endswith(('.xlsx', '.xls')):
+                    df = pd.read_excel(filepath)
+                else:
+                    flash('Format de fichier non supporté. Utilisez .xlsx, .xls ou .csv', 'error')
+                    os.remove(filepath)
+                    return redirect(url_for('referentiels.stock_items_import'))
+            except Exception as e:
+                flash(f'Erreur lors de la lecture du fichier: {str(e)}', 'error')
+                os.remove(filepath)
+                return redirect(url_for('referentiels.stock_items_import'))
+            
+            # Normaliser les noms de colonnes
+            df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('é', 'e').str.replace('è', 'e')
+            
+            # Colonnes requises
+            required_cols = ['sku', 'nom', 'name']
+            has_sku = 'sku' in df.columns
+            has_name = any(col in df.columns for col in ['nom', 'name'])
+            
+            if not has_sku:
+                flash('Colonne "SKU" manquante. Le fichier doit contenir au moins le SKU de l\'article.', 'error')
+                os.remove(filepath)
+                return redirect(url_for('referentiels.stock_items_import'))
+            
+            if not has_name:
+                flash('Colonne "Nom" ou "Name" manquante. Le fichier doit contenir au moins le nom de l\'article.', 'error')
+                os.remove(filepath)
+                return redirect(url_for('referentiels.stock_items_import'))
+            
+            # Mapper les colonnes possibles
+            sku_col = 'sku'
+            name_col = next((col for col in ['nom', 'name', 'article', 'article_name'] if col in df.columns), None)
+            family_col = next((col for col in ['famille', 'family', 'famille_name', 'family_name'] if col in df.columns), None)
+            price_col = next((col for col in ['prix', 'price', 'purchase_price_gnf', 'prix_achat', 'prix_d_achat'] if col in df.columns), None)
+            weight_col = next((col for col in ['poids', 'weight', 'unit_weight_kg', 'poids_kg', 'poids_en_kg'] if col in df.columns), None)
+            description_col = next((col for col in ['description', 'desc', 'description_article'] if col in df.columns), None)
+            min_depot_col = next((col for col in ['stock_min_depot', 'min_stock_depot', 'seuil_depot', 'stock_minimum_depot'] if col in df.columns), None)
+            min_vehicle_col = next((col for col in ['stock_min_vehicle', 'min_stock_vehicle', 'seuil_vehicle', 'stock_minimum_vehicle'] if col in df.columns), None)
+            active_col = next((col for col in ['actif', 'active', 'is_active'] if col in df.columns), None)
+            
+            # Mode de traitement
+            update_mode = request.form.get('update_mode', 'skip')  # 'skip', 'update', 'create_new'
+            
+            success_count = 0
+            error_count = 0
+            errors = []
+            
+            # Traiter chaque ligne
+            for idx, row in df.iterrows():
+                try:
+                    # Récupérer les valeurs
+                    sku = str(row[sku_col]).strip() if pd.notna(row.get(sku_col)) else None
+                    if not sku or sku == 'nan':
+                        error_count += 1
+                        errors.append(f"Ligne {idx + 2}: SKU manquant")
+                        continue
+                    
+                    name = str(row[name_col]).strip() if name_col and pd.notna(row.get(name_col)) else None
+                    if not name or name == 'nan':
+                        error_count += 1
+                        errors.append(f"Ligne {idx + 2}: Nom d'article manquant")
+                        continue
+                    
+                    # Famille
+                    family_name = None
+                    if family_col and pd.notna(row.get(family_col)):
+                        family_name = str(row[family_col]).strip()
+                    
+                    family_id = None
+                    if family_name:
+                        family = Family.query.filter_by(name=family_name).first()
+                        if not family:
+                            # Créer la famille si elle n'existe pas
+                            family = Family(name=family_name)
+                            db.session.add(family)
+                            db.session.flush()
+                        family_id = family.id
+                    else:
+                        # Si pas de famille dans le fichier, utiliser la première famille disponible ou laisser None
+                        first_family = Family.query.first()
+                        if first_family:
+                            family_id = first_family.id
+                    
+                    # Prix
+                    purchase_price_gnf = Decimal('0')
+                    if price_col and pd.notna(row.get(price_col)):
+                        try:
+                            purchase_price_gnf = Decimal(str(row[price_col]))
+                        except:
+                            purchase_price_gnf = Decimal('0')
+                    
+                    # Poids
+                    unit_weight_kg = Decimal('0')
+                    if weight_col and pd.notna(row.get(weight_col)):
+                        try:
+                            unit_weight_kg = Decimal(str(row[weight_col]))
+                        except:
+                            unit_weight_kg = Decimal('0')
+                    
+                    # Description
+                    description = None
+                    if description_col and pd.notna(row.get(description_col)):
+                        description = str(row[description_col]).strip()
+                    
+                    # Stock min dépôt
+                    min_stock_depot = Decimal('0')
+                    if min_depot_col and pd.notna(row.get(min_depot_col)):
+                        try:
+                            min_stock_depot = Decimal(str(row[min_depot_col]))
+                        except:
+                            min_stock_depot = Decimal('0')
+                    
+                    # Stock min véhicule
+                    min_stock_vehicle = Decimal('0')
+                    if min_vehicle_col and pd.notna(row.get(min_vehicle_col)):
+                        try:
+                            min_stock_vehicle = Decimal(str(row[min_vehicle_col]))
+                        except:
+                            min_stock_vehicle = Decimal('0')
+                    
+                    # Actif
+                    is_active = True
+                    if active_col and pd.notna(row.get(active_col)):
+                        active_val = str(row[active_col]).strip().lower()
+                        is_active = active_val in ['oui', 'yes', 'true', '1', 'actif', 'active']
+                    
+                    # Vérifier si l'article existe déjà (par SKU)
+                    existing = StockItem.query.filter_by(sku=sku).first()
+                    
+                    if existing:
+                        if update_mode == 'skip':
+                            continue  # Ignorer les articles existants
+                        elif update_mode == 'update':
+                            # Mettre à jour l'article existant
+                            existing.name = name
+                            existing.family_id = family_id
+                            existing.purchase_price_gnf = purchase_price_gnf
+                            existing.unit_weight_kg = unit_weight_kg
+                            existing.description = description
+                            existing.min_stock_depot = min_stock_depot
+                            existing.min_stock_vehicle = min_stock_vehicle
+                            existing.is_active = is_active
+                            existing.updated_at = datetime.now(UTC)
+                            success_count += 1
+                        elif update_mode == 'create_new':
+                            # Créer un nouvel article avec un SKU modifié
+                            sku = f"{sku}-{datetime.now(UTC).strftime('%Y%m%d')}"
+                            stock_item = StockItem(
+                                sku=sku,
+                                name=name,
+                                family_id=family_id,
+                                purchase_price_gnf=purchase_price_gnf,
+                                unit_weight_kg=unit_weight_kg,
+                                description=description,
+                                min_stock_depot=min_stock_depot,
+                                min_stock_vehicle=min_stock_vehicle,
+                                is_active=is_active
+                            )
+                            db.session.add(stock_item)
+                            success_count += 1
+                    else:
+                        # Créer un nouvel article
+                        stock_item = StockItem(
+                            sku=sku,
+                            name=name,
+                            family_id=family_id,
+                            purchase_price_gnf=purchase_price_gnf,
+                            unit_weight_kg=unit_weight_kg,
+                            description=description,
+                            min_stock_depot=min_stock_depot,
+                            min_stock_vehicle=min_stock_vehicle,
+                            is_active=is_active
+                        )
+                        db.session.add(stock_item)
+                        success_count += 1
+                
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"Ligne {idx + 2}: {str(e)}")
+                    continue
+            
+            # Commit toutes les modifications
+            db.session.commit()
+            
+            # Nettoyer le fichier temporaire
+            try:
+                os.remove(filepath)
+            except:
+                pass
+            
+            # Message de succès
+            if success_count > 0:
+                flash(f'Import réussi : {success_count} article(s) de stock traité(s) avec succès.', 'success')
+            if error_count > 0:
+                flash(f'Import terminé avec {error_count} erreur(s). Voir les détails ci-dessous.', 'warning')
+                if errors:
+                    flash(f'Erreurs: {"; ".join(errors[:10])}', 'warning')  # Afficher les 10 premières erreurs
+            
+            return redirect(url_for('referentiels.stock_items_list'))
+        
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Erreur lors de l'import: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Erreur lors de l\'import: {str(e)}', 'error')
+            return redirect(url_for('referentiels.stock_items_import'))
 
 @referentiels_bp.route('/stock-items/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
