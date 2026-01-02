@@ -1,0 +1,351 @@
+/* Fichier: static/css/forecast_mobile_responsive.css */
+
+/* Styles généraux pour la responsivité du module Prévisions & Ventes */
+
+/* Ajustements pour les petits écrans (smartphones) */
+@media (max-width: 768px) {
+    /* Contenu principal */
+    .main-content {
+        margin-left: 0 !important;
+        padding: var(--space-sm) !important;
+    }
+
+    .page-container {
+        padding: 0;
+    }
+
+    /* En-têtes de page */
+    .page-header-hl {
+        flex-direction: column;
+        align-items: flex-start !important;
+        margin: var(--space-md) !important;
+        padding: var(--space-md) !important;
+        width: calc(100% - 2 * var(--space-md)) !important;
+    }
+
+    .page-header-hl .page-title-hl {
+        font-size: 1.5rem;
+        margin-bottom: var(--space-sm);
+    }
+
+    .page-header-hl .btn-hl {
+        width: 100%;
+        margin-top: var(--space-sm);
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-sm) !important;
+        margin: var(--space-md) !important;
+        width: calc(100% - 2 * var(--space-md)) !important;
+    }
+
+    .stat-card-hl {
+        padding: var(--space-md) !important;
+    }
+
+    .stat-card-hl-value {
+        font-size: 1.8rem !important;
+    }
+
+    .stat-card-hl-label {
+        font-size: 0.8rem !important;
+    }
+
+    /* Cartes d'action */
+    .action-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-md) !important;
+        margin: var(--space-md) !important;
+        width: calc(100% - 2 * var(--space-md)) !important;
+    }
+
+    .action-card {
+        padding: var(--space-lg) !important;
+    }
+
+    .action-icon {
+        font-size: 2.5rem !important;
+    }
+
+    .action-title {
+        font-size: 1.1rem !important;
+    }
+
+    /* Grille de prévisions */
+    .forecasts-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-md) !important;
+        margin: var(--space-md) !important;
+        width: calc(100% - 2 * var(--space-md)) !important;
+    }
+
+    .forecast-card {
+        padding: var(--space-lg) !important;
+    }
+
+    .forecast-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .forecast-title {
+        font-size: 1.1rem !important;
+    }
+
+    /* Filtres */
+    .filters-section {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-sm) !important;
+        margin: var(--space-md) !important;
+    }
+
+    .form-group {
+        margin-bottom: var(--space-sm);
+    }
+
+    .form-hl-input, .form-hl-select {
+        padding: var(--space-sm) !important;
+        min-height: 44px; /* Taille minimale pour les cibles tactiles */
+        font-size: 16px; /* Évite le zoom automatique sur iOS */
+    }
+
+    /* Formulaires */
+    .form-container {
+        padding: var(--space-md) !important;
+        margin: var(--space-md) auto !important;
+    }
+
+    .form-hl {
+        padding: var(--space-lg) !important;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-sm) !important;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: var(--space-sm) !important;
+    }
+
+    .form-actions .btn-hl {
+        width: 100%;
+    }
+
+    /* Tableaux - Conversion en cartes */
+    .table-responsive-wrapper {
+        overflow-x: hidden;
+    }
+
+    .table-hl, .editable-table {
+        display: block;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 var(--space-md);
+    }
+
+    .table-hl thead, .editable-table thead {
+        display: none;
+    }
+
+    .table-hl tbody, .table-hl tr,
+    .editable-table tbody, .editable-table tr {
+        display: block;
+        width: 100%;
+    }
+
+    .table-hl tr, .editable-table tr {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--space-md);
+        box-shadow: var(--shadow-sm);
+        padding: var(--space-md);
+    }
+
+    .table-hl td, .editable-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-xs) var(--space-sm);
+        border-bottom: none;
+        font-size: 0.9rem;
+    }
+
+    .table-hl td::before, .editable-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-secondary);
+        flex-basis: 40%;
+        text-align: left;
+        padding-right: var(--space-sm);
+    }
+
+    .table-hl td:last-child, .editable-table td:last-child {
+        border-bottom: none;
+    }
+
+    /* Tableaux éditables */
+    .editable-table input {
+        font-size: 16px; /* Évite le zoom automatique sur iOS */
+        padding: var(--space-sm) !important;
+        min-height: 44px;
+    }
+
+    /* Cartes */
+    .card-hl {
+        margin: var(--space-md) !important;
+        width: calc(100% - 2 * var(--space-md)) !important;
+        padding: var(--space-lg) !important;
+    }
+
+    /* Graphiques */
+    .chart-container {
+        width: 100% !important;
+        height: 250px !important;
+        margin: var(--space-md) 0 !important;
+    }
+
+    /* Boutons */
+    .btn-hl {
+        padding: var(--space-sm) var(--space-md) !important;
+        font-size: 0.9rem !important;
+        min-height: 44px;
+    }
+
+    .simulation-actions, .forecast-actions {
+        flex-direction: column;
+        gap: var(--space-sm) !important;
+    }
+
+    .simulation-actions .btn-hl,
+    .forecast-actions .btn-hl {
+        width: 100%;
+    }
+
+    /* Header actions */
+    .header-actions {
+        flex-direction: column;
+        gap: var(--space-sm) !important;
+        width: 100%;
+    }
+
+    .header-actions .btn-hl,
+    .header-actions form {
+        width: 100%;
+    }
+
+    /* Badges */
+    .badge-hl {
+        font-size: 0.7rem !important;
+        padding: var(--space-xs) var(--space-sm) !important;
+    }
+
+    /* Pagination */
+    .pagination {
+        flex-direction: column;
+        gap: var(--space-sm) !important;
+    }
+
+    .pagination .btn-hl {
+        width: 100%;
+    }
+
+    /* Modals */
+    .modal-content {
+        margin: var(--space-md) !important;
+        width: calc(100% - 2 * var(--space-md)) !important;
+        max-width: 100% !important;
+    }
+
+    /* Performance charts */
+    .performance-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Import area */
+    .import-area {
+        padding: var(--space-lg) !important;
+    }
+
+    .drag-drop-zone {
+        padding: var(--space-xl) var(--space-md) !important;
+    }
+}
+
+/* Ajustements pour les écrans de taille moyenne (tablettes) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-content {
+        margin-left: 0 !important;
+        padding: var(--space-lg) !important;
+    }
+
+    .page-header-hl, .card-hl {
+        margin: var(--space-lg) !important;
+        width: calc(100% - 2 * var(--space-lg)) !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .forecasts-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .filters-section {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Ajustements pour les très petits écrans (smartphones étroits) */
+@media (max-width: 480px) {
+    .page-header-hl .page-title-hl {
+        font-size: 1.3rem;
+    }
+
+    .stat-card-hl-value {
+        font-size: 1.5rem !important;
+    }
+
+    .action-icon {
+        font-size: 2rem !important;
+    }
+
+    .table-hl td, .editable-table td {
+        font-size: 0.85rem;
+    }
+
+    .table-hl td::before, .editable-table td::before {
+        flex-basis: 50%;
+    }
+
+    .form-hl-input, .form-hl-select {
+        font-size: 14px;
+    }
+}
+
+/* Amélioration de la lisibilité sur mobile */
+@media (max-width: 768px) {
+    /* Augmenter les espacements pour faciliter le toucher */
+    .btn-hl, .btn-promo {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Améliorer la visibilité des liens */
+    a {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Espacement entre les sections */
+    .card-hl + .card-hl {
+        margin-top: var(--space-md) !important;
+    }
+}
+
