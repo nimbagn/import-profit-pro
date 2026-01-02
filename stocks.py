@@ -18,6 +18,7 @@ from models import (
 )
 from auth import has_permission
 from sqlalchemy.orm import joinedload
+from sqlalchemy import or_, and_
 
 # Créer le blueprint
 stocks_bp = Blueprint('stocks', __name__, url_prefix='/stocks')
@@ -990,22 +991,61 @@ def movement_new():
                                     depot_id=int(from_depot_id), 
                                     stock_item_id=stock_item_id
                                 ).first()
+                                
+                                # Calculer le stock réel à partir des mouvements pour vérification
+                                # Cela garantit que nous avons le stock le plus à jour
+                                actual_stock = Decimal('0')
+                                depot_movements = StockMovement.query.filter(
+                                    or_(
+                                        and_(
+                                            StockMovement.to_depot_id == int(from_depot_id),
+                                            StockMovement.stock_item_id == stock_item_id
+                                        ),
+                                        and_(
+                                            StockMovement.from_depot_id == int(from_depot_id),
+                                            StockMovement.stock_item_id == stock_item_id
+                                        )
+                                    )
+                                ).all()
+                                
+                                for mov in depot_movements:
+                                    if mov.to_depot_id == int(from_depot_id):
+                                        # Entrée dans le dépôt
+                                        actual_stock += Decimal(str(mov.quantity))
+                                    elif mov.from_depot_id == int(from_depot_id):
+                                        # Sortie du dépôt
+                                        actual_stock -= abs(Decimal(str(mov.quantity)))
+                                
+                                # Utiliser le stock réel calculé ou celui de DepotStock
+                                available_quantity = actual_stock if actual_stock > 0 else (source_stock.quantity if source_stock else Decimal('0'))
+                                
+                                # Si DepotStock n'existe pas ou est désynchronisé, le créer/mettre à jour
                                 if not source_stock:
-                                    # Créer le stock avec quantité 0
                                     source_stock = DepotStock(
                                         depot_id=int(from_depot_id),
                                         stock_item_id=stock_item_id,
-                                        quantity=Decimal('0')
+                                        quantity=available_quantity
                                     )
                                     db.session.add(source_stock)
-                                # Vérifier le stock disponible
-                                if source_stock.quantity < quantity:
+                                elif abs(source_stock.quantity - actual_stock) > Decimal('0.0001'):
+                                    # Synchroniser DepotStock avec le stock réel
+                                    source_stock.quantity = actual_stock
+                                
+                                # Vérifier le stock disponible avec arrondi pour éviter les problèmes de précision
+                                quantity_decimal = Decimal(str(quantity)).quantize(Decimal('0.0001'))
+                                available_decimal = available_quantity.quantize(Decimal('0.0001'))
+                                
+                                if available_decimal < quantity_decimal:
                                     item = StockItem.query.get(stock_item_id)
                                     item_name = item.name if item else f"ID {stock_item_id}"
-                                    errors.append(f"Stock insuffisant à la source pour {item_name} (disponible: {source_stock.quantity}, requis: {quantity})")
+                                    # Formater les quantités pour l'affichage (éviter les décimales inutiles)
+                                    available_display = f"{available_quantity:.4f}".rstrip('0').rstrip('.')
+                                    quantity_display = f"{quantity:.4f}".rstrip('0').rstrip('.')
+                                    errors.append(f"Stock insuffisant à la source pour {item_name} (disponible: {available_display}, requis: {quantity_display})")
                                     continue
+                                
                                 # Déduire la quantité du stock source
-                                source_stock.quantity -= quantity
+                                source_stock.quantity -= quantity_decimal
                             
                             elif from_vehicle_id:
                                 source_stock = VehicleStock.query.filter_by(
