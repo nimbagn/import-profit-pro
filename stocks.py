@@ -972,73 +972,84 @@ def movement_new():
                                 continue
                             
                             # Vérifier le stock source et créer s'il n'existe pas
+                            source_stock = None
+                            
                             if from_depot_id:
                                 source_stock = DepotStock.query.filter_by(
                                     depot_id=int(from_depot_id), 
                                     stock_item_id=stock_item_id
                                 ).first()
-                            if not source_stock:
-                                # Créer le stock avec quantité 0
-                                source_stock = DepotStock(
-                                    depot_id=int(from_depot_id),
-                                    stock_item_id=stock_item_id,
-                                    quantity=Decimal('0')
-                                )
-                                db.session.add(source_stock)
-                            if source_stock.quantity < quantity:
-                                item = StockItem.query.get(stock_item_id)
-                                item_name = item.name if item else f"ID {stock_item_id}"
-                                errors.append(f"Stock insuffisant à la source pour {item_name} (disponible: {source_stock.quantity}, requis: {quantity})")
-                                continue
-                            source_stock.quantity -= quantity
+                                if not source_stock:
+                                    # Créer le stock avec quantité 0
+                                    source_stock = DepotStock(
+                                        depot_id=int(from_depot_id),
+                                        stock_item_id=stock_item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(source_stock)
+                                # Vérifier le stock disponible
+                                if source_stock.quantity < quantity:
+                                    item = StockItem.query.get(stock_item_id)
+                                    item_name = item.name if item else f"ID {stock_item_id}"
+                                    errors.append(f"Stock insuffisant à la source pour {item_name} (disponible: {source_stock.quantity}, requis: {quantity})")
+                                    continue
+                                # Déduire la quantité du stock source
+                                source_stock.quantity -= quantity
                             
-                            if from_vehicle_id:
+                            elif from_vehicle_id:
                                 source_stock = VehicleStock.query.filter_by(
-                                vehicle_id=int(from_vehicle_id), 
-                                stock_item_id=stock_item_id
-                            ).first()
-                            if not source_stock:
-                                # Créer le stock avec quantité 0
-                                source_stock = VehicleStock(
-                                    vehicle_id=int(from_vehicle_id),
-                                    stock_item_id=stock_item_id,
-                                    quantity=Decimal('0')
-                                )
-                                db.session.add(source_stock)
-                            if source_stock.quantity < quantity:
-                                item = StockItem.query.get(stock_item_id)
-                                item_name = item.name if item else f"ID {stock_item_id}"
-                                errors.append(f"Stock insuffisant à la source pour {item_name} (disponible: {source_stock.quantity}, requis: {quantity})")
+                                    vehicle_id=int(from_vehicle_id), 
+                                    stock_item_id=stock_item_id
+                                ).first()
+                                if not source_stock:
+                                    # Créer le stock avec quantité 0
+                                    source_stock = VehicleStock(
+                                        vehicle_id=int(from_vehicle_id),
+                                        stock_item_id=stock_item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(source_stock)
+                                # Vérifier le stock disponible
+                                if source_stock.quantity < quantity:
+                                    item = StockItem.query.get(stock_item_id)
+                                    item_name = item.name if item else f"ID {stock_item_id}"
+                                    errors.append(f"Stock insuffisant à la source pour {item_name} (disponible: {source_stock.quantity}, requis: {quantity})")
+                                    continue
+                                # Déduire la quantité du stock source
+                                source_stock.quantity -= quantity
+                            
+                            else:
+                                # Aucune source définie (ne devrait pas arriver pour un transfert)
+                                errors.append(f"Aucune source définie pour le transfert de l'article {stock_item_id}")
                                 continue
-                            source_stock.quantity -= quantity
                             
                             # Mettre à jour le stock destination
                             if to_depot_id:
                                 dest_stock = DepotStock.query.filter_by(
-                                depot_id=int(to_depot_id), 
-                                stock_item_id=stock_item_id
-                            ).first()
-                            if not dest_stock:
-                                dest_stock = DepotStock(
-                                    depot_id=int(to_depot_id),
-                                    stock_item_id=stock_item_id,
-                                    quantity=Decimal('0')
-                                )
-                                db.session.add(dest_stock)
+                                    depot_id=int(to_depot_id), 
+                                    stock_item_id=stock_item_id
+                                ).first()
+                                if not dest_stock:
+                                    dest_stock = DepotStock(
+                                        depot_id=int(to_depot_id),
+                                        stock_item_id=stock_item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(dest_stock)
                                 dest_stock.quantity += quantity
                             
-                            if to_vehicle_id:
+                            elif to_vehicle_id:
                                 dest_stock = VehicleStock.query.filter_by(
-                                vehicle_id=int(to_vehicle_id), 
-                                stock_item_id=stock_item_id
-                            ).first()
-                            if not dest_stock:
-                                dest_stock = VehicleStock(
-                                    vehicle_id=int(to_vehicle_id),
-                                    stock_item_id=stock_item_id,
-                                    quantity=Decimal('0')
-                                )
-                                db.session.add(dest_stock)
+                                    vehicle_id=int(to_vehicle_id), 
+                                    stock_item_id=stock_item_id
+                                ).first()
+                                if not dest_stock:
+                                    dest_stock = VehicleStock(
+                                        vehicle_id=int(to_vehicle_id),
+                                        stock_item_id=stock_item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(dest_stock)
                                 dest_stock.quantity += quantity
                             
                             # Générer une référence de base pour ce transfert
