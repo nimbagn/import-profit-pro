@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════════════
+  GUIDE RAPIDE : Migration Fiches de Prix sur Render
+═══════════════════════════════════════════════════════════════
+
+PROBLÈME :
+Les articles de stock sont importés mais n'apparaissent pas dans 
+les fiches de prix car la migration de la base de données n'a pas 
+été exécutée.
+
+SOLUTION :
+Exécuter le script de migration Python sur Render.
+
+═══════════════════════════════════════════════════════════════
+ÉTAPES :
+═══════════════════════════════════════════════════════════════
+
+1. Aller sur https://dashboard.render.com
+2. Sélectionner votre service web
+3. Cliquer sur "Shell" (en haut à droite)
+4. Attendre la connexion au shell
+
+5. Exécuter ces commandes :
+
+cd /opt/render/project/src
+python3 scripts/executer_migration_price_list_items_postgresql.py
+
+═══════════════════════════════════════════════════════════════
+  VÉRIFICATION (Optionnelle) :
+═══════════════════════════════════════════════════════════════
+
+Pour vérifier l'état avant/après :
+
+python3
+>>> from app import app, db
+>>> from sqlalchemy import inspect
+>>> with app.app_context():
+...     inspector = inspect(db.engine)
+...     cols = [c['name'] for c in inspector.get_columns('price_list_items')]
+...     print("Colonnes:", cols)
+... 
+
+Résultat attendu après migration :
+  Colonnes: ['id', 'price_list_id', 'stock_item_id', ...]
+  (stock_item_id doit être présent, article_id ne doit pas être présent)
+
+═══════════════════════════════════════════════════════════════
+  APRÈS LA MIGRATION :
+═══════════════════════════════════════════════════════════════
+
+1. Tester la création d'une nouvelle fiche de prix
+2. Vérifier que les articles de stock s'affichent
+3. Ajouter des prix aux articles
+4. Vérifier que tout fonctionne
+
+═══════════════════════════════════════════════════════════════
+  ⚠️  ATTENTION :
+═══════════════════════════════════════════════════════════════
+
+Cette migration SUPPRIME toutes les données existantes dans 
+price_list_items car il n'y a pas de correspondance entre 
+Article et StockItem.
+
+Les utilisateurs devront recréer leurs fiches de prix.
+
+═══════════════════════════════════════════════════════════════
+

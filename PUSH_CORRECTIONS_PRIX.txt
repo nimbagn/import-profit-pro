@@ -1,0 +1,27 @@
+═══════════════════════════════════════════════════════════════
+  COMMANDES GIT POUR POUSSER LES CORRECTIONS
+═══════════════════════════════════════════════════════════════
+
+Exécutez ces commandes dans votre terminal local :
+
+git add templates/referentiels/stock_items_list.html
+git add scripts/verifier_prix_articles_stock.py
+git add VERIFIER_PRIX_RENDER.txt
+git add push_fix_affichage_prix.sh
+
+git commit -m "Fix: Amélioration de l'affichage du prix d'achat dans la liste des articles de stock
+
+- Gestion des valeurs None pour le prix d'achat
+- Affichage conditionnel avec formatage approprié
+- Ajout d'un script de vérification des prix dans la base de données
+- Ajout d'un guide de vérification rapide pour Render"
+
+git push origin main
+
+═══════════════════════════════════════════════════════════════
+
+Après le push, attendez quelques minutes que Render déploie,
+puis vous pourrez utiliser le script de vérification.
+
+═══════════════════════════════════════════════════════════════
+
