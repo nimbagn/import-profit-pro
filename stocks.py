@@ -987,49 +987,31 @@ def movement_new():
                             source_stock = None
                             
                             if from_depot_id:
+                                # Récupérer le stock du dépôt (source principale)
                                 source_stock = DepotStock.query.filter_by(
                                     depot_id=int(from_depot_id), 
                                     stock_item_id=stock_item_id
                                 ).first()
                                 
-                                # Calculer le stock réel à partir des mouvements pour vérification
-                                # Cela garantit que nous avons le stock le plus à jour
-                                actual_stock = Decimal('0')
-                                depot_movements = StockMovement.query.filter(
-                                    or_(
-                                        and_(
-                                            StockMovement.to_depot_id == int(from_depot_id),
-                                            StockMovement.stock_item_id == stock_item_id
-                                        ),
-                                        and_(
-                                            StockMovement.from_depot_id == int(from_depot_id),
-                                            StockMovement.stock_item_id == stock_item_id
-                                        )
-                                    )
-                                ).all()
-                                
-                                for mov in depot_movements:
-                                    if mov.to_depot_id == int(from_depot_id):
-                                        # Entrée dans le dépôt
-                                        actual_stock += Decimal(str(mov.quantity))
-                                    elif mov.from_depot_id == int(from_depot_id):
-                                        # Sortie du dépôt
-                                        actual_stock -= abs(Decimal(str(mov.quantity)))
-                                
-                                # Utiliser le stock réel calculé ou celui de DepotStock
-                                available_quantity = actual_stock if actual_stock > 0 else (source_stock.quantity if source_stock else Decimal('0'))
-                                
-                                # Si DepotStock n'existe pas ou est désynchronisé, le créer/mettre à jour
+                                # Si le stock n'existe pas, le créer avec quantité 0
                                 if not source_stock:
                                     source_stock = DepotStock(
                                         depot_id=int(from_depot_id),
                                         stock_item_id=stock_item_id,
-                                        quantity=available_quantity
+                                        quantity=Decimal('0')
                                     )
                                     db.session.add(source_stock)
-                                elif abs(source_stock.quantity - actual_stock) > Decimal('0.0001'):
-                                    # Synchroniser DepotStock avec le stock réel
-                                    source_stock.quantity = actual_stock
+                                    # Flush pour s'assurer que l'objet est dans la session
+                                    db.session.flush()
+                                
+                                # Rafraîchir l'objet depuis la base de données pour avoir la valeur la plus récente
+                                db.session.refresh(source_stock)
+                                
+                                # Utiliser directement la quantité de DepotStock
+                                available_quantity = source_stock.quantity or Decimal('0')
+                                
+                                # Debug: afficher les valeurs pour diagnostic
+                                print(f"🔍 DEBUG Stock - Dépôt: {from_depot_id}, Article: {stock_item_id}, Disponible: {available_quantity}, Requis: {quantity}")
                                 
                                 # Vérifier le stock disponible avec arrondi pour éviter les problèmes de précision
                                 quantity_decimal = Decimal(str(quantity)).quantize(Decimal('0.0001'))
