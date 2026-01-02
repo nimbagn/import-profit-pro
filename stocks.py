@@ -8,7 +8,7 @@ Gestion des stocks par dépôt et véhicule, mouvements de stock
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_login import login_required, current_user  # type: ignore
 from datetime import datetime, UTC, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from models import (
     db, DepotStock, VehicleStock, StockMovement, StockItem, 
@@ -1701,7 +1701,22 @@ def reception_new():
                 if len(parts) >= 2:
                     item_id = int(parts[0])
                     qty = Decimal(parts[1])
-                    unit_price = Decimal(parts[2]) if len(parts) > 2 and parts[2] else None
+                    # Récupérer le prix unitaire depuis le formulaire ou utiliser le prix d'achat du StockItem
+                    unit_price = None
+                    if len(parts) > 2 and parts[2] and parts[2].strip():
+                        try:
+                            unit_price = Decimal(parts[2])
+                        except (ValueError, InvalidOperation):
+                            unit_price = None
+                    
+                    # Si le prix n'est pas fourni, utiliser le prix d'achat du StockItem
+                    if unit_price is None or unit_price == 0:
+                        stock_item = StockItem.query.get(item_id)
+                        if stock_item and stock_item.purchase_price_gnf:
+                            unit_price = stock_item.purchase_price_gnf
+                        else:
+                            # Si aucun prix n'est disponible, utiliser 0 comme valeur par défaut
+                            unit_price = Decimal('0')
                     
                     detail = ReceptionDetail(
                         reception_id=reception.id,
