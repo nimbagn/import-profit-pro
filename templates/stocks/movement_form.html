@@ -168,10 +168,10 @@
         <div class="form-row">
           <div class="form-group" style="margin-bottom: var(--space-lg);">
             <label for="from_depot_id" class="form-hl-label">
-              <i class="fas fa-warehouse me-2" style="color: #dc2626;"></i>Dépôt Source
+              <i class="fas fa-warehouse me-2" style="color: #dc2626;"></i>Dépôt Source <span style="color: var(--color-danger);">*</span>
             </label>
-            <select id="from_depot_id" name="from_depot_id" class="form-hl-select" onchange="updateMovementSummary()">
-              <option value="">Aucun dépôt source</option>
+            <select id="from_depot_id" name="from_depot_id" class="form-hl-select" required onchange="updateMovementSummary()">
+              <option value="">Sélectionner un dépôt source</option>
               {% for depot in depots %}
               <option value="{{ depot.id }}">{{ depot.name }}</option>
               {% endfor %}
@@ -179,7 +179,7 @@
           </div>
           <div class="form-group" style="margin-bottom: var(--space-lg);">
             <label for="from_vehicle_id" class="form-hl-label">
-              <i class="fas fa-car me-2" style="color: #dc2626;"></i>Véhicule Source
+              <i class="fas fa-car me-2" style="color: #dc2626;"></i>Véhicule Source <small style="color: var(--text-secondary); font-weight: normal;">(optionnel)</small>
             </label>
             <select id="from_vehicle_id" name="from_vehicle_id" class="form-hl-select" onchange="updateMovementSummary()">
               <option value="">Aucun véhicule source</option>
@@ -211,10 +211,10 @@
         <div class="form-row">
           <div class="form-group" style="margin-bottom: var(--space-lg);">
             <label for="to_depot_id" class="form-hl-label">
-              <i class="fas fa-warehouse me-2" style="color: #16a34a;"></i>Dépôt Destination
+              <i class="fas fa-warehouse me-2" style="color: #16a34a;"></i>Dépôt Destination <span style="color: var(--color-danger);">*</span>
             </label>
-            <select id="to_depot_id" name="to_depot_id" class="form-hl-select" onchange="updateMovementSummary()">
-              <option value="">Aucun dépôt destination</option>
+            <select id="to_depot_id" name="to_depot_id" class="form-hl-select" required onchange="updateMovementSummary()">
+              <option value="">Sélectionner un dépôt destination</option>
               {% for depot in depots %}
               <option value="{{ depot.id }}">{{ depot.name }}</option>
               {% endfor %}
@@ -222,7 +222,7 @@
           </div>
           <div class="form-group" style="margin-bottom: var(--space-lg);">
             <label for="to_vehicle_id" class="form-hl-label">
-              <i class="fas fa-car me-2" style="color: #16a34a;"></i>Véhicule Destination
+              <i class="fas fa-car me-2" style="color: #16a34a;"></i>Véhicule Destination <small style="color: var(--text-secondary); font-weight: normal;">(optionnel)</small>
             </label>
             <select id="to_vehicle_id" name="to_vehicle_id" class="form-hl-select" onchange="updateMovementSummary()">
               <option value="">Aucun véhicule destination</option>

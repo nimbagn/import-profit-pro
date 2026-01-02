@@ -934,6 +934,17 @@ def movement_new():
                 #
                 # Crée 2 mouvements : SORTIE (négatif) depuis la source + ENTRÉE (positif) vers la destination
                 
+                # Validation : Les dépôts sont obligatoires, les véhicules sont facultatifs
+                if not from_depot_id:
+                    flash('Le dépôt source est obligatoire', 'error')
+                    form_data = get_movement_form_data()
+                    return render_template('stocks/movement_form.html', movement_type=movement_type, **form_data)
+                
+                if not to_depot_id:
+                    flash('Le dépôt destination est obligatoire', 'error')
+                    form_data = get_movement_form_data()
+                    return render_template('stocks/movement_form.html', movement_type=movement_type, **form_data)
+                
                 # Validation : source et destination ne peuvent pas être identiques
                 if (from_depot_id and to_depot_id and int(from_depot_id) == int(to_depot_id)) or \
                    (from_vehicle_id and to_vehicle_id and int(from_vehicle_id) == int(to_vehicle_id)) or \
