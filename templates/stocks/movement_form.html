@@ -95,13 +95,23 @@
         <small style="color: var(--text-secondary); font-size: 0.75rem;">Utilisateur émetteur</small>
       </div>
       <div>
-        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
-          <i class="fas fa-calendar me-2"></i>Date
+        <label for="movement_date" class="form-hl-label" style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
+          <i class="fas fa-calendar-alt me-2"></i>Date d'enregistrement
         </label>
-        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);" id="movementDate">
+        <input 
+          type="datetime-local" 
+          id="movement_date" 
+          name="movement_date" 
+          class="form-hl-input" 
+          style="width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.875rem;"
+        />
+        <div style="font-size: 0.875rem; font-weight: 500; color: var(--text-primary); margin-top: var(--space-xs);" id="movementDateDisplay">
           <!-- Date sera remplie par JavaScript -->
         </div>
-        <small style="color: var(--text-secondary); font-size: 0.75rem;">Date du mouvement</small>
+        <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: var(--space-xs); display: block;">
+          <i class="fas fa-info-circle me-1"></i>
+          Vous pouvez modifier la date et l'heure d'enregistrement du mouvement
+        </small>
       </div>
     </div>
 
@@ -303,6 +313,26 @@
       </div>
       {% endif %}
 
+      <!-- Champ de note pour tous les types de mouvements -->
+      <div class="form-group" style="margin-bottom: var(--space-lg); margin-top: var(--space-xl);">
+        <label for="operation_notes" class="form-hl-label">
+          <i class="fas fa-sticky-note me-2" style="color: var(--color-primary);"></i>
+          Notes sur l'opération
+          <small style="color: var(--text-secondary); font-weight: normal; margin-left: var(--space-xs);">(optionnel)</small>
+        </label>
+        <textarea 
+          id="operation_notes" 
+          name="operation_notes" 
+          class="form-hl-input" 
+          rows="4" 
+          placeholder="Ajoutez des notes, observations ou commentaires concernant cette opération de mouvement de stock..."
+          style="resize: vertical; min-height: 100px;"></textarea>
+        <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: var(--space-xs); display: block;">
+          <i class="fas fa-info-circle me-1"></i>
+          Ces notes seront enregistrées avec le mouvement et visibles dans l'historique
+        </small>
+      </div>
+
       <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
         <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
           <i class="fas fa-arrow-left me-2"></i>Annuler
@@ -318,17 +348,45 @@
 
 {% block extra_js %}
 <script>
-  // Afficher la date actuelle
+  // Initialiser la date actuelle dans le champ datetime-local
   document.addEventListener('DOMContentLoaded', function() {
-    const dateElement = document.getElementById('movementDate');
-    if (dateElement) {
+    const dateInput = document.getElementById('movement_date');
+    const dateDisplay = document.getElementById('movementDateDisplay');
+    
+    // Fonction pour formater et afficher la date
+    function updateDateDisplay() {
+      if (dateInput && dateDisplay) {
+        const selectedDate = new Date(dateInput.value);
+        if (!isNaN(selectedDate.getTime())) {
+          const day = String(selectedDate.getDate()).padStart(2, '0');
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+          const year = selectedDate.getFullYear();
+          const hours = String(selectedDate.getHours()).padStart(2, '0');
+          const minutes = String(selectedDate.getMinutes()).padStart(2, '0');
+          dateDisplay.textContent = `Date sélectionnée: ${day}/${month}/${year} à ${hours}:${minutes}`;
+        } else {
+          dateDisplay.textContent = '';
+        }
+      }
+    }
+    
+    // Initialiser le champ datetime-local avec la date/heure actuelle
+    if (dateInput && !dateInput.value) {
       const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0');
+      // Ajuster pour le fuseau horaire local (format datetime-local attendu)
       const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
-      dateElement.textContent = `${day}/${month}/${year} ${hours}:${minutes}`;
+      dateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      updateDateDisplay();
+    }
+    
+    // Mettre à jour l'affichage quand la date change
+    if (dateInput) {
+      dateInput.addEventListener('change', updateDateDisplay);
+      dateInput.addEventListener('input', updateDateDisplay);
     }
   });
 </script>

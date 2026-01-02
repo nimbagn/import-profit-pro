@@ -701,7 +701,7 @@ class StockMovement(db.Model):
     __tablename__ = "stock_movements"
     id = PK()
     reference = db.Column(db.String(50), nullable=True, unique=True, index=True)
-    movement_type = db.Column(db.Enum("transfer", "reception", "adjustment", "inventory", name="movement_type"), nullable=False)
+    movement_type = db.Column(db.Enum("transfer", "reception", "reception_return", "adjustment", "inventory", name="movement_type"), nullable=False)
     movement_date = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC), index=True)
     stock_item_id = FK("stock_items.id", onupdate="CASCADE", ondelete="RESTRICT")
     quantity = db.Column(N18_4, nullable=False)
@@ -839,15 +839,25 @@ class StockOutgoingDetail(db.Model):
         return f"<StockOutgoingDetail outgoing={self.outgoing_id} item={self.stock_item_id} qty={self.quantity}>"
 
 class StockReturn(db.Model):
-    """Retours de stock (retours clients)"""
+    """Retours de stock (retours clients ou retours fournisseurs)"""
     __tablename__ = "stock_returns"
     id = PK()
     reference = db.Column(db.String(50), unique=True, nullable=False, index=True)  # Référence unique
     return_date = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC), index=True)
-    client_name = db.Column(db.String(120), nullable=False)
+    
+    # Type de retour : 'client' (retour client) ou 'supplier' (retour fournisseur = mouvement inverse de réception)
+    return_type = db.Column(db.Enum("client", "supplier", name="return_type"), nullable=False, default="client", index=True)
+    
+    # Champs pour retours clients
+    client_name = db.Column(db.String(120), nullable=True)  # Modifié en nullable pour permettre retours fournisseurs
     client_phone = db.Column(db.String(20), nullable=True)
     original_outgoing_id = FK("stock_outgoings.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Référence sortie originale
     original_order_id = FK("commercial_orders.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Référence commande originale (optionnel)
+    
+    # Champs pour retours fournisseurs (mouvement inverse de réception)
+    supplier_name = db.Column(db.String(120), nullable=True)  # Nom du fournisseur pour retours fournisseurs
+    original_reception_id = FK("receptions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Référence réception originale
+    
     commercial_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
     vehicle_id = FK("vehicles.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
     depot_id = FK("depots.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
@@ -860,6 +870,7 @@ class StockReturn(db.Model):
     
     original_outgoing = db.relationship("StockOutgoing", foreign_keys=[original_outgoing_id], lazy="joined")
     original_order = db.relationship("CommercialOrder", foreign_keys=[original_order_id], lazy="joined")
+    original_reception = db.relationship("Reception", foreign_keys=[original_reception_id], lazy="joined")
     commercial = db.relationship("User", foreign_keys=[commercial_id], lazy="joined")
     user = db.relationship("User", foreign_keys=[user_id], lazy="joined")
     vehicle = db.relationship("Vehicle", lazy="joined")
@@ -869,11 +880,15 @@ class StockReturn(db.Model):
     __table_args__ = (
         db.Index("idx_return_date", "return_date"),
         db.Index("idx_return_reference", "reference"),
+        db.Index("idx_return_type", "return_type"),
         db.Index("idx_return_outgoing", "original_outgoing_id"),
         db.Index("idx_return_order", "original_order_id"),
+        db.Index("idx_return_reception", "original_reception_id"),
     )
     
     def __repr__(self):
+        if self.return_type == 'supplier':
+            return f"<StockReturn {self.reference} to {self.supplier_name}>"
         return f"<StockReturn {self.reference} from {self.client_name}>"
 
 class StockReturnDetail(db.Model):

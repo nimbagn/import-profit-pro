@@ -175,20 +175,28 @@
     <!-- Informations supplémentaires -->
     {% if main_movement.supplier_name or main_movement.bl_number or main_movement.reason %}
     <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-md);">
-      <h4 style="margin-bottom: var(--space-md); color: var(--text-primary);">Informations supplémentaires</h4>
+      <h4 style="margin-bottom: var(--space-md); color: var(--text-primary);">
+        <i class="fas fa-info-circle me-2"></i>Informations supplémentaires
+      </h4>
       {% if main_movement.supplier_name %}
       <div style="margin-bottom: var(--space-sm);">
-        <strong>Fournisseur:</strong> {{ main_movement.supplier_name }}
+        <strong><i class="fas fa-truck me-2" style="color: var(--color-primary);"></i>Fournisseur:</strong> {{ main_movement.supplier_name }}
       </div>
       {% endif %}
       {% if main_movement.bl_number %}
       <div style="margin-bottom: var(--space-sm);">
-        <strong>N° BL:</strong> {{ main_movement.bl_number }}
+        <strong><i class="fas fa-file-invoice me-2" style="color: var(--color-primary);"></i>N° BL:</strong> {{ main_movement.bl_number }}
       </div>
       {% endif %}
       {% if main_movement.reason %}
-      <div>
-        <strong>Raison:</strong> {{ main_movement.reason }}
+      <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--gray-200);">
+        <strong style="display: flex; align-items: center; gap: var(--space-xs); margin-bottom: var(--space-sm);">
+          <i class="fas fa-sticky-note" style="color: var(--color-primary);"></i>
+          Notes sur l'opération:
+        </strong>
+        <div style="background: var(--white); padding: var(--space-md); border-radius: var(--radius-sm); border-left: 3px solid var(--color-primary); white-space: pre-wrap; color: var(--text-primary);">
+          {{ main_movement.reason }}
+        </div>
       </div>
       {% endif %}
     </div>

@@ -10,6 +10,7 @@ from flask_login import login_required, current_user  # type: ignore
 from datetime import datetime, UTC, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
+import time
 from models import (
     db, DepotStock, VehicleStock, StockMovement, StockItem, 
     Depot, Vehicle, Reception, ReceptionDetail, User,
@@ -26,10 +27,10 @@ stocks_bp = Blueprint('stocks', __name__, url_prefix='/stocks')
 def generate_movement_reference(movement_type='transfer', existing_references=None):
     """Génère une référence unique pour un mouvement de stock"""
     from datetime import datetime, UTC
-    import time
     prefix_map = {
         'transfer': 'TRANS',
         'reception': 'REC',
+        'reception_return': 'RET-REC',  # Retour fournisseur (mouvement inverse de réception)
         'adjustment': 'AJUST',
         'inventory': 'INV'
     }
@@ -923,6 +924,15 @@ def movement_new():
         # Ajustement
         reason = request.form.get('reason')
         
+        # Notes sur l'opération (pour tous les types de mouvements)
+        operation_notes = request.form.get('operation_notes', '').strip()
+        # Si des notes sont fournies, les ajouter à la raison (ou utiliser comme raison si reason est vide)
+        if operation_notes:
+            if reason:
+                reason = f"{reason}\n\nNotes: {operation_notes}"
+            else:
+                reason = operation_notes
+        
         # Traitement selon le type
         try:
             if movement_type == 'transfer':
@@ -1098,7 +1108,12 @@ def movement_new():
                             movement_date_str = request.form.get('movement_date')
                             if movement_date_str:
                                 try:
-                                    movement_date = datetime.strptime(movement_date_str, '%Y-%m-%d')
+                                    # Format datetime-local: YYYY-MM-DDTHH:MM
+                                    if 'T' in movement_date_str:
+                                        movement_date = datetime.strptime(movement_date_str, '%Y-%m-%dT%H:%M')
+                                    else:
+                                        # Format date seulement: YYYY-MM-DD
+                                        movement_date = datetime.strptime(movement_date_str, '%Y-%m-%d')
                                 except:
                                     movement_date = datetime.now()
                             else:
@@ -1275,7 +1290,12 @@ def movement_new():
                 movement_date_str = request.form.get('movement_date')
                 if movement_date_str:
                     try:
-                        movement_date = datetime.strptime(movement_date_str, '%Y-%m-%d')
+                        # Format datetime-local: YYYY-MM-DDTHH:MM
+                        if 'T' in movement_date_str:
+                            movement_date = datetime.strptime(movement_date_str, '%Y-%m-%dT%H:%M')
+                        else:
+                            # Format date seulement: YYYY-MM-DD
+                            movement_date = datetime.strptime(movement_date_str, '%Y-%m-%d')
                     except:
                         movement_date = datetime.now()
                 else:
@@ -2695,25 +2715,45 @@ def returns_export_excel():
 @stocks_bp.route('/returns/new', methods=['GET', 'POST'])
 @login_required
 def return_new():
-    """Créer un nouveau retour de stock"""
+    """Créer un nouveau retour de stock (client ou fournisseur)"""
     if not has_permission(current_user, 'returns.create'):
         flash('Vous n\'avez pas la permission de créer un retour', 'error')
         return redirect(url_for('stocks.returns_list'))
     
     if request.method == 'POST':
-        client_name = request.form.get('client_name')
-        client_phone = request.form.get('client_phone')
-        original_outgoing_id = request.form.get('original_outgoing_id') or None
-        commercial_id = request.form.get('commercial_id') or None
-        vehicle_id = request.form.get('vehicle_id') or None
-        depot_id = request.form.get('depot_id') or None
+        # Déterminer le type de retour
+        return_type = request.form.get('return_type', 'client')  # 'client' ou 'supplier'
+        
+        # Champs communs
         return_date = request.form.get('return_date') or datetime.now(UTC)
         reason = request.form.get('reason')
         notes = request.form.get('notes')
+        commercial_id = request.form.get('commercial_id') or None
+        vehicle_id = request.form.get('vehicle_id') or None
+        depot_id = request.form.get('depot_id') or None
         
-        if not client_name:
-            flash('Le nom du client est obligatoire', 'error')
-            return render_template('stocks/return_form.html', **get_return_form_data())
+        # Champs spécifiques selon le type
+        if return_type == 'supplier':
+            # Retour fournisseur (mouvement inverse de réception)
+            supplier_name = request.form.get('supplier_name')
+            original_reception_id = request.form.get('original_reception_id') or None
+            
+            if not supplier_name:
+                flash('Le nom du fournisseur est obligatoire pour un retour fournisseur', 'error')
+                return render_template('stocks/return_form.html', **get_return_form_data())
+            
+            if not depot_id:
+                flash('Le dépôt source est obligatoire pour un retour fournisseur', 'error')
+                return render_template('stocks/return_form.html', **get_return_form_data())
+        else:
+            # Retour client (logique actuelle)
+            client_name = request.form.get('client_name')
+            client_phone = request.form.get('client_phone')
+            original_outgoing_id = request.form.get('original_outgoing_id') or None
+            
+            if not client_name:
+                flash('Le nom du client est obligatoire', 'error')
+                return render_template('stocks/return_form.html', **get_return_form_data())
         
         # Générer une référence unique avec UUID pour éviter les collisions
         import uuid
@@ -2736,8 +2776,7 @@ def return_new():
         # Construire les données du retour
         return_data = {
             'reference': reference,
-            'client_name': client_name,
-            'client_phone': client_phone,
+            'return_type': return_type,
             'commercial_id': int(commercial_id) if commercial_id else None,
             'vehicle_id': int(vehicle_id) if vehicle_id else None,
             'depot_id': int(depot_id) if depot_id else None,
@@ -2748,15 +2787,16 @@ def return_new():
             'status': 'draft'
         }
         
-        # Ajouter original_outgoing_id seulement si la colonne existe
-        try:
-            from sqlalchemy import inspect
-            inspector = inspect(db.engine)
-            columns = [col['name'] for col in inspector.get_columns('stock_returns')]
-            if 'original_outgoing_id' in columns and original_outgoing_id:
+        # Ajouter les champs spécifiques selon le type
+        if return_type == 'supplier':
+            return_data['supplier_name'] = supplier_name
+            if original_reception_id:
+                return_data['original_reception_id'] = int(original_reception_id)
+        else:
+            return_data['client_name'] = client_name
+            return_data['client_phone'] = client_phone
+            if original_outgoing_id:
                 return_data['original_outgoing_id'] = int(original_outgoing_id)
-        except:
-            pass  # Si on ne peut pas vérifier, on continue sans original_outgoing_id
         
         return_ = StockReturn(**return_data)
         db.session.add(return_)
@@ -2769,7 +2809,7 @@ def return_new():
             db.session.rollback()
             return render_template('stocks/return_form.html', **get_return_form_data())
         
-        # Créer les détails et incrémenter les stocks
+        # Créer les détails et gérer les stocks selon le type de retour
         for item_data in items_data:
             if item_data:
                 parts = item_data.split(',')
@@ -2777,71 +2817,101 @@ def return_new():
                     item_id = int(parts[0])
                     qty = Decimal(parts[1])
                     
-                    # Incrémenter le stock (cache)
-                    if vehicle_id:
-                        stock = VehicleStock.query.filter_by(vehicle_id=int(vehicle_id), stock_item_id=item_id).first()
-                        if not stock:
-                            stock = VehicleStock(vehicle_id=int(vehicle_id), stock_item_id=item_id, quantity=Decimal('0'))
-                            db.session.add(stock)
-                        stock.quantity += qty
-                        
-                        # Créer le mouvement de stock (ENTRÉE = positif)
-                        # Utiliser 'transfer' comme type mais avec reason détaillé pour distinguer les retours clients
-                        movement_ref = generate_movement_reference('transfer')
-                        # Convertir return_date si c'est une string
-                        return_date = return_.return_date
-                        if isinstance(return_date, str):
-                            try:
-                                return_date = datetime.strptime(return_date, '%Y-%m-%d')
-                            except:
-                                return_date = datetime.now()
-                        
-                        movement = StockMovement(
-                            reference=movement_ref,
-                            movement_type='transfer',  # Type 'transfer' mais reason indique 'Retour client'
-                            movement_date=return_date,
-                            stock_item_id=item_id,
-                            quantity=qty,  # POSITIF pour entrée
-                            user_id=current_user.id,
-                            from_depot_id=None,
-                            from_vehicle_id=None,
-                            to_depot_id=None,
-                            to_vehicle_id=int(vehicle_id),
-                            reason=f'[RETOUR_CLIENT] Retour client: {client_name} - Référence retour: {return_.reference}'
-                        )
-                        db.session.add(movement)
-                    elif depot_id:
-                        stock = DepotStock.query.filter_by(depot_id=int(depot_id), stock_item_id=item_id).first()
-                        if not stock:
-                            stock = DepotStock(depot_id=int(depot_id), stock_item_id=item_id, quantity=Decimal('0'))
-                            db.session.add(stock)
-                        stock.quantity += qty
-                        
-                        # Créer le mouvement de stock (ENTRÉE = positif)
-                        # Utiliser 'transfer' comme type mais avec reason détaillé pour distinguer les retours clients
-                        movement_ref = generate_movement_reference('transfer')
-                        # Convertir return_date si c'est une string
-                        return_date = return_.return_date
-                        if isinstance(return_date, str):
-                            try:
-                                return_date = datetime.strptime(return_date, '%Y-%m-%d')
-                            except:
-                                return_date = datetime.now()
-                        
-                        movement = StockMovement(
-                            reference=movement_ref,
-                            movement_type='transfer',  # Type 'transfer' mais reason indique 'Retour client'
-                            movement_date=return_date,
-                            stock_item_id=item_id,
-                            quantity=qty,  # POSITIF pour entrée
-                            user_id=current_user.id,
-                            from_depot_id=None,
-                            from_vehicle_id=None,
-                            to_depot_id=int(depot_id),
-                            to_vehicle_id=None,
-                            reason=f'[RETOUR_CLIENT] Retour client: {client_name} - Référence retour: {return_.reference}'
-                        )
-                        db.session.add(movement)
+                    # Convertir return_date si c'est une string
+                    return_date_obj = return_.return_date
+                    if isinstance(return_date_obj, str):
+                        try:
+                            return_date_obj = datetime.strptime(return_date_obj, '%Y-%m-%d')
+                        except:
+                            return_date_obj = datetime.now()
+                    
+                    if return_type == 'supplier':
+                        # RETOUR FOURNISSEUR : Mouvement inverse de réception
+                        # Diminue le stock (quantité NÉGATIVE)
+                        if depot_id:
+                            # Vérifier que le stock est suffisant
+                            stock = DepotStock.query.filter_by(depot_id=int(depot_id), stock_item_id=item_id).first()
+                            if not stock or stock.quantity < qty:
+                                item = StockItem.query.get(item_id)
+                                item_name = item.name if item else f"ID {item_id}"
+                                available = stock.quantity if stock else Decimal('0')
+                                flash(f'Stock insuffisant pour {item_name} (disponible: {available}, requis: {qty})', 'error')
+                                db.session.rollback()
+                                return render_template('stocks/return_form.html', **get_return_form_data())
+                            
+                            # Diminuer le stock
+                            stock.quantity -= qty
+                            
+                            # Créer le mouvement de stock (SORTIE = négatif)
+                            movement_ref = generate_movement_reference('reception_return')
+                            movement = StockMovement(
+                                reference=movement_ref,
+                                movement_type='reception_return',  # Type dédié pour retours fournisseurs
+                                movement_date=return_date_obj,
+                                stock_item_id=item_id,
+                                quantity=-qty,  # NÉGATIF pour diminuer le stock
+                                user_id=current_user.id,
+                                from_depot_id=int(depot_id),  # Source = dépôt
+                                from_vehicle_id=None,
+                                to_depot_id=None,  # Pas de destination (retour externe)
+                                to_vehicle_id=None,
+                                supplier_name=supplier_name,
+                                reason=f'[RETOUR_FOURNISSEUR] Retour vers {supplier_name} - Référence retour: {return_.reference}' + 
+                                       (f' - Référence réception: {return_.original_reception.reference}' if return_.original_reception else '')
+                            )
+                            db.session.add(movement)
+                        else:
+                            flash('Le dépôt source est obligatoire pour un retour fournisseur', 'error')
+                            db.session.rollback()
+                            return render_template('stocks/return_form.html', **get_return_form_data())
+                    else:
+                        # RETOUR CLIENT : Augmente le stock (quantité POSITIVE)
+                        if vehicle_id:
+                            stock = VehicleStock.query.filter_by(vehicle_id=int(vehicle_id), stock_item_id=item_id).first()
+                            if not stock:
+                                stock = VehicleStock(vehicle_id=int(vehicle_id), stock_item_id=item_id, quantity=Decimal('0'))
+                                db.session.add(stock)
+                            stock.quantity += qty
+                            
+                            # Créer le mouvement de stock (ENTRÉE = positif)
+                            movement_ref = generate_movement_reference('transfer')
+                            movement = StockMovement(
+                                reference=movement_ref,
+                                movement_type='transfer',  # Type 'transfer' pour retours clients
+                                movement_date=return_date_obj,
+                                stock_item_id=item_id,
+                                quantity=qty,  # POSITIF pour entrée
+                                user_id=current_user.id,
+                                from_depot_id=None,
+                                from_vehicle_id=None,
+                                to_depot_id=None,
+                                to_vehicle_id=int(vehicle_id),
+                                reason=f'[RETOUR_CLIENT] Retour client: {client_name} - Référence retour: {return_.reference}'
+                            )
+                            db.session.add(movement)
+                        elif depot_id:
+                            stock = DepotStock.query.filter_by(depot_id=int(depot_id), stock_item_id=item_id).first()
+                            if not stock:
+                                stock = DepotStock(depot_id=int(depot_id), stock_item_id=item_id, quantity=Decimal('0'))
+                                db.session.add(stock)
+                            stock.quantity += qty
+                            
+                            # Créer le mouvement de stock (ENTRÉE = positif)
+                            movement_ref = generate_movement_reference('transfer')
+                            movement = StockMovement(
+                                reference=movement_ref,
+                                movement_type='transfer',  # Type 'transfer' pour retours clients
+                                movement_date=return_date_obj,
+                                stock_item_id=item_id,
+                                quantity=qty,  # POSITIF pour entrée
+                                user_id=current_user.id,
+                                from_depot_id=None,
+                                from_vehicle_id=None,
+                                to_depot_id=int(depot_id),
+                                to_vehicle_id=None,
+                                reason=f'[RETOUR_CLIENT] Retour client: {client_name} - Référence retour: {return_.reference}'
+                            )
+                            db.session.add(movement)
                     
                     detail = StockReturnDetail(
                         return_id=return_.id,
@@ -2869,6 +2939,7 @@ def get_return_form_data():
         'depots': Depot.query.filter_by(is_active=True).order_by(Depot.name).all(),
         'vehicles': Vehicle.query.filter_by(status='active').order_by(Vehicle.plate_number).all(),
         'outgoings': StockOutgoing.query.filter_by(status='completed').order_by(StockOutgoing.outgoing_date.desc()).limit(100).all(),
+        'receptions': Reception.query.filter_by(status='completed').order_by(Reception.reception_date.desc()).limit(100).all(),
         'commercials': commercials
     }
 
@@ -4197,9 +4268,55 @@ def update_movements_signs():
             # Maintenant créer les nouveaux mouvements (après le flush)
             for data in transfers_to_split:
                 try:
-                    # Créer SORTIE (négatif) - utiliser la référence originale
+                    # Vérifier si la référence originale existe déjà
+                    original_ref = data['reference']
+                    ref_out = None
+                    ref_in = None
+                    
+                    # Vérifier si la référence originale existe déjà dans la base
+                    existing = StockMovement.query.filter_by(reference=original_ref).first()
+                    if existing:
+                        # Générer des références uniques
+                        date_str = data['movement_date'].strftime('%Y%m%d') if data['movement_date'] else datetime.now().strftime('%Y%m%d')
+                        base_ref = original_ref.split('-')[0] if '-' in original_ref else 'TRANS'
+                        
+                        # Chercher des références uniques
+                        counter = 1
+                        while True:
+                            ref_out = f"{base_ref}-{date_str}-{counter:04d}-OUT"
+                            ref_in = f"{base_ref}-{date_str}-{counter:04d}-IN"
+                            
+                            # Vérifier si ces références existent déjà
+                            if not StockMovement.query.filter_by(reference=ref_out).first() and \
+                               not StockMovement.query.filter_by(reference=ref_in).first():
+                                break
+                            counter += 1
+                            
+                            # Sécurité : éviter une boucle infinie
+                            if counter > 9999:
+                                # Utiliser un timestamp pour garantir l'unicité
+                                timestamp = int(time.time())
+                                ref_out = f"{base_ref}-{date_str}-{timestamp}-OUT"
+                                ref_in = f"{base_ref}-{date_str}-{timestamp}-IN"
+                                break
+                    else:
+                        # Utiliser la référence originale avec suffixe
+                        ref_out = f"{original_ref}-OUT"
+                        ref_in = f"{original_ref}-IN"
+                        
+                        # Vérifier si ces références existent déjà
+                        if StockMovement.query.filter_by(reference=ref_out).first() or \
+                           StockMovement.query.filter_by(reference=ref_in).first():
+                            # Générer des références uniques
+                            date_str = data['movement_date'].strftime('%Y%m%d') if data['movement_date'] else datetime.now().strftime('%Y%m%d')
+                            base_ref = original_ref.split('-')[0] if '-' in original_ref else 'TRANS'
+                            timestamp = int(time.time())
+                            ref_out = f"{base_ref}-{date_str}-{timestamp}-OUT"
+                            ref_in = f"{base_ref}-{date_str}-{timestamp}-IN"
+                    
+                    # Créer SORTIE (négatif)
                     movement_out = StockMovement(
-                        reference=data['reference'],
+                        reference=ref_out,
                         movement_type='transfer',
                         movement_date=data['movement_date'],
                         stock_item_id=data['stock_item_id'],
@@ -4212,12 +4329,11 @@ def update_movements_signs():
                         reason=data['reason']
                     )
                     db.session.add(movement_out)
-                    # Flush immédiat pour éviter la contrainte d'unicité
                     db.session.flush()
                     
-                    # Créer ENTRÉE (positif) - utiliser la même référence
+                    # Créer ENTRÉE (positif)
                     movement_in = StockMovement(
-                        reference=data['reference'],
+                        reference=ref_in,
                         movement_type='transfer',
                         movement_date=data['movement_date'],
                         stock_item_id=data['stock_item_id'],
@@ -4230,53 +4346,14 @@ def update_movements_signs():
                         reason=data['reason']
                     )
                     db.session.add(movement_in)
-                    # Flush immédiat
                     db.session.flush()
                     
                     stats['transfers_created'] += 2
                 except Exception as e:
-                    stats['errors'].append(f"Création transfert {data['reference']}: {str(e)}")
+                    stats['errors'].append(f"Création transfert {data.get('reference', 'N/A')}: {str(e)}")
                     db.session.rollback()
-                    # Réessayer avec une référence unique temporaire
-                    try:
-                        # Utiliser une référence différente pour éviter le conflit
-                        temp_ref_out = f"{data['reference']}-OUT"
-                        temp_ref_in = f"{data['reference']}-IN"
-                        
-                        movement_out = StockMovement(
-                            reference=temp_ref_out,
-                            movement_type='transfer',
-                            movement_date=data['movement_date'],
-                            stock_item_id=data['stock_item_id'],
-                            quantity=Decimal(str(-data['quantity'])),
-                            user_id=data['user_id'],
-                            from_depot_id=data['from_depot_id'],
-                            from_vehicle_id=data['from_vehicle_id'],
-                            to_depot_id=None,
-                            to_vehicle_id=None,
-                            reason=data['reason']
-                        )
-                        db.session.add(movement_out)
-                        db.session.flush()
-                        
-                        movement_in = StockMovement(
-                            reference=temp_ref_in,
-                            movement_type='transfer',
-                            movement_date=data['movement_date'],
-                            stock_item_id=data['stock_item_id'],
-                            quantity=Decimal(str(data['quantity'])),
-                            user_id=data['user_id'],
-                            from_depot_id=None,
-                            from_vehicle_id=None,
-                            to_depot_id=data['to_depot_id'],
-                            to_vehicle_id=data['to_vehicle_id'],
-                            reason=data['reason']
-                        )
-                        db.session.add(movement_in)
-                        db.session.flush()
-                        stats['transfers_created'] += 2
-                    except Exception as e2:
-                        stats['errors'].append(f"Erreur critique transfert {data['reference']}: {str(e2)}")
+                    # Continuer avec le prochain transfert
+                    continue
             
             # 2. Traiter les réceptions
             receptions = StockMovement.query.filter_by(movement_type='reception').all()
@@ -4318,20 +4395,37 @@ def update_movements_signs():
                 except Exception as e:
                     stats['errors'].append(f"Ajustement ID {movement.id}: {str(e)}")
             
-            db.session.commit()
-            
-            flash(f"""
-                ✅ Mise à jour terminée !<br>
-                📦 Transferts: {stats['transfers_updated']} traités ({stats['transfers_created']} nouveaux mouvements créés)<br>
-                📥 Réceptions: {stats['receptions_updated']} corrigées<br>
-                🔧 Ajustements: {stats['adjustments_updated']} corrigés<br>
-                {'❌ Erreurs: ' + str(len(stats['errors'])) if stats['errors'] else ''}
-            """, 'success')
-            
-            return redirect(url_for('stocks.movements_list'))
+            try:
+                db.session.commit()
+                
+                error_msg = ""
+                if stats['errors']:
+                    error_msg = f"<br>❌ Erreurs ({len(stats['errors'])}):<br>" + "<br>".join(stats['errors'][:10])
+                    if len(stats['errors']) > 10:
+                        error_msg += f"<br>... et {len(stats['errors']) - 10} autres erreurs"
+                
+                flash(f"""
+                    ✅ Mise à jour terminée !<br>
+                    📦 Transferts: {stats['transfers_updated']} traités ({stats['transfers_created']} nouveaux mouvements créés)<br>
+                    📥 Réceptions: {stats['receptions_updated']} corrigées<br>
+                    🔧 Ajustements: {stats['adjustments_updated']} corrigés{error_msg}
+                """, 'success' if not stats['errors'] else 'warning')
+                
+                return redirect(url_for('stocks.movements_list'))
+                
+            except Exception as commit_error:
+                db.session.rollback()
+                import traceback
+                error_details = traceback.format_exc()
+                print(f"❌ Erreur lors du commit: {error_details}")
+                flash(f'Erreur lors du commit: {str(commit_error)}', 'error')
+                return redirect(url_for('stocks.update_movements_signs'))
             
         except Exception as e:
             db.session.rollback()
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"❌ Erreur lors de la mise à jour: {error_details}")
             flash(f'Erreur lors de la mise à jour: {str(e)}', 'error')
             return redirect(url_for('stocks.update_movements_signs'))
     
@@ -4419,8 +4513,13 @@ def stock_history():
     
     # Récupérer les mouvements avec optimisation N+1
     movements = movements_query.options(
-        joinedload(StockMovement.stock_item)
-    ).order_by(StockMovement.movement_date.desc()).limit(1000).all()
+        joinedload(StockMovement.stock_item),
+        joinedload(StockMovement.from_depot),
+        joinedload(StockMovement.to_depot),
+        joinedload(StockMovement.from_vehicle),
+        joinedload(StockMovement.to_vehicle),
+        joinedload(StockMovement.user)
+    ).order_by(StockMovement.movement_date.asc()).limit(1000).all()  # Ordre croissant pour calculer le solde progressif
     
     # Grouper par article
     movements_by_item = {}
@@ -4433,13 +4532,64 @@ def stock_history():
             }
         movements_by_item[item_id]['movements'].append(movement)
     
-    # Calculer les totaux par article
+    # Calculer le stock initial (avant la période filtrée) et le solde progressif
     for item_id, data in movements_by_item.items():
+        stock_item = data['item']
+        
+        # Calculer le stock initial : somme de tous les mouvements AVANT la période filtrée
+        initial_stock_query = StockMovement.query.filter_by(stock_item_id=item_id)
+        
+        # Calculer le stock initial : somme de tous les mouvements AVANT la période filtrée
+        # Récupérer la date de début du filtre
+        filter_start = None
+        
+        if period == 'today':
+            filter_start = today
+        elif period == 'week':
+            filter_start = today - timedelta(days=today.weekday())
+        elif period == 'month':
+            filter_start = today.replace(day=1)
+        elif period == 'year':
+            filter_start = today.replace(month=1, day=1)
+        elif period == 'custom' and start_date:
+            try:
+                filter_start = datetime.strptime(start_date, '%Y-%m-%d')
+            except:
+                filter_start = None
+        # Si period == 'all', filter_start reste None (pas de limite)
+        
+        if filter_start:
+            # Stock initial = somme de tous les mouvements avant la date de début
+            initial_movements = initial_stock_query.filter(
+                StockMovement.movement_date < filter_start
+            ).all()
+            initial_stock = sum(Decimal(str(m.quantity)) for m in initial_movements)
+        else:
+            # Pas de filtre de date (period == 'all'), stock initial = 0
+            initial_stock = Decimal('0')
+        
+        data['initial_stock'] = float(initial_stock)
+        
+        # Trier les mouvements par date croissante (du plus ancien au plus récent) pour calculer le solde progressif
+        data['movements'].sort(key=lambda m: (m.movement_date, m.id))
+        
+        # Calculer le solde progressif pour chaque mouvement dans l'ordre chronologique
+        running_balance = initial_stock
+        for movement in data['movements']:
+            running_balance += Decimal(str(movement.quantity))
+            movement.running_balance = float(running_balance)
+        
+        # Stock final
+        data['final_stock'] = float(running_balance)
+        
+        # Calculer les totaux par article
         entries = sum(float(m.quantity) for m in data['movements'] if float(m.quantity) > 0)
         exits = sum(abs(float(m.quantity)) for m in data['movements'] if float(m.quantity) < 0)
         data['total_entries'] = entries
         data['total_exits'] = exits
         data['net'] = entries - exits
+        
+        # Les mouvements restent triés par date croissante pour l'affichage hiérarchique (du plus ancien au plus récent)
     
     # Récupérer les données pour les filtres
     stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
