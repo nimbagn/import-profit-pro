@@ -193,7 +193,135 @@ BEGIN
 END $$;
 
 -- =========================================================
--- 4. unit_price_gnf NULLABLE DANS reception_details
+-- 4. CORRECTION TABLES depot_stocks ET vehicle_stocks
+-- =========================================================
+DO $$
+BEGIN
+    -- Créer depot_stocks si elle n'existe pas
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'depot_stocks'
+    ) THEN
+        CREATE TABLE depot_stocks (
+            id BIGSERIAL PRIMARY KEY,
+            depot_id BIGINT NOT NULL,
+            stock_item_id BIGINT NOT NULL,
+            quantity NUMERIC(18,4) NOT NULL DEFAULT 0.0000,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        RAISE NOTICE '✅ Table depot_stocks créée';
+    END IF;
+    
+    -- Ajouter colonnes manquantes à depot_stocks
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'depot_stocks' AND column_name = 'updated_at'
+    ) THEN
+        ALTER TABLE depot_stocks ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+    
+    -- Contraintes et index pour depot_stocks
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_depot_stock') THEN
+        ALTER TABLE depot_stocks ADD CONSTRAINT uq_depot_stock UNIQUE (depot_id, stock_item_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_depotstock_depot') THEN
+        ALTER TABLE depot_stocks ADD CONSTRAINT fk_depotstock_depot 
+        FOREIGN KEY (depot_id) REFERENCES depots(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_depotstock_item') THEN
+        ALTER TABLE depot_stocks ADD CONSTRAINT fk_depotstock_item 
+        FOREIGN KEY (stock_item_id) REFERENCES stock_items(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    END IF;
+    CREATE INDEX IF NOT EXISTS idx_depotstock_depot ON depot_stocks(depot_id);
+    CREATE INDEX IF NOT EXISTS idx_depotstock_item ON depot_stocks(stock_item_id);
+    CREATE INDEX IF NOT EXISTS idx_depotstock_depot_item ON depot_stocks(depot_id, stock_item_id);
+    
+    -- Créer vehicle_stocks si elle n'existe pas
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'vehicle_stocks'
+    ) THEN
+        CREATE TABLE vehicle_stocks (
+            id BIGSERIAL PRIMARY KEY,
+            vehicle_id BIGINT NOT NULL,
+            stock_item_id BIGINT NOT NULL,
+            quantity NUMERIC(18,4) NOT NULL DEFAULT 0.0000,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        RAISE NOTICE '✅ Table vehicle_stocks créée';
+    END IF;
+    
+    -- Ajouter colonnes manquantes à vehicle_stocks
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'vehicle_stocks' AND column_name = 'updated_at'
+    ) THEN
+        ALTER TABLE vehicle_stocks ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+    
+    -- Contraintes et index pour vehicle_stocks
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_vehicle_stock') THEN
+        ALTER TABLE vehicle_stocks ADD CONSTRAINT uq_vehicle_stock UNIQUE (vehicle_id, stock_item_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_vehiclestock_vehicle') THEN
+        ALTER TABLE vehicle_stocks ADD CONSTRAINT fk_vehiclestock_vehicle 
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_vehiclestock_item') THEN
+        ALTER TABLE vehicle_stocks ADD CONSTRAINT fk_vehiclestock_item 
+        FOREIGN KEY (stock_item_id) REFERENCES stock_items(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    END IF;
+    CREATE INDEX IF NOT EXISTS idx_vehiclestock_vehicle ON vehicle_stocks(vehicle_id);
+    CREATE INDEX IF NOT EXISTS idx_vehiclestock_item ON vehicle_stocks(stock_item_id);
+    CREATE INDEX IF NOT EXISTS idx_vehiclestock_vehicle_item ON vehicle_stocks(vehicle_id, stock_item_id);
+    
+    -- Synchroniser les données depuis stock_movements
+    -- IMPORTANT : Recalculer depuis zéro pour corriger les incohérences
+    RAISE NOTICE '🔄 Synchronisation des stocks depuis stock_movements...';
+    
+    -- Synchroniser depot_stocks : Recalculer depuis zéro
+    DELETE FROM depot_stocks;
+    
+    INSERT INTO depot_stocks (depot_id, stock_item_id, quantity, updated_at)
+    SELECT 
+        depot_id,
+        stock_item_id,
+        COALESCE(SUM(quantity_change), 0) as quantity,
+        CURRENT_TIMESTAMP
+    FROM (
+        SELECT to_depot_id as depot_id, stock_item_id, quantity as quantity_change
+        FROM stock_movements WHERE to_depot_id IS NOT NULL
+        UNION ALL
+        SELECT from_depot_id as depot_id, stock_item_id, -ABS(quantity) as quantity_change
+        FROM stock_movements WHERE from_depot_id IS NOT NULL
+    ) as stock_changes
+    WHERE depot_id IS NOT NULL
+    GROUP BY depot_id, stock_item_id;
+    
+    -- Synchroniser vehicle_stocks : Recalculer depuis zéro
+    DELETE FROM vehicle_stocks;
+    
+    INSERT INTO vehicle_stocks (vehicle_id, stock_item_id, quantity, updated_at)
+    SELECT 
+        vehicle_id,
+        stock_item_id,
+        COALESCE(SUM(quantity_change), 0) as quantity,
+        CURRENT_TIMESTAMP
+    FROM (
+        SELECT to_vehicle_id as vehicle_id, stock_item_id, quantity as quantity_change
+        FROM stock_movements WHERE to_vehicle_id IS NOT NULL
+        UNION ALL
+        SELECT from_vehicle_id as vehicle_id, stock_item_id, -ABS(quantity) as quantity_change
+        FROM stock_movements WHERE from_vehicle_id IS NOT NULL
+    ) as stock_changes
+    WHERE vehicle_id IS NOT NULL
+    GROUP BY vehicle_id, stock_item_id;
+    
+    RAISE NOTICE '✅ Tables depot_stocks et vehicle_stocks corrigées et synchronisées';
+END $$;
+
+-- =========================================================
+-- 5. unit_price_gnf NULLABLE DANS reception_details
 -- =========================================================
 DO $$
 BEGIN
@@ -213,7 +341,7 @@ EXCEPTION
 END $$;
 
 -- =========================================================
--- 5. RETOURS FOURNISSEURS : Colonnes dans stock_returns
+-- 6. RETOURS FOURNISSEURS : Colonnes dans stock_returns
 -- =========================================================
 DO $$
 BEGIN
@@ -283,7 +411,7 @@ BEGIN
 END $$;
 
 -- =========================================================
--- 6. TYPE DE MOUVEMENT 'reception_return' DANS movement_type
+-- 7. TYPE DE MOUVEMENT 'reception_return' DANS movement_type
 -- =========================================================
 DO $$
 BEGIN
@@ -300,7 +428,7 @@ BEGIN
 END $$;
 
 -- =========================================================
--- 7. PERMISSIONS RÔLE MAGASINIER (warehouse)
+-- 8. PERMISSIONS RÔLE MAGASINIER (warehouse)
 -- =========================================================
 DO $$
 DECLARE
@@ -356,7 +484,7 @@ BEGIN
 END $$;
 
 -- =========================================================
--- 8. PERMISSIONS RÔLE RH_ASSISTANT
+-- 9. PERMISSIONS RÔLE RH_ASSISTANT
 -- =========================================================
 DO $$
 DECLARE
@@ -465,6 +593,26 @@ BEGIN
         RAISE NOTICE '✅ FK stock_movements: OK';
     ELSE
         RAISE WARNING '❌ FK stock_movements: MANQUANTES';
+    END IF;
+    
+    -- Vérifier depot_stocks
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'depot_stocks'
+    ) THEN
+        RAISE NOTICE '✅ Table depot_stocks: OK';
+    ELSE
+        RAISE WARNING '❌ Table depot_stocks: MANQUANTE';
+    END IF;
+    
+    -- Vérifier vehicle_stocks
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'vehicle_stocks'
+    ) THEN
+        RAISE NOTICE '✅ Table vehicle_stocks: OK';
+    ELSE
+        RAISE WARNING '❌ Table vehicle_stocks: MANQUANTE';
     END IF;
     
     RAISE NOTICE '========================================';

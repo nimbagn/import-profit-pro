@@ -1,0 +1,88 @@
+========================================
+CORRIGER MODULE STOCKS SUR RENDER
+========================================
+
+📋 PROBLÈME :
+Erreur "Stock insuffisant à la source" sur Render
+La route /stocks/movements/new ne fonctionne pas correctement
+
+🔧 SOLUTION :
+Exécuter les scripts SQL pour corriger les tables de stock
+
+========================================
+ÉTAPES RAPIDES :
+========================================
+
+1. Accéder au Shell PostgreSQL sur Render
+   Dashboard Render → Service PostgreSQL → Shell/Connect
+
+2. Exécuter dans l'ordre :
+
+   a) Fix stock_movements :
+   psql $DATABASE_URL < scripts/fix_stock_movements_postgresql.sql
+
+   b) Fix depot_stocks et vehicle_stocks :
+   psql $DATABASE_URL < scripts/fix_stocks_tables_postgresql.sql
+
+   OU
+
+   c) Migration complète stocks (recommandé) :
+   psql $DATABASE_URL < scripts/migration_stocks_complete_postgresql.sql
+
+========================================
+VÉRIFICATION RAPIDE :
+========================================
+
+-- Vérifier depot_stocks
+SELECT COUNT(*) FROM depot_stocks;
+SELECT depot_id, stock_item_id, quantity 
+FROM depot_stocks 
+WHERE quantity > 0 
+LIMIT 10;
+
+-- Vérifier vehicle_stocks
+SELECT COUNT(*) FROM vehicle_stocks;
+SELECT vehicle_id, stock_item_id, quantity 
+FROM vehicle_stocks 
+WHERE quantity > 0 
+LIMIT 10;
+
+-- Vérifier stock_movements
+SELECT COUNT(*) FROM stock_movements;
+SELECT movement_type, COUNT(*) 
+FROM stock_movements 
+GROUP BY movement_type;
+
+========================================
+CE QUE LES SCRIPTS CORRIGENT :
+========================================
+
+✅ stock_movements :
+- Type ENUM movement_type avec toutes les valeurs
+- Colonne reference
+- Toutes les FK (from_depot, to_depot, from_vehicle, to_vehicle)
+- Tous les index
+
+✅ depot_stocks :
+- Création de la table si manquante
+- FK vers depots et stock_items
+- Index pour performances
+- Synchronisation depuis stock_movements
+
+✅ vehicle_stocks :
+- Création de la table si manquante
+- FK vers vehicles et stock_items
+- Index pour performances
+- Synchronisation depuis stock_movements
+
+========================================
+⚠️ IMPORTANT :
+========================================
+
+- Les scripts sont IDEMPOTENTS (peut être exécutés plusieurs fois)
+- Faites un BACKUP avant d'exécuter
+- La synchronisation recalcule les stocks depuis stock_movements
+- Cela corrige l'erreur "Stock insuffisant"
+
+========================================
+
