@@ -1,0 +1,45 @@
+=========================================================
+GUIDE RAPIDE : MIGRATION CHAT POSTGRESQL SUR RENDER
+=========================================================
+
+1. CONNEXION AU SHELL RENDER
+   - Allez sur https://dashboard.render.com
+   - Sélectionnez votre service PostgreSQL
+   - Cliquez sur "Shell"
+
+2. EXÉCUTION DU SCRIPT
+   
+   Option A : Via psql direct
+   ----------------------------------------
+   psql $DATABASE_URL
+   
+   Puis copiez-collez le contenu de :
+   scripts/create_chat_tables_postgresql.sql
+   
+   Option B : Via fichier
+   ----------------------------------------
+   psql $DATABASE_URL -f /opt/render/project/src/scripts/create_chat_tables_postgresql.sql
+   
+   Option C : Si le fichier n'est pas accessible
+   ----------------------------------------
+   # Créez un fichier temporaire avec le contenu du script
+   # Puis exécutez-le
+
+3. VÉRIFICATION
+   ----------------------------------------
+   \dt chat_*
+   
+   Vous devriez voir 5 tables :
+   - chat_rooms
+   - chat_room_members
+   - chat_messages
+   - chat_attachments
+   - chat_message_reads
+
+4. NOTES
+   - Le script est idempotent (peut être exécuté plusieurs fois)
+   - Les types ENUM sont créés automatiquement
+   - Tous les index et foreign keys sont configurés
+
+=========================================================
+

@@ -139,39 +139,104 @@ def api_rooms_list():
 @login_required
 def api_room_create():
     """API: Créer une nouvelle conversation"""
+    print(f"🔵 POST /chat/api/rooms - Content-Type: {request.content_type}")
+    print(f"🔵 Headers: {dict(request.headers)}")
+    
     try:
         if not has_permission(current_user, 'chat.create'):
+            print("❌ Permission refusée")
             return jsonify({'error': 'Permission refusée'}), 403
         
         # Essayer de parser le JSON même si Content-Type n'est pas exact
         data = None
+        body_text = None
         try:
-            if request.is_json:
-                data = request.get_json()
-            else:
-                # Essayer de parser quand même
-                data = request.get_json(force=True, silent=True)
-                if data is None:
-                    # Essayer de lire le body brut
-                    try:
-                        import json
-                        body = request.get_data(as_text=True)
-                        if body:
-                            data = json.loads(body)
-                    except:
-                        pass
+            # Lire le body brut d'abord pour pouvoir le logger et le parser manuellement si nécessaire
+            body_text = request.get_data(as_text=True)
+            print(f"🔵 Body brut (premiers 500 chars): {body_text[:500] if body_text else 'VIDE'}")
+            print(f"🔵 Body longueur: {len(body_text) if body_text else 0}")
+            
+            if not body_text or not body_text.strip():
+                print("❌ Body vide")
+                return jsonify({'error': 'Données JSON invalides ou vides', 'details': 'Aucune donnée reçue'}), 400
+            
+            # Essayer de parser avec json.loads directement (plus robuste)
+            import json
+            try:
+                # Nettoyer le body (enlever les espaces en début/fin)
+                body_clean = body_text.strip()
+                # Si le body contient plusieurs objets JSON, prendre seulement le premier
+                # Chercher la première accolade fermante complète
+                if body_clean.startswith('{'):
+                    # Trouver la fin du premier objet JSON
+                    brace_count = 0
+                    first_obj_end = -1
+                    for i, char in enumerate(body_clean):
+                        if char == '{':
+                            brace_count += 1
+                        elif char == '}':
+                            brace_count -= 1
+                            if brace_count == 0:
+                                first_obj_end = i + 1
+                                break
+                    
+                    if first_obj_end > 0:
+                        body_clean = body_clean[:first_obj_end]
+                        print(f"🔵 Body nettoyé (premiers 500 chars): {body_clean[:500]}")
+                
+                data = json.loads(body_clean)
+                print(f"✅ JSON parsé avec succès: {data}")
+            except json.JSONDecodeError as je:
+                print(f"❌ Erreur JSON decode: {je}")
+                print(f"🔵 Position de l'erreur: {je.pos if hasattr(je, 'pos') else 'N/A'}")
+                print(f"🔵 Body complet: {body_text}")
+                # Essayer quand même avec request.get_json en mode silencieux
+                try:
+                    data = request.get_json(force=True, silent=True)
+                    if data:
+                        print(f"✅ JSON parsé via get_json(force=True): {data}")
+                except:
+                    pass
+                
+                if not data:
+                    return jsonify({'error': 'Données JSON invalides', 'details': f'Erreur de parsing: {str(je)}'}), 400
         except Exception as e:
+            print(f"❌ Exception lors du parsing JSON: {e}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': 'Données JSON invalides', 'details': str(e)}), 400
         
         if not data:
+            print(f"❌ Données JSON invalides ou vides. Body brut: {request.get_data(as_text=True)}")
             return jsonify({'error': 'Données JSON invalides ou vides', 'details': 'Aucune donnée reçue'}), 400
+        
+        print(f"✅ Données reçues: {data}")
         
         # Accepter à la fois 'type' et 'room_type' pour compatibilité
         room_type = data.get('type') or data.get('room_type', 'direct')
-        user_ids = data.get('user_ids', [])
+        user_ids_raw = data.get('user_ids', [])
+        
+        # S'assurer que user_ids est une liste et convertir en entiers
+        if not isinstance(user_ids_raw, list):
+            print(f"❌ user_ids n'est pas une liste: {type(user_ids_raw)}")
+            return jsonify({'error': 'user_ids doit être une liste', 'details': f'Type reçu: {type(user_ids_raw)}'}), 400
+        
+        # Filtrer et convertir en entiers
+        user_ids = []
+        for uid in user_ids_raw:
+            try:
+                user_id = int(uid)
+                if user_id > 0:  # S'assurer que c'est un ID valide
+                    user_ids.append(user_id)
+            except (ValueError, TypeError):
+                print(f"⚠️ ID utilisateur invalide ignoré: {uid}")
+                continue
+        
+        print(f"📋 Type: {room_type}, User IDs: {user_ids}, Longueur: {len(user_ids)}")
         
         if room_type == 'direct' and len(user_ids) != 1:
-            return jsonify({'error': 'Une conversation directe nécessite exactement un autre utilisateur'}), 400
+            print(f"❌ Conversation directe nécessite exactement 1 utilisateur, reçu: {len(user_ids)}")
+            return jsonify({'error': 'Une conversation directe nécessite exactement un autre utilisateur', 'details': f'Reçu {len(user_ids)} utilisateur(s)'}), 400
         
         # Vérifier si une conversation directe existe déjà
         # Une conversation directe entre deux utilisateurs est unique, peu importe qui l'a créée
@@ -222,12 +287,6 @@ def api_room_create():
         db.session.commit()
         
         return jsonify({'room_id': room.id, 'message': 'Conversation créée avec succès'}), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': 'Erreur lors de la création de la conversation', 'details': str(e)}), 500
         
     except Exception as e:
         db.session.rollback()

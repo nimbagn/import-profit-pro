@@ -1,0 +1,54 @@
+=========================================================
+COMMANDES POUR EFFECTUER LA MIGRATION GIT
+=========================================================
+
+1. AJOUTER LES FICHIERS MODIFIÉS
+   ----------------------------------------
+   git add chat/api.py
+   git add chat/sse.py
+   git add gunicorn.conf.py
+   git add templates/chat/new.html
+   git add scripts/create_chat_tables_postgresql.sql
+   git add GUIDE_MIGRATION_CHAT_POSTGRESQL.md
+   git add EXECUTER_MIGRATION_CHAT_RENDER.txt
+   git add push_fix_chat_json_error.sh
+
+2. CRÉER LE COMMIT
+   ----------------------------------------
+   git commit -m "fix(chat): Correction parsing JSON, timeout SSE et migration PostgreSQL
+
+- Amélioration du parsing JSON dans chat/api.py pour gérer les données supplémentaires
+- Extraction automatique du premier objet JSON valide
+- Ajout de logs de débogage détaillés
+- Correction du timeout Gunicorn pour les connexions SSE (300s)
+- Amélioration de la gestion des erreurs côté client dans templates/chat/new.html
+- Heartbeats SSE plus fréquents (10s au lieu de 30s)
+- Ajout du script SQL PostgreSQL pour créer les tables chat (idempotent)
+- Documentation complète pour la migration PostgreSQL sur Render"
+
+3. POUSSER VERS GIT
+   ----------------------------------------
+   git push origin main
+
+OU EXÉCUTEZ DIRECTEMENT LE SCRIPT :
+   bash push_fix_chat_json_error.sh
+
+=========================================================
+MIGRATION POSTGRESQL SUR RENDER
+=========================================================
+
+Après le push Git, exécutez sur Render :
+
+1. Connectez-vous au Shell Render de votre base PostgreSQL
+2. Exécutez :
+   
+   psql $DATABASE_URL -f /opt/render/project/src/scripts/create_chat_tables_postgresql.sql
+   
+   OU copiez-collez le contenu du fichier dans psql
+
+3. Vérifiez avec :
+   
+   \dt chat_*
+
+=========================================================
+
