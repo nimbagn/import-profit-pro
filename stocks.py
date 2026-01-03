@@ -3936,7 +3936,15 @@ def stock_summary():
     # Calculer les totaux
     total_items = len(stock_summary)
     total_quantity = sum(s['total_stock'] for s in stock_summary)
-    total_value = sum(s['value'] for s in stock_summary)
+    
+    # Vérifier si l'utilisateur peut voir les valeurs de stock
+    from auth import can_view_stock_values
+    can_view_values = can_view_stock_values(current_user)
+    
+    # Calculer total_value seulement si l'utilisateur peut voir les valeurs
+    total_value = Decimal('0')
+    if can_view_values:
+        total_value = sum(s['value'] for s in stock_summary)
     
     # Calculer les statistiques par dépôt (entrées, sorties, transferts)
     depot_stats = []
