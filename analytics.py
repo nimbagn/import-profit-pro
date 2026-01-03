@@ -14,7 +14,7 @@ from models import (
     PriceList, Article, Category, PromotionSale, PromotionTeam,
     PromotionMember, Region, User
 )
-from auth import has_permission
+from auth import has_permission, can_view_stock_values
 
 # Créer le blueprint
 analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics')
@@ -724,6 +724,9 @@ def dashboard():
         user_region = Region.query.get(user_region_id)
         user_region_name = user_region.name if user_region else None
     
+    # Vérifier si l'utilisateur peut voir les valeurs de stock
+    can_view_values = can_view_stock_values(current_user)
+    
     return render_template('analytics/dashboard.html',
                          simulation_kpis=simulation_kpis,
                          forecast_kpis=forecast_kpis,
@@ -738,7 +741,8 @@ def dashboard():
                          period=period,
                          start_date=start_date,
                          end_date=end_date,
-                         user_region_name=user_region_name)
+                         user_region_name=user_region_name,
+                         can_view_stock_values=can_view_values)
 
 @analytics_bp.route('/api/kpis')
 @login_required

@@ -13,7 +13,7 @@ from models import (
     db, Vehicle, VehicleDocument, VehicleMaintenance, VehicleOdometer, 
     VehicleAssignment, User
 )
-from auth import has_permission
+from auth import has_permission, can_view_stock_values
 from utils import calculate_document_status, check_km_consistency, get_days_until_expiry
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
@@ -697,8 +697,10 @@ def vehicle_detail(vehicle_id):
     vehicle_stocks = VehicleStock.query.filter_by(vehicle_id=vehicle_id)\
         .options(joinedload(VehicleStock.stock_item))\
         .all()
+    # Vérifier si l'utilisateur peut voir les valeurs de stock
+    can_view_values = can_view_stock_values(current_user)
     stock_value = sum(float(vs.quantity) * float(vs.stock_item.unit_price or 0) 
-                     for vs in vehicle_stocks if vs.stock_item and vs.stock_item.unit_price)
+                     for vs in vehicle_stocks if vs.stock_item and vs.stock_item.unit_price) if can_view_values else 0
     
     # Mouvements de stock - Optimisation avec préchargement
     from models import StockMovement
@@ -765,7 +767,8 @@ def vehicle_detail(vehicle_id):
                          costs=costs,
                          assignments=assignments,
                          current_assignment=current_assignment,
-                         stats=stats)
+                         stats=stats,
+                         can_view_stock_values=can_view_values)
 
 @flotte_bp.route('/<int:vehicle_id>/odometer/new', methods=['GET', 'POST'])
 @login_required

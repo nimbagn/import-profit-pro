@@ -785,6 +785,40 @@ def is_admin_or_supervisor(user):
         return False
     return user.role.code in ['admin', 'supervisor']
 
+def can_view_stock_values(user):
+    """
+    Vérifier si l'utilisateur peut voir les valeurs monétaires du stock
+    
+    Les rôles suivants NE PEUVENT PAS voir les valeurs :
+    - warehouse (magasinier)
+    - supervisor (superviseur)
+    - commercial
+    
+    Seuls les admins et autres rôles de gestion peuvent voir les valeurs.
+    
+    Args:
+        user: L'utilisateur à vérifier
+    
+    Returns:
+        bool: True si l'utilisateur peut voir les valeurs, False sinon
+    """
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin peut toujours voir les valeurs
+    if user.role.code == 'admin':
+        return True
+    
+    # Rôles qui ne peuvent PAS voir les valeurs
+    restricted_roles = ['warehouse', 'supervisor', 'commercial']
+    if user.role.code in restricted_roles:
+        return False
+    
+    # Tous les autres rôles peuvent voir les valeurs
+    return True
+
 def require_permission(permission):
     """Décorateur pour vérifier une permission"""
     def decorator(f):

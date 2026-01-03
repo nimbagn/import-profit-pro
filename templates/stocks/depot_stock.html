@@ -96,7 +96,9 @@
             <th>Quantité</th>
             <th>Seuil Min.</th>
             <th>Statut</th>
+            {% if can_view_stock_values %}
             <th>Valeur</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -113,7 +115,9 @@
               <span class="badge-hl badge-hl-success">✓ OK</span>
               {% endif %}
             </td>
+            {% if can_view_stock_values %}
             <td><strong>{{ "{:,.0f}".format(stock.quantity * stock.stock_item.purchase_price_gnf) }} GNF</strong></td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>

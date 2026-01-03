@@ -113,7 +113,9 @@ def depot_stock(depot_id):
     ).all()
     
     # Calculer les totaux
-    total_value = sum(float(stock.quantity * stock.stock_item.purchase_price_gnf) for stock in stocks)
+    from auth import can_view_stock_values
+    can_view_values = can_view_stock_values(current_user)
+    total_value = sum(float(stock.quantity * stock.stock_item.purchase_price_gnf) for stock in stocks) if can_view_values else 0
     total_items = len(stocks)
     low_stock_items = [s for s in stocks if s.quantity < s.stock_item.min_stock_depot]
     
@@ -122,7 +124,8 @@ def depot_stock(depot_id):
                          stocks=stocks,
                          total_value=total_value,
                          total_items=total_items,
-                         low_stock_items=low_stock_items)
+                         low_stock_items=low_stock_items,
+                         can_view_stock_values=can_view_values)
 
 @stocks_bp.route('/depot/<int:depot_id>/low')
 @login_required
@@ -176,7 +179,9 @@ def vehicle_stock(vehicle_id):
     ).all()
     
     # Calculer les totaux
-    total_value = sum(float(stock.quantity * stock.stock_item.purchase_price_gnf) for stock in stocks)
+    from auth import can_view_stock_values
+    can_view_values = can_view_stock_values(current_user)
+    total_value = sum(float(stock.quantity * stock.stock_item.purchase_price_gnf) for stock in stocks) if can_view_values else 0
     total_items = len(stocks)
     low_stock_items = [s for s in stocks if s.quantity < s.stock_item.min_stock_vehicle]
     
@@ -185,7 +190,8 @@ def vehicle_stock(vehicle_id):
                          stocks=stocks,
                          total_value=total_value,
                          total_items=total_items,
-                         low_stock_items=low_stock_items)
+                         low_stock_items=low_stock_items,
+                         can_view_stock_values=can_view_values)
 
 @stocks_bp.route('/vehicle/<int:vehicle_id>/low')
 @login_required
@@ -3920,7 +3926,7 @@ def stock_summary():
             'entries': entries,
             'exits': exits,
             'movements_count': len(movements),
-            'value': total_stock * float(item.purchase_price_gnf) if total_stock > 0 else 0
+            'value': (total_stock * float(item.purchase_price_gnf) if total_stock > 0 and item.purchase_price_gnf else 0)
         })
     
     # Utiliser les dépôts et véhicules déjà filtrés par région pour les filtres
@@ -4186,6 +4192,7 @@ def stock_summary():
                          total_quantity=total_quantity,
                          total_value=total_value,
                          depot_stats=depot_stats,
+                         can_view_stock_values=can_view_values,
                          total_receptions_all=total_receptions_all,
                          total_entries_all=total_entries_all,
                          total_exits_all=total_exits_all,

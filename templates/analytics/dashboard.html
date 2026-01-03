@@ -607,6 +607,7 @@
     </div>
     
     <!-- Stocks KPIs -->
+    {% if can_view_stock_values %}
     <div class="kpi-card">
       <div class="kpi-card-header">
         <span class="kpi-card-title">Valeur Stock</span>
@@ -625,6 +626,7 @@
         {% endif %}
       </div>
     </div>
+    {% endif %}
     
     <div class="kpi-card">
       <div class="kpi-card-header">

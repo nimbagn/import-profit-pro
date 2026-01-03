@@ -578,8 +578,10 @@
               <th>Article</th>
               <th>Référence</th>
               <th>Quantité</th>
+              {% if can_view_stock_values %}
               <th>Prix Unitaire</th>
               <th>Valeur Totale</th>
+              {% endif %}
             </tr>
           </thead>
           <tbody>
@@ -588,6 +590,7 @@
               <td>{{ vs.stock_item.name if vs.stock_item else '-' }}</td>
               <td>{{ vs.stock_item.reference if vs.stock_item else '-' }}</td>
               <td><strong>{{ "{:,.2f}".format(vs.quantity)|replace(',', ' ') }}</strong></td>
+              {% if can_view_stock_values %}
               <td>
                 {% if vs.stock_item and vs.stock_item.unit_price %}
                   {{ "{:,.0f}".format(vs.stock_item.unit_price)|replace(',', ' ') }} GNF
@@ -602,17 +605,20 @@
                   -
                 {% endif %}
               </td>
+              {% endif %}
             </tr>
             {% endfor %}
           </tbody>
+          {% if can_view_stock_values %}
           <tfoot>
             <tr>
-              <td colspan="4" style="text-align: right; font-weight: 600;">Valeur totale du stock:</td>
+              <td colspan="{% if can_view_stock_values %}4{% else %}3{% endif %}" style="text-align: right; font-weight: 600;">Valeur totale du stock:</td>
               <td style="font-weight: 700; font-size: 1.1rem;">
                 {{ "{:,.0f}".format(stock_value)|replace(',', ' ') }} GNF
               </td>
             </tr>
           </tfoot>
+          {% endif %}
         </table>
       </div>
       {% else %}
