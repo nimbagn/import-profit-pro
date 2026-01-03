@@ -139,76 +139,101 @@ def api_rooms_list():
 @login_required
 def api_room_create():
     """API: Créer une nouvelle conversation"""
-    if not has_permission(current_user, 'chat.create'):
-        return jsonify({'error': 'Permission refusée'}), 403
-    
-    if not request.is_json:
-        return jsonify({'error': 'Content-Type doit être application/json'}), 400
-    
     try:
-        data = request.get_json(force=True)  # Utiliser force=True pour forcer le parsing même si Content-Type n'est pas exact
+        if not has_permission(current_user, 'chat.create'):
+            return jsonify({'error': 'Permission refusée'}), 403
+        
+        # Essayer de parser le JSON même si Content-Type n'est pas exact
+        data = None
+        try:
+            if request.is_json:
+                data = request.get_json()
+            else:
+                # Essayer de parser quand même
+                data = request.get_json(force=True, silent=True)
+                if data is None:
+                    # Essayer de lire le body brut
+                    try:
+                        import json
+                        body = request.get_data(as_text=True)
+                        if body:
+                            data = json.loads(body)
+                    except:
+                        pass
+        except Exception as e:
+            return jsonify({'error': 'Données JSON invalides', 'details': str(e)}), 400
+        
+        if not data:
+            return jsonify({'error': 'Données JSON invalides ou vides', 'details': 'Aucune donnée reçue'}), 400
+        
+        # Accepter à la fois 'type' et 'room_type' pour compatibilité
+        room_type = data.get('type') or data.get('room_type', 'direct')
+        user_ids = data.get('user_ids', [])
+        
+        if room_type == 'direct' and len(user_ids) != 1:
+            return jsonify({'error': 'Une conversation directe nécessite exactement un autre utilisateur'}), 400
+        
+        # Vérifier si une conversation directe existe déjà
+        # Une conversation directe entre deux utilisateurs est unique, peu importe qui l'a créée
+        if room_type == 'direct':
+            target_user_id = user_ids[0]
+            # Trouver toutes les rooms où l'utilisateur actuel est membre
+            current_user_rooms = ChatRoomMember.query.filter_by(user_id=current_user.id).with_entities(ChatRoomMember.room_id).all()
+            current_user_room_ids = [r.room_id for r in current_user_rooms]
+            
+            # Trouver les rooms directes qui contiennent aussi l'utilisateur cible
+            existing_room = db.session.query(ChatRoom).join(ChatRoomMember, ChatRoom.id == ChatRoomMember.room_id).filter(
+                ChatRoom.id.in_(current_user_room_ids),
+                ChatRoom.room_type == 'direct',
+                ChatRoomMember.user_id == target_user_id
+            ).group_by(ChatRoom.id).having(func.count(ChatRoomMember.id) == 2).first()
+            
+            if existing_room:
+                return jsonify({'room_id': existing_room.id}), 200
+        
+        # Créer la room
+        room = ChatRoom(
+            name=data.get('name'),
+            room_type=room_type,
+            created_by_id=current_user.id
+        )
+        db.session.add(room)
+        db.session.flush()
+        
+        # Ajouter les membres
+        # Créateur
+        creator_member = ChatRoomMember(
+            room_id=room.id,
+            user_id=current_user.id,
+            role='admin' if room_type != 'direct' else 'member'
+        )
+        db.session.add(creator_member)
+        
+        # Autres utilisateurs
+        for user_id in user_ids:
+            if user_id != current_user.id:
+                member = ChatRoomMember(
+                    room_id=room.id,
+                    user_id=user_id,
+                    role='member'
+                )
+                db.session.add(member)
+        
+        db.session.commit()
+        
+        return jsonify({'room_id': room.id, 'message': 'Conversation créée avec succès'}), 201
+        
     except Exception as e:
-        return jsonify({'error': 'Données JSON invalides', 'details': str(e)}), 400
-    
-    if not data:
-        return jsonify({'error': 'Données JSON invalides ou vides'}), 400
-    
-    # Accepter à la fois 'type' et 'room_type' pour compatibilité
-    room_type = data.get('type') or data.get('room_type', 'direct')
-    user_ids = data.get('user_ids', [])
-    
-    if room_type == 'direct' and len(user_ids) != 1:
-        return jsonify({'error': 'Une conversation directe nécessite exactement un autre utilisateur'}), 400
-    
-    # Vérifier si une conversation directe existe déjà
-    # Une conversation directe entre deux utilisateurs est unique, peu importe qui l'a créée
-    if room_type == 'direct':
-        target_user_id = user_ids[0]
-        # Trouver toutes les rooms où l'utilisateur actuel est membre
-        current_user_rooms = ChatRoomMember.query.filter_by(user_id=current_user.id).with_entities(ChatRoomMember.room_id).all()
-        current_user_room_ids = [r.room_id for r in current_user_rooms]
+        db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Erreur lors de la création de la conversation', 'details': str(e)}), 500
         
-        # Trouver les rooms directes qui contiennent aussi l'utilisateur cible
-        existing_room = db.session.query(ChatRoom).join(ChatRoomMember, ChatRoom.id == ChatRoomMember.room_id).filter(
-            ChatRoom.id.in_(current_user_room_ids),
-            ChatRoom.room_type == 'direct',
-            ChatRoomMember.user_id == target_user_id
-        ).group_by(ChatRoom.id).having(func.count(ChatRoomMember.id) == 2).first()
-        
-        if existing_room:
-            return jsonify({'room_id': existing_room.id}), 200
-    
-    # Créer la room
-    room = ChatRoom(
-        name=data.get('name'),
-        room_type=room_type,
-        created_by_id=current_user.id
-    )
-    db.session.add(room)
-    db.session.flush()
-    
-    # Ajouter les membres
-    # Créateur
-    creator_member = ChatRoomMember(
-        room_id=room.id,
-        user_id=current_user.id,
-        role='admin' if room_type != 'direct' else 'member'
-    )
-    db.session.add(creator_member)
-    
-    # Autres utilisateurs
-    for user_id in user_ids:
-        if user_id != current_user.id:
-            member = ChatRoomMember(
-                room_id=room.id,
-                user_id=user_id,
-                role='member'
-            )
-            db.session.add(member)
-    
-    db.session.commit()
-    
-    return jsonify({'room_id': room.id, 'message': 'Conversation créée avec succès'}), 201
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Erreur lors de la création de la conversation', 'details': str(e)}), 500
 
 
 @chat_bp.route('/api/rooms/<int:room_id>/messages', methods=['GET'])

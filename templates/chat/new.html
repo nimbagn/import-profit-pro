@@ -228,16 +228,40 @@ document.getElementById('newRoomForm').addEventListener('submit', async function
       })
     });
     
-    const data = await response.json();
+    // Vérifier le Content-Type avant de parser le JSON
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Erreur parsing JSON:', jsonError);
+        const text = await response.text();
+        console.error('Réponse reçue:', text);
+        alert('Erreur: Données JSON invalides reçues du serveur');
+        return;
+      }
+    } else {
+      // Si ce n'est pas du JSON, lire le texte
+      const text = await response.text();
+      console.error('Réponse non-JSON reçue:', text);
+      alert('Erreur: Réponse invalide du serveur');
+      return;
+    }
     
     if (response.ok) {
-      window.location.href = `/chat/${data.room_id}`;
+      if (data.room_id) {
+        window.location.href = `/chat/${data.room_id}`;
+      } else {
+        alert('Erreur: ID de conversation manquant dans la réponse');
+      }
     } else {
-      alert(data.error || 'Erreur lors de la création de la conversation');
+      alert(data.error || data.details || 'Erreur lors de la création de la conversation');
     }
   } catch (error) {
     console.error('Erreur:', error);
-    alert('Erreur lors de la création de la conversation');
+    alert('Erreur lors de la création de la conversation: ' + error.message);
   }
 });
 </script>
