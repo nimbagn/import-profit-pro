@@ -10,8 +10,9 @@ worker_connections = 1000
 
 # Timeout pour les connexions longues (SSE, WebSocket, etc.)
 # Par défaut Gunicorn a un timeout de 30 secondes
-# On l'augmente à 120 secondes pour les connexions SSE
-timeout = 120
+# On l'augmente à 300 secondes (5 minutes) pour les connexions SSE
+# Les heartbeats sont envoyés toutes les 10 secondes pour maintenir la connexion active
+timeout = 300
 graceful_timeout = 30
 keepalive = 5
 

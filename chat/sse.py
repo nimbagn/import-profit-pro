@@ -69,9 +69,15 @@ def stream_messages(room_id):
         yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
         
         try:
+            iteration = 0
             while True:
-                # Vérifier les nouveaux messages toutes les 1-2 secondes
-                time.sleep(1)
+                iteration += 1
+                
+                # Envoyer un heartbeat toutes les 10 secondes pour éviter le timeout Gunicorn
+                # (Gunicorn timeout par défaut est 30s, on envoie un heartbeat toutes les 10s)
+                if iteration % 10 == 0:  # Toutes les 10 itérations (10 * 1s = 10s)
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
+                    last_check = datetime.now(UTC)
                 
                 # Récupérer les nouveaux messages depuis le dernier check avec les relations
                 from sqlalchemy.orm import joinedload
@@ -98,13 +104,8 @@ def stream_messages(room_id):
                     if not last_message_id or message.id > last_message_id:
                         last_message_id = message.id
                 
-                # Envoyer un heartbeat toutes les 30 secondes pour maintenir la connexion
-                if (datetime.now(UTC) - last_check).total_seconds() > 30:
-                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
-                    last_check = datetime.now(UTC)
-                
-                # Vérifier si la connexion est toujours active (timeout après 5 minutes d'inactivité)
-                # Cette vérification sera gérée côté client qui se reconnectera si nécessaire
+                # Sleep après avoir envoyé les données pour éviter de bloquer trop longtemps
+                time.sleep(1)  # Vérifier toutes les 1 seconde
                 
         except GeneratorExit:
             # Connexion fermée par le client
@@ -140,8 +141,15 @@ def stream_rooms():
         yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
         
         try:
+            iteration = 0
             while True:
-                time.sleep(2)  # Vérifier toutes les 2 secondes
+                iteration += 1
+                
+                # Envoyer un heartbeat toutes les 10 secondes pour éviter le timeout Gunicorn
+                # (Gunicorn timeout par défaut est 30s, on envoie un heartbeat toutes les 10s)
+                if iteration % 5 == 0:  # Toutes les 5 itérations (5 * 2s = 10s)
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
+                    last_check = datetime.now(UTC)
                 
                 # Récupérer toutes les conversations de l'utilisateur (optimisé)
                 from sqlalchemy.orm import joinedload
@@ -149,6 +157,8 @@ def stream_rooms():
                 room_ids = [m.room_id for m in memberships]
                 
                 if not room_ids:
+                    # Envoyer un heartbeat même si pas de rooms pour maintenir la connexion
+                    time.sleep(2)
                     continue
                 
                 # OPTIMISATION: Récupérer tous les derniers messages en une seule requête
@@ -214,10 +224,8 @@ def stream_rooms():
                             'unread_count': unread_count
                         })}\n\n"
                 
-                # Heartbeat
-                if (datetime.now(UTC) - last_check).total_seconds() > 30:
-                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
-                    last_check = datetime.now(UTC)
+                # Sleep après avoir envoyé les données pour éviter de bloquer trop longtemps
+                time.sleep(2)  # Vérifier toutes les 2 secondes
                 
         except GeneratorExit:
             pass
