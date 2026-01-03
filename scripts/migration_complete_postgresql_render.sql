@@ -123,26 +123,73 @@ BEGIN
 END $$;
 
 -- =========================================================
--- 3. COLONNE reference DANS stock_movements
+-- 3. CORRECTION COMPLÈTE DE stock_movements
 -- =========================================================
 DO $$
 BEGIN
+    -- Vérifier si le type ENUM existe
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'movement_type') THEN
+        CREATE TYPE movement_type AS ENUM ('transfer', 'reception', 'adjustment', 'inventory');
+    END IF;
+    
+    -- Ajouter 'reception_return' si elle n'existe pas
     IF NOT EXISTS (
-        SELECT 1 
-        FROM information_schema.columns 
+        SELECT 1 FROM pg_enum 
+        WHERE enumlabel = 'reception_return' 
+        AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'movement_type')
+    ) THEN
+        ALTER TYPE movement_type ADD VALUE 'reception_return';
+    END IF;
+    
+    -- Ajouter la colonne reference si manquante
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'public'
         AND table_name = 'stock_movements'
         AND column_name = 'reference'
     ) THEN
         ALTER TABLE stock_movements 
         ADD COLUMN reference VARCHAR(50) NULL;
-        
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_movement_reference ON stock_movements(reference);
-        
-        RAISE NOTICE '✅ Colonne reference ajoutée à stock_movements';
-    ELSE
-        RAISE NOTICE 'ℹ️  Colonne reference existe déjà';
     END IF;
+    
+    -- Créer les index manquants
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_movement_reference ON stock_movements(reference) 
+    WHERE reference IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_movement_from_depot ON stock_movements(from_depot_id);
+    CREATE INDEX IF NOT EXISTS idx_movement_to_depot ON stock_movements(to_depot_id);
+    CREATE INDEX IF NOT EXISTS idx_movement_from_vehicle ON stock_movements(from_vehicle_id);
+    CREATE INDEX IF NOT EXISTS idx_movement_to_vehicle ON stock_movements(to_vehicle_id);
+    
+    -- Ajouter les FK manquantes
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_movements_from_depot') THEN
+        ALTER TABLE stock_movements 
+        ADD CONSTRAINT fk_movements_from_depot 
+        FOREIGN KEY (from_depot_id) REFERENCES depots(id) 
+        ON UPDATE CASCADE ON DELETE SET NULL;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_movements_to_depot') THEN
+        ALTER TABLE stock_movements 
+        ADD CONSTRAINT fk_movements_to_depot 
+        FOREIGN KEY (to_depot_id) REFERENCES depots(id) 
+        ON UPDATE CASCADE ON DELETE SET NULL;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_movements_from_vehicle') THEN
+        ALTER TABLE stock_movements 
+        ADD CONSTRAINT fk_movements_from_vehicle 
+        FOREIGN KEY (from_vehicle_id) REFERENCES vehicles(id) 
+        ON UPDATE CASCADE ON DELETE SET NULL;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_movements_to_vehicle') THEN
+        ALTER TABLE stock_movements 
+        ADD CONSTRAINT fk_movements_to_vehicle 
+        FOREIGN KEY (to_vehicle_id) REFERENCES vehicles(id) 
+        ON UPDATE CASCADE ON DELETE SET NULL;
+    END IF;
+    
+    RAISE NOTICE '✅ stock_movements corrigé et complété';
 END $$;
 
 -- =========================================================
@@ -398,6 +445,26 @@ BEGIN
         RAISE NOTICE '✅ reception_return dans movement_type: OK';
     ELSE
         RAISE WARNING '❌ reception_return: MANQUANT';
+    END IF;
+    
+    -- Vérifier stock_movements (index et FK)
+    IF EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE tablename = 'stock_movements' 
+        AND indexname = 'idx_movement_from_depot'
+    ) THEN
+        RAISE NOTICE '✅ Index stock_movements: OK';
+    ELSE
+        RAISE WARNING '❌ Index stock_movements: MANQUANTS';
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'fk_movements_from_depot'
+    ) THEN
+        RAISE NOTICE '✅ FK stock_movements: OK';
+    ELSE
+        RAISE WARNING '❌ FK stock_movements: MANQUANTES';
     END IF;
     
     RAISE NOTICE '========================================';

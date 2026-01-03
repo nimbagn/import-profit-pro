@@ -1,0 +1,65 @@
+========================================
+CORRIGER stock_movements SUR RENDER
+========================================
+
+📋 PROBLÈME :
+La route /stocks/movements ne fonctionne pas sur Render
+
+🔧 SOLUTION :
+Exécuter le script fix_stock_movements_postgresql.sql
+
+========================================
+ÉTAPES RAPIDES :
+========================================
+
+1. Accéder au Shell PostgreSQL sur Render
+   Dashboard Render → Service PostgreSQL → Shell/Connect
+
+2. Copier le contenu du fichier :
+   scripts/fix_stock_movements_postgresql.sql
+
+3. Coller dans le terminal PostgreSQL et exécuter
+
+OU
+
+Exécuter directement :
+psql $DATABASE_URL < scripts/fix_stock_movements_postgresql.sql
+
+========================================
+VÉRIFICATION RAPIDE :
+========================================
+
+-- Vérifier la structure
+\d stock_movements
+
+-- Vérifier les index
+SELECT indexname FROM pg_indexes WHERE tablename = 'stock_movements';
+
+-- Vérifier le type ENUM
+SELECT enumlabel FROM pg_enum 
+WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'movement_type')
+ORDER BY enumsortorder;
+
+-- Tester une requête
+SELECT COUNT(*) FROM stock_movements;
+
+========================================
+CE QUE LE SCRIPT CORRIGE :
+========================================
+
+✅ Type ENUM movement_type avec toutes les valeurs
+✅ Colonne reference (si manquante)
+✅ Toutes les contraintes FK (from_depot, to_depot, from_vehicle, to_vehicle)
+✅ Tous les index nécessaires pour les performances
+✅ Vérifications complètes
+
+========================================
+⚠️ IMPORTANT :
+========================================
+
+- Le script est IDEMPOTENT (peut être exécuté plusieurs fois)
+- Faites un BACKUP avant d'exécuter
+- Utilise une TRANSACTION (BEGIN/COMMIT)
+
+========================================
+
