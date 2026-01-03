@@ -1,0 +1,69 @@
+========================================
+EXÉCUTER LA MIGRATION COMPLÈTE SUR RENDER
+========================================
+
+📋 ÉTAPES RAPIDES :
+
+1. Accéder au Shell PostgreSQL sur Render
+   - Dashboard Render → Service PostgreSQL → Shell/Connect
+
+2. Copier le contenu du fichier :
+   scripts/migration_complete_postgresql_render.sql
+
+3. Coller dans le terminal PostgreSQL et exécuter
+
+OU
+
+Exécuter directement :
+psql $DATABASE_URL < scripts/migration_complete_postgresql_render.sql
+
+========================================
+VÉRIFICATION RAPIDE :
+========================================
+
+SELECT 
+    'additional_permissions' as migration,
+    CASE WHEN EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'additional_permissions'
+    ) THEN '✅ OK' ELSE '❌ MANQUANT' END as status
+UNION ALL
+SELECT 
+    'stock_item_id',
+    CASE WHEN EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'price_list_items' AND column_name = 'stock_item_id'
+    ) THEN '✅ OK' ELSE '❌ MANQUANT' END
+UNION ALL
+SELECT 
+    'reference',
+    CASE WHEN EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'stock_movements' AND column_name = 'reference'
+    ) THEN '✅ OK' ELSE '❌ MANQUANT' END
+UNION ALL
+SELECT 
+    'return_type',
+    CASE WHEN EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'stock_returns' AND column_name = 'return_type'
+    ) THEN '✅ OK' ELSE '❌ MANQUANT' END
+UNION ALL
+SELECT 
+    'reception_return',
+    CASE WHEN EXISTS (
+        SELECT 1 FROM pg_enum 
+        WHERE enumlabel = 'reception_return' 
+        AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'movement_type')
+    ) THEN '✅ OK' ELSE '❌ MANQUANT' END;
+
+========================================
+⚠️ IMPORTANT :
+========================================
+
+- Le script est IDEMPOTENT (peut être exécuté plusieurs fois)
+- Faites un BACKUP avant d'exécuter
+- La migration price_list_items supprime les données existantes
+
+========================================
+
