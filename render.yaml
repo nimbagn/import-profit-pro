@@ -1,10 +1,11 @@
 # Configuration Render pour déploiement automatique
+# Import Profit Pro - Configuration complète
 services:
   - type: web
     name: import-profit-pro
     env: python
     buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 wsgi:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile - wsgi:app
     envVars:
       - key: FLASK_ENV
         value: production
@@ -12,6 +13,18 @@ services:
         value: 0
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      # DATABASE_URL sera automatiquement fourni par Render si vous liez la base de données
+      # Sinon, configurez-la manuellement dans l'interface Render
+      - key: DATABASE_URL
+        fromDatabase:
+          name: import-profit-db
+          property: connectionString
+      - key: CACHE_TYPE
+        value: simple
+      - key: URL_SCHEME
+        value: https
 
 databases:
   - name: import-profit-db

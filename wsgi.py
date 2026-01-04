@@ -11,7 +11,8 @@ from app import app
 
 # Gunicorn cherchera l'objet 'app' dans ce fichier
 # C'est ce qui sera utilisé en production
-application = app
+# Note: render.yaml utilise 'wsgi:app', donc on expose 'app'
+# (application est aussi disponible pour compatibilité)
 
 # Pour les tests locaux uniquement
 if __name__ == "__main__":
