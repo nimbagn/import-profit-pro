@@ -65,3 +65,16 @@ psql "$DATABASE_URL" -f script.sql  # ✅ CORRECT
 
 **Pour plus de détails, consultez `GUIDE_DEPLOIEMENT_RENDER.md`**
 
+---
+
+## 🔧 Mise à jour des permissions superviseur
+
+Pour ajouter les permissions `price_lists` au rôle superviseur :
+
+1. Allez dans votre base PostgreSQL → **"Connect"** → **"SQL Editor"**
+2. Ouvrez `scripts/add_price_lists_permission_supervisor_postgresql.sql`
+3. Copiez-collez le contenu dans l'éditeur SQL
+4. Cliquez sur **"Run"**
+
+📖 **Guide complet** : `GUIDE_MISE_A_JOUR_PERMISSIONS_RENDER.md`
+
