@@ -284,7 +284,8 @@ with app.app_context():
                         'families': ['read'],
                         'stock_items': ['read'],
                         'promotion': ['read', 'write'],
-                        'orders': ['read', 'validate', 'update']
+                        'orders': ['read', 'validate', 'update'],
+                        'price_lists': ['read', 'create', 'update', 'delete']
                     }
                 },
                 {
