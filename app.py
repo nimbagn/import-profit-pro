@@ -285,7 +285,7 @@ with app.app_context():
                         'stock_items': ['read'],
                         'promotion': ['read', 'write'],
                         'orders': ['read', 'validate', 'update'],
-                        'price_lists': ['read', 'create', 'update', 'delete']
+                        'price_lists': ['view', 'create', 'edit', 'delete']
                     }
                 },
                 {

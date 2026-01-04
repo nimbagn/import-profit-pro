@@ -10,7 +10,7 @@
 DO $$
 DECLARE
     supervisor_permissions JSONB;
-    price_lists_perms JSONB := '["read", "create", "update", "delete"]'::JSONB;
+    price_lists_perms JSONB := '["view", "create", "edit", "delete"]'::JSONB;
 BEGIN
     -- Récupérer les permissions actuelles du superviseur
     SELECT permissions INTO supervisor_permissions

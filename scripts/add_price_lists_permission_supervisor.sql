@@ -11,7 +11,7 @@ UPDATE roles
 SET permissions = JSON_SET(
     permissions, 
     '$.price_lists', 
-    JSON_ARRAY('read', 'create', 'update', 'delete')
+    JSON_ARRAY('view', 'create', 'edit', 'delete')
 ) 
 WHERE code = 'supervisor';
 
