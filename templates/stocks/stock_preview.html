@@ -163,6 +163,19 @@
       display: none;
     }
   }
+  
+  /* Classes pour les couleurs de stock */
+  .stock-positive {
+    color: #10b981;
+  }
+  
+  .stock-neutral {
+    color: #7a8a9a;
+  }
+  
+  .stock-negative {
+    color: #ef4444;
+  }
 </style>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -212,11 +225,59 @@
           Exporter Excel
         </a>
       </div>
-      <a href="{{ url_for('stocks.stock_summary', period=period, stock_item_id=stock_item_id, depot_id=depot_id, start_date=start_date.strftime('%Y-%m-%d') if start_date else '', end_date=end_date.strftime('%Y-%m-%d') if end_date else '') }}" 
+      <a href="{{ url_for('stocks.stock_summary', period=period, stock_item_id=stock_item_id, depot_id=depot_id, vehicle_id=vehicle_id, start_date=start_date.strftime('%Y-%m-%d') if start_date else '', end_date=end_date.strftime('%Y-%m-%d') if end_date else '') }}" 
          class="btn-hl btn-hl-outline">
         <i class="fas fa-arrow-left me-2"></i>
         Retour
       </a>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="preview-content" style="margin-bottom: var(--space-md);">
+    <div class="info-section">
+      <h3><i class="fas fa-filter me-2"></i>Filtres</h3>
+      <form method="GET" action="{{ url_for('stocks.stock_summary_preview') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+        <input type="hidden" name="period" value="{{ period }}">
+        {% if start_date %}
+        <input type="hidden" name="start_date" value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}">
+        {% endif %}
+        {% if end_date %}
+        <input type="hidden" name="end_date" value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}">
+        {% endif %}
+        <div class="form-group">
+          <label class="form-hl-label">Dépôt</label>
+          <select name="depot_id" class="form-hl-select" onchange="this.form.submit()">
+            <option value="">Tous les dépôts</option>
+            {% for depot in depots %}
+            <option value="{{ depot.id }}" {% if depot_id == depot.id %}selected{% endif %}>
+              {{ depot.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Période</label>
+          <select name="period" class="form-hl-select" onchange="this.form.submit()">
+            <option value="all" {% if period == 'all' %}selected{% endif %}>Toutes</option>
+            <option value="today" {% if period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+            <option value="week" {% if period == 'week' %}selected{% endif %}>7 derniers jours</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>30 derniers jours</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>1 an</option>
+            <option value="custom" {% if period == 'custom' %}selected{% endif %}>Personnalisée</option>
+          </select>
+        </div>
+        {% if period == 'custom' %}
+        <div class="form-group">
+          <label class="form-hl-label">Date début</label>
+          <input type="date" name="start_date" value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}" class="form-hl-input" onchange="this.form.submit()">
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Date fin</label>
+          <input type="date" name="end_date" value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}" class="form-hl-input" onchange="this.form.submit()">
+        </div>
+        {% endif %}
+      </form>
     </div>
   </div>
 
@@ -236,51 +297,64 @@
         {% if start_date and end_date %}
         <div class="info-item">
           <div class="info-label">Date début</div>
-          <div class="info-value">{{ start_date.strftime('%d/%m/%Y') }}</div>
+          <div class="info-value">{{ start_date.strftime('%d/%m/%Y') if start_date else '--' }}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Date fin</div>
-          <div class="info-value">{{ end_date.strftime('%d/%m/%Y') }}</div>
+          <div class="info-value">{{ end_date.strftime('%d/%m/%Y') if end_date else '--' }}</div>
         </div>
         {% endif %}
         <div class="info-item">
           <div class="info-label">Dépôt</div>
-          <div class="info-value">{{ preview_data[0].depot_name if preview_data else 'Tous les dépôts' }}</div>
+          <div class="info-value">{{ preview_data[0].depot_name if preview_data and preview_data[0] else 'Tous les dépôts' }}</div>
         </div>
       </div>
     </div>
 
-    <!-- Tableau des stocks -->
+    <!-- Tableau des stocks avec quantités restantes -->
     <div class="info-section">
-      <h3><i class="fas fa-list me-2"></i>Détail des Stocks</h3>
+      <h3><i class="fas fa-list me-2"></i>Récapitulatif Stock par Article (Quantités Restantes)</h3>
       {% if preview_data %}
       <table class="table-preview">
         <thead>
           <tr>
             <th>Article</th>
-            <th>Dépôt</th>
-            <th>Quantité</th>
-            <th>Prix Unitaire (GNF)</th>
-            <th>Valeur (GNF)</th>
+            <th>SKU</th>
+            <th>Stock Initial</th>
+            <th>Entrées</th>
+            <th>Sorties</th>
+            <th>Stock Final (Calculé)</th>
+            <th>Stock Actuel</th>
+            <th>Mouvements</th>
           </tr>
         </thead>
         <tbody>
           {% for data in preview_data %}
           <tr>
-            <td>{{ data.item.name }}</td>
-            <td>{{ data.depot_name }}</td>
-            <td>{{ "{:,.2f}".format(data.quantity|default(0))|replace(',', ' ') }}</td>
-            <td>{{ "{:,.0f}".format(data.item.purchase_price_gnf|default(0))|replace(',', ' ') }}</td>
-            <td>{{ "{:,.0f}".format(data.value|default(0))|replace(',', ' ') }}</td>
+            <td><strong>{{ data.item.name }}</strong></td>
+            <td><code style="background: var(--bg-secondary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.85rem;">{{ data.item.sku or '' }}</code></td>
+            <td style="text-align: right;">{{ "{:,.2f}".format(data.initial_stock|default(0))|replace(',', ' ') }}</td>
+            <td style="text-align: right; color: #10b981; font-weight: 600;">+{{ "{:,.2f}".format(data.entries|default(0))|replace(',', ' ') }}</td>
+            <td style="text-align: right; color: #ef4444; font-weight: 600;">-{{ "{:,.2f}".format(data.exits|default(0))|replace(',', ' ') }}</td>
+            <td style="text-align: right; font-weight: 600; color: var(--color-primary);">{{ "{:,.2f}".format(data.final_stock_calculated|default(0))|replace(',', ' ') }}</td>
+            <td class="{% if data.current_stock > 0 %}stock-positive{% elif data.current_stock == 0 %}stock-neutral{% else %}stock-negative{% endif %}" style="text-align: right; font-weight: 700; font-size: 1.1rem;">
+              {{ "{:,.2f}".format(data.current_stock|default(0))|replace(',', ' ') }}
+            </td>
+            <td style="text-align: center;">
+              <span class="badge-hl badge-hl-secondary" style="font-size: 0.85rem;">{{ data.movements_count|default(0) }}</span>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
         <tfoot>
           <tr>
             <td colspan="2"><strong>TOTAL</strong></td>
-            <td><strong>{{ "{:,.2f}".format(total_quantity|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="text-align: right;"><strong>{{ "{:,.2f}".format(preview_data|sum(attribute='initial_stock')|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="text-align: right; color: #10b981;"><strong>+{{ "{:,.2f}".format(preview_data|sum(attribute='entries')|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="text-align: right; color: #ef4444;"><strong>-{{ "{:,.2f}".format(preview_data|sum(attribute='exits')|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="text-align: right;"><strong>{{ "{:,.2f}".format(preview_data|sum(attribute='final_stock_calculated')|default(0))|replace(',', ' ') }}</strong></td>
+            <td style="text-align: right;"><strong>{{ "{:,.2f}".format(preview_data|sum(attribute='current_stock')|default(0))|replace(',', ' ') }}</strong></td>
             <td></td>
-            <td><strong>{{ "{:,.0f}".format(total_value|default(0))|replace(',', ' ') }}</strong></td>
           </tr>
         </tfoot>
       </table>
@@ -300,32 +374,57 @@
           <div class="summary-card-value">{{ preview_data|length }}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-card-label">Quantité Totale</div>
-          <div class="summary-card-value">{{ "{:,.2f}".format(total_quantity|default(0))|replace(',', ' ') }}</div>
+          <div class="summary-card-label">Stock Initial Total</div>
+          <div class="summary-card-value">{{ "{:,.2f}".format(preview_data|sum(attribute='initial_stock')|default(0))|replace(',', ' ') }}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-card-label">Valeur Totale</div>
-          <div class="summary-card-value">{{ "{:,.0f}".format(total_value|default(0))|replace(',', ' ') }}</div>
-          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+          <div class="summary-card-label">Entrées Total</div>
+          <div class="summary-card-value">+{{ "{:,.2f}".format(preview_data|sum(attribute='entries')|default(0))|replace(',', ' ') }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Sorties Total</div>
+          <div class="summary-card-value">-{{ "{:,.2f}".format(preview_data|sum(attribute='exits')|default(0))|replace(',', ' ') }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Stock Actuel Total</div>
+          <div class="summary-card-value">{{ "{:,.2f}".format(preview_data|sum(attribute='current_stock')|default(0))|replace(',', ' ') }}</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<script type="application/json" id="preview-data">
+{{ {
+  'period': period or '',
+  'stock_item_id': stock_item_id or '',
+  'depot_id': depot_id or '',
+  'vehicle_id': vehicle_id or '',
+  'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+  'end_date': end_date.strftime('%Y-%m-%d') if end_date else '',
+  'pdf_url': url_for('stocks.stock_summary_pdf'),
+  'excel_url': url_for('stocks.stock_summary_excel')
+}|tojson|safe }}
+</script>
 <script>
+/* eslint-disable */
+// @ts-nocheck
 document.addEventListener('DOMContentLoaded', function() {
   const currencySelect = document.getElementById('currency-select');
   const pdfBtn = document.getElementById('export-pdf-btn');
   const excelBtn = document.getElementById('export-excel-btn');
   
+  const previewDataElement = document.getElementById('preview-data');
+  const previewData = previewDataElement ? JSON.parse(previewDataElement.textContent) : {};
+  
   function updateExportLinks() {
     const currency = currencySelect.value;
-    const period = '{{ period }}';
-    const stockItemId = '{{ stock_item_id or '' }}';
-    const depotId = '{{ depot_id or '' }}';
-    const startDate = '{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}';
-    const endDate = '{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}';
+    const period = previewData.period || '';
+    const stockItemId = previewData.stock_item_id || '';
+    const depotId = previewData.depot_id || '';
+    const vehicleId = previewData.vehicle_id || '';
+    const startDate = previewData.start_date || '';
+    const endDate = previewData.end_date || '';
     
     const params = new URLSearchParams({
       currency: currency,
@@ -333,16 +432,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     if (stockItemId) params.append('stock_item_id', stockItemId);
     if (depotId) params.append('depot_id', depotId);
+    if (vehicleId) params.append('vehicle_id', vehicleId);
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
     
-    pdfBtn.href = `{{ url_for('stocks.stock_summary_pdf') }}?${params.toString()}`;
-    excelBtn.href = `{{ url_for('stocks.stock_summary_excel') }}?${params.toString()}`;
+    pdfBtn.href = `${previewData.pdf_url}?${params.toString()}`;
+    excelBtn.href = `${previewData.excel_url}?${params.toString()}`;
   }
   
   currencySelect.addEventListener('change', updateExportLinks);
   updateExportLinks();
 });
+/* eslint-enable */
 </script>
 {% endblock %}
 

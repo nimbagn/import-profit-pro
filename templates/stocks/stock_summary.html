@@ -105,6 +105,206 @@
     0% { background-color: #dbeafe; }
     100% { background-color: transparent; }
   }
+  
+  .stock-positive { color: #16a34a; }
+  .stock-negative { color: #dc2626; }
+  .stock-success { color: #10b981; }
+  .stock-neutral { color: #7a8a9a; }
+  .stock-danger { color: #ef4444; }
+
+  /* Responsive Styles */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .page-container {
+      padding: var(--space-md);
+    }
+    
+    .page-header-hl {
+      flex-direction: column;
+      align-items: flex-start !important;
+    }
+    
+    .filters-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .summary-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-hl table {
+      min-width: 800px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .page-container {
+      padding: var(--space-sm);
+    }
+    
+    .page-header-hl {
+      padding: var(--space-md);
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    
+    .page-title-hl {
+      font-size: 1.5rem;
+    }
+    
+    .filters-section {
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    
+    .filters-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
+    }
+    
+    .summary-stats {
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
+    }
+    
+    .stat-card {
+      padding: var(--space-md);
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+    }
+    
+    .card-hl {
+      margin: var(--space-sm) 0;
+      border-radius: var(--radius-md);
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      display: block;
+    }
+    
+    .table-hl table {
+      width: 100%;
+      min-width: 600px;
+      font-size: 0.875rem;
+    }
+    
+    .table-hl th,
+    .table-hl td {
+      padding: 0.5rem 0.75rem;
+      white-space: nowrap;
+    }
+    
+    .table-hl thead {
+      display: none;
+    }
+    
+    .table-hl tbody {
+      display: block;
+    }
+    
+    .table-hl tr {
+      display: block;
+      margin-bottom: var(--space-md);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      padding: var(--space-sm);
+    }
+    
+    .table-hl td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border: none;
+      border-bottom: 1px solid var(--gray-100);
+      text-align: left !important;
+    }
+    
+    .table-hl td:last-child {
+      border-bottom: none;
+    }
+    
+    .table-hl td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-right: var(--space-sm);
+      flex-shrink: 0;
+      min-width: 120px;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .auto-refresh-indicator {
+      font-size: 0.75rem;
+      padding: var(--space-xs) var(--space-sm);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-container {
+      padding: var(--space-xs);
+    }
+    
+    .page-header-hl {
+      padding: var(--space-sm);
+    }
+    
+    .page-title-hl {
+      font-size: 1.25rem;
+    }
+    
+    .filters-section {
+      padding: var(--space-sm);
+    }
+    
+    .stat-value {
+      font-size: 1.25rem;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+    }
+    
+    .table-hl table {
+      min-width: 500px;
+      font-size: 0.8rem;
+    }
+    
+    .table-hl td {
+      font-size: 0.8rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+    
+    .table-hl td::before {
+      margin-bottom: 0.25rem;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -154,16 +354,24 @@
           <option value="custom" {% if period == 'custom' %}selected{% endif %}>Personnalisée</option>
         </select>
       </div>
-      
-      <div id="custom-dates" style="display: {% if period == 'custom' %}block{% else %}none{% endif %};">
+
+      {% if period == 'custom' %}
+      <div id="custom-dates">
         <label class="form-hl-label">Date début</label>
         <input type="date" name="start_date" class="form-hl-input" value="{{ start_date if start_date else '' }}">
       </div>
-      
-      <div id="custom-dates-end" style="display: {% if period == 'custom' %}block{% else %}none{% endif %};">
+      {% endif %}
+      {% if period == 'custom' %}
+      <div id="custom-dates-end">
         <label class="form-hl-label">Date fin</label>
         <input type="date" name="end_date" class="form-hl-input" value="{{ end_date if end_date else '' }}">
       </div>
+      {% else %}
+      <div id="custom-dates-end" style="display: none;">
+        <label class="form-hl-label">Date fin</label>
+        <input type="date" name="end_date" class="form-hl-input" value="{{ end_date if end_date else '' }}">
+      </div>
+      {% endif %}
       
       <div>
         <label class="form-hl-label">Dépôt</label>
@@ -262,23 +470,23 @@
         <tbody>
           {% for pending in pending_orders %}
           <tr>
-            <td>
+            <td data-label="Référence">
               <strong style="color: var(--hl-blue);">{{ pending.order.reference }}</strong>
             </td>
-            <td>
+            <td data-label="Date Validation">
               {% if pending.order.validated_at %}
               {{ pending.order.validated_at.strftime('%d/%m/%Y %H:%M') }}
               {% else %}
               <span style="color: var(--text-muted);">-</span>
               {% endif %}
             </td>
-            <td>
+            <td data-label="Commercial">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <i class="fas fa-user-tie" style="color: var(--text-muted); font-size: 0.875rem;"></i>
                 <span>{{ pending.order.commercial.full_name or pending.order.commercial.username if pending.order.commercial else '-' }}</span>
               </div>
             </td>
-            <td>
+            <td data-label="Région">
               {% if pending.order.region %}
               <span class="badge-hl badge-hl-primary" style="background: rgba(0, 56, 101, 0.1); color: var(--hl-blue);">
                 <i class="fas fa-map-marker-alt me-1"></i>
@@ -288,7 +496,7 @@
               <span style="color: var(--text-muted);">-</span>
               {% endif %}
             </td>
-            <td>
+            <td data-label="Dépôt Source">
               {% if pending.source_depot %}
               <span class="badge-hl badge-hl-primary" style="background: rgba(255, 102, 0, 0.1); color: var(--hl-orange);">
                 <i class="fas fa-warehouse me-1"></i>
@@ -303,25 +511,35 @@
               <span style="color: var(--text-muted); font-style: italic;">À définir</span>
               {% endif %}
             </td>
-            <td style="text-align: center;">
+            <td data-label="Clients" style="text-align: center;">
               <strong style="color: var(--hl-blue);">{{ pending.total_clients }}</strong>
             </td>
-            <td style="text-align: center;">
+            <td data-label="Articles" style="text-align: center;">
               <strong style="color: var(--hl-blue);">{{ pending.total_items }}</strong>
             </td>
-            <td style="text-align: right; font-weight: 600; color: var(--hl-blue);">
+            <td data-label="Quantité Totale" style="text-align: right; font-weight: 600; color: var(--hl-blue);">
               {{ "{:,.2f}".format(pending.total_quantity)|replace(',', ' ') }}
             </td>
-            <td style="text-align: center;">
+            <td data-label="Jours d'attente" style="text-align: center;">
               {% if pending.days_waiting > 0 %}
-              <span class="badge-hl" style="background: {% if pending.days_waiting > 7 %}rgba(239, 68, 68, 0.1); color: var(--color-danger);{% elif pending.days_waiting > 3 %}rgba(255, 102, 0, 0.1); color: var(--hl-orange);{% else %}rgba(16, 185, 129, 0.1); color: var(--color-success);{% endif %};">
+              {% if pending.days_waiting > 7 %}
+              <span class="badge-hl" style="background: rgba(239, 68, 68, 0.1); color: var(--color-danger);">
                 {{ pending.days_waiting }} jour{{ 's' if pending.days_waiting > 1 else '' }}
               </span>
+              {% elif pending.days_waiting > 3 %}
+              <span class="badge-hl" style="background: rgba(255, 102, 0, 0.1); color: var(--hl-orange);">
+                {{ pending.days_waiting }} jour{{ 's' if pending.days_waiting > 1 else '' }}
+              </span>
+              {% else %}
+              <span class="badge-hl" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success);">
+                {{ pending.days_waiting }} jour{{ 's' if pending.days_waiting > 1 else '' }}
+              </span>
+              {% endif %}
               {% else %}
               <span style="color: var(--text-muted);">Aujourd'hui</span>
               {% endif %}
             </td>
-            <td>
+            <td data-label="Actions">
               <div style="display: flex; gap: var(--space-xs);">
                 <a href="{{ url_for('orders.order_detail', id=pending.order.id) }}" 
                    class="btn-hl btn-hl-outline btn-hl-sm" 
@@ -390,20 +608,20 @@
         <tbody id="depotStatsTableBody">
           {% for stat in depot_stats %}
           <tr>
-            <td><strong>{{ stat.depot.name }}</strong></td>
-            <td style="color: #22c55e; text-align: right; font-weight: 600;">
+            <td data-label="Dépôt"><strong>{{ stat.depot.name }}</strong></td>
+            <td data-label="Réceptions" style="color: #22c55e; text-align: right; font-weight: 600;">
               +{{ "{:,.2f}".format(stat.total_receptions)|replace(',', ' ') }}
             </td>
-            <td style="color: #3b82f6; text-align: right; font-weight: 600;">
+            <td data-label="Transferts" style="color: #3b82f6; text-align: right; font-weight: 600;">
               {{ "{:,.2f}".format(stat.total_transfers)|replace(',', ' ') }}
             </td>
-            <td style="color: #ef4444; text-align: right; font-weight: 600;">
+            <td data-label="Sorties" style="color: #ef4444; text-align: right; font-weight: 600;">
               -{{ "{:,.2f}".format(stat.total_exits)|replace(',', ' ') }}
             </td>
-            <td style="color: {% if stat.total_stock >= 0 %}#16a34a{% else %}#dc2626{% endif %}; text-align: right; font-weight: 700; font-size: 1.1rem;">
+            <td data-label="Stock Total" class="{% if stat.total_stock >= 0 %}stock-positive{% else %}stock-negative{% endif %}" style="text-align: right; font-weight: 700; font-size: 1.1rem;">
               {{ "{:,.2f}".format(stat.total_stock)|replace(',', ' ') }}
             </td>
-            <td style="text-align: center;">{{ stat.movements_count }}</td>
+            <td data-label="Mouvements" style="text-align: center;">{{ stat.movements_count }}</td>
           </tr>
           {% else %}
           <tr>
@@ -436,6 +654,94 @@
     </div>
   </div>
 
+  <!-- Tableau récapitulatif par article avec quantités restantes -->
+  <div class="card-hl">
+    <div class="card-header-hl" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md);">
+      <div>
+        <h3 class="card-title-hl">
+          <i class="fas fa-boxes me-2"></i>
+          Récapitulatif Stock par Article (Quantités Restantes)
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: var(--space-xs);">
+          Stock initial, entrées, sorties et stock final calculé pour la période sélectionnée
+          {% if selected_depot_id %}
+          <br><strong>Dépôt :</strong> {{ depots|selectattr('id', 'equalto', selected_depot_id)|map(attribute='name')|first or 'N/A' }}
+          {% endif %}
+        </p>
+      </div>
+      <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+        <a href="{{ url_for('stocks.stock_summary_preview', period=period, start_date=start_date, end_date=end_date, depot_id=selected_depot_id, vehicle_id=selected_vehicle_id, stock_item_id=selected_stock_item_id) }}" 
+           class="btn-hl btn-hl-secondary" 
+           target="_blank">
+          <i class="fas fa-eye me-2"></i>
+          Prévisualiser
+        </a>
+        <a href="{{ url_for('stocks.stock_summary_pdf', period=period, start_date=start_date, end_date=end_date, depot_id=selected_depot_id, vehicle_id=selected_vehicle_id, stock_item_id=selected_stock_item_id) }}" 
+           class="btn-hl btn-hl-primary">
+          <i class="fas fa-file-pdf me-2"></i>
+          Exporter PDF
+        </a>
+      </div>
+    </div>
+    <div class="table-hl">
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Article</th>
+            <th>SKU</th>
+            <th>Stock Initial</th>
+            <th>Entrées</th>
+            <th>Sorties</th>
+            <th>Stock Final (Calculé)</th>
+            <th>Stock Actuel</th>
+            <th>Mouvements</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for summary in stock_summary %}
+          <tr>
+            <td data-label="Article">
+              <strong style="color: var(--color-primary);">{{ summary.item.name }}</strong>
+            </td>
+            <td data-label="SKU">
+              <code style="background: var(--bg-secondary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.85rem;">
+                {{ summary.item.sku }}
+              </code>
+            </td>
+            <td data-label="Stock Initial" style="text-align: right; font-weight: 500;">
+              {{ "{:,.2f}".format(summary.initial_stock|default(0))|replace(',', ' ') }}
+            </td>
+            <td data-label="Entrées" style="text-align: right; color: #10b981; font-weight: 600;">
+              +{{ "{:,.2f}".format(summary.entries|default(0))|replace(',', ' ') }}
+            </td>
+            <td data-label="Sorties" style="text-align: right; color: #ef4444; font-weight: 600;">
+              -{{ "{:,.2f}".format(summary.exits|default(0))|replace(',', ' ') }}
+            </td>
+            <td data-label="Stock Final (Calculé)" style="text-align: right; font-weight: 600; color: var(--color-primary);">
+              {{ "{:,.2f}".format(summary.final_stock_calculated|default(0))|replace(',', ' ') }}
+            </td>
+            <td data-label="Stock Actuel" class="{% if summary.total_stock > 0 %}stock-success{% elif summary.total_stock == 0 %}stock-neutral{% else %}stock-danger{% endif %}" style="text-align: right; font-weight: 700; font-size: 1.1rem;">
+              {{ "{:,.2f}".format(summary.total_stock|default(0))|replace(',', ' ') }}
+            </td>
+            <td data-label="Mouvements" style="text-align: center;">
+              <span class="badge-hl badge-hl-secondary" style="font-size: 0.85rem;">
+                {{ summary.movements_count|default(0) }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: var(--space-3xl); color: var(--text-muted);">
+              <i class="fas fa-boxes" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+              <p>Aucun article trouvé</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Tableau récapitulatif -->
   <div class="card-hl">
     <div class="card-header-hl">
@@ -461,26 +767,26 @@
         <tbody id="stockTableBody">
           {% for summary in stock_summary %}
           <tr data-item-id="{{ summary.item.id }}">
-            <td><strong>{{ summary.item.name }}</strong></td>
-            <td>{{ summary.item.sku }}</td>
-            <td style="{% if summary.depot_stock >= 0 %}color: #16a34a;{% else %}color: #dc2626;{% endif %} font-weight: 600;">
+            <td data-label="Article"><strong>{{ summary.item.name }}</strong></td>
+            <td data-label="SKU">{{ summary.item.sku }}</td>
+            <td data-label="Stock Dépôt" class="{% if summary.depot_stock >= 0 %}stock-positive{% else %}stock-negative{% endif %}" style="font-weight: 600;">
               {{ "{:,.2f}".format(summary.depot_stock)|replace(',', ' ') }}
             </td>
-            <td style="{% if summary.vehicle_stock >= 0 %}color: #16a34a;{% else %}color: #dc2626;{% endif %} font-weight: 600;">
+            <td data-label="Stock Véhicule" class="{% if summary.vehicle_stock >= 0 %}stock-positive{% else %}stock-negative{% endif %}" style="font-weight: 600;">
               {{ "{:,.2f}".format(summary.vehicle_stock)|replace(',', ' ') }}
             </td>
-            <td style="{% if summary.total_stock >= 0 %}color: #16a34a;{% else %}color: #dc2626;{% endif %} font-weight: 700; font-size: 1.1rem;">
+            <td data-label="Stock Total" class="{% if summary.total_stock >= 0 %}stock-positive{% else %}stock-negative{% endif %}" style="font-weight: 700; font-size: 1.1rem;">
               {{ "{:,.2f}".format(summary.total_stock)|replace(',', ' ') }}
             </td>
-            <td style="color: #22c55e; font-weight: 600;">
+            <td data-label="Entrées (Période)" style="color: #22c55e; font-weight: 600;">
               <i class="fas fa-arrow-up me-1"></i>+{{ "{:,.2f}".format(summary.entries)|replace(',', ' ') }}
             </td>
-            <td style="color: #ef4444; font-weight: 600;">
+            <td data-label="Sorties (Période)" style="color: #ef4444; font-weight: 600;">
               <i class="fas fa-arrow-down me-1"></i>-{{ "{:,.2f}".format(summary.exits)|replace(',', ' ') }}
             </td>
-            <td>{{ summary.movements_count }}</td>
+            <td data-label="Mouvements">{{ summary.movements_count }}</td>
             {% if can_view_stock_values %}
-            <td><strong>{{ "{:,.0f}".format(summary.value)|replace(',', ' ') }}</strong></td>
+            <td data-label="Valeur (GNF)"><strong>{{ "{:,.0f}".format(summary.value)|replace(',', ' ') }}</strong></td>
             {% endif %}
           </tr>
           {% else %}
@@ -561,7 +867,7 @@
               <br><small style="color: var(--text-muted);">SKU: {{ movement.stock_item.sku }}</small>
               {% endif %}
             </td>
-            <td style="font-weight: 700; font-size: 1.1rem; {% if movement.quantity >= 0 %}color: #16a34a;{% else %}color: #dc2626;{% endif %}">
+            <td class="{% if movement.quantity >= 0 %}stock-positive{% else %}stock-negative{% endif %}" style="font-weight: 700; font-size: 1.1rem;">
               {% if movement.quantity >= 0 %}
                 <i class="fas fa-arrow-up me-1"></i>+{{ "{:,.2f}".format(movement.quantity)|replace(',', ' ') }}
               {% else %}

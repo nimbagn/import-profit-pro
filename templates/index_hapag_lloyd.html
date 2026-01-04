@@ -761,7 +761,7 @@
           <tbody>
             {% for order in recent_orders[:5] %}
             <tr>
-              <td><a href="{{ url_for('orders.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
+              <td><a href="{{ url_for('orders.order_detail', id=order.id) }}">#{{ order.id }}</a></td>
               <td>{{ order.client.name if order.client else '-' }}</td>
               <td>{{ order.created_at.strftime('%d/%m/%Y') if order.created_at else '-' }}</td>
               <td>

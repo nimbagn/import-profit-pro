@@ -51,6 +51,56 @@
     color: var(--text-muted);
   }
   
+  /* Classes pour les badges de variance avec background */
+  .variance-badge-zero {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.875rem;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #10b981;
+  }
+  
+  .variance-badge-positive {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.875rem;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #ef4444;
+  }
+  
+  .variance-badge-negative {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.875rem;
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    color: #ea580c;
+  }
+  
+  /* Classes pour les couleurs de variance */
+  .variance-color-zero {
+    color: #10b981;
+  }
+  
+  .variance-color-positive {
+    color: #ef4444;
+  }
+  
+  .variance-color-negative {
+    color: #ea580c;
+  }
+  
   /* Tri de tableau */
   .sortable th {
     cursor: pointer;
@@ -684,14 +734,14 @@
             <td data-sort-value="{{ detail.system_quantity }}">{{ "{:.2f}".format(detail.system_quantity) }}</td>
             <td data-sort-value="{{ detail.counted_quantity }}">{{ "{:.2f}".format(detail.counted_quantity) }}</td>
             <td data-sort-value="{{ detail.variance }}">
-              <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.875rem; {% if detail.variance == 0 %}background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #10b981;{% elif detail.variance > 0 %}background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #ef4444;{% else %}background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #ea580c;{% endif %}">
+              <span class="{% if detail.variance == 0 %}variance-badge-zero{% elif detail.variance > 0 %}variance-badge-positive{% else %}variance-badge-negative{% endif %}">
                 {% if detail.variance == 0 %}<i class="fas fa-check-circle"></i>{% elif detail.variance > 0 %}<i class="fas fa-exclamation-triangle"></i>{% else %}<i class="fas fa-plus-circle"></i>{% endif %}
                 {{ "{:+.2f}".format(detail.variance) }}
               </span>
             </td>
             <td data-sort-value="{{ item.value_variance }}">
               {% if item.has_price %}
-              <span style="color: {% if detail.variance == 0 %}#10b981{% elif detail.variance > 0 %}#ef4444{% else %}#ea580c{% endif %}; font-weight: 600;">
+              <span class="{% if detail.variance == 0 %}variance-color-zero{% elif detail.variance > 0 %}variance-color-positive{% else %}variance-color-negative{% endif %}" style="font-weight: 600;">
                 {{ item.value_variance|format_number(0) }} GNF
               </span>
               {% else %}

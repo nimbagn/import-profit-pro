@@ -391,13 +391,16 @@
   });
 </script>
 {% if movement_type == 'transfer' %}
+<script type="application/json" id="stock-items-data">
+{{ (stock_items|tojson if stock_items else [])|safe }}
+</script>
 <script>
+  /* eslint-disable */
+  // @ts-nocheck
   let articleRowCount = 0;
-  const stockItems = [
-    {% for item in stock_items %}
-    { id: {{ item.id }}, sku: "{{ item.sku }}", name: "{{ item.name }}" },
-    {% endfor %}
-  ];
+  const stockItemsDataElement = document.getElementById('stock-items-data');
+  const stockItems = stockItemsDataElement ? JSON.parse(stockItemsDataElement.textContent) : [];
+  /* eslint-enable */
 
   function addArticleRow() {
     articleRowCount++;

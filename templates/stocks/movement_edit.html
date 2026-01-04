@@ -247,11 +247,18 @@
   </div>
 </div>
 
+<script type="application/json" id="movement-data">
+{{ {'quantity': movement.quantity if movement else 0}|tojson|safe }}
+</script>
 <script>
+/* eslint-disable */
+// @ts-nocheck
 document.addEventListener('DOMContentLoaded', function() {
   // Ajuster automatiquement le signe de la quantité selon le type de mouvement
   const quantityInput = document.getElementById('quantity');
-  const originalQuantity = {{ movement.quantity }};
+  const movementDataElement = document.getElementById('movement-data');
+  const movementData = movementDataElement ? JSON.parse(movementDataElement.textContent) : {quantity: 0};
+  const originalQuantity = movementData.quantity || 0;
   
   // Si c'est une sortie (négative), s'assurer que la quantité reste négative
   if (originalQuantity < 0) {
@@ -263,6 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+/* eslint-enable */
 </script>
 {% endblock %}
 

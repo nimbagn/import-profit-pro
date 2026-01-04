@@ -98,6 +98,24 @@
   .movement-row:hover {
     background: var(--bg-secondary);
   }
+  
+  /* Classes pour l'affichage conditionnel des champs de date */
+  .custom-period-visible {
+    display: block;
+  }
+  
+  .custom-period-hidden {
+    display: none;
+  }
+  
+  /* Classes pour les couleurs de mouvement */
+  .movement-positive {
+    color: #22c55e;
+  }
+  
+  .movement-negative {
+    color: #ef4444;
+  }
 </style>
 {% endblock %}
 
@@ -128,12 +146,12 @@
         </select>
       </div>
       
-      <div id="custom-dates" style="display: {% if period == 'custom' %}block{% else %}none{% endif %};">
+      <div id="custom-dates" class="{% if period == 'custom' %}custom-period-visible{% else %}custom-period-hidden{% endif %}">
         <label class="form-hl-label">Date début</label>
         <input type="date" name="start_date" class="form-hl-input" value="{{ start_date }}">
       </div>
       
-      <div id="custom-dates-end" style="display: {% if period == 'custom' %}block{% else %}none{% endif %};">
+      <div id="custom-dates-end" class="{% if period == 'custom' %}custom-period-visible{% else %}custom-period-hidden{% endif %}">
         <label class="form-hl-label">Date fin</label>
         <input type="date" name="end_date" class="form-hl-input" value="{{ end_date }}">
       </div>
@@ -287,7 +305,7 @@
                 </span>
               </td>
               <td>{{ movement.reference or '-' }}</td>
-              <td style="color: {% if movement.quantity >= 0 %}#22c55e{% else %}#ef4444{% endif %}; font-weight: 600; text-align: center;">
+              <td class="{% if movement.quantity >= 0 %}movement-positive{% else %}movement-negative{% endif %}" style="font-weight: 600; text-align: center;">
                 {% if movement.quantity >= 0 %}+{% endif %}{{ "{:,.2f}".format(movement.quantity)|replace(',', ' ') }}
               </td>
               <td style="font-weight: 700; color: var(--color-primary); text-align: center;">
@@ -336,12 +354,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const customDatesEnd = document.getElementById('custom-dates-end');
   
   periodSelect.addEventListener('change', function() {
-    if (this.value === 'custom') {
-      customDates.style.display = 'block';
-      customDatesEnd.style.display = 'block';
-    } else {
-      customDates.style.display = 'none';
-      customDatesEnd.style.display = 'none';
+    const isCustom = this.value === 'custom';
+    if (customDates) {
+      customDates.classList.remove('custom-period-visible', 'custom-period-hidden');
+      customDates.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
+    }
+    if (customDatesEnd) {
+      customDatesEnd.classList.remove('custom-period-visible', 'custom-period-hidden');
+      customDatesEnd.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
     }
   });
 });

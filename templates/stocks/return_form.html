@@ -266,13 +266,14 @@
   </div>
 </div>
 
+<script type="application/json" id="stock-items-data">
+{{ (stock_items|tojson if stock_items else [])|safe }}
+</script>
 <script>
 let itemCounter = 0;
-const stockItems = [
-  {% for item in stock_items %}
-  {id: {{ item.id }}, sku: "{{ item.sku }}", name: "{{ item.name|replace('"', '\\"') }}"}{% if not loop.last %},{% endif %}
-  {% endfor %}
-];
+// Stock items data - loaded from JSON script tag
+const stockItemsDataElement = document.getElementById('stock-items-data');
+const stockItems = stockItemsDataElement ? JSON.parse(stockItemsDataElement.textContent) : [];
 
 // Fonction pour basculer entre retour client et retour fournisseur
 function toggleReturnType() {

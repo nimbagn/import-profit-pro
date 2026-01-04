@@ -1,0 +1,320 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Prévisualisation Réception {{ reception.reference }} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: var(--space-xl);
+    background: var(--bg-secondary);
+  }
+
+  .preview-header {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .preview-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .export-buttons {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .preview-content {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-xl);
+  }
+
+  .info-section {
+    margin-bottom: var(--space-xl);
+  }
+
+  .info-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--color-primary);
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .info-item {
+    padding: var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+  }
+
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-xs);
+  }
+
+  .info-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .table-preview {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-lg);
+  }
+
+  .table-preview thead {
+    background: var(--color-primary);
+    color: var(--white);
+  }
+
+  .table-preview th {
+    padding: var(--space-md);
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+  }
+
+  .table-preview td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .table-preview tbody tr:hover {
+    background: var(--bg-secondary);
+  }
+
+  .table-preview tfoot {
+    background: var(--bg-tertiary);
+    font-weight: 700;
+  }
+
+  .table-preview tfoot td {
+    border-top: 2px solid var(--color-primary);
+    padding: var(--space-md);
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+  }
+
+  .summary-card {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--hl-blue-dark) 100%);
+    color: var(--white);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+
+  .summary-card-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-bottom: var(--space-sm);
+  }
+
+  .summary-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  @media print {
+    .export-buttons {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <!-- En-tête avec boutons d'export -->
+  <div class="preview-header">
+    <div>
+      <h1 class="preview-title">
+        <i class="fas fa-eye me-2"></i>
+        Prévisualisation - Réception {{ reception.reference }}
+      </h1>
+      <p style="color: var(--text-muted); margin-top: var(--space-xs);">
+        Aperçu avant export PDF
+      </p>
+    </div>
+    <div class="export-buttons">
+      <a href="{{ url_for('stocks.reception_pdf', id=reception.id) }}" class="btn-hl btn-hl-primary" target="_blank" style="background: #dc3545;">
+        <i class="fas fa-file-pdf me-2"></i>
+        Exporter PDF
+      </a>
+      <a href="{{ url_for('stocks.reception_detail', id=reception.id) }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour
+      </a>
+    </div>
+  </div>
+
+  <!-- Informations de la réception -->
+  <div class="preview-content">
+    <div class="info-section">
+      <h3><i class="fas fa-info-circle me-2"></i>Informations de la Réception</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Référence</div>
+          <div class="info-value">{{ reception.reference }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Date</div>
+          <div class="info-value">{{ reception.reception_date.strftime('%d/%m/%Y %H:%M') if reception.reception_date else '-' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Dépôt</div>
+          <div class="info-value">{{ reception.depot.name if reception.depot else '-' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Fournisseur</div>
+          <div class="info-value">{{ reception.supplier_name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">N° BL</div>
+          <div class="info-value">{{ reception.bl_number or '-' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Statut</div>
+          <div class="info-value">
+            <span class="badge-hl {% if reception.status == 'completed' %}badge-hl-success{% elif reception.status == 'draft' %}badge-hl-warning{% else %}badge-hl-danger{% endif %}">
+              {{ reception.status|title }}
+            </span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Créé par</div>
+          <div class="info-value">{{ reception.user.username if reception.user else '-' }}</div>
+        </div>
+        {% if reception.vehicle %}
+        <div class="info-item">
+          <div class="info-label">Véhicule</div>
+          <div class="info-value">{{ reception.vehicle.plate_number }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Tableau des articles -->
+    <div class="info-section">
+      <h3><i class="fas fa-list me-2"></i>Articles Reçus</h3>
+      {% if reception.details %}
+      <table class="table-preview">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Article</th>
+            <th>Quantité</th>
+            <th>Prix Unitaire (GNF)</th>
+            <th>Total (GNF)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for detail in reception.details %}
+          <tr>
+            <td><strong>{{ detail.stock_item.sku }}</strong></td>
+            <td>{{ detail.stock_item.name }}</td>
+            <td>{{ "{:,.2f}".format(detail.quantity)|replace(',', ' ') }}</td>
+            <td>{{ "{:,.0f}".format(detail.unit_price_gnf) if detail.unit_price_gnf else '-'|replace(',', ' ') }}</td>
+            <td><strong>{{ "{:,.0f}".format(detail.quantity * detail.unit_price_gnf) if detail.unit_price_gnf else '-'|replace(',', ' ') }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><strong>TOTAL</strong></td>
+            <td><strong>{{ "{:,.2f}".format(reception.details|sum(attribute='quantity'))|replace(',', ' ') }}</strong></td>
+            <td></td>
+            <td><strong>{{ "{:,.0f}".format(reception.details|sum(attribute='quantity') * reception.details|selectattr('unit_price_gnf')|map(attribute='unit_price_gnf')|first|default(0))|replace(',', ' ') }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+      {% else %}
+      <p style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">
+        Aucun article dans cette réception.
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Résumé -->
+    <div class="info-section">
+      <h3><i class="fas fa-chart-bar me-2"></i>Résumé</h3>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="summary-card-label">Nombre d'Articles</div>
+          <div class="summary-card-value">{{ reception.details|length if reception.details else 0 }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Quantité Totale</div>
+          <div class="summary-card-value">{{ "{:,.2f}".format(reception.details|sum(attribute='quantity') if reception.details else 0)|replace(',', ' ') }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card-label">Valeur Totale</div>
+          <div class="summary-card-value">
+            {% set total_value = 0 %}
+            {% for detail in reception.details %}
+              {% if detail.unit_price_gnf %}
+                {% set total_value = total_value + (detail.quantity * detail.unit_price_gnf) %}
+              {% endif %}
+            {% endfor %}
+            {{ "{:,.0f}".format(total_value)|replace(',', ' ') }}
+          </div>
+          <div style="font-size: 0.75rem; margin-top: var(--space-xs);">GNF</div>
+        </div>
+      </div>
+    </div>
+
+    {% if reception.notes %}
+    <div class="info-section">
+      <h3><i class="fas fa-sticky-note me-2"></i>Notes</h3>
+      <div style="padding: var(--space-md); background: var(--bg-secondary); border-radius: var(--radius-md); border-left: 4px solid var(--color-primary);">
+        <p style="color: var(--text-secondary); margin: 0; white-space: pre-wrap;">{{ reception.notes }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

@@ -114,6 +114,15 @@
   .badge-completed { background: #17a2b8; color: var(--white); }
   .badge-archived { background: var(--gray-400); color: var(--white); }
   
+  /* Classes pour les couleurs de pourcentage */
+  .percentage-success {
+    color: var(--color-success);
+  }
+  
+  .percentage-danger {
+    color: var(--color-danger);
+  }
+  
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0 !important;
@@ -226,8 +235,9 @@
               <td>{{ "{:,.0f}".format(forecast.total_realized_value|default(0))|replace(',', ' ') }}</td>
               <td>
                 {% if forecast.total_forecast_value > 0 %}
-                  <strong style="color: {% if (forecast.total_realized_value / forecast.total_forecast_value * 100) >= 50 %}var(--color-success){% else %}var(--color-danger){% endif %};">
-                    {{ "%.1f"|format((forecast.total_realized_value / forecast.total_forecast_value * 100)|float) }}%
+                  {% set percentage = (forecast.total_realized_value / forecast.total_forecast_value * 100) %}
+                  <strong class="{% if percentage >= 50 %}percentage-success{% else %}percentage-danger{% endif %}">
+                    {{ "%.1f"|format(percentage|float) }}%
                   </strong>
                 {% else %}
                   0%

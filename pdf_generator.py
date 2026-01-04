@@ -715,12 +715,169 @@ class PDFGenerator:
         return buffer
     
     def generate_stock_summary_pdf(self, stock_data, currency='GNF', exchange_rate=None):
-        """Génère un PDF pour le récapitulatif de stock avec orientation automatique et conversion de devise"""
+        """Génère un PDF pour le récapitulatif de stock avec quantités restantes"""
         # Déterminer l'orientation et les largeurs de colonnes
-        # Tableau avec 4 colonnes : Article, Dépôt, Quantité, Valeur
-        original_col_widths = [5*cm, 4*cm, 3*cm, 4*cm]
-        page_size, available_width = self.determine_orientation(original_col_widths, 4)
-        adjusted_col_widths = self.adjust_table_for_page(original_col_widths, available_width, min_col_width=2*cm)
+        # Tableau avec 8 colonnes : Article, SKU, Stock Initial, Entrées, Sorties, Stock Final, Stock Actuel, Mouvements
+        original_col_widths = [4*cm, 2.5*cm, 2*cm, 2*cm, 2*cm, 2.5*cm, 2.5*cm, 1.5*cm]
+        page_size, available_width = self.determine_orientation(original_col_widths, 8)
+        adjusted_col_widths = self.adjust_table_for_page(original_col_widths, available_width, min_col_width=1.2*cm)
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=page_size,
+                               rightMargin=1.5*cm, leftMargin=1.5*cm,
+                               topMargin=3*cm, bottomMargin=2*cm)
+        
+        story = []
+        
+        # Titre avec devise
+        title_text = f'RÉCAPITULATIF STOCK PAR ARTICLE - QUANTITÉS RESTANTES ({currency})'
+        story.append(Paragraph(title_text, self.styles['CustomTitle']))
+        story.append(Spacer(1, 0.3*cm))
+        
+        # Informations (compact)
+        period_info = stock_data.get('period', 'all')
+        if period_info == 'custom':
+            start_date_str = self.format_date(stock_data.get('start_date')) if stock_data.get('start_date') else 'N/A'
+            end_date_str = self.format_date(stock_data.get('end_date')) if stock_data.get('end_date') else 'N/A'
+            period_display = f'{start_date_str} - {end_date_str}'
+        elif period_info == 'all':
+            period_display = 'Toutes les périodes'
+        else:
+            period_display = period_info.title()
+        
+        info_data = [
+            ['Date', self.format_date(datetime.now(UTC)), 'Dépôt', stock_data.get('depot_name', 'Tous les dépôts')],
+            ['Période', period_display, '', ''],
+        ]
+        
+        info_table = Table(info_data, colWidths=[3*cm, 5*cm, 3*cm, 5*cm])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f5f7fa')),
+            ('BACKGROUND', (2, 0), (2, -1), colors.HexColor('#f5f7fa')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#7a8a9a')),
+            ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#7a8a9a')),
+            ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#2c3e50')),
+            ('TEXTCOLOR', (3, 0), (3, -1), colors.HexColor('#2c3e50')),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Oblique'),
+            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Oblique'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (3, 0), (3, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
+        ]))
+        
+        story.append(info_table)
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Tableau des stocks avec quantités restantes
+        story.append(Paragraph('DÉTAIL DES STOCKS PAR ARTICLE', self.styles['CustomSubtitle']))
+        story.append(Spacer(1, 0.2*cm))
+        
+        headers = ['Article', 'SKU', 'Stock Initial', 'Entrées', 'Sorties', 'Stock Final', 'Stock Actuel', 'Mouv.']
+        items_data = [headers]
+        
+        total_initial = Decimal('0')
+        total_entries = Decimal('0')
+        total_exits = Decimal('0')
+        total_final = Decimal('0')
+        total_current = Decimal('0')
+        
+        for item in stock_data.get('items', []):
+            article_name = item.get('article_name', 'N/A')
+            sku = item.get('sku', '')
+            initial_stock = item.get('initial_stock', 0) or 0
+            entries = item.get('entries', 0) or 0
+            exits = item.get('exits', 0) or 0
+            final_stock = item.get('final_stock_calculated', 0) or 0
+            current_stock = item.get('current_stock', 0) or 0
+            movements_count = item.get('movements_count', 0) or 0
+            
+            total_initial += Decimal(str(initial_stock))
+            total_entries += Decimal(str(entries))
+            total_exits += Decimal(str(exits))
+            total_final += Decimal(str(final_stock))
+            total_current += Decimal(str(current_stock))
+            
+            # Limiter la longueur
+            max_article_len = int(adjusted_col_widths[0] / 0.25)
+            article_name = article_name[:max_article_len] if len(article_name) > max_article_len else article_name
+            
+            items_data.append([
+                article_name,
+                sku[:15] if sku else '',
+                f"{initial_stock:.2f}",
+                f"+{entries:.2f}",
+                f"-{exits:.2f}",
+                f"{final_stock:.2f}",
+                f"{current_stock:.2f}",
+                str(movements_count)
+            ])
+        
+        # Ligne de total
+        items_data.append([
+            'TOTAL',
+            '',
+            f"{total_initial:.2f}",
+            f"+{total_entries:.2f}",
+            f"-{total_exits:.2f}",
+            f"{total_final:.2f}",
+            f"{total_current:.2f}",
+            ''
+        ])
+        
+        items_table = Table(items_data, colWidths=adjusted_col_widths)
+        items_table.setStyle(TableStyle([
+            # En-têtes
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003d82')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            # Données
+            ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+            ('TEXTCOLOR', (0, 1), (-1, -2), colors.HexColor('#2c3e50')),
+            ('ALIGN', (0, 1), (0, -2), 'LEFT'),  # Article aligné à gauche
+            ('ALIGN', (1, 1), (1, -2), 'CENTER'),  # SKU centré
+            ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),  # Tous les nombres alignés à droite
+            ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -2), 7),
+            ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
+            ('TOPPADDING', (0, 1), (-1, -2), 4),
+            # Ligne de total
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f5f7fa')),
+            ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor('#003d82')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, -1), (-1, -1), 8),
+            ('ALIGN', (2, -1), (-1, -1), 'RIGHT'),
+            # Grille
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
+            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#003d82')),
+            ('LINEABOVE', (0, -1), (-1, -1), 2, colors.HexColor('#003d82')),
+        ]))
+        
+        story.append(items_table)
+        
+        # Générer le PDF
+        def header_footer(c, d):
+            self.create_header_footer(c, d, 'Récapitulatif de Stock', page_size)
+        
+        doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+        
+        buffer.seek(0)
+        return buffer
+    
+    def generate_reception_pdf(self, reception):
+        """Génère un PDF pour une réception de stock"""
+        # Déterminer l'orientation et les largeurs de colonnes
+        # Tableau avec 5 colonnes : Article, SKU, Quantité, Prix Unitaire, Total
+        original_col_widths = [5*cm, 3*cm, 2.5*cm, 3*cm, 3*cm]
+        page_size, available_width = self.determine_orientation(original_col_widths, 5)
+        adjusted_col_widths = self.adjust_table_for_page(original_col_widths, available_width, min_col_width=1.5*cm)
         
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=page_size,
@@ -729,15 +886,27 @@ class PDFGenerator:
         
         story = []
         
-        # Titre avec devise
-        title_text = f'RÉCAPITULATIF DE STOCK ({currency})'
+        # Titre
+        title_text = 'BON DE RÉCEPTION'
         story.append(Paragraph(title_text, self.styles['CustomTitle']))
         story.append(Spacer(1, 0.3*cm))
         
-        # Informations (compact)
+        # Informations de la réception
+        depot_name = reception.depot.name if reception.depot else 'N/A'
+        supplier_name = reception.supplier_name or 'N/A'
+        bl_number = reception.bl_number or 'N/A'
+        user_name = reception.user.username if reception.user else 'N/A'
+        status = reception.status.title() if reception.status else 'N/A'
+        
         info_data = [
-            ['Date', self.format_date(datetime.now(UTC)), 'Dépôt', stock_data.get('depot_name', 'Tous les dépôts')],
+            ['Référence', reception.reference or 'N/A', 'Date', self.format_date(reception.reception_date)],
+            ['Dépôt', depot_name, 'Statut', status],
+            ['Fournisseur', supplier_name, 'Créé par', user_name],
+            ['N° BL', bl_number, '', ''],
         ]
+        
+        if reception.notes:
+            info_data.append(['Notes', reception.notes[:100] + ('...' if len(reception.notes) > 100 else ''), '', ''])
         
         info_table = Table(info_data, colWidths=[3*cm, 5*cm, 3*cm, 5*cm])
         info_table.setStyle(TableStyle([
@@ -761,44 +930,46 @@ class PDFGenerator:
         story.append(info_table)
         story.append(Spacer(1, 0.5*cm))
         
-        # Tableau des stocks
-        story.append(Paragraph('DÉTAIL DES STOCKS', self.styles['CustomSubtitle']))
+        # Tableau des articles
+        story.append(Paragraph('DÉTAIL DES ARTICLES', self.styles['CustomSubtitle']))
         story.append(Spacer(1, 0.2*cm))
         
-        headers = ['Article', 'Dépôt', 'Quantité', f'Valeur ({currency})']
+        headers = ['Article', 'SKU', 'Quantité', 'Prix Unitaire', 'Total']
         items_data = [headers]
         
-        total_value = Decimal('0')
         total_quantity = Decimal('0')
+        total_value = Decimal('0')
         
-        for item in stock_data.get('items', []):
-            article_name = item.get('article_name', 'N/A')
-            depot_name = item.get('depot_name', 'N/A')
-            quantity = item.get('quantity', 0) or 0
-            value = item.get('value', 0) or 0
+        for detail in reception.details:
+            stock_item = detail.stock_item
+            article_name = stock_item.name if stock_item else 'N/A'
+            sku = stock_item.sku if stock_item else 'N/A'
+            quantity = Decimal(str(detail.quantity)) if detail.quantity else Decimal('0')
+            unit_price = Decimal(str(detail.unit_price_gnf)) if detail.unit_price_gnf else Decimal('0')
+            line_total = quantity * unit_price
             
-            total_value += Decimal(str(value))
-            total_quantity += Decimal(str(quantity))
+            total_quantity += quantity
+            total_value += line_total
             
-            # Limiter la longueur
-            max_article_len = int(adjusted_col_widths[0] / 0.3)
-            max_depot_len = int(adjusted_col_widths[1] / 0.3)
-            article_name = article_name[:max_article_len] if len(article_name) > max_article_len else article_name
-            depot_name = depot_name[:max_depot_len] if len(depot_name) > max_depot_len else depot_name
+            # Limiter la longueur du nom
+            max_name_len = int(adjusted_col_widths[0] / 0.3)
+            article_name = article_name[:max_name_len] if len(article_name) > max_name_len else article_name
             
             items_data.append([
                 article_name,
-                depot_name,
+                sku[:20] if sku else '',
                 f"{quantity:.2f}",
-                self.format_currency(value, currency, exchange_rate).replace(f' {currency}', '')
+                self.format_currency(unit_price, 'GNF').replace(' GNF', ''),
+                self.format_currency(line_total, 'GNF').replace(' GNF', '')
             ])
         
-        # Ligne de total (sans balises HTML)
+        # Ligne de total
         items_data.append([
             'TOTAL',
             '',
             f"{total_quantity:.2f}",
-            self.format_currency(total_value, currency, exchange_rate).replace(f' {currency}', '')
+            '',
+            self.format_currency(total_value, 'GNF').replace(' GNF', '')
         ])
         
         items_table = Table(items_data, colWidths=adjusted_col_widths)
@@ -814,8 +985,8 @@ class PDFGenerator:
             # Données
             ('BACKGROUND', (0, 1), (-1, -2), colors.white),
             ('TEXTCOLOR', (0, 1), (-1, -2), colors.HexColor('#2c3e50')),
-            ('ALIGN', (2, 1), (2, -2), 'CENTER'),
-            ('ALIGN', (3, 1), (3, -2), 'RIGHT'),
+            ('ALIGN', (0, 1), (1, -2), 'LEFT'),  # Article et SKU alignés à gauche
+            ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),  # Nombres alignés à droite
             ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -2), 8),
             ('BOTTOMPADDING', (0, 1), (-1, -2), 6),
@@ -825,7 +996,7 @@ class PDFGenerator:
             ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor('#003d82')),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, -1), (-1, -1), 9),
-            ('ALIGN', (2, -1), (-1, -1), 'CENTER'),
+            ('ALIGN', (2, -1), (-1, -1), 'RIGHT'),
             # Grille
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
             ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#003d82')),
@@ -833,10 +1004,34 @@ class PDFGenerator:
         ]))
         
         story.append(items_table)
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Résumé
+        summary_data = [
+            ['Total Articles', str(len(reception.details))],
+            ['Total Quantité', f"{total_quantity:.2f}"],
+            ['Valeur Totale', self.format_currency(total_value, 'GNF')],
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[5*cm, 11*cm])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f5f7fa')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c3e50')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
+        ]))
+        
+        story.append(summary_table)
         
         # Générer le PDF
         def header_footer(c, d):
-            self.create_header_footer(c, d, 'Récapitulatif de Stock', page_size)
+            self.create_header_footer(c, d, 'Bon de Réception', page_size)
         
         doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
         

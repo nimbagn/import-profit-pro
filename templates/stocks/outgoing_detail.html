@@ -152,10 +152,18 @@
     </div>
     {% endif %}
 
-    <div style="margin-top: var(--space-xl);">
+    <div style="margin-top: var(--space-xl); display: flex; gap: var(--space-md); flex-wrap: wrap;">
       <a href="{{ url_for('stocks.outgoings_list') }}" class="btn-hl btn-hl-outline">
         <i class="fas fa-arrow-left me-2"></i>
         Retour à la liste
+      </a>
+      <a href="{{ url_for('stocks.outgoing_preview', id=outgoing.id) }}" class="btn-hl btn-hl-primary" target="_blank">
+        <i class="fas fa-eye me-2"></i>
+        Prévisualiser PDF
+      </a>
+      <a href="{{ url_for('stocks.outgoing_pdf', id=outgoing.id) }}" class="btn-hl" style="background: #dc2626; color: white; border-color: #dc2626;">
+        <i class="fas fa-file-pdf me-2"></i>
+        Exporter PDF
       </a>
     </div>
   </div>

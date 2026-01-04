@@ -1814,6 +1814,45 @@ def reception_detail(id):
     reception = Reception.query.get_or_404(id)
     return render_template('stocks/reception_detail.html', reception=reception)
 
+@stocks_bp.route('/receptions/<int:id>/preview')
+@login_required
+def reception_preview(id):
+    """Prévisualisation d'une réception avant export PDF"""
+    if not has_permission(current_user, 'receptions.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('stocks.receptions_list'))
+    
+    reception = Reception.query.get_or_404(id)
+    return render_template('stocks/reception_preview.html', reception=reception)
+
+@stocks_bp.route('/receptions/<int:id>/pdf')
+@login_required
+def reception_pdf(id):
+    """Générer un PDF pour une réception"""
+    if not has_permission(current_user, 'receptions.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('stocks.receptions_list'))
+    
+    from pdf_generator import PDFGenerator
+    from flask import make_response
+    
+    try:
+        reception = Reception.query.get_or_404(id)
+        pdf_gen = PDFGenerator()
+        pdf_buffer = pdf_gen.generate_reception_pdf(reception)
+        
+        filename = f'reception_{reception.reference}_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.pdf'
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Erreur lors de la génération du PDF: {e}")
+        flash(f'Erreur lors de la génération du PDF: {str(e)}', 'error')
+        return redirect(url_for('stocks.reception_detail', id=id))
+
 # =========================================================
 # SORTIES DE STOCK (VENTES)
 # =========================================================
@@ -2263,6 +2302,45 @@ def outgoing_detail(id):
     
     outgoing = StockOutgoing.query.get_or_404(id)
     return render_template('stocks/outgoing_detail.html', outgoing=outgoing)
+
+@stocks_bp.route('/outgoings/<int:id>/preview')
+@login_required
+def outgoing_preview(id):
+    """Prévisualisation d'une sortie avant export PDF"""
+    if not has_permission(current_user, 'outgoings.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('stocks.outgoings_list'))
+    
+    outgoing = StockOutgoing.query.get_or_404(id)
+    return render_template('stocks/outgoing_preview.html', outgoing=outgoing)
+
+@stocks_bp.route('/outgoings/<int:id>/pdf')
+@login_required
+def outgoing_pdf(id):
+    """Générer un PDF pour une sortie"""
+    if not has_permission(current_user, 'outgoings.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('stocks.outgoings_list'))
+    
+    from pdf_generator import PDFGenerator
+    from flask import make_response
+    
+    try:
+        outgoing = StockOutgoing.query.get_or_404(id)
+        pdf_gen = PDFGenerator()
+        pdf_buffer = pdf_gen.generate_outgoing_pdf(outgoing)
+        
+        filename = f'sortie_{outgoing.reference}_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.pdf'
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Erreur lors de la génération du PDF: {e}")
+        flash(f'Erreur lors de la génération du PDF: {str(e)}', 'error')
+        return redirect(url_for('stocks.outgoing_detail', id=id))
 
 # =========================================================
 # RETOURS DE STOCK
@@ -3015,6 +3093,45 @@ def return_detail(id):
     
     return render_template('stocks/return_detail.html', return_=return_)
 
+@stocks_bp.route('/returns/<int:id>/preview')
+@login_required
+def return_preview(id):
+    """Prévisualisation d'un retour avant export PDF"""
+    if not has_permission(current_user, 'returns.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('stocks.returns_list'))
+    
+    return_ = StockReturn.query.get_or_404(id)
+    return render_template('stocks/return_preview.html', return_=return_)
+
+@stocks_bp.route('/returns/<int:id>/pdf')
+@login_required
+def return_pdf(id):
+    """Générer un PDF pour un retour"""
+    if not has_permission(current_user, 'returns.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('stocks.returns_list'))
+    
+    from pdf_generator import PDFGenerator
+    from flask import make_response
+    
+    try:
+        return_ = StockReturn.query.get_or_404(id)
+        pdf_gen = PDFGenerator()
+        pdf_buffer = pdf_gen.generate_return_pdf(return_)
+        
+        filename = f'retour_{return_.reference}_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.pdf'
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Erreur lors de la génération du PDF: {e}")
+        flash(f'Erreur lors de la génération du PDF: {str(e)}', 'error')
+        return redirect(url_for('stocks.return_detail', id=id))
+
 # =========================================================
 # RÉCAPITULATIF STOCK RESTANT
 # =========================================================
@@ -3022,7 +3139,7 @@ def return_detail(id):
 @stocks_bp.route('/summary/preview')
 @login_required
 def stock_summary_preview():
-    """Prévisualisation avant export PDF/Excel"""
+    """Prévisualisation avant export PDF/Excel avec quantités restantes"""
     if not has_permission(current_user, 'stocks.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
@@ -3037,125 +3154,213 @@ def stock_summary_preview():
     end_date = request.args.get('end_date')
     stock_item_id = request.args.get('stock_item_id', type=int)
     depot_id = request.args.get('depot_id', type=int)
+    vehicle_id = request.args.get('vehicle_id', type=int)
     
-    # Calculer les dates selon la période
+    # Calculer les dates selon la période (même logique que stock_summary)
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    period_start_date = None
+    period_end_date = None
+    
     if period == 'today':
-        start_date = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-        end_date = datetime.now(UTC)
+        period_start_date = today
+        period_end_date = datetime.now(UTC)
     elif period == 'week':
-        end_date = datetime.now(UTC)
-        start_date = end_date - timedelta(days=7)
+        week_start = today - timedelta(days=today.weekday())
+        period_start_date = week_start
+        period_end_date = datetime.now(UTC)
     elif period == 'month':
-        end_date = datetime.now(UTC)
-        start_date = end_date - timedelta(days=30)
+        month_start = today.replace(day=1)
+        period_start_date = month_start
+        period_end_date = datetime.now(UTC)
     elif period == 'year':
-        end_date = datetime.now(UTC)
-        start_date = end_date - timedelta(days=365)
+        year_start = today.replace(month=1, day=1)
+        period_start_date = year_start
+        period_end_date = datetime.now(UTC)
     elif period == 'custom' and start_date and end_date:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    else:
-        start_date = None
-        end_date = None
+        try:
+            start = datetime.strptime(start_date, '%Y-%m-%d')
+            end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+            period_start_date = start.replace(tzinfo=UTC) if start.tzinfo is None else start
+            period_end_date = end.replace(tzinfo=UTC) if end.tzinfo is None else end
+        except:
+            pass
     
-    # Récupérer les données
+    # Récupérer les données filtrées par région
+    from utils_region_filter import filter_depots_by_region, filter_stock_movements_by_region
+    depots_query = Depot.query.filter_by(is_active=True)
+    depots_query = filter_depots_by_region(depots_query)
+    accessible_depots = depots_query.all()
+    
     stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
-    depots = Depot.query.filter_by(is_active=True).order_by(Depot.name).all()
     
-    # Optimisation : Charger tous les stocks en une seule requête pour éviter N+1
-    stock_item_ids = [item.id for item in stock_items]
-    if stock_item_id:
-        stock_item_ids = [stock_item_id]
-    
-    # Charger tous les stocks de dépôt en une requête
-    if depot_id:
-        all_depot_stocks = DepotStock.query.filter(
-            DepotStock.stock_item_id.in_(stock_item_ids),
-            DepotStock.depot_id == depot_id
-        ).all()
-    else:
-        all_depot_stocks = DepotStock.query.filter(
-            DepotStock.stock_item_id.in_(stock_item_ids)
-        ).all()
-    
-    # Charger tous les stocks de véhicule en une requête
-    all_vehicle_stocks = VehicleStock.query.filter(
-        VehicleStock.stock_item_id.in_(stock_item_ids)
-    ).all() if not depot_id else []
-    
-    # Grouper par stock_item_id en mémoire
-    depot_stocks_by_item = {}
-    for ds in all_depot_stocks:
-        if ds.stock_item_id not in depot_stocks_by_item:
-            depot_stocks_by_item[ds.stock_item_id] = []
-        depot_stocks_by_item[ds.stock_item_id].append(ds)
-    
-    vehicle_stocks_by_item = {}
-    for vs in all_vehicle_stocks:
-        if vs.stock_item_id not in vehicle_stocks_by_item:
-            vehicle_stocks_by_item[vs.stock_item_id] = []
-        vehicle_stocks_by_item[vs.stock_item_id].append(vs)
-    
-    # Préparer les données pour la prévisualisation
+    # Préparer les données pour la prévisualisation avec quantités restantes
     preview_data = []
-    total_quantity = Decimal('0')
-    total_value = Decimal('0')
+    depot_name = 'Tous les dépôts'
+    if depot_id:
+        depot = next((d for d in accessible_depots if d.id == depot_id), None)
+        if depot:
+            depot_name = depot.name
     
+    # Calculer les quantités restantes pour chaque article (même logique que stock_summary)
     for item in stock_items:
         if stock_item_id and item.id != stock_item_id:
             continue
         
-        # Calculer le stock total depuis les données groupées
-        total_stock = Decimal('0')
-        depot_stock = Decimal('0')
+        # Calculer le stock initial (avant la période)
+        initial_stock = Decimal('0')
+        if period_start_date:
+            if depot_id:
+                initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                    or_(
+                        StockMovement.to_depot_id == depot_id,
+                        StockMovement.from_depot_id == depot_id
+                    )
+                )
+                initial_movements_query = filter_stock_movements_by_region(initial_movements_query)
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                initial_movements_query = initial_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                initial_movements = initial_movements_query.all()
+                
+                balance = Decimal('0')
+                for m in initial_movements:
+                    if m.to_depot_id == depot_id:
+                        balance += m.quantity
+                    elif m.from_depot_id == depot_id:
+                        balance -= abs(m.quantity)
+                initial_stock = balance
+            elif vehicle_id:
+                initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                    or_(
+                        StockMovement.to_vehicle_id == vehicle_id,
+                        StockMovement.from_vehicle_id == vehicle_id
+                    )
+                )
+                initial_movements_query = filter_stock_movements_by_region(initial_movements_query)
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                initial_movements_query = initial_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                initial_movements = initial_movements_query.all()
+                
+                balance = Decimal('0')
+                for m in initial_movements:
+                    if m.to_vehicle_id == vehicle_id:
+                        balance += m.quantity
+                    elif m.from_vehicle_id == vehicle_id:
+                        balance -= abs(m.quantity)
+                initial_stock = balance
+            else:
+                initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+                initial_movements_query = filter_stock_movements_by_region(initial_movements_query)
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                initial_movements_query = initial_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                initial_movements = initial_movements_query.all()
+                for m in initial_movements:
+                    initial_stock += m.quantity
         
+        # Calculer les mouvements dans la période
+        movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+        movements_query = filter_stock_movements_by_region(movements_query)
+        if period_start_date:
+            period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+            movements_query = movements_query.filter(StockMovement.movement_date >= period_start_naive)
+        if period_end_date:
+            period_end_naive = period_end_date.replace(tzinfo=None) if period_end_date.tzinfo else period_end_date
+            movements_query = movements_query.filter(StockMovement.movement_date <= period_end_naive)
         if depot_id:
-            depot_stocks = depot_stocks_by_item.get(item.id, [])
-            depot_stock = sum(Decimal(str(ds.quantity)) for ds in depot_stocks)
-            total_stock = depot_stock
-        else:
-            depot_stocks = depot_stocks_by_item.get(item.id, [])
-            depot_stock = sum(Decimal(str(ds.quantity)) for ds in depot_stocks)
-            vehicle_stocks = vehicle_stocks_by_item.get(item.id, [])
-            vehicle_stock = sum(Decimal(str(vs.quantity)) for vs in vehicle_stocks)
-            total_stock = depot_stock + vehicle_stock
+            movements_query = movements_query.filter(
+                or_(
+                    StockMovement.from_depot_id == depot_id,
+                    StockMovement.to_depot_id == depot_id
+                )
+            )
+        if vehicle_id:
+            movements_query = movements_query.filter(
+                or_(
+                    StockMovement.from_vehicle_id == vehicle_id,
+                    StockMovement.to_vehicle_id == vehicle_id
+                )
+            )
         
-        if total_stock > 0:
-            value = total_stock * Decimal(str(item.purchase_price_gnf or 0))
-            total_quantity += total_stock
-            total_value += value
-            
+        movements = movements_query.all()
+        entries = sum(float(m.quantity) for m in movements if float(m.quantity) > 0)
+        exits = sum(abs(float(m.quantity)) for m in movements if float(m.quantity) < 0)
+        final_stock_calculated = float(initial_stock) + entries - exits
+        
+        # Calculer le stock actuel (balance totale)
+        if depot_id:
+            depot_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                or_(
+                    StockMovement.to_depot_id == depot_id,
+                    StockMovement.from_depot_id == depot_id
+                )
+            )
+            depot_movements_query = filter_stock_movements_by_region(depot_movements_query)
+            depot_movements = depot_movements_query.all()
+            balance = Decimal('0')
+            for m in depot_movements:
+                if m.to_depot_id == depot_id:
+                    balance += m.quantity
+                elif m.from_depot_id == depot_id:
+                    balance -= abs(m.quantity)
+            current_stock = float(balance)
+        elif vehicle_id:
+            vehicle_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                or_(
+                    StockMovement.to_vehicle_id == vehicle_id,
+                    StockMovement.from_vehicle_id == vehicle_id
+                )
+            )
+            vehicle_movements_query = filter_stock_movements_by_region(vehicle_movements_query)
+            vehicle_movements = vehicle_movements_query.all()
+            balance = Decimal('0')
+            for m in vehicle_movements:
+                if m.to_vehicle_id == vehicle_id:
+                    balance += m.quantity
+                elif m.from_vehicle_id == vehicle_id:
+                    balance -= abs(m.quantity)
+            current_stock = float(balance)
+        else:
+            all_movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+            all_movements_query = filter_stock_movements_by_region(all_movements_query)
+            all_movements = all_movements_query.all()
+            current_stock = float(sum(m.quantity for m in all_movements))
+        
+        # N'afficher que les articles avec du stock restant (stock actuel > 0)
+        if current_stock > 0:
             preview_data.append({
                 'item': item,
-                'quantity': total_stock,
-                'value': value,
-                'depot_name': depots[0].name if depots and depot_id else 'Tous les dépôts'
+                'initial_stock': float(initial_stock),
+                'entries': entries,
+                'exits': exits,
+                'final_stock_calculated': final_stock_calculated,
+                'current_stock': current_stock,
+                'movements_count': len(movements),
+                'depot_name': depot_name
             })
     
     return render_template('stocks/stock_preview.html',
                          preview_data=preview_data,
-                         total_quantity=total_quantity,
-                         total_value=total_value,
                          period=period,
                          start_date=start_date,
                          end_date=end_date,
                          stock_item_id=stock_item_id,
                          depot_id=depot_id,
-                         depots=depots,
+                         vehicle_id=vehicle_id,
+                         depots=accessible_depots,
                          stock_items=stock_items,
                          current_time=datetime.now(UTC))
 
 @stocks_bp.route('/summary/pdf')
 @login_required
 def stock_summary_pdf():
-    """Générer un PDF pour le récapitulatif de stock"""
+    """Générer un PDF pour le récapitulatif de stock avec quantités restantes"""
     if not has_permission(current_user, 'stocks.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
     from pdf_generator import PDFGenerator
     from flask import send_file, request
-    from datetime import datetime, UTC
+    from datetime import datetime, UTC, timedelta
+    from sqlalchemy import func, and_, or_
     
     # Récupérer la devise sélectionnée (par défaut GNF)
     currency = request.args.get('currency', 'GNF').upper()
@@ -3165,91 +3370,197 @@ def stock_summary_pdf():
     try:
         # Récupérer les paramètres de filtre
         period = request.args.get('period', 'all')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
         stock_item_id = request.args.get('stock_item_id', type=int)
         depot_id = request.args.get('depot_id', type=int)
+        vehicle_id = request.args.get('vehicle_id', type=int)
+        
+        # Calculer les dates selon la période (même logique que stock_summary)
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        period_start_date = None
+        period_end_date = None
+        
+        if period == 'today':
+            period_start_date = today
+            period_end_date = datetime.now(UTC)
+        elif period == 'week':
+            week_start = today - timedelta(days=today.weekday())
+            period_start_date = week_start
+            period_end_date = datetime.now(UTC)
+        elif period == 'month':
+            month_start = today.replace(day=1)
+            period_start_date = month_start
+            period_end_date = datetime.now(UTC)
+        elif period == 'year':
+            year_start = today.replace(month=1, day=1)
+            period_start_date = year_start
+            period_end_date = datetime.now(UTC)
+        elif period == 'custom' and start_date and end_date:
+            try:
+                start = datetime.strptime(start_date, '%Y-%m-%d')
+                end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+                period_start_date = start.replace(tzinfo=UTC) if start.tzinfo is None else start
+                period_end_date = end.replace(tzinfo=UTC) if end.tzinfo is None else end
+            except:
+                pass
         
         # Récupérer les données de stock (similaire à stock_summary)
+        from utils_region_filter import filter_depots_by_region, filter_stock_movements_by_region
+        depots_query = Depot.query.filter_by(is_active=True)
+        depots_query = filter_depots_by_region(depots_query)
+        accessible_depots = depots_query.all()
+        
         stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
-        depots = Depot.query.filter_by(is_active=True).order_by(Depot.name).all()
         
         # Préparer les données pour le PDF
+        depot_name = 'Tous les dépôts'
+        if depot_id:
+            depot = next((d for d in accessible_depots if d.id == depot_id), None)
+            if depot:
+                depot_name = depot.name
+        
         stock_data = {
-            'depot_name': 'Tous les dépôts',
+            'depot_name': depot_name,
+            'period': period,
+            'start_date': period_start_date,
+            'end_date': period_end_date,
             'items': []
         }
         
-        if depot_id:
-            depot = Depot.query.get(depot_id)
-            if depot:
-                stock_data['depot_name'] = depot.name
-        
-        # Optimisation : Charger tous les stocks en une seule requête pour éviter N+1
-        stock_item_ids = [item.id for item in stock_items]
-        if stock_item_id:
-            stock_item_ids = [stock_item_id]
-        
-        # Charger tous les stocks de dépôt en une requête
-        if depot_id:
-            all_depot_stocks = DepotStock.query.filter(
-                DepotStock.stock_item_id.in_(stock_item_ids),
-                DepotStock.depot_id == depot_id
-            ).all()
-        else:
-            all_depot_stocks = DepotStock.query.filter(
-                DepotStock.stock_item_id.in_(stock_item_ids)
-            ).all()
-        
-        # Charger tous les stocks de véhicule en une requête
-        all_vehicle_stocks = VehicleStock.query.filter(
-            VehicleStock.stock_item_id.in_(stock_item_ids)
-        ).all() if not depot_id else []
-        
-        # Grouper par stock_item_id en mémoire
-        depot_stocks_by_item = {}
-        for ds in all_depot_stocks:
-            if ds.stock_item_id not in depot_stocks_by_item:
-                depot_stocks_by_item[ds.stock_item_id] = []
-            depot_stocks_by_item[ds.stock_item_id].append(ds)
-        
-        vehicle_stocks_by_item = {}
-        for vs in all_vehicle_stocks:
-            if vs.stock_item_id not in vehicle_stocks_by_item:
-                vehicle_stocks_by_item[vs.stock_item_id] = []
-            vehicle_stocks_by_item[vs.stock_item_id].append(vs)
-        
-        # Calculer les stocks pour chaque article
+        # Calculer les quantités restantes pour chaque article (même logique que stock_summary)
         for item in stock_items:
             if stock_item_id and item.id != stock_item_id:
                 continue
             
-            # Calculer le stock total depuis les données groupées
-            total_stock = Decimal('0')
-            depot_stock = Decimal('0')
+            # Calculer le stock initial (avant la période)
+            initial_stock = Decimal('0')
+            if period_start_date:
+                if depot_id:
+                    initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                        or_(
+                            StockMovement.to_depot_id == depot_id,
+                            StockMovement.from_depot_id == depot_id
+                        )
+                    )
+                    initial_movements_query = filter_stock_movements_by_region(initial_movements_query)
+                    period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                    initial_movements_query = initial_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                    initial_movements = initial_movements_query.all()
+                    
+                    balance = Decimal('0')
+                    for m in initial_movements:
+                        if m.to_depot_id == depot_id:
+                            balance += m.quantity
+                        elif m.from_depot_id == depot_id:
+                            balance -= abs(m.quantity)
+                    initial_stock = balance
+                elif vehicle_id:
+                    initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                        or_(
+                            StockMovement.to_vehicle_id == vehicle_id,
+                            StockMovement.from_vehicle_id == vehicle_id
+                        )
+                    )
+                    initial_movements_query = filter_stock_movements_by_region(initial_movements_query)
+                    period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                    initial_movements_query = initial_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                    initial_movements = initial_movements_query.all()
+                    
+                    balance = Decimal('0')
+                    for m in initial_movements:
+                        if m.to_vehicle_id == vehicle_id:
+                            balance += m.quantity
+                        elif m.from_vehicle_id == vehicle_id:
+                            balance -= abs(m.quantity)
+                    initial_stock = balance
+                else:
+                    initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+                    initial_movements_query = filter_stock_movements_by_region(initial_movements_query)
+                    period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                    initial_movements_query = initial_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                    initial_movements = initial_movements_query.all()
+                    for m in initial_movements:
+                        initial_stock += m.quantity
             
+            # Calculer les mouvements dans la période
+            movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+            movements_query = filter_stock_movements_by_region(movements_query)
+            if period_start_date:
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                movements_query = movements_query.filter(StockMovement.movement_date >= period_start_naive)
+            if period_end_date:
+                period_end_naive = period_end_date.replace(tzinfo=None) if period_end_date.tzinfo else period_end_date
+                movements_query = movements_query.filter(StockMovement.movement_date <= period_end_naive)
             if depot_id:
-                # Stock dans le dépôt spécifique
-                depot_stocks = depot_stocks_by_item.get(item.id, [])
-                depot_stock = sum(Decimal(str(ds.quantity)) for ds in depot_stocks)
-                total_stock = depot_stock
-            else:
-                # Stock dans tous les dépôts
-                depot_stocks = depot_stocks_by_item.get(item.id, [])
-                depot_stock = sum(Decimal(str(ds.quantity)) for ds in depot_stocks)
-                
-                # Stock dans les véhicules
-                vehicle_stocks = vehicle_stocks_by_item.get(item.id, [])
-                vehicle_stock = sum(Decimal(str(vs.quantity)) for vs in vehicle_stocks)
-                
-                total_stock = depot_stock + vehicle_stock
+                movements_query = movements_query.filter(
+                    or_(
+                        StockMovement.from_depot_id == depot_id,
+                        StockMovement.to_depot_id == depot_id
+                    )
+                )
+            if vehicle_id:
+                movements_query = movements_query.filter(
+                    or_(
+                        StockMovement.from_vehicle_id == vehicle_id,
+                        StockMovement.to_vehicle_id == vehicle_id
+                    )
+                )
             
-            if total_stock > 0:
-                value = float(total_stock) * float(item.purchase_price_gnf or 0)
-                stock_data['items'].append({
-                    'article_name': item.name,
-                    'depot_name': stock_data['depot_name'],
-                    'quantity': float(total_stock),
-                    'value': value
-                })
+            movements = movements_query.all()
+            entries = sum(float(m.quantity) for m in movements if float(m.quantity) > 0)
+            exits = sum(abs(float(m.quantity)) for m in movements if float(m.quantity) < 0)
+            final_stock_calculated = float(initial_stock) + entries - exits
+            
+            # Calculer le stock actuel (balance totale)
+            if depot_id:
+                depot_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                    or_(
+                        StockMovement.to_depot_id == depot_id,
+                        StockMovement.from_depot_id == depot_id
+                    )
+                )
+                depot_movements_query = filter_stock_movements_by_region(depot_movements_query)
+                depot_movements = depot_movements_query.all()
+                balance = Decimal('0')
+                for m in depot_movements:
+                    if m.to_depot_id == depot_id:
+                        balance += m.quantity
+                    elif m.from_depot_id == depot_id:
+                        balance -= abs(m.quantity)
+                current_stock = float(balance)
+            elif vehicle_id:
+                vehicle_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                    or_(
+                        StockMovement.to_vehicle_id == vehicle_id,
+                        StockMovement.from_vehicle_id == vehicle_id
+                    )
+                )
+                vehicle_movements_query = filter_stock_movements_by_region(vehicle_movements_query)
+                vehicle_movements = vehicle_movements_query.all()
+                balance = Decimal('0')
+                for m in vehicle_movements:
+                    if m.to_vehicle_id == vehicle_id:
+                        balance += m.quantity
+                    elif m.from_vehicle_id == vehicle_id:
+                        balance -= abs(m.quantity)
+                current_stock = float(balance)
+            else:
+                all_movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+                all_movements_query = filter_stock_movements_by_region(all_movements_query)
+                all_movements = all_movements_query.all()
+                current_stock = float(sum(m.quantity for m in all_movements))
+            
+            stock_data['items'].append({
+                'article_name': item.name,
+                'sku': item.sku or '',
+                'initial_stock': float(initial_stock),
+                'entries': entries,
+                'exits': exits,
+                'final_stock_calculated': final_stock_calculated,
+                'current_stock': current_stock,
+                'movements_count': len(movements)
+            })
         
         # Déterminer le taux de change (utiliser des taux par défaut si non disponibles)
         # Pour les stocks, on peut utiliser des taux de change génériques ou depuis la config
@@ -3738,22 +4049,34 @@ def stock_summary():
     # Calculer les dates selon la période
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     date_filter = None
+    period_start_date = None
+    period_end_date = None
     
     if period == 'today':
+        period_start_date = today
+        period_end_date = datetime.now(UTC)
         date_filter = and_(StockMovement.movement_date >= today)
     elif period == 'week':
         week_start = today - timedelta(days=today.weekday())
+        period_start_date = week_start
+        period_end_date = datetime.now(UTC)
         date_filter = and_(StockMovement.movement_date >= week_start)
     elif period == 'month':
         month_start = today.replace(day=1)
+        period_start_date = month_start
+        period_end_date = datetime.now(UTC)
         date_filter = and_(StockMovement.movement_date >= month_start)
     elif period == 'year':
         year_start = today.replace(month=1, day=1)
+        period_start_date = year_start
+        period_end_date = datetime.now(UTC)
         date_filter = and_(StockMovement.movement_date >= year_start)
     elif period == 'custom' and start_date and end_date:
         try:
             start = datetime.strptime(start_date, '%Y-%m-%d')
             end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+            period_start_date = start.replace(tzinfo=UTC) if start.tzinfo is None else start
+            period_end_date = end.replace(tzinfo=UTC) if end.tzinfo is None else end
             date_filter = and_(StockMovement.movement_date >= start, StockMovement.movement_date < end)
         except:
             pass
@@ -3916,18 +4239,85 @@ def stock_summary():
         # Sorties = quantités négatives (on prend la valeur absolue pour l'affichage)
         exits = sum(abs(float(m.quantity)) for m in movements if float(m.quantity) < 0)
         
-        stock_summary.append({
-            'item': item,
-            'total_stock': total_stock,
-            'depot_stock': total_depot_stock,
-            'vehicle_stock': total_vehicle_stock,
-            'depot_balances': depot_balances,  # Balance par dépôt
-            'vehicle_balances': vehicle_balances,  # Balance par véhicule
-            'entries': entries,
-            'exits': exits,
-            'movements_count': len(movements),
-            'value': (total_stock * float(item.purchase_price_gnf) if total_stock > 0 and item.purchase_price_gnf else 0)
-        })
+        # Calculer le stock initial (avant la période sélectionnée)
+        initial_stock = Decimal('0')
+        if period_start_date:
+            # Stock initial = balance calculée jusqu'à period_start_date
+            # Utiliser la même logique que pour le stock total mais limitée aux mouvements avant la période
+            if depot_id:
+                # Balance initiale pour un dépôt spécifique
+                initial_depot_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                    or_(
+                        StockMovement.to_depot_id == depot_id,
+                        StockMovement.from_depot_id == depot_id
+                    )
+                )
+                initial_depot_movements_query = filter_stock_movements_by_region(initial_depot_movements_query)
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                initial_depot_movements_query = initial_depot_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                initial_depot_movements = initial_depot_movements_query.all()
+                
+                balance = Decimal('0')
+                for m in initial_depot_movements:
+                    if m.to_depot_id == depot_id:
+                        balance += m.quantity  # Entrée
+                    elif m.from_depot_id == depot_id:
+                        balance -= abs(m.quantity)  # Sortie
+                initial_stock = balance
+            elif vehicle_id:
+                # Balance initiale pour un véhicule spécifique
+                initial_vehicle_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                    or_(
+                        StockMovement.to_vehicle_id == vehicle_id,
+                        StockMovement.from_vehicle_id == vehicle_id
+                    )
+                )
+                initial_vehicle_movements_query = filter_stock_movements_by_region(initial_vehicle_movements_query)
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                initial_vehicle_movements_query = initial_vehicle_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                initial_vehicle_movements = initial_vehicle_movements_query.all()
+                
+                balance = Decimal('0')
+                for m in initial_vehicle_movements:
+                    if m.to_vehicle_id == vehicle_id:
+                        balance += m.quantity  # Entrée
+                    elif m.from_vehicle_id == vehicle_id:
+                        balance -= abs(m.quantity)  # Sortie
+                initial_stock = balance
+            else:
+                # Balance initiale pour tous les dépôts et véhicules accessibles
+                initial_all_movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+                initial_all_movements_query = filter_stock_movements_by_region(initial_all_movements_query)
+                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                initial_all_movements_query = initial_all_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                initial_all_movements = initial_all_movements_query.all()
+                
+                # Calculer la balance globale initiale
+                for m in initial_all_movements:
+                    initial_stock += m.quantity
+        else:
+            # Si pas de période, le stock initial est 0
+            initial_stock = Decimal('0')
+        
+        # Stock final calculé = stock initial + entrées - sorties
+        final_stock_calculated = float(initial_stock) + entries - exits
+        
+        # N'afficher que les articles avec du stock restant (stock actuel > 0)
+        if total_stock > 0:
+            stock_summary.append({
+                'item': item,
+                'total_stock': total_stock,
+                'depot_stock': total_depot_stock,
+                'vehicle_stock': total_vehicle_stock,
+                'depot_balances': depot_balances,  # Balance par dépôt
+                'vehicle_balances': vehicle_balances,  # Balance par véhicule
+                'entries': entries,
+                'exits': exits,
+                'movements_count': len(movements),
+                'value': (total_stock * float(item.purchase_price_gnf) if total_stock > 0 and item.purchase_price_gnf else 0),
+                'initial_stock': float(initial_stock),
+                'final_stock_calculated': final_stock_calculated
+            })
     
     # Utiliser les dépôts et véhicules déjà filtrés par région pour les filtres
     depots = sorted(accessible_depots, key=lambda d: d.name)
@@ -4644,7 +5034,7 @@ def warehouse_dashboard():
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
-    from sqlalchemy import func, and_
+    from sqlalchemy import func, and_, or_
     
     # Filtres
     status_filter = request.args.get('status', 'all')
@@ -4744,6 +5134,117 @@ def warehouse_dashboard():
     commercial_role = Role.query.filter_by(code='commercial').first()
     commercials = User.query.filter_by(role_id=commercial_role.id, is_active=True).all() if commercial_role else []
     
+    # =========================================================
+    # TABLEAU RÉCAPITULATIF PAR ARTICLE AVEC QUANTITÉS RESTANTES
+    # =========================================================
+    # Filtres pour le tableau récapitulatif
+    stock_period = request.args.get('stock_period', 'all')  # all, today, week, month, year, custom
+    stock_date_from = request.args.get('stock_date_from', '')
+    stock_date_to = request.args.get('stock_date_to', '')
+    stock_depot_id = request.args.get('stock_depot_id', type=int)
+    
+    # Calculer les dates pour le calcul des stocks
+    stock_start_date = None
+    stock_end_date = None
+    
+    if stock_period == 'today':
+        stock_start_date = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        stock_end_date = datetime.now(UTC)
+    elif stock_period == 'week':
+        stock_end_date = datetime.now(UTC)
+        stock_start_date = stock_end_date - timedelta(days=7)
+    elif stock_period == 'month':
+        stock_end_date = datetime.now(UTC)
+        stock_start_date = stock_end_date - timedelta(days=30)
+    elif stock_period == 'year':
+        stock_end_date = datetime.now(UTC)
+        stock_start_date = stock_end_date - timedelta(days=365)
+    elif stock_period == 'custom':
+        if stock_date_from:
+            try:
+                stock_start_date = datetime.strptime(stock_date_from, '%Y-%m-%d').replace(tzinfo=UTC)
+            except ValueError:
+                pass
+        if stock_date_to:
+            try:
+                stock_end_date = datetime.strptime(stock_date_to, '%Y-%m-%d').replace(hour=23, minute=59, second=59, tzinfo=UTC)
+            except ValueError:
+                pass
+    
+    # Récupérer tous les articles de stock actifs
+    stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
+    
+    # Calculer les quantités restantes pour chaque article
+    stock_summary = []
+    for item in stock_items:
+        # Calculer le stock initial (avant la période)
+        initial_stock = Decimal('0')
+        if stock_start_date:
+            # Stock initial = somme des mouvements jusqu'à stock_start_date
+            initial_movements = db.session.query(func.sum(StockMovement.quantity)).filter(
+                StockMovement.stock_item_id == item.id,
+                StockMovement.movement_date < stock_start_date
+            ).scalar() or Decimal('0')
+            initial_stock = initial_movements
+        
+        # Calculer les mouvements dans la période
+        movements_query = StockMovement.query.filter(
+            StockMovement.stock_item_id == item.id
+        )
+        
+        if stock_start_date:
+            movements_query = movements_query.filter(StockMovement.movement_date >= stock_start_date)
+        if stock_end_date:
+            movements_query = movements_query.filter(StockMovement.movement_date <= stock_end_date)
+        if stock_depot_id:
+            # Filtrer par dépôt (source ou destination)
+            movements_query = movements_query.filter(
+                or_(
+                    StockMovement.from_depot_id == stock_depot_id,
+                    StockMovement.to_depot_id == stock_depot_id
+                )
+            )
+        
+        movements = movements_query.all()
+        total_entries = sum(Decimal(str(m.quantity)) for m in movements if m.quantity > 0)
+        total_exits = abs(sum(Decimal(str(m.quantity)) for m in movements if m.quantity < 0))
+        
+        # Stock final = stock initial + entrées - sorties
+        final_stock = initial_stock + total_entries - total_exits
+        
+        # Récupérer le stock actuel depuis DepotStock (si disponible)
+        current_stock = Decimal('0')
+        if stock_depot_id:
+            depot_stock = DepotStock.query.filter_by(
+                stock_item_id=item.id,
+                depot_id=stock_depot_id
+            ).first()
+            if depot_stock:
+                current_stock = Decimal(str(depot_stock.quantity))
+        else:
+            # Stock total de tous les dépôts
+            depot_stocks = DepotStock.query.filter_by(stock_item_id=item.id).all()
+            current_stock = sum(Decimal(str(ds.quantity)) for ds in depot_stocks)
+        
+        stock_summary.append({
+            'item': item,
+            'initial_stock': initial_stock,
+            'total_entries': total_entries,
+            'total_exits': total_exits,
+            'final_stock': final_stock,
+            'current_stock': current_stock,
+            'movements_count': len(movements)
+        })
+    
+    # Trier par quantité restante décroissante
+    stock_summary.sort(key=lambda x: x['current_stock'], reverse=True)
+    
+    # Récupérer les dépôts pour le filtre
+    from utils_region_filter import filter_depots_by_region
+    depots_query = Depot.query.filter_by(is_active=True)
+    depots_query = filter_depots_by_region(depots_query)
+    depots = depots_query.order_by(Depot.name).all()
+    
     return render_template('stocks/warehouse_dashboard.html',
                          summaries=summaries,
                          stats=stats,
@@ -4752,7 +5253,13 @@ def warehouse_dashboard():
                          commercial_filter=commercial_filter,
                          date_from=date_from,
                          date_to=date_to,
-                         commercials=commercials)
+                         commercials=commercials,
+                         stock_summary=stock_summary,
+                         stock_period=stock_period,
+                         stock_date_from=stock_date_from,
+                         stock_date_to=stock_date_to,
+                         stock_depot_id=stock_depot_id,
+                         depots=depots)
 
 @stocks_bp.route('/warehouse/loading/<int:id>')
 @login_required

@@ -412,6 +412,28 @@
       grid-template-columns: 1fr;
     }
   }
+  
+  /* Classes pour l'affichage conditionnel des champs de date */
+  .custom-period-visible {
+    display: block;
+  }
+  
+  .custom-period-hidden {
+    display: none;
+  }
+  
+  /* Classes pour les couleurs de stock */
+  .stock-positive {
+    color: #10b981;
+  }
+  
+  .stock-neutral {
+    color: #7a8a9a;
+  }
+  
+  .stock-negative {
+    color: #ef4444;
+  }
 </style>
 {% endblock %}
 
@@ -708,5 +730,140 @@
       {% endif %}
     </div>
   </div>
+
+  <!-- Tableau Récapitulatif par Article -->
+  <div class="page-header-hl">
+    <div class="card-hl">
+      <h2 class="section-title">
+        <i class="fas fa-boxes"></i>
+        Récapitulatif Stock par Article
+      </h2>
+      
+      <!-- Filtres pour le tableau récapitulatif -->
+      <form method="GET" action="{{ url_for('stocks.warehouse_dashboard') }}" style="margin-bottom: var(--space-xl);">
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        <input type="hidden" name="commercial_id" value="{{ commercial_filter or '' }}">
+        <input type="hidden" name="date_from" value="{{ date_from }}">
+        <input type="hidden" name="date_to" value="{{ date_to }}">
+        <input type="hidden" name="page" value="{{ summaries.page if summaries else 1 }}">
+        
+        <div class="filters-compact">
+          <div class="form-group">
+            <label class="form-hl-label">Période</label>
+            <select name="stock_period" class="form-hl-select" onchange="this.form.submit()">
+              <option value="all" {% if stock_period == 'all' %}selected{% endif %}>Toutes</option>
+              <option value="today" {% if stock_period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+              <option value="week" {% if stock_period == 'week' %}selected{% endif %}>7 derniers jours</option>
+              <option value="month" {% if stock_period == 'month' %}selected{% endif %}>30 derniers jours</option>
+              <option value="year" {% if stock_period == 'year' %}selected{% endif %}>1 an</option>
+              <option value="custom" {% if stock_period == 'custom' %}selected{% endif %}>Personnalisée</option>
+            </select>
+          </div>
+          <div class="form-group {% if stock_period == 'custom' %}custom-period-visible{% else %}custom-period-hidden{% endif %}" id="stockDateFromGroup">
+            <label class="form-hl-label">Date début</label>
+            <input type="date" name="stock_date_from" value="{{ stock_date_from }}" class="form-hl-input" onchange="this.form.submit()">
+          </div>
+          <div class="form-group {% if stock_period == 'custom' %}custom-period-visible{% else %}custom-period-hidden{% endif %}" id="stockDateToGroup">
+            <label class="form-hl-label">Date fin</label>
+            <input type="date" name="stock_date_to" value="{{ stock_date_to }}" class="form-hl-input" onchange="this.form.submit()">
+          </div>
+          <div class="form-group">
+            <label class="form-hl-label">Dépôt</label>
+            <select name="stock_depot_id" class="form-hl-select" onchange="this.form.submit()">
+              <option value="">Tous les dépôts</option>
+              {% for depot in depots %}
+              <option value="{{ depot.id }}" {% if stock_depot_id == depot.id %}selected{% endif %}>
+                {{ depot.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <!-- Tableau récapitulatif -->
+      {% if stock_summary %}
+      <div class="table-responsive-wrapper">
+        <div class="table-hl">
+          <table>
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th>SKU</th>
+                <th>Stock Initial</th>
+                <th>Entrées</th>
+                <th>Sorties</th>
+                <th>Stock Final (Calculé)</th>
+                <th>Stock Actuel</th>
+                <th>Mouvements</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for summary in stock_summary %}
+              <tr>
+                <td>
+                  <strong style="color: var(--color-primary);">{{ summary.item.name }}</strong>
+                </td>
+                <td>
+                  <code style="background: var(--bg-secondary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.85rem;">
+                    {{ summary.item.sku }}
+                  </code>
+                </td>
+                <td style="text-align: right; font-weight: 500;">
+                  {{ "{:,.2f}".format(summary.initial_stock)|replace(',', ' ') }}
+                </td>
+                <td style="text-align: right; color: #10b981; font-weight: 600;">
+                  +{{ "{:,.2f}".format(summary.total_entries)|replace(',', ' ') }}
+                </td>
+                <td style="text-align: right; color: #ef4444; font-weight: 600;">
+                  -{{ "{:,.2f}".format(summary.total_exits)|replace(',', ' ') }}
+                </td>
+                <td style="text-align: right; font-weight: 600; color: var(--color-primary);">
+                  {{ "{:,.2f}".format(summary.final_stock)|replace(',', ' ') }}
+                </td>
+                <td class="{% if summary.current_stock > 0 %}stock-positive{% elif summary.current_stock == 0 %}stock-neutral{% else %}stock-negative{% endif %}" style="text-align: right; font-weight: 700; font-size: 1.1rem;">
+                  {{ "{:,.2f}".format(summary.current_stock)|replace(',', ' ') }}
+                </td>
+                <td style="text-align: center;">
+                  <span class="badge-hl badge-hl-secondary" style="font-size: 0.85rem;">
+                    {{ summary.movements_count }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-boxes"></i>
+        <p>Aucun article trouvé</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
+
+<script>
+// Afficher/masquer les champs de date personnalisée
+document.addEventListener('DOMContentLoaded', function() {
+  const periodSelect = document.querySelector('select[name="stock_period"]');
+  if (periodSelect) {
+    periodSelect.addEventListener('change', function() {
+      const isCustom = this.value === 'custom';
+      const fromGroup = document.getElementById('stockDateFromGroup');
+      const toGroup = document.getElementById('stockDateToGroup');
+      if (fromGroup) {
+        fromGroup.classList.remove('custom-period-visible', 'custom-period-hidden');
+        fromGroup.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
+      }
+      if (toGroup) {
+        toGroup.classList.remove('custom-period-visible', 'custom-period-hidden');
+        toGroup.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

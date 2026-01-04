@@ -1,6 +1,40 @@
 {% extends "base_modern_complete.html" %}
 {% block title %}Détail Mouvement {{ reference }} - Import Profit Pro{% endblock %}
 
+{% block extra_css %}
+<style>
+  .movement-quantity-positive {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #16a34a;
+    background: #dcfce7;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  
+  .movement-quantity-negative {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  
+  .balance-positive {
+    color: #16a34a;
+    font-size: 1.1rem;
+  }
+  
+  .balance-negative {
+    color: #dc2626;
+    font-size: 1.1rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-container">
   <div class="page-header-hl">
@@ -137,7 +171,7 @@
                   {{ movement.stock_item.sku if movement.stock_item else 'N/A' }}
                 </code>
               </td>
-              <td style="font-weight: 700; font-size: 1.1rem; {% if movement.quantity >= 0 %}color: #16a34a; background: #dcfce7;{% else %}color: #dc2626; background: #fee2e2;{% endif %} padding: 0.75rem; border-radius: var(--radius-sm); text-align: center;">
+              <td class="{% if movement.quantity >= 0 %}movement-quantity-positive{% else %}movement-quantity-negative{% endif %}">
                 {% if movement.quantity >= 0 %}
                   <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                     <i class="fas fa-arrow-up"></i>
@@ -158,13 +192,15 @@
           <tfoot>
             <tr style="background: var(--gray-50); font-weight: 600;">
               <td colspan="3" style="text-align: right;">Balance Nette:</td>
-              <td style="{% set balance = movements|sum(attribute='quantity') %}{% if balance >= 0 %}color: #16a34a;{% else %}color: #dc2626;{% endif %} font-size: 1.1rem;">
+              <td>
                 {% set balance = movements|sum(attribute='quantity') %}
-                {% if balance >= 0 %}
-                  <i class="fas fa-arrow-up me-1"></i>+{{ "{:,.2f}".format(balance)|replace(',', ' ') }}
-                {% else %}
-                  <i class="fas fa-arrow-down me-1"></i>{{ "{:,.2f}".format(balance)|replace(',', ' ') }}
-                {% endif %}
+                <span class="{% if balance >= 0 %}balance-positive{% else %}balance-negative{% endif %}">
+                  {% if balance >= 0 %}
+                    <i class="fas fa-arrow-up me-1"></i>+{{ "{:,.2f}".format(balance)|replace(',', ' ') }}
+                  {% else %}
+                    <i class="fas fa-arrow-down me-1"></i>{{ "{:,.2f}".format(balance)|replace(',', ' ') }}
+                  {% endif %}
+                </span>
               </td>
             </tr>
           </tfoot>

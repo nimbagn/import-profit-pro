@@ -7,7 +7,7 @@ Système de commandes avec validation hiérarchique
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from decimal import Decimal
 from models import (
     db, CommercialOrder, CommercialOrderClient, CommercialOrderItem,
@@ -123,6 +123,46 @@ def orders_list():
     search_query = request.args.get('search', '')
     sort_order = request.args.get('sort', 'arrival')  # 'arrival' pour ordre d'arrivée, 'date' pour date décroissante
     
+    # Filtres de période
+    period = request.args.get('period', '')
+    start_date_str = request.args.get('start_date', '')
+    end_date_str = request.args.get('end_date', '')
+    
+    # Calculer les dates de début et fin selon la période sélectionnée
+    start_date = None
+    end_date = None
+    
+    if period:
+        now = datetime.now(UTC)
+        if period == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'week':
+            # Lundi de cette semaine
+            days_since_monday = now.weekday()
+            start_date = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'month':
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'quarter':
+            # Premier jour du trimestre
+            quarter = (now.month - 1) // 3
+            start_date = now.replace(month=quarter * 3 + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'year':
+            start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    elif start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0)
+            start_date = start_date.replace(tzinfo=UTC)
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59, microsecond=999999)
+            end_date = end_date.replace(tzinfo=UTC)
+        except ValueError:
+            start_date = None
+            end_date = None
+    
     # #region agent log
     try:
         with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
@@ -135,7 +175,8 @@ def orders_list():
         query = CommercialOrder.query.options(
             joinedload(CommercialOrder.commercial),
             joinedload(CommercialOrder.validator),
-            joinedload(CommercialOrder.region)
+            joinedload(CommercialOrder.region),
+            joinedload(CommercialOrder.clients).joinedload(CommercialOrderClient.items).joinedload(CommercialOrderItem.stock_item)
         )
         # #region agent log
         try:
@@ -200,6 +241,15 @@ def orders_list():
             or_(
                 CommercialOrder.reference.like(f'%{search_query}%'),
                 CommercialOrder.notes.like(f'%{search_query}%')
+            )
+        )
+    
+    # Appliquer le filtre de période
+    if start_date and end_date:
+        query = query.filter(
+            and_(
+                CommercialOrder.order_date >= start_date,
+                CommercialOrder.order_date <= end_date
             )
         )
     
@@ -288,6 +338,73 @@ def orders_list():
     except Exception as e:
         regions = []
     
+    # Calculer les valeurs totales et préparer le récapitulatif
+    orders_summary = []
+    total_general = Decimal('0')
+    
+    # Récupérer toutes les commandes (sans pagination) pour le récapitulatif
+    summary_query = query.order_by(order_by)
+    all_orders_for_summary = summary_query.all()
+    
+    # Calculer les valeurs pour chaque commande et préparer le format tableau
+    for order in all_orders_for_summary:
+        order_total = Decimal('0')
+        clients_data = []
+        all_clients = []  # Liste de tous les clients uniques
+        all_articles = {}  # Dict: article_name -> {client_name: quantity, ...}
+        
+        for client in order.clients:
+            if client.status != 'rejected':  # Exclure les clients rejetés
+                client_name = client.client_name
+                if client_name not in all_clients:
+                    all_clients.append(client_name)
+                
+                client_total = Decimal('0')
+                for item in client.items:
+                    if item.quantity and item.unit_price_gnf:
+                        item_name = item.stock_item.name if item.stock_item else 'Article inconnu'
+                        item_quantity = float(item.quantity)
+                        item_value = Decimal(str(item.quantity)) * Decimal(str(item.unit_price_gnf))
+                        order_total += item_value
+                        client_total += item_value
+                        
+                        # Ajouter l'article au dictionnaire
+                        if item_name not in all_articles:
+                            all_articles[item_name] = {}
+                        if client_name not in all_articles[item_name]:
+                            all_articles[item_name][client_name] = 0
+                        all_articles[item_name][client_name] += item_quantity
+                
+                if client_total > 0:  # Ne garder que les clients avec des articles
+                    clients_data.append({
+                        'name': client_name,
+                        'total_value': client_total
+                    })
+        
+        if clients_data and all_articles:  # Ne garder que les commandes avec des clients valides
+            # Convertir all_articles en liste triée
+            articles_list = []
+            for article_name, clients_quantities in sorted(all_articles.items()):
+                article_total = sum(clients_quantities.values())
+                articles_list.append({
+                    'name': article_name,
+                    'clients_quantities': clients_quantities,
+                    'total': article_total
+                })
+            
+            orders_summary.append({
+                'order': order,
+                'reference': order.reference,
+                'date': order.order_date,
+                'commercial': order.commercial.full_name if order.commercial and order.commercial.full_name else (order.commercial.username if order.commercial else '-'),
+                'region': order.region.name if order.region else '-',
+                'clients': clients_data,
+                'clients_list': all_clients,
+                'articles': articles_list,
+                'total_value': order_total
+            })
+            total_general += order_total
+    
     # #region agent log
     try:
         with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
@@ -304,7 +421,12 @@ def orders_list():
                              search_query=search_query,
                              sort_order=sort_order,
                              commercials=commercials,
-                             regions=regions)
+                             regions=regions,
+                             period=period,
+                             start_date=start_date_str,
+                             end_date=end_date_str,
+                             orders_summary=orders_summary,
+                             total_general=total_general)
         # #region agent log
         try:
             with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:

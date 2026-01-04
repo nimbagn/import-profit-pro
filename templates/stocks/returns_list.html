@@ -196,9 +196,14 @@
               {% endif %}
             </td>
             <td>
-              <a href="{{ url_for('stocks.return_detail', id=return_.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Voir détails">
-                <i class="fas fa-eye"></i>
-              </a>
+              <div style="display: flex; gap: var(--space-xs);">
+                <a href="{{ url_for('stocks.return_preview', id=return_.id) }}" class="btn-hl btn-hl-secondary" style="padding: var(--space-xs) var(--space-sm);" title="Prévisualiser" target="_blank">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('stocks.return_detail', id=return_.id) }}" class="btn-hl btn-hl-outline" style="padding: var(--space-xs) var(--space-sm);" title="Voir détails">
+                  <i class="fas fa-info-circle"></i>
+                </a>
+              </div>
             </td>
           </tr>
           {% endfor %}

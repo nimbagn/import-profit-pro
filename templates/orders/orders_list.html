@@ -266,6 +266,506 @@
     margin-bottom: 12px;
   }
   
+  /* Styles modernes pour le tableau récapitulatif */
+  .summary-card-modern {
+    margin-bottom: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: none;
+  }
+  
+  .summary-header-modern {
+    background: #3b82f6;
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .summary-header-left {
+    flex: 1;
+  }
+  
+  .summary-commercial-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .summary-commercial-badge i {
+    font-size: 16px;
+    opacity: 0.9;
+  }
+  
+  .summary-commercial-label {
+    font-weight: 500;
+    opacity: 0.9;
+  }
+  
+  .summary-commercial-name {
+    font-weight: 700;
+    font-size: 15px;
+  }
+  
+  .summary-header-center {
+    flex: 2;
+    text-align: center;
+  }
+  
+  .summary-title-modern {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .summary-meta {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    font-size: 13px;
+    opacity: 0.95;
+  }
+  
+  .summary-ref, .summary-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .summary-table-modern {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+  }
+  
+  .summary-table-modern thead {
+    background: #f9fafb;
+  }
+  
+  .summary-th-article {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+    border-bottom: 3px solid #3b82f6;
+    background: #f8f9fa;
+  }
+  
+  .summary-th-client {
+    padding: 16px 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+    border-bottom: 3px solid #3b82f6;
+    background: #fef3c7;
+    min-width: 120px;
+  }
+  
+  .summary-th-client i {
+    margin-right: 6px;
+    color: #856404;
+  }
+  
+  .summary-th-total {
+    padding: 16px 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+    border-bottom: 3px solid #3b82f6;
+    background: #dbeafe;
+    min-width: 100px;
+  }
+  
+  .summary-article-row {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+  }
+  
+  .summary-article-row:hover {
+    background: #f8f9fa;
+  }
+  
+  .summary-article-row:nth-child(even) {
+    background: #fafbfc;
+  }
+  
+  .summary-article-row:nth-child(even):hover {
+    background: #f1f3f5;
+  }
+  
+  .summary-cell-article {
+    padding: 14px 20px;
+    font-weight: 600;
+    color: #212529;
+    font-size: 14px;
+    border-right: 2px solid #e9ecef;
+  }
+  
+  .summary-cell-article i {
+    margin-right: 8px;
+    color: #3b82f6;
+    font-size: 12px;
+  }
+  
+  .summary-cell-quantity {
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #495057;
+    border-right: 1px solid #e9ecef;
+  }
+  
+  .quantity-value {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #e7f5ff;
+    border-radius: 6px;
+    color: #1971c2;
+    font-weight: 700;
+  }
+  
+  .quantity-empty {
+    color: #adb5bd;
+    font-style: italic;
+  }
+  
+  .summary-cell-total {
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0c5460;
+    background: #d1ecf1;
+    border-left: 2px solid #17a2b8;
+  }
+  
+  .summary-value-row {
+    background: #d1fae5;
+    border-top: 3px solid #10b981;
+  }
+  
+  .summary-cell-value-label {
+    padding: 18px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 2px solid #10b981;
+  }
+  
+  .summary-cell-value-label i {
+    margin-right: 8px;
+    color: #059669;
+  }
+  
+  .summary-cell-value {
+    padding: 18px 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: #059669;
+    border-right: 1px solid #a7f3d0;
+  }
+  
+  .summary-cell-value-total {
+    padding: 18px 20px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: #059669;
+    background: #a7f3d0;
+    border-left: 3px solid #10b981;
+  }
+  
+  .summary-total-card {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    margin-top: 24px;
+  }
+  
+  .summary-total-header {
+    padding: 20px 32px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .summary-total-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .summary-total-value {
+    padding: 24px 32px;
+    text-align: center;
+  }
+  
+  .total-amount {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Styles pour les sections collapsibles */
+  .filters-card {
+    margin-bottom: 20px;
+  }
+  
+  .filters-header {
+    padding: 16px 24px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  
+  .filters-header:hover {
+    background: #f3f4f6;
+  }
+  
+  .filters-toggle-icon {
+    transition: transform 0.3s ease;
+    color: #6b7280;
+  }
+  
+  .filters-content {
+    padding: 24px;
+  }
+  
+  .filters-content.collapsed {
+    display: none !important;
+  }
+  
+  .filters-toggle-icon.rotated {
+    transform: rotate(180deg);
+  }
+  
+  .summary-section-card {
+    margin-bottom: 24px;
+  }
+  
+  .summary-section-header {
+    padding: 16px 24px;
+    background: #f9fafb;
+    border-bottom: 2px solid #3b82f6;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  
+  .summary-section-header:hover {
+    background: #f3f4f6;
+  }
+  
+  .summary-count-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  
+  .summary-toggle-icon {
+    transition: transform 0.3s ease;
+    color: #3b82f6;
+  }
+  
+  .summary-toggle-icon.rotated {
+    transform: rotate(180deg);
+  }
+  
+  .summary-section-content {
+    padding: 0;
+  }
+  
+  .summary-section-content.collapsed {
+    display: none;
+  }
+  
+  .summary-item-collapsible {
+    margin: 16px 24px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  
+  .summary-item-collapsible:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-header-modern {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  
+  .summary-header-right {
+    display: flex;
+    align-items: center;
+  }
+  
+  .summary-item-toggle {
+    transition: transform 0.3s ease;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+  }
+  
+  .summary-item-toggle.rotated {
+    transform: rotate(180deg);
+  }
+  
+  .summary-table-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+  }
+  
+  .summary-table-container.expanded {
+    max-height: 2000px;
+    padding: 0;
+    display: block !important;
+  }
+  
+  .summary-value-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 12px;
+  }
+  
+  .orders-history-card {
+    margin-top: 24px;
+  }
+  
+  .orders-count-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  
+  .table-view-controls {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .view-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #6b7280;
+  }
+  
+  .view-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+  
+  .view-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+  
+  .table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .orders-table.compact-view th,
+  .orders-table.compact-view td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .orders-table.compact-view th {
+    font-size: 11px;
+  }
+  
+  /* Responsive amélioré pour les récapitulatifs */
+  @media (max-width: 1024px) {
+    .summary-header-modern {
+      flex-direction: column;
+      gap: 12px;
+      padding: 20px;
+    }
+    
+    .summary-header-center {
+      text-align: left;
+    }
+    
+    .summary-title-modern {
+      font-size: 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .summary-card-modern {
+      margin: 12px;
+    }
+    
+    .summary-header-modern {
+      padding: 16px;
+    }
+    
+    .summary-title-modern {
+      font-size: 18px;
+    }
+    
+    .summary-table-modern {
+      font-size: 12px;
+    }
+    
+    .summary-th-article,
+    .summary-th-client,
+    .summary-th-total {
+      padding: 12px 8px;
+      font-size: 11px;
+    }
+    
+    .summary-cell-article,
+    .summary-cell-quantity,
+    .summary-cell-total {
+      padding: 10px 8px;
+      font-size: 12px;
+    }
+    
+    .table-view-controls {
+      display: none;
+    }
+  }
+  
   .region-stat-details {
     display: flex;
     gap: 16px;
@@ -564,12 +1064,17 @@
   </div>
 
   <!-- Filtres -->
-  <div class="card-hl">
-    <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
-      <i class="fas fa-filter me-2"></i>
-      Filtres et Recherche
-    </h3>
-    <form method="GET" action="{{ url_for('orders.orders_list') }}" class="filters-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+  <div class="card-hl filters-card">
+    <div class="filters-header" onclick="toggleFilters()">
+      <h3 style="color: var(--text-primary); margin: 0; font-size: 1.1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+        <span>
+          <i class="fas fa-filter me-2"></i>
+          Filtres et Recherche
+        </span>
+        <i class="fas fa-chevron-down filters-toggle-icon" id="filtersToggleIcon"></i>
+      </h3>
+    </div>
+    <form method="GET" action="{{ url_for('orders.orders_list') }}" class="filters-section filters-content" id="filtersContent" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
       <div class="form-group">
         <label class="form-hl-label">Recherche</label>
         <input type="text" name="search" value="{{ search_query or '' }}" class="form-hl-input" placeholder="Référence, notes...">
@@ -623,12 +1128,50 @@
             <option value="date" {% if sort_order == 'date' %}selected{% endif %}>Date décroissante (plus récentes en premier)</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-hl-label">Période prédéfinie</label>
+          <select name="period" id="period_select" class="form-hl-select">
+            <option value="">Aucune période</option>
+            <option value="today" {% if period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+            <option value="week" {% if period == 'week' %}selected{% endif %}>Cette semaine</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>Ce mois</option>
+            <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>Ce trimestre</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>Cette année</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Date de début</label>
+          <input type="date" name="start_date" id="start_date" value="{{ start_date or '' }}" class="form-hl-input">
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Date de fin</label>
+          <input type="date" name="end_date" id="end_date" value="{{ end_date or '' }}" class="form-hl-input">
+        </div>
       {% else %}
         <input type="hidden" name="sort" value="arrival">
         <div class="form-group">
           <label class="form-hl-label">Tri</label>
           <input type="text" value="Ordre d'arrivée (automatique)" class="form-hl-input" disabled style="background: #f3f4f6; cursor: not-allowed;">
           <small style="color: var(--text-muted); font-size: 0.75rem;">Les commandes sont triées par ordre d'arrivée pour traitement</small>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Période prédéfinie</label>
+          <select name="period" id="period_select" class="form-hl-select">
+            <option value="">Aucune période</option>
+            <option value="today" {% if period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+            <option value="week" {% if period == 'week' %}selected{% endif %}>Cette semaine</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>Ce mois</option>
+            <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>Ce trimestre</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>Cette année</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Date de début</label>
+          <input type="date" name="start_date" id="start_date" value="{{ start_date or '' }}" class="form-hl-input">
+        </div>
+        <div class="form-group">
+          <label class="form-hl-label">Date de fin</label>
+          <input type="date" name="end_date" id="end_date" value="{{ end_date or '' }}" class="form-hl-input">
         </div>
       {% endif %}
       <div class="form-group" style="display: flex; gap: var(--space-sm); align-items: flex-end;">
@@ -641,6 +1184,207 @@
       </div>
     </form>
   </div>
+
+  <script>
+    // Gérer l'exclusivité entre période prédéfinie et plage de dates
+    document.addEventListener('DOMContentLoaded', function() {
+      const periodSelect = document.getElementById('period_select');
+      const startDateInput = document.getElementById('start_date');
+      const endDateInput = document.getElementById('end_date');
+      
+      function updateDateInputs() {
+        if (periodSelect && startDateInput && endDateInput) {
+          if (periodSelect.value) {
+            // Désactiver les champs de date si une période est sélectionnée
+            startDateInput.disabled = true;
+            endDateInput.disabled = true;
+            startDateInput.value = '';
+            endDateInput.value = '';
+          } else {
+            // Activer les champs de date si aucune période n'est sélectionnée
+            startDateInput.disabled = false;
+            endDateInput.disabled = false;
+          }
+        }
+      }
+      
+      if (periodSelect) {
+        periodSelect.addEventListener('change', updateDateInputs);
+        updateDateInputs(); // Appeler au chargement de la page
+      }
+      
+      if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+          if (startDateInput.value && periodSelect) {
+            periodSelect.value = '';
+          }
+        });
+        
+        endDateInput.addEventListener('change', function() {
+          if (endDateInput.value && periodSelect) {
+            periodSelect.value = '';
+          }
+        });
+      }
+    });
+    
+    // Fonctions pour les sections collapsibles
+    function toggleFilters() {
+      const content = document.getElementById('filtersContent');
+      const icon = document.getElementById('filtersToggleIcon');
+      if (content && icon) {
+        content.classList.toggle('collapsed');
+        icon.classList.toggle('rotated');
+      }
+    }
+    
+    function toggleSummarySection() {
+      const content = document.getElementById('summarySectionContent');
+      const icon = document.getElementById('summaryToggleIcon');
+      if (content && icon) {
+        content.classList.toggle('collapsed');
+        icon.classList.toggle('rotated');
+      }
+    }
+    
+    function toggleSummaryItem(header) {
+      const container = header.nextElementSibling;
+      const toggle = header.querySelector('.summary-item-toggle');
+      if (container && toggle) {
+        container.classList.toggle('expanded');
+        toggle.classList.toggle('rotated');
+      }
+    }
+    
+    function setTableView(view) {
+      const table = document.getElementById('ordersTable');
+      const buttons = document.querySelectorAll('.view-btn');
+      if (table) {
+        table.className = 'table-hl orders-table';
+        if (view === 'compact') {
+          table.classList.add('compact-view');
+        }
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+      }
+    }
+    
+    // Initialiser l'état des sections (collapsed par défaut sur mobile)
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.innerWidth <= 768) {
+        const summaryContent = document.getElementById('summarySectionContent');
+        if (summaryContent) {
+          summaryContent.classList.add('collapsed');
+        }
+      }
+    });
+  </script>
+
+  {% if orders_summary and orders_summary|length > 0 %}
+  <!-- Section récapitulatif avec toggle -->
+  <div class="card-hl summary-section-card">
+    <div class="summary-section-header" onclick="toggleSummarySection()">
+        <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+        <span>
+          <i class="fas fa-chart-line me-2" style="color: #3b82f6;"></i>
+          Récapitulatifs des Commandes
+          <span class="summary-count-badge">{{ orders_summary|length }}</span>
+        </span>
+        <i class="fas fa-chevron-down summary-toggle-icon" id="summaryToggleIcon"></i>
+      </h3>
+    </div>
+    <div class="summary-section-content" id="summarySectionContent">
+  {% for summary in orders_summary %}
+  <div class="card-hl summary-card-modern summary-item-collapsible">
+    <div class="summary-header-modern" onclick="toggleSummaryItem(this)">
+      <div class="summary-header-left">
+        <div class="summary-commercial-badge">
+          <i class="fas fa-user-tie"></i>
+          <span class="summary-commercial-label">COMMERCIAL:</span>
+          <span class="summary-commercial-name">{{ summary.commercial }}</span>
+        </div>
+      </div>
+      <div class="summary-header-center">
+        <h2 class="summary-title-modern">RÉCAPITULATIF COMMANDE</h2>
+        <div class="summary-meta">
+          <span class="summary-ref"><i class="fas fa-hashtag"></i> {{ summary.reference }}</span>
+          <span class="summary-date"><i class="fas fa-calendar"></i> {{ summary.date.strftime('%d/%m/%Y') if summary.date else '-' }}</span>
+          <span class="summary-value-badge">{{ summary.total_value|format_number(0) }} GNF</span>
+        </div>
+      </div>
+      <div class="summary-header-right">
+        <i class="fas fa-chevron-down summary-item-toggle"></i>
+      </div>
+    </div>
+    <div class="summary-table-container" style="overflow-x: auto; display: none;">
+      <table class="summary-table-modern">
+        <thead>
+          <tr>
+            <th class="summary-th-article">ARTICLE / CLIENT</th>
+            {% for client_name in summary.clients_list %}
+            <th class="summary-th-client">
+              <i class="fas fa-user"></i> {{ client_name }}
+            </th>
+            {% endfor %}
+            <th class="summary-th-total">TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for article in summary.articles %}
+          <tr class="summary-article-row">
+            <td class="summary-cell-article">
+              <i class="fas fa-box"></i> {{ article.name }}
+            </td>
+            {% for client_name in summary.clients_list %}
+            <td class="summary-cell-quantity">
+              {% if client_name in article.clients_quantities %}
+                <span class="quantity-value">{{ article.clients_quantities[client_name]|int if article.clients_quantities[client_name] == article.clients_quantities[client_name]|int else article.clients_quantities[client_name] }}</span>
+              {% else %}
+                <span class="quantity-empty">-</span>
+              {% endif %}
+            </td>
+            {% endfor %}
+            <td class="summary-cell-total">
+              <strong>{{ article.total|int if article.total == article.total|int else article.total }}</strong>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="summary-value-row">
+            <td class="summary-cell-value-label">
+              <strong><i class="fas fa-money-bill-wave"></i> VALEUR COMMANDE</strong>
+            </td>
+            {% for client_name in summary.clients_list %}
+            {% set client_data = summary.clients|selectattr('name', 'equalto', client_name)|first %}
+            <td class="summary-cell-value">
+              <strong>{{ client_data.total_value|format_number(0) if client_data else '0' }}</strong>
+            </td>
+            {% endfor %}
+            <td class="summary-cell-value-total">
+              <strong>{{ summary.total_value|format_number(0) }}</strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+  
+  <!-- Total général de toutes les commandes -->
+  {% if orders_summary|length > 1 %}
+  <div class="card-hl summary-total-card">
+    <div class="summary-total-header">
+      <h3><i class="fas fa-chart-pie"></i> TOTAL GÉNÉRAL ({{ orders_summary|length }} commande{{ 's' if orders_summary|length > 1 else '' }})</h3>
+    </div>
+    <div class="summary-total-value">
+      <span class="total-amount">{{ total_general|format_number(0) }} GNF</span>
+    </div>
+  </div>
+  {% endif %}
+    </div>
+  </div>
+  {% endif %}
 
   {% if orders and orders.items %}
   {% if regions|length > 1 %}
@@ -682,12 +1426,13 @@
   </div>
   {% endif %}
   
-  <div class="card-hl">
-    <div style="padding: 16px 24px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">
+  <div class="card-hl orders-history-card">
+    <div class="orders-history-header" style="padding: 16px 24px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+      <div style="flex: 1;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;">
           <i class="fas fa-list-ol me-2" style="color: #3b82f6;"></i>
           Historique des Commandes
+          <span class="orders-count-badge">{{ orders.total if orders else 0 }}</span>
         </h3>
         <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">
           {% if current_user.role and current_user.role.code == 'warehouse' %}
@@ -702,8 +1447,17 @@
           {% endif %}
         </p>
       </div>
+      <div class="table-view-controls">
+        <button type="button" class="view-btn active" onclick="setTableView('compact')" title="Vue compacte">
+          <i class="fas fa-compress"></i>
+        </button>
+        <button type="button" class="view-btn" onclick="setTableView('normal')" title="Vue normale">
+          <i class="fas fa-expand"></i>
+        </button>
+      </div>
     </div>
-    <table class="table-hl">
+    <div class="table-responsive-wrapper">
+    <table class="table-hl orders-table" id="ordersTable">
       <thead>
         <tr>
           <th style="width: 60px;">N°</th>
@@ -802,11 +1556,12 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
 
     {% if orders.pages > 1 %}
     <div style="padding: 20px 24px; border-top: 1px solid #f3f4f6; display: flex; justify-content: center; align-items: center; gap: 12px;">
       {% if orders.has_prev %}
-      <a href="{{ url_for('orders.orders_list', page=orders.prev_num, status=status_filter, commercial_id=commercial_filter, search=search_query, region_id=region_filter, sort=sort_order) }}" class="btn-hl btn-hl-outline">
+      <a href="{{ url_for('orders.orders_list', page=orders.prev_num, status=status_filter, commercial_id=commercial_filter, search=search_query, region_id=region_filter, sort=sort_order, period=period, start_date=start_date, end_date=end_date) }}" class="btn-hl btn-hl-outline">
         <i class="fas fa-chevron-left"></i> Précédent
       </a>
       {% endif %}
@@ -816,7 +1571,7 @@
       </span>
       
       {% if orders.has_next %}
-      <a href="{{ url_for('orders.orders_list', page=orders.next_num, status=status_filter, commercial_id=commercial_filter, search=search_query, region_id=region_filter, sort=sort_order) }}" class="btn-hl btn-hl-outline">
+      <a href="{{ url_for('orders.orders_list', page=orders.next_num, status=status_filter, commercial_id=commercial_filter, search=search_query, region_id=region_filter, sort=sort_order, period=period, start_date=start_date, end_date=end_date) }}" class="btn-hl btn-hl-outline">
         Suivant <i class="fas fa-chevron-right"></i>
       </a>
       {% endif %}
