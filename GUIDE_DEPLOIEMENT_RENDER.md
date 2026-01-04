@@ -48,7 +48,14 @@ git push origin main
 
 ```bash
 # Via psql (si vous avez accès)
-psql <INTERNAL_DATABASE_URL> < scripts/migration_postgresql_render_complete.sql
+# Option 1 : Avec variable d'environnement DATABASE_URL
+psql "$DATABASE_URL" -f scripts/migration_postgresql_render_complete.sql
+
+# Option 2 : Avec URL complète (remplacez les valeurs)
+psql "postgresql://user:password@host:port/database" -f scripts/migration_postgresql_render_complete.sql
+
+# Option 3 : Avec paramètres séparés
+psql -h hostname -U username -d database -f scripts/migration_postgresql_render_complete.sql
 ```
 
 **OU** via l'interface Render :
