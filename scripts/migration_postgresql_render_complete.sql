@@ -558,6 +558,7 @@ INSERT INTO roles (name, description, permissions, is_active) VALUES
 ('admin', 'Administrateur système', '{"*": ["*"]}', TRUE),
 ('commercial', 'Commercial', '{"orders": ["*"], "clients": ["*"], "forecasts": ["*"]}', TRUE),
 ('magasinier', 'Magasinier', '{"stocks": ["*"], "receptions": ["*"], "outgoings": ["*"], "returns": ["*"], "inventories": ["*"]}', TRUE),
+('supervisor', 'Superviseur', '{"stocks": ["read"], "inventory": ["read", "validate"], "vehicles": ["read", "update"], "reports": ["read"], "regions": ["read"], "depots": ["read"], "families": ["read"], "stock_items": ["read"], "promotion": ["read", "write"], "orders": ["read", "validate", "update"], "price_lists": ["view", "create", "edit", "delete"]}', TRUE),
 ('rh', 'Ressources Humaines', '{"rh": ["*"]}', TRUE)
 ON CONFLICT (name) DO NOTHING;
 
