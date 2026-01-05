@@ -251,8 +251,93 @@
     color: white;
     font-size: 0.875rem;
     font-weight: 600;
-    margin-top: var(--space-md);
     backdrop-filter: blur(10px);
+  }
+  
+  .btn-show-all-items:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    transform: translateY(-2px);
+  }
+  
+  .all-items-section {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  .item-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  .item-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(0, 56, 101, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .item-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: var(--space-sm);
+  }
+  
+  .item-card-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    flex: 1;
+  }
+  
+  .item-card-sku {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+  }
+  
+  .item-card-price {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 1rem;
+    margin-top: var(--space-xs);
+  }
+  
+  .item-card-actions {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+  }
+  
+  .item-card-add-btn {
+    flex: 1;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+  }
+  
+  .item-card-add-btn:hover {
+    background: var(--hl-blue-light);
+    transform: scale(1.02);
   }
   
   /* Tableau clients - Optimisé pour écran paysage */
@@ -1028,18 +1113,45 @@
           </label>
           <div class="search-input-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" id="itemSearch" placeholder="🔍 Tapez le nom ou SKU de l'article pour rechercher..." autocomplete="off">
+            <input type="text" id="itemSearch" placeholder="🔍 Tapez le nom ou SKU de l'article pour rechercher... (Appuyez sur Entrée pour voir tous les articles)" autocomplete="off">
             <div id="searchResults"></div>
           </div>
-          <div class="added-items-badge" id="addedItemsBadge" style="display: none;">
-            <i class="fas fa-check-circle"></i>
-            <span id="addedItemsCount">0</span> article(s) ajouté(s)
+          <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md); flex-wrap: wrap; align-items: center;">
+            <div class="added-items-badge" id="addedItemsBadge" style="display: none;">
+              <i class="fas fa-check-circle"></i>
+              <span id="addedItemsCount">0</span> article(s) ajouté(s)
+            </div>
+            <button type="button" class="btn-show-all-items" id="showAllItemsBtn" onclick="toggleAllItemsList()" style="background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid rgba(255, 255, 255, 0.3); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: var(--space-xs);">
+              <i class="fas fa-list"></i>
+              <span id="allItemsBtnText">Voir tous les articles</span>
+            </button>
           </div>
           <div style="margin-top: var(--space-md); padding: var(--space-sm); background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); backdrop-filter: blur(10px);">
             <small style="color: white; font-size: 0.875rem; display: flex; align-items: center; gap: var(--space-xs);">
               <i class="fas fa-info-circle"></i>
               Les prix sont pré-remplis automatiquement depuis la fiche de prix active
             </small>
+          </div>
+        </div>
+        
+        <!-- Liste complète des articles (masquée par défaut) -->
+        <div class="all-items-section" id="allItemsSection" style="display: none; margin-bottom: var(--space-xl);">
+          <div class="card-hl" style="padding: var(--space-xl);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); flex-wrap: wrap; gap: var(--space-md);">
+              <h3 style="margin: 0; display: flex; align-items: center; gap: var(--space-sm);">
+                <i class="fas fa-box"></i>
+                Tous les articles disponibles
+              </h3>
+              <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+                <input type="text" id="allItemsFilter" placeholder="🔍 Filtrer les articles..." style="padding: var(--space-sm) var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.875rem; min-width: 200px;">
+                <button type="button" onclick="toggleAllItemsList()" class="btn-hl btn-hl-secondary" style="padding: var(--space-sm) var(--space-md);">
+                  <i class="fas fa-times me-2"></i>Fermer
+                </button>
+              </div>
+            </div>
+            <div id="allItemsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md); max-height: 600px; overflow-y: auto; padding: var(--space-sm);">
+              <!-- Les articles seront ajoutés dynamiquement -->
+            </div>
           </div>
         </div>
         
@@ -1342,19 +1454,61 @@ function removeItemRow(button) {
   }
 }
 
-// Recherche d'articles
+// Recherche d'articles avec tri par pertinence
 function searchItems(query) {
   const resultsDiv = document.getElementById('searchResults');
   
-  if (!query || query.length < 2) {
+  if (!query || query.length < 1) {
     resultsDiv.style.display = 'none';
     return;
   }
   
-  const filtered = stockItems.filter(item => 
-    item.name.toLowerCase().includes(query.toLowerCase()) ||
-    (item.sku && item.sku.toLowerCase().includes(query.toLowerCase()))
-  );
+  const queryLower = query.toLowerCase().trim();
+  
+  // Recherche avec scoring de pertinence
+  const filtered = stockItems.map(item => {
+    const nameLower = (item.name || '').toLowerCase();
+    const skuLower = (item.sku || '').toLowerCase();
+    
+    let score = 0;
+    let matches = false;
+    
+    // Correspondance exacte du nom (score élevé)
+    if (nameLower === queryLower) {
+      score = 1000;
+      matches = true;
+    }
+    // Correspondance exacte du SKU (score très élevé)
+    else if (skuLower === queryLower) {
+      score = 2000;
+      matches = true;
+    }
+    // Nom commence par la requête (score élevé)
+    else if (nameLower.startsWith(queryLower)) {
+      score = 500;
+      matches = true;
+    }
+    // SKU commence par la requête (score élevé)
+    else if (skuLower.startsWith(queryLower)) {
+      score = 600;
+      matches = true;
+    }
+    // Nom contient la requête (score moyen)
+    else if (nameLower.includes(queryLower)) {
+      score = 100 + (nameLower.indexOf(queryLower) * 10);
+      matches = true;
+    }
+    // SKU contient la requête (score moyen)
+    else if (skuLower.includes(queryLower)) {
+      score = 200 + (skuLower.indexOf(queryLower) * 10);
+      matches = true;
+    }
+    
+    return { item, score, matches };
+  })
+  .filter(result => result.matches)
+  .sort((a, b) => b.score - a.score)
+  .map(result => result.item);
   
   resultsDiv.innerHTML = '';
   
@@ -1364,13 +1518,17 @@ function searchItems(query) {
         <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
         <p style="font-weight: 600; margin-bottom: var(--space-xs);">Aucun article trouvé</p>
         <p style="font-size: 0.875rem;">Essayez avec un autre terme de recherche</p>
+        <button type="button" onclick="toggleAllItemsList()" style="margin-top: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600;">
+          <i class="fas fa-list me-2"></i>Voir tous les articles
+        </button>
       </div>
     `;
     resultsDiv.style.display = 'block';
     return;
   }
   
-  filtered.slice(0, 10).forEach((item, index) => {
+  // Afficher jusqu'à 20 résultats (au lieu de 10)
+  filtered.slice(0, 20).forEach((item, index) => {
     const div = document.createElement('div');
     div.className = 'search-result-item';
     div.dataset.itemIndex = index;
@@ -1398,11 +1556,15 @@ function searchItems(query) {
       ? `<span class="search-result-price">${item.default_price.toLocaleString('fr-FR')} GNF</span>`
       : '<span style="color: var(--text-muted); font-size: 0.875rem;">Prix non défini</span>';
     
+    // Mettre en évidence la correspondance dans le nom
+    const highlightedName = highlightMatch(item.name, query);
+    const highlightedSku = item.sku ? highlightMatch(item.sku, query) : 'N/A';
+    
     div.innerHTML = `
       <div class="search-result-info">
-        <div class="search-result-name">${item.name}</div>
+        <div class="search-result-name">${highlightedName}</div>
         <div class="search-result-details">
-          <span><i class="fas fa-barcode me-1"></i>${item.sku || 'N/A'}</span>
+          <span><i class="fas fa-barcode me-1"></i>${highlightedSku}</span>
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: var(--space-md);">
@@ -1416,7 +1578,108 @@ function searchItems(query) {
     resultsDiv.appendChild(div);
   });
   
+  // Afficher un message si plus de résultats
+  if (filtered.length > 20) {
+    const moreDiv = document.createElement('div');
+    moreDiv.style.cssText = 'padding: var(--space-md); text-align: center; background: var(--bg-tertiary); border-top: 1px solid var(--gray-200);';
+    moreDiv.innerHTML = `
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: var(--space-sm);">
+        ${filtered.length - 20} autre(s) résultat(s) trouvé(s)
+      </p>
+      <button type="button" onclick="toggleAllItemsList(); document.getElementById('allItemsFilter').value = '${query.replace(/'/g, "\\'")}'; filterAllItems();" style="padding: var(--space-sm) var(--space-md); background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+        <i class="fas fa-list me-2"></i>Voir tous les résultats
+      </button>
+    `;
+    resultsDiv.appendChild(moreDiv);
+  }
+  
   resultsDiv.style.display = 'block';
+}
+
+// Fonction pour mettre en évidence les correspondances
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark style="background: var(--color-primary); color: white; padding: 2px 4px; border-radius: 3px; font-weight: 600;">$1</mark>');
+}
+
+// Afficher/masquer la liste complète des articles
+function toggleAllItemsList() {
+  const section = document.getElementById('allItemsSection');
+  const btn = document.getElementById('showAllItemsBtn');
+  const btnText = document.getElementById('allItemsBtnText');
+  
+  if (section.style.display === 'none' || !section.style.display) {
+    section.style.display = 'block';
+    btnText.textContent = 'Masquer les articles';
+    renderAllItems();
+    // Focus sur le filtre
+    setTimeout(() => {
+      document.getElementById('allItemsFilter').focus();
+    }, 100);
+  } else {
+    section.style.display = 'none';
+    btnText.textContent = 'Voir tous les articles';
+  }
+}
+
+// Rendre tous les articles dans la grille
+function renderAllItems(filterQuery = '') {
+  const container = document.getElementById('allItemsList');
+  container.innerHTML = '';
+  
+  let itemsToShow = stockItems;
+  
+  // Filtrer si une requête est fournie
+  if (filterQuery && filterQuery.trim()) {
+    const queryLower = filterQuery.toLowerCase().trim();
+    itemsToShow = stockItems.filter(item => 
+      (item.name && item.name.toLowerCase().includes(queryLower)) ||
+      (item.sku && item.sku.toLowerCase().includes(queryLower))
+    );
+  }
+  
+  if (itemsToShow.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: var(--space-2xl); text-align: center; color: var(--text-muted);">
+        <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+        <p style="font-weight: 600;">Aucun article trouvé</p>
+      </div>
+    `;
+    return;
+  }
+  
+  itemsToShow.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    
+    const priceDisplay = item.default_price 
+      ? `<div class="item-card-price">${item.default_price.toLocaleString('fr-FR')} GNF</div>`
+      : '<div style="color: var(--text-muted); font-size: 0.875rem;">Prix non défini</div>';
+    
+    card.innerHTML = `
+      <div class="item-card-header">
+        <div class="item-card-name">${item.name}</div>
+        <div class="item-card-sku">${item.sku || 'N/A'}</div>
+      </div>
+      ${priceDisplay}
+      <div class="item-card-actions">
+        <button type="button" class="item-card-add-btn" onclick="addItemRow({id: ${item.id}, name: '${item.name.replace(/'/g, "\\'")}', sku: '${(item.sku || '').replace(/'/g, "\\'")}', default_price: ${item.default_price || 'null'}}); updateAddedItemsBadge();">
+          <i class="fas fa-plus"></i>
+          Ajouter
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+// Filtrer la liste complète des articles
+function filterAllItems() {
+  const filterInput = document.getElementById('allItemsFilter');
+  const query = filterInput ? filterInput.value : '';
+  renderAllItems(query);
 }
 
 // Calculer le total d'une ligne (quantité × prix)
@@ -1627,7 +1890,32 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('input', function() {
       searchItems(this.value);
     });
+    
+    // Raccourci clavier : Entrée pour voir tous les articles
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !this.value.trim()) {
+        e.preventDefault();
+        toggleAllItemsList();
+      }
+    });
   }
+  
+  // Gestion du filtre de la liste complète
+  const allItemsFilter = document.getElementById('allItemsFilter');
+  if (allItemsFilter) {
+    allItemsFilter.addEventListener('input', function() {
+      filterAllItems();
+    });
+  }
+  
+  // Fermer les résultats de recherche en cliquant ailleurs
+  document.addEventListener('click', function(e) {
+    const searchSection = document.getElementById('searchSection');
+    const searchResults = document.getElementById('searchResults');
+    if (searchSection && searchResults && !searchSection.contains(e.target)) {
+      searchResults.style.display = 'none';
+    }
+  });
 });
 </script>
 {% endblock %}
