@@ -1,0 +1,282 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Contacts - Messagerie{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: #f5f7fa;
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0;
+    padding: 32px 40px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .page-title-hl {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .btn-hl {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-hl-primary {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  .btn-hl-primary:hover {
+    background: #2563eb;
+    color: white;
+  }
+  
+  .card-hl {
+    margin: 24px 40px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .card-hl h3 {
+    padding: 20px 24px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafbfc;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  thead {
+    background: #f9fafb;
+  }
+  
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  td {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    color: #374151;
+  }
+  
+  tr:hover {
+    background: #f9fafb;
+  }
+  
+  .badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+  
+  .pagination {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f3f4f6;
+  }
+  
+  .pagination-info {
+    font-size: 14px;
+    color: #6b7280;
+  }
+  
+  .pagination-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn-pagination {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  
+  .btn-pagination:hover {
+    background: #f9fafb;
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+  
+  .empty-state {
+    padding: 48px;
+    text-align: center;
+    color: #9ca3af;
+  }
+  
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-container">
+    <div class="page-header-hl">
+      <h1 class="page-title-hl">
+        <i class="fas fa-address-book"></i>
+        Contacts
+      </h1>
+      {% if has_permission(current_user, 'messaging.manage_contacts') %}
+      <a href="{{ url_for('messaging.create_contact') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus"></i> Nouveau Contact
+      </a>
+      {% endif %}
+    </div>
+    
+    <div class="card-hl">
+      <h3>Liste des Contacts</h3>
+      
+      {% if contacts %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Téléphone</th>
+              <th>Groupes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for contact in contacts %}
+            <tr>
+              <td><strong>{{ contact.name or 'N/A' }}</strong></td>
+              <td>{{ contact.phone or 'N/A' }}</td>
+              <td>
+                {% if contact.groups %}
+                  {% for group in contact.groups %}
+                  <span class="badge">{{ group.name or group.id }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span style="color: #9ca3af;">Aucun groupe</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination">
+        <div class="pagination-info">
+          Page {{ page }} - {{ contacts|length }} contact(s)
+        </div>
+        <div class="pagination-buttons">
+          {% if page > 1 %}
+          <a href="{{ url_for('messaging.contacts_list', page=page-1, limit=limit) }}" 
+             class="btn-pagination">
+            <i class="fas fa-chevron-left"></i> Précédent
+          </a>
+          {% endif %}
+          <a href="{{ url_for('messaging.contacts_list', page=page+1, limit=limit) }}" 
+             class="btn-pagination">
+            Suivant <i class="fas fa-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-address-book"></i>
+        <p>Aucun contact</p>
+        {% if has_permission(current_user, 'messaging.manage_contacts') %}
+        <a href="{{ url_for('messaging.create_contact') }}" class="btn-hl btn-hl-primary" style="margin-top: 16px;">
+          <i class="fas fa-plus"></i> Créer le premier contact
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    
+    {% if groups %}
+    <div class="card-hl">
+      <h3>Groupes de Contacts</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for group in groups %}
+            <tr>
+              <td><strong>{{ group.name or group.id }}</strong></td>
+              <td>{{ group.description or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

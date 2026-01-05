@@ -1,0 +1,333 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Envoyer un WhatsApp - Messagerie{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: #f5f7fa;
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0;
+    padding: 32px 40px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .page-title-hl {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .card-hl {
+    margin: 24px 40px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .card-hl h3 {
+    padding: 20px 24px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafbfc;
+  }
+  
+  .form-section {
+    padding: 24px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-hl-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  
+  .form-hl-input,
+  .form-hl-select,
+  .form-hl-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-hl-textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  
+  .form-hl-input:focus,
+  .form-hl-select:focus,
+  .form-hl-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .btn-hl {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-hl-primary {
+    background: #25d366;
+    color: white;
+  }
+  
+  .btn-hl-primary:hover {
+    background: #128c7e;
+    color: white;
+  }
+  
+  .btn-hl-secondary {
+    background: #6b7280;
+    color: white;
+  }
+  
+  .btn-hl-secondary:hover {
+    background: #4b5563;
+    color: white;
+  }
+  
+  .help-text {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+  
+  .file-upload {
+    padding: 12px;
+    border: 2px dashed #d1d5db;
+    border-radius: 6px;
+    text-align: center;
+    background: #f9fafb;
+    transition: border-color 0.2s;
+  }
+  
+  .file-upload:hover {
+    border-color: #3b82f6;
+  }
+  
+  .file-upload input[type="file"] {
+    display: none;
+  }
+  
+  .file-upload-label {
+    cursor: pointer;
+    color: #3b82f6;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-container">
+    <div class="page-header-hl">
+      <h1 class="page-title-hl">
+        <i class="fab fa-whatsapp"></i>
+        Envoyer un Message WhatsApp
+      </h1>
+    </div>
+    
+    <div class="card-hl">
+      <h3>Nouveau Message WhatsApp</h3>
+      <form method="POST" enctype="multipart/form-data" class="form-section">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-hl-label" for="account">Compte WhatsApp *</label>
+            <select id="account" name="account" class="form-hl-select" required>
+              <option value="">Sélectionner un compte</option>
+              {% for account in accounts %}
+              <option value="{{ account.unique_id or account.id }}">{{ account.name or account.phone or account.unique_id }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-hl-label" for="recipient">Destinataire *</label>
+            <input type="text" id="recipient" name="recipient" class="form-hl-input" 
+                   placeholder="+224601123456 ou adresse groupe" required>
+            <div class="help-text">Numéro E.164 ou adresse de groupe WhatsApp</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-hl-label" for="type">Type de message *</label>
+          <select id="type" name="type" class="form-hl-select" required>
+            <option value="text">Texte</option>
+            <option value="media">Média (Image/Audio/Video)</option>
+            <option value="document">Document</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-hl-label" for="message">Message / Légende *</label>
+          <textarea id="message" name="message" class="form-hl-textarea" 
+                    placeholder="Votre message ici..." required></textarea>
+        </div>
+        
+        <div id="media-options" style="display: none;">
+          <div class="form-group">
+            <label class="form-hl-label">Fichier Média</label>
+            <div class="file-upload">
+              <label for="media_file" class="file-upload-label">
+                <i class="fas fa-upload"></i> Cliquez pour téléverser un fichier média
+              </label>
+              <input type="file" id="media_file" name="media_file" accept="image/*,video/*,audio/*">
+              <div class="help-text">Formats supportés: JPG, PNG, GIF, MP4, MP3, OGG</div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-hl-label" for="media_url">OU URL Média</label>
+            <input type="url" id="media_url" name="media_url" class="form-hl-input" 
+                   placeholder="https://example.com/image.jpg">
+            <div class="help-text">Lien direct vers le fichier média</div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-hl-label" for="media_type">Type de média (si URL)</label>
+            <select id="media_type" name="media_type" class="form-hl-select">
+              <option value="">Sélectionner</option>
+              <option value="image">Image</option>
+              <option value="audio">Audio</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="document-options" style="display: none;">
+          <div class="form-group">
+            <label class="form-hl-label">Fichier Document</label>
+            <div class="file-upload">
+              <label for="document_file" class="file-upload-label">
+                <i class="fas fa-file-upload"></i> Cliquez pour téléverser un document
+              </label>
+              <input type="file" id="document_file" name="document_file" accept=".pdf,.xml,.xls,.xlsx,.doc,.docx">
+              <div class="help-text">Formats supportés: PDF, XML, XLS, XLSX, DOC, DOCX</div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-hl-label" for="document_url">OU URL Document</label>
+            <input type="url" id="document_url" name="document_url" class="form-hl-input" 
+                   placeholder="https://example.com/document.pdf">
+            <div class="help-text">Lien direct vers le document</div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-hl-label" for="document_name">Nom du document (si URL)</label>
+              <input type="text" id="document_name" name="document_name" class="form-hl-input" 
+                     placeholder="document.pdf">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-hl-label" for="document_type">Type de document (si URL)</label>
+              <select id="document_type" name="document_type" class="form-hl-select">
+                <option value="">Sélectionner</option>
+                <option value="pdf">PDF</option>
+                <option value="xml">XML</option>
+                <option value="xls">XLS</option>
+                <option value="xlsx">XLSX</option>
+                <option value="doc">DOC</option>
+                <option value="docx">DOCX</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-hl-label" for="priority">Priorité</label>
+          <select id="priority" name="priority" class="form-hl-select">
+            <option value="1">Haute (immédiat)</option>
+            <option value="2" selected>Normale</option>
+          </select>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fab fa-whatsapp"></i> Envoyer
+          </button>
+          <a href="{{ url_for('messaging.dashboard') }}" class="btn-hl btn-hl-secondary">
+            <i class="fas fa-times"></i> Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('type').addEventListener('change', function() {
+  const type = this.value;
+  const mediaOptions = document.getElementById('media-options');
+  const documentOptions = document.getElementById('document-options');
+  
+  mediaOptions.style.display = type === 'media' ? 'block' : 'none';
+  documentOptions.style.display = type === 'document' ? 'block' : 'none';
+});
+
+document.getElementById('media_file').addEventListener('change', function(e) {
+  if (e.target.files.length > 0) {
+    const label = document.querySelector('label[for="media_file"]');
+    label.innerHTML = '<i class="fas fa-check"></i> Fichier sélectionné: ' + e.target.files[0].name;
+  }
+});
+
+document.getElementById('document_file').addEventListener('change', function(e) {
+  if (e.target.files.length > 0) {
+    const label = document.querySelector('label[for="document_file"]');
+    label.innerHTML = '<i class="fas fa-check"></i> Fichier sélectionné: ' + e.target.files[0].name;
+  }
+});
+</script>
+{% endblock %}
+
