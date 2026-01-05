@@ -1053,13 +1053,14 @@ function scrollToClient(clientId) {
         {% elif order.status == 'completed' %}
         <span class="badge-status badge-completed"><i class="fas fa-check-double"></i>Complétée</span>
         {% endif %}
-        {% set order_total_preview = 0 %}
+        {% set client_totals_preview = [] %}
         {% for client in order.clients %}
           {% if client.status != 'rejected' %}
             {% set client_total_preview = client.items|calculate_items_total %}
-            {% set order_total_preview = order_total_preview + client_total_preview %}
+            {% set _ = client_totals_preview.append(client_total_preview) %}
           {% endif %}
         {% endfor %}
+        {% set order_total_preview = client_totals_preview|sum %}
         <div style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-lg); border: 1px solid rgba(255, 255, 255, 0.3); text-align: right;">
           <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: var(--space-xs);">Valeur totale</div>
           <div style="font-size: 1.25rem; font-weight: 700;">{{ order_total_preview|format_number(0) }} GNF</div>
@@ -1507,13 +1508,14 @@ function scrollToClient(clientId) {
     </div>
     
     <!-- Total Global de la Commande (excluant les clients rejetés) -->
-    {% set order_total = 0 %}
+    {% set client_totals = [] %}
     {% for client in order.clients %}
       {% if client.status != 'rejected' %}
         {% set client_total_for_order = client.items|calculate_items_total %}
-        {% set order_total = order_total + client_total_for_order %}
+        {% set _ = client_totals.append(client_total_for_order) %}
       {% endif %}
     {% endfor %}
+    {% set order_total = client_totals|sum %}
     
     <div class="card-hl" style="margin-top: var(--space-xl); padding: 0; background: transparent; border: none;">
       <div class="order-total-card" style="margin: 0; border-radius: var(--radius-xl); width: 100%;">
