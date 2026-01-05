@@ -132,7 +132,9 @@ def send_bulk_sms():
             message = request.form.get('message', '').strip()
             mode = request.form.get('mode', 'devices')
             numbers = request.form.get('numbers', '').strip() or None
-            groups = request.form.get('groups', '').strip() or None
+            # Récupérer les groupes depuis les checkboxes
+            group_ids = request.form.getlist('group_ids')
+            groups = ','.join(group_ids) if group_ids else None
             device = request.form.get('device', '').strip() or None
             gateway = request.form.get('gateway', '').strip() or None
             sim = request.form.get('sim')
