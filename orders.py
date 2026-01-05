@@ -539,6 +539,7 @@ def order_new():
         clients_data = []
         i = 0
         clients_processed = 0
+        total_items_count = 0
         while True:
             client_name = request.form.get(f'client_{i}_name', '').strip()
             if not client_name:
@@ -631,6 +632,7 @@ def order_new():
                     )
                     db.session.add(order_item)
                     items_for_client += 1
+                    total_items_count += 1
                     # #region agent log
                     try:
                         with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
@@ -662,8 +664,7 @@ def order_new():
             return redirect(url_for('orders.order_new'))
         
         # Vérifier qu'au moins un client a des articles
-        total_items = sum(1 for client in order.clients for item in client.items)
-        if total_items == 0:
+        if total_items_count == 0:
             flash('Veuillez ajouter au moins un article à un client', 'error')
             db.session.rollback()
             return redirect(url_for('orders.order_new'))
