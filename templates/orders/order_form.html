@@ -1546,8 +1546,8 @@ document.addEventListener('DOMContentLoaded', function() {
           {% for item in client.items %}
           {
             id: {{ item.stock_item_id }},
-            quantity: {{ item.quantity }},
-            price: {{ item.unit_price_gnf }},
+            quantity: {{ item.quantity|float }},
+            price: {{ item.unit_price_gnf|float }},
             notes: {{ (item.notes or '')|tojson|safe }}
           }{% if not loop.last %},{% endif %}
           {% endfor %}
