@@ -12,7 +12,7 @@ UPDATE roles
 SET permissions = JSON_SET(
     permissions, 
     '$.messaging', 
-    JSON_ARRAY('read', 'send_sms', 'send_whatsapp', 'send_otp', 'manage_contacts')
+    JSON_ARRAY('read', 'update', 'send_sms', 'send_whatsapp', 'send_otp', 'manage_contacts')
 ) 
 WHERE code = 'supervisor';
 

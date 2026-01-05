@@ -10,7 +10,7 @@
 DO $$
 DECLARE
     supervisor_permissions JSONB;
-    messaging_perms JSONB := '["read", "send_sms", "send_whatsapp", "send_otp", "manage_contacts"]'::JSONB;
+    messaging_perms JSONB := '["read", "update", "send_sms", "send_whatsapp", "send_otp", "manage_contacts"]'::JSONB;
 BEGIN
     -- Récupérer les permissions actuelles du superviseur
     SELECT permissions INTO supervisor_permissions
