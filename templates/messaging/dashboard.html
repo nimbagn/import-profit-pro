@@ -1,452 +1,543 @@
 {% extends "base_modern_complete.html" %}
-{% block title %}Messagerie - Import Profit Pro{% endblock %}
+{% block title %}Messagerie - Tableau de Bord{% endblock %}
 
 {% block extra_css %}
 <style>
-  .main-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin-left: 280px !important;
-    margin-top: 70px !important;
-  }
-  
-  .page-container {
-    width: 100%;
-    min-height: calc(100vh - 70px);
-    padding: 0;
-    background: #f5f7fa;
-    margin: 0;
-  }
-  
-  .content-wrapper {
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-  }
-  
-  .page-header-hl {
-    margin: 0;
-    padding: 32px 40px 24px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .page-title-hl {
-    font-size: 28px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 16px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .page-title-hl i {
-    color: #3b82f6;
-    font-size: 24px;
-  }
-  
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 24px;
-    padding: 24px 40px;
-  }
-  
-  .stat-card {
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-  
-  .stat-card-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: #6b7280;
-    margin-bottom: 8px;
-  }
-  
-  .stat-card-value {
-    font-size: 32px;
-    font-weight: 700;
-    color: #1f2937;
-  }
-  
-  .stat-card-value.success {
-    color: #10b981;
-  }
-  
-  .stat-card-value.warning {
-    color: #f59e0b;
-  }
-  
-  .actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    padding: 0 40px 24px;
-  }
-  
-  .action-card {
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  
-  .action-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  
-  .action-card h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 12px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .action-card h3 i {
-    color: #3b82f6;
-  }
-  
-  .action-card h3 .fa-whatsapp {
-    color: #25d366;
-  }
-  
-  .action-card p {
-    font-size: 14px;
-    color: #6b7280;
-    margin: 0 0 16px 0;
-    line-height: 1.5;
-  }
-  
-  .btn-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background 0.2s;
-  }
-  
-  .btn-action:hover {
-    background: #2563eb;
-    color: white;
-  }
-  
-  .btn-action.secondary {
-    background: #25d366;
-  }
-  
-  .btn-action.secondary:hover {
-    background: #128c7e;
-  }
-  
-  .recent-messages {
-    padding: 0 40px 24px;
-  }
-  
-  .card-hl {
-    margin: 0;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    overflow: hidden;
-  }
-  
-  .card-hl h3 {
-    padding: 20px 24px;
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafbfc;
-  }
-  
-  .message-list {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-  
-  .message-item {
-    padding: 16px 24px;
-    border-bottom: 1px solid #f3f4f6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .message-item:last-child {
-    border-bottom: none;
-  }
-  
-  .message-info {
-    flex: 1;
-    min-width: 0;
-  }
-  
-  .message-phone {
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 4px;
-  }
-  
-  .message-text {
-    font-size: 13px;
-    color: #6b7280;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 400px;
-  }
-  
-  .message-date {
-    font-size: 12px;
-    color: #9ca3af;
-    white-space: nowrap;
-    margin-left: 16px;
-  }
-  
-  /* Responsive */
-  @media (max-width: 1024px) {
+    :root {
+        --primary-color: #4f46e5; /* Indigo */
+        --primary-light: #e0e7ff;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --sidebar-width: 280px;
+    }
+
+    /* Layout Reset & Main Container */
     .main-content {
-      margin-left: 0 !important;
-      width: 100% !important;
+        margin-left: var(--sidebar-width) !important;
+        margin-top: 70px !important;
+        background-color: var(--bg-color);
+        min-height: calc(100vh - 70px);
+        padding: 2rem;
+        transition: all 0.3s ease;
     }
-    
-    .page-header-hl {
-      padding: 24px 20px;
+
+    .content-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    
-    .stats-grid,
-    .actions-grid,
-    .recent-messages {
-      padding-left: 20px;
-      padding-right: 20px;
+
+    /* Header Section */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
     }
-    
-    .actions-grid {
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-  }
-  
-  @media (max-width: 768px) {
+
     .page-title-hl {
-      font-size: 24px;
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
     }
-    
+
+    .page-title-icon {
+        background: linear-gradient(135deg, var(--primary-color), #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Stats Grid */
     .stats-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
     }
-    
-    .actions-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 0 16px 16px;
-    }
-    
-    .action-card {
-      padding: 20px;
-    }
-    
-    .recent-messages {
-      padding: 0 16px 16px;
-    }
-    
-    .message-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 12px 16px;
-    }
-    
-    .message-date {
-      margin-left: 0;
-      align-self: flex-end;
-    }
-    
-    .message-text {
-      max-width: 100%;
-      white-space: normal;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .page-header-hl {
-      padding: 20px 16px;
-    }
-    
-    .page-title-hl {
-      font-size: 20px;
-    }
-    
+
     .stat-card {
-      padding: 20px;
+        background: var(--card-bg);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(255,255,255,0.5);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-icon-bg {
+        position: absolute;
+        right: -10px;
+        bottom: -10px;
+        font-size: 5rem;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+        color: var(--text-main);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .text-success { color: var(--success-color) !important; }
+    .text-warning { color: var(--warning-color) !important; }
+
+    /* Actions Grid */
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .action-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .action-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-light);
+        transform: translateY(-4px);
+    }
+
+    .action-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .bg-blue-soft { background: #eff6ff; color: #3b82f6; }
+    .bg-green-soft { background: #ecfdf5; color: #10b981; }
+    .bg-purple-soft { background: #f3e8ff; color: #a855f7; }
+    .bg-orange-soft { background: #fff7ed; color: #f97316; }
+
+    .action-content h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+        color: var(--text-main);
+    }
+
+    .action-content p {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .action-footer {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--bg-color);
+    }
+
+    .btn-action-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-weight: 500;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        transition: background 0.2s;
+        font-size: 0.875rem;
+    }
+
+    .btn-action-link:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Recent Messages Table */
+    .card-table-container {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+
+    .modern-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        background: #f9fafb;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    .modern-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+
+    .modern-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .modern-table tr:hover td {
+        background: #f9fafb;
+    }
+
+    .badge-msg {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
     
-    .stat-card-value {
-      font-size: 28px;
+    .badge-sms { background: #eff6ff; color: #1d4ed8; }
+    .badge-whatsapp { background: #ecfdf5; color: #047857; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1.5rem;
+        }
     }
-    
-    .action-card h3 {
-      font-size: 16px;
+
+    @media (max-width: 640px) {
+        .page-title-hl { font-size: 1.5rem; }
+        .stats-grid { grid-template-columns: 1fr; }
+        .action-header { flex-direction: column; align-items: center; text-align: center; }
+        .action-content p { text-align: center; }
+        .modern-table th:nth-child(3), 
+        .modern-table td:nth-child(3) { display: none; } /* Hide date on small mobile */
     }
-    
-    .btn-action {
-      width: 100%;
-      justify-content: center;
-    }
-  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="main-content">
-  <div class="page-container">
     <div class="content-wrapper">
-      <div class="page-header-hl">
-        <h1 class="page-title-hl">
-          <i class="fas fa-comments"></i>
-          Messagerie
-        </h1>
-      </div>
-      
-      {% if credits_info %}
-      <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-card-title">Crédits Restants</div>
-        <div class="stat-card-value {% if credits_info.data.credits|float > 100 %}success{% elif credits_info.data.credits|float > 50 %}warning{% endif %}">
-          {{ credits_info.data.credits }} {{ credits_info.data.currency }}
+        
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1 class="page-title-hl">
+                <i class="fas fa-comments page-title-icon"></i>
+                Messagerie
+            </h1>
+            <div class="header-actions">
+                <!-- Possibilité d'ajouter un bouton global ici -->
+            </div>
         </div>
-      </div>
-      
-      {% if subscription_info %}
-      <div class="stat-card">
-        <div class="stat-card-title">Abonnement</div>
-        <div class="stat-card-value">{{ subscription_info.data.name or 'N/A' }}</div>
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-    
-    <div class="actions-grid">
-      {% if has_permission(current_user, 'messaging.send_sms') %}
-      <div class="action-card">
-        <h3><i class="fas fa-sms"></i> Envoyer un SMS</h3>
-        <p>Envoyez un SMS unique à un numéro de téléphone</p>
-        <a href="{{ url_for('messaging.send_sms') }}" class="btn-action">
-          <i class="fas fa-paper-plane"></i> Envoyer SMS
-        </a>
-      </div>
-      
-      <div class="action-card">
-        <h3><i class="fas fa-bullhorn"></i> SMS en Masse</h3>
-        <p>Créez une campagne SMS pour plusieurs destinataires</p>
-        <a href="{{ url_for('messaging.send_bulk_sms') }}" class="btn-action">
-          <i class="fas fa-users"></i> Campagne SMS
-        </a>
-      </div>
-      {% endif %}
-      
-      {% if has_permission(current_user, 'messaging.send_whatsapp') %}
-      <div class="action-card">
-        <h3><i class="fab fa-whatsapp"></i> Envoyer WhatsApp</h3>
-        <p>Envoyez un message WhatsApp unique</p>
-        <a href="{{ url_for('messaging.send_whatsapp') }}" class="btn-action secondary">
-          <i class="fab fa-whatsapp"></i> Envoyer WhatsApp
-        </a>
-      </div>
-      {% endif %}
-      
-      {% if has_permission(current_user, 'messaging.send_otp') %}
-      <div class="action-card">
-        <h3><i class="fas fa-key"></i> Envoyer OTP</h3>
-        <p>Générez et envoyez un code OTP par SMS ou WhatsApp</p>
-        <a href="{{ url_for('messaging.send_otp') }}" class="btn-action">
-          <i class="fas fa-shield-alt"></i> Envoyer OTP
-        </a>
-      </div>
-      {% endif %}
-      
-      {% if has_permission(current_user, 'messaging.read') %}
-      <div class="action-card">
-        <h3><i class="fas fa-history"></i> Historique SMS</h3>
-        <p>Consultez l'historique des SMS envoyés et reçus</p>
-        <a href="{{ url_for('messaging.sms_history') }}" class="btn-action">
-          <i class="fas fa-list"></i> Voir l'historique
-        </a>
-      </div>
-      
-      <div class="action-card">
-        <h3><i class="fas fa-address-book"></i> Contacts</h3>
-        <p>Gérez vos contacts et groupes de contacts</p>
-        <a href="{{ url_for('messaging.contacts_list') }}" class="btn-action">
-          <i class="fas fa-users"></i> Gérer les contacts
-        </a>
-      </div>
-      {% endif %}
-    </div>
-    
-    {% if has_permission(current_user, 'messaging.read') %}
-    <div class="recent-messages">
-      <div class="card-hl">
-        <h3>Messages Récents</h3>
-        <ul class="message-list">
-          {% if sent_messages %}
-            {% for msg in sent_messages[:5] %}
-            <li class="message-item">
-              <div class="message-info">
-                <div class="message-phone">{{ msg.recipient or msg.phone or 'N/A' }}</div>
-                <div class="message-text">{{ msg.message or 'N/A' }}</div>
-              </div>
-              <div class="message-date">
-                {% if msg.created %}
-                  {% set dt = msg.created|int %}
-                  {% if dt > 10000000000 %}
-                    {{ (dt / 1000)|int }}
-                  {% else %}
-                    {{ dt }}
-                  {% endif %}
-                {% else %}
-                  N/A
-                {% endif %}
-              </div>
-            </li>
-            {% endfor %}
-          {% else %}
-            <li class="message-item">
-              <div class="message-info">
-                <div class="message-text" style="color: #9ca3af;">Aucun message récent</div>
-              </div>
-            </li>
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-    {% endif %}
-    </div>
-  </div>
-</div>
-{% endblock %}
 
+        <!-- KPI / Credits Info -->
+        {% if credits_info %}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-coins stat-icon-bg"></i>
+                <div class="stat-label">Crédits Disponibles</div>
+                <div class="stat-value {% if credits_info.data.credits|float < 50 %}text-warning{% else %}text-success{% endif %}">
+                    {{ credits_info.data.credits }} <span style="font-size: 1rem; color: #9ca3af;">{{ credits_info.data.currency }}</span>
+                </div>
+            </div>
+
+            {% if subscription_info %}
+            <div class="stat-card">
+                <i class="fas fa-crown stat-icon-bg"></i>
+                <div class="stat-label">Plan Actuel</div>
+                <div class="stat-value" style="font-size: 1.5rem; line-height: 2.25rem;">
+                    {{ subscription_info.data.name or 'Standard' }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Carte Statistique Supplémentaire (Exemple) -->
+            <div class="stat-card">
+                <i class="fas fa-paper-plane stat-icon-bg"></i>
+                <div class="stat-label">Messages (Ce mois)</div>
+                <div class="stat-value">
+                   {{ sent_messages|length if sent_messages else 0 }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <h2 class="section-title"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Actions Rapides</h2>
+        <div class="actions-grid">
+            {% if has_permission(current_user, 'messaging.send_sms') %}
+            <div class="action-card">
+                <div class="action-header">
+                    <div class="action-icon bg-blue-soft">
+                        <i class="fas fa-sms"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Envoi SMS Unitaire</h3>
+                        <p>Envoyez rapidement un message texte à un seul destinataire.</p>
+                    </div>
+                </div>
+                <div class="action-footer">
+                    <a href="{{ url_for('messaging.send_sms') }}" class="btn-action-link">
+                        Commencer <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="action-card">
+                <div class="action-header">
+                    <div class="action-icon bg-purple-soft">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Campagne SMS</h3>
+                        <p>Diffusez vos offres à une liste de contacts en un clic.</p>
+                    </div>
+                </div>
+                <div class="action-footer">
+                    <a href="{{ url_for('messaging.send_bulk_sms') }}" class="btn-action-link">
+                        Créer une campagne <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if has_permission(current_user, 'messaging.send_whatsapp') %}
+            <div class="action-card">
+                <div class="action-header">
+                    <div class="action-icon bg-green-soft">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Message WhatsApp</h3>
+                        <p>Engagez vos clients sur leur canal préféré.</p>
+                    </div>
+                </div>
+                <div class="action-footer">
+                    <a href="{{ url_for('messaging.send_whatsapp') }}" class="btn-action-link">
+                        Ouvrir WhatsApp <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if has_permission(current_user, 'messaging.send_otp') %}
+            <div class="action-card">
+                <div class="action-header">
+                    <div class="action-icon bg-orange-soft">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Sécurité OTP</h3>
+                        <p>Générez et envoyez des codes de vérification sécurisés.</p>
+                    </div>
+                </div>
+                <div class="action-footer">
+                    <a href="{{ url_for('messaging.send_otp') }}" class="btn-action-link">
+                        Envoyer OTP <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if has_permission(current_user, 'messaging.read') %}
+             <div class="action-card">
+                <div class="action-header">
+                    <div class="action-icon" style="background: #f1f5f9; color: #475569;">
+                        <i class="fas fa-address-book"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Contacts</h3>
+                        <p>Gérez votre carnet d'adresses et vos groupes.</p>
+                    </div>
+                </div>
+                <div class="action-footer">
+                    <a href="{{ url_for('messaging.contacts_list') }}" class="btn-action-link">
+                        Gérer <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity -->
+        {% if has_permission(current_user, 'messaging.read') %}
+        <div class="card-table-container">
+            <div class="table-header">
+                <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">
+                    <i class="fas fa-history" style="margin-right:8px; color:var(--primary-color);"></i>
+                    Derniers Messages
+                </h3>
+                <a href="{{ url_for('messaging.sms_history') }}" style="font-size:0.875rem; color:var(--primary-color); text-decoration:none;">
+                    Tout voir
+                </a>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Destinataire</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if sent_messages %}
+                            {% for msg in sent_messages[:5] %}
+                            <tr>
+                                <td style="font-weight: 500;">
+                                    {{ msg.recipient or msg.phone or 'Inconnu' }}
+                                </td>
+                                <td>
+                                    <div style="max-width: 350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary);">
+                                        {{ msg.message or 'Pas de contenu' }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <!-- Utilisation d'un attribut data pour le JS -->
+                                    <span class="date-format" data-timestamp="{{ msg.created }}">
+                                        {{ msg.created }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Simulation de badge selon le contenu ou une variable si dispo -->
+                                    {% if 'whatsapp' in (msg.type|default('')|lower) %}
+                                        <span class="badge-msg badge-whatsapp"><i class="fab fa-whatsapp" style="margin-right:4px;"></i> WhatsApp</span>
+                                    {% else %}
+                                        <span class="badge-msg badge-sms"><i class="fas fa-sms" style="margin-right:4px;"></i> SMS</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+                                    Aucun message récent trouvé.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Formatage intelligent des dates
+    const dateElements = document.querySelectorAll('.date-format');
+    
+    dateElements.forEach(el => {
+        const rawTimestamp = el.getAttribute('data-timestamp');
+        if (!rawTimestamp) return;
+
+        let timestamp = parseInt(rawTimestamp);
+        
+        // Correction si le timestamp est en secondes au lieu de millisecondes
+        // 1000000000000 est une estimation approximative pour différencier sec/ms
+        if (timestamp < 10000000000) {
+            timestamp *= 1000;
+        }
+
+        const date = new Date(timestamp);
+        
+        if (isNaN(date.getTime())) {
+            el.textContent = "Date invalide";
+            return;
+        }
+
+        // Formatage local (ex: 5 janv. 14:30)
+        const options = { 
+            day: 'numeric', 
+            month: 'short', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        };
+        el.textContent = date.toLocaleDateString('fr-FR', options);
+    });
+});
+</script>
+{% endblock %}
