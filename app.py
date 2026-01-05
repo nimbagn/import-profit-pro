@@ -292,7 +292,7 @@ with app.app_context():
                         'promotion': ['read', 'write'],
                         'orders': ['read', 'validate', 'update'],
                         'price_lists': ['view', 'create', 'edit', 'delete'],
-                        'messaging': ['read', 'send_sms', 'send_whatsapp', 'send_otp', 'manage_contacts']
+                        'messaging': ['read', 'update', 'send_sms', 'send_whatsapp', 'send_otp', 'manage_contacts']
                     }
                 },
                 {
