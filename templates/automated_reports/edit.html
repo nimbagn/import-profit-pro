@@ -1,0 +1,357 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Modifier un Rapport Automatique - Messagerie{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --primary-light: #e0e7ff;
+        --primary-hover: #4338ca;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --sidebar-width: 280px;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width) !important;
+        margin-top: 70px !important;
+        background-color: var(--bg-color);
+        min-height: calc(100vh - 70px);
+        padding: 2rem;
+    }
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title-hl {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        background: linear-gradient(135deg, var(--primary-color), #818cf8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .modern-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .form-textarea {
+        min-height: 100px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .help-text {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    .btn-modern:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .alert-info {
+        padding: 1rem;
+        background: #dbeafe;
+        border-left: 4px solid var(--primary-color);
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+        color: #1e40af;
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1 class="page-title-hl">
+                <i class="fas fa-edit page-title-icon"></i>
+                Modifier un Rapport Automatique
+            </h1>
+        </div>
+
+        <div class="modern-card">
+            <div class="card-header">
+                <h3 class="card-title">Configuration du Rapport</h3>
+            </div>
+
+            <form method="POST" class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="name">Nom du Rapport *</label>
+                    <input type="text" id="name" name="name" class="form-input" 
+                           value="{{ report.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" name="description" class="form-textarea">{{ report.description or '' }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="report_type">Type de Rapport *</label>
+                        <select id="report_type" name="report_type" class="form-select" required>
+                            <option value="stock_inventory" {% if report.report_type == 'stock_inventory' %}selected{% endif %}>Inventaire de Stock</option>
+                            <option value="stock_summary" {% if report.report_type == 'stock_summary' %}selected{% endif %}>Récapitulatif Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="depot_id">Dépôt</label>
+                        <select id="depot_id" name="depot_id" class="form-select">
+                            <option value="">Tous les dépôts</option>
+                            {% for depot in depots %}
+                            <option value="{{ depot.id }}" {% if report.depot_id == depot.id %}selected{% endif %}>{{ depot.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="period">Période</label>
+                        <select id="period" name="period" class="form-select">
+                            <option value="all" {% if report.period == 'all' %}selected{% endif %}>Toutes les périodes</option>
+                            <option value="today" {% if report.period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                            <option value="week" {% if report.period == 'week' %}selected{% endif %}>Cette semaine</option>
+                            <option value="month" {% if report.period == 'month' %}selected{% endif %}>Ce mois</option>
+                            <option value="year" {% if report.period == 'year' %}selected{% endif %}>Cette année</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="currency">Devise</label>
+                        <select id="currency" name="currency" class="form-select">
+                            <option value="GNF" {% if report.currency == 'GNF' %}selected{% endif %}>GNF</option>
+                            <option value="USD" {% if report.currency == 'USD' %}selected{% endif %}>USD</option>
+                            <option value="EUR" {% if report.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                            <option value="XOF" {% if report.currency == 'XOF' %}selected{% endif %}>XOF</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="schedule_type">Fréquence *</label>
+                    <select id="schedule_type" name="schedule_type" class="form-select" required onchange="updateScheduleInput()">
+                        <option value="daily" {% if report.schedule_type == 'daily' %}selected{% endif %}>Quotidien</option>
+                        <option value="weekly" {% if report.schedule_type == 'weekly' %}selected{% endif %}>Hebdomadaire</option>
+                        <option value="monthly" {% if report.schedule_type == 'monthly' %}selected{% endif %}>Mensuel</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="schedule">Planning *</label>
+                    <input type="text" id="schedule" name="schedule" class="form-input" 
+                           value="{{ report.schedule }}" required>
+                    <div class="help-text" id="schedule-help">
+                        Format: HH:MM (ex: 18:00 pour 18h00)
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="whatsapp_account_id">Compte WhatsApp *</label>
+                    <select id="whatsapp_account_id" name="whatsapp_account_id" class="form-select" required>
+                        <option value="">Sélectionner un compte</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.unique_id or account.id }}" 
+                                {% if report.whatsapp_account_id == (account.unique_id or account.id) %}selected{% endif %}>
+                            {{ account.name or account.phone or account.unique_id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="recipients">Numéros de Téléphone</label>
+                    <textarea id="recipients" name="recipients" class="form-textarea">{{ report.recipients or '' }}</textarea>
+                    <div class="help-text">Numéros séparés par des virgules</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="group_ids">IDs de Groupes</label>
+                    <input type="text" id="group_ids" name="group_ids" class="form-input" 
+                           value="{{ report.group_ids or '' }}">
+                    <div class="help-text">IDs de groupes séparés par des virgules</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="message">Message Personnalisé</label>
+                    <textarea id="message" name="message" class="form-textarea">{{ report.message or '' }}</textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-modern">
+                        <i class="fas fa-save"></i> Enregistrer les Modifications
+                    </button>
+                    <a href="{{ url_for('automated_reports.reports_list') }}" class="btn-modern btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateScheduleInput() {
+    const scheduleType = document.getElementById('schedule_type').value;
+    const scheduleInput = document.getElementById('schedule');
+    const helpText = document.getElementById('schedule-help');
+    
+    if (scheduleType === 'daily') {
+        scheduleInput.placeholder = '18:00';
+        helpText.textContent = 'Format: HH:MM (ex: 18:00 pour 18h00)';
+    } else if (scheduleType === 'weekly') {
+        scheduleInput.placeholder = 'MON 18:00';
+        helpText.textContent = 'Format: JOUR HH:MM (ex: MON 18:00). Jours: MON, TUE, WED, THU, FRI, SAT, SUN';
+    } else if (scheduleType === 'monthly') {
+        scheduleInput.placeholder = '01 18:00';
+        helpText.textContent = 'Format: JJ HH:MM (ex: 01 18:00 pour le 1er de chaque mois)';
+    }
+}
+
+// Initialiser au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    updateScheduleInput();
+});
+</script>
+{% endblock %}
+

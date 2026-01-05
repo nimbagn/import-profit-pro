@@ -663,14 +663,20 @@
                             <i class="fab fa-whatsapp"></i>
                             Historique WhatsApp
                         </a>
-                        <a href="{{ url_for('messaging.contacts_list') }}" class="menu-subitem {% if request.endpoint == 'messaging.contacts_list' or request.endpoint == 'messaging.create_contact' %}active{% endif %}">
-                            <i class="fas fa-address-book"></i>
-                            Contacts
-                        </a>
-                        {% endif %}
-                    </div>
+                    <a href="{{ url_for('messaging.contacts_list') }}" class="menu-subitem {% if request.endpoint == 'messaging.contacts_list' or request.endpoint == 'messaging.create_contact' %}active{% endif %}">
+                        <i class="fas fa-address-book"></i>
+                        Contacts
+                    </a>
+                    {% endif %}
+                    {% if has_permission(current_user, 'messaging.read') %}
+                    <a href="{{ url_for('automated_reports.reports_list') }}" class="menu-subitem {% if request.endpoint and 'automated_reports' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-clock"></i>
+                        Rapports Automatiques
+                    </a>
+                    {% endif %}
                 </div>
-                {% endif %}
+            </div>
+            {% endif %}
                 
                 {% if current_user.role and current_user.role.code in ['rh', 'rh_manager', 'rh_assistant', 'rh_recruiter', 'rh_analyst'] or has_permission(current_user, 'users.read') %}
                 <div class="menu-group">

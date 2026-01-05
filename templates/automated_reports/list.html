@@ -1,0 +1,465 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Rapports Automatiques - Messagerie{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --primary-light: #e0e7ff;
+        --primary-hover: #4338ca;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --sidebar-width: 280px;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width) !important;
+        margin-top: 70px !important;
+        background-color: var(--bg-color);
+        min-height: calc(100vh - 70px);
+        padding: 2rem;
+    }
+
+    .content-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title-hl {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        background: linear-gradient(135deg, var(--primary-color), #818cf8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    .btn-modern:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        color: white;
+    }
+
+    .modern-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        min-width: 800px;
+    }
+
+    .modern-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        background: #f9fafb;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modern-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+
+    .modern-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .modern-table tr:hover td {
+        background: #f8fafc;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-type {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-icon {
+        padding: 0.5rem;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        text-decoration: none;
+    }
+
+    .btn-icon:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .btn-icon-danger:hover {
+        background: #fee2e2;
+        border-color: var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-text {
+        font-size: 1rem;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .table-responsive {
+            margin: 0 -1.5rem;
+            padding: 0 1.5rem;
+        }
+
+        .modern-table {
+            min-width: 700px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1 class="page-title-hl">
+                <i class="fas fa-clock page-title-icon"></i>
+                Rapports Automatiques
+            </h1>
+            <a href="{{ url_for('automated_reports.create_report') }}" class="btn-modern">
+                <i class="fas fa-plus"></i> Nouveau Rapport
+            </a>
+        </div>
+
+        <div class="modern-card">
+            <div class="card-header">
+                <h3 class="card-title">Rapports Configurés</h3>
+            </div>
+
+            {% if reports %}
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Type</th>
+                            <th>Planning</th>
+                            <th>Destinataires</th>
+                            <th>Dernière Exécution</th>
+                            <th>Prochaine Exécution</th>
+                            <th>Statut</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td>
+                                <strong>{{ report.name }}</strong>
+                                {% if report.description %}
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                    {{ report.description[:50] }}{% if report.description|length > 50 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-type">
+                                    {% if report.report_type == 'stock_inventory' %}
+                                        <i class="fas fa-boxes" style="margin-right: 4px;"></i> Inventaire Stock
+                                    {% elif report.report_type == 'stock_summary' %}
+                                        <i class="fas fa-chart-bar" style="margin-right: 4px;"></i> Récap Stock
+                                    {% else %}
+                                        <i class="fas fa-file-alt" style="margin-right: 4px;"></i> {{ report.report_type }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.875rem;">
+                                    {% if report.schedule_type == 'daily' %}
+                                        <i class="fas fa-calendar-day" style="margin-right: 4px; color: var(--text-secondary);"></i>
+                                        Quotidien à {{ report.schedule }}
+                                    {% elif report.schedule_type == 'weekly' %}
+                                        <i class="fas fa-calendar-week" style="margin-right: 4px; color: var(--text-secondary);"></i>
+                                        Hebdomadaire {{ report.schedule }}
+                                    {% elif report.schedule_type == 'monthly' %}
+                                        <i class="fas fa-calendar-alt" style="margin-right: 4px; color: var(--text-secondary);"></i>
+                                        Mensuel {{ report.schedule }}
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                    {% if report.recipients %}
+                                        {{ report.recipients.split(',')|length }} numéro(s)
+                                    {% endif %}
+                                    {% if report.group_ids %}
+                                        {% if report.recipients %}<br>{% endif %}
+                                        {{ report.group_ids.split(',')|length }} groupe(s)
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if report.last_run %}
+                                    <div style="font-size: 0.875rem;">
+                                        {{ report.last_run.strftime('%d/%m/%Y %H:%M') }}
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                        ({{ report.run_count or 0 }} fois)
+                                    </div>
+                                {% else %}
+                                    <span style="color: var(--text-secondary); font-style: italic;">Jamais exécuté</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.next_run %}
+                                    <div style="font-size: 0.875rem; font-weight: 500;">
+                                        {{ report.next_run.strftime('%d/%m/%Y %H:%M') }}
+                                    </div>
+                                {% else %}
+                                    <span style="color: var(--text-secondary);">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.is_active %}
+                                    <span class="badge badge-active">
+                                        <i class="fas fa-check-circle" style="margin-right: 4px;"></i> Actif
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-inactive">
+                                        <i class="fas fa-pause-circle" style="margin-right: 4px;"></i> Inactif
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button onclick="testReport({{ report.id }})" 
+                                            class="btn-icon" 
+                                            title="Tester">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                    <a href="{{ url_for('automated_reports.edit_report', report_id=report.id) }}" 
+                                       class="btn-icon" 
+                                       title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button onclick="toggleReport({{ report.id }}, {{ 'true' if report.is_active else 'false' }})" 
+                                            class="btn-icon" 
+                                            title="{% if report.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                        <i class="fas fa-{% if report.is_active %}pause{% else %}play{% endif %}"></i>
+                                    </button>
+                                    <button onclick="deleteReport({{ report.id }})" 
+                                            class="btn-icon btn-icon-danger" 
+                                            title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-clock empty-icon"></i>
+                <h3 style="color: var(--text-main); margin-bottom: 0.5rem;">Aucun rapport automatique</h3>
+                <p class="empty-text">Créez votre premier rapport automatique pour commencer à recevoir des rapports PDF via WhatsApp.</p>
+                <a href="{{ url_for('automated_reports.create_report') }}" class="btn-modern" style="margin-top: 1.5rem;">
+                    <i class="fas fa-plus"></i> Créer un rapport
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleReport(reportId, isActive) {
+    fetch(`{{ url_for('automated_reports.toggle_report', report_id=0) }}`.replace('0', reportId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la modification du rapport');
+    });
+}
+
+function testReport(reportId) {
+    if (!confirm('Voulez-vous envoyer un test de ce rapport maintenant ?')) {
+        return;
+    }
+    
+    fetch(`{{ url_for('automated_reports.test_report', report_id=0) }}`.replace('0', reportId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+        } else {
+            alert('❌ Erreur: ' + (data.error || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'envoi du test');
+    });
+}
+
+function deleteReport(reportId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce rapport automatique ?')) {
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `{{ url_for('automated_reports.delete_report', report_id=0) }}`.replace('0', reportId);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}
+

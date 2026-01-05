@@ -1930,3 +1930,56 @@ class PromotionMemberLocation(db.Model):
     
     def __repr__(self):
         return f"<PromotionMemberLocation Member:{self.member_id} Lat:{self.latitude} Lon:{self.longitude} At:{self.recorded_at}>"
+
+# =========================================================
+# RAPPORTS AUTOMATIQUES
+# =========================================================
+
+class ScheduledReport(db.Model):
+    """Configuration de rapports automatiques à envoyer via WhatsApp"""
+    __tablename__ = "scheduled_reports"
+    id = PK()
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    report_type = db.Column(db.Enum("stock_inventory", "stock_summary", "order_summary", name="report_type_enum"), 
+                            nullable=False, index=True)
+    schedule_type = db.Column(db.Enum("daily", "weekly", "monthly", name="schedule_type_enum"), 
+                             nullable=False, default="daily")
+    schedule = db.Column(db.String(50), nullable=False)  # Format: "HH:MM" pour daily, "DAY HH:MM" pour weekly
+    is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    
+    # Paramètres du rapport
+    depot_id = FK("depots.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    period = db.Column(db.String(50), nullable=True, default="all")  # all, today, week, month, year, custom
+    start_date = db.Column(db.Date, nullable=True)
+    end_date = db.Column(db.Date, nullable=True)
+    currency = db.Column(db.String(10), nullable=False, default="GNF")
+    
+    # Destinataires WhatsApp
+    whatsapp_account_id = db.Column(db.String(100), nullable=False)  # ID du compte WhatsApp Message Pro
+    recipients = db.Column(db.Text, nullable=True)  # Numéros séparés par des virgules
+    group_ids = db.Column(db.Text, nullable=True)  # IDs de groupes séparés par des virgules
+    message = db.Column(db.Text, nullable=True)  # Message personnalisé à envoyer avec le rapport
+    
+    # Suivi d'exécution
+    last_run = db.Column(db.DateTime, nullable=True)
+    next_run = db.Column(db.DateTime, nullable=True)
+    run_count = db.Column(db.Integer, nullable=False, default=0)
+    last_error = db.Column(db.Text, nullable=True)
+    
+    # Métadonnées
+    created_by_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    created_by = db.relationship("User", foreign_keys=[created_by_id], lazy="joined")
+    depot = db.relationship("Depot", lazy="joined")
+    
+    __table_args__ = (
+        db.Index("idx_scheduledreport_type", "report_type"),
+        db.Index("idx_scheduledreport_active", "is_active"),
+        db.Index("idx_scheduledreport_nextrun", "next_run"),
+    )
+    
+    def __repr__(self):
+        return f"<ScheduledReport {self.name} ({self.report_type})>"

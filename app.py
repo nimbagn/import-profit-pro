@@ -213,6 +213,9 @@ app.register_blueprint(orders_bp)
 from messaging import messaging_bp
 app.register_blueprint(messaging_bp)
 
+from automated_reports import automated_reports_bp
+app.register_blueprint(automated_reports_bp)
+
 # Création des tables et initialisation des données
 with app.app_context():
     try:
