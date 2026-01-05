@@ -193,7 +193,19 @@
 </div>
 
 <script type="application/json" id="stock-items-data">
-{{ (stock_items|tojson if stock_items else [])|safe }}
+{% if stock_items %}
+[
+  {% for item in stock_items %}
+  {
+    "id": {{ item.id }},
+    "name": {{ item.name|tojson }},
+    "sku": {{ item.sku|tojson if item.sku else 'null' }}
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]
+{% else %}
+[]
+{% endif %}
 </script>
 <script>
 /* eslint-disable */
