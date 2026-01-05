@@ -1,0 +1,332 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Messagerie - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: #f5f7fa;
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0;
+    padding: 32px 40px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .page-title-hl {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    padding: 24px 40px;
+  }
+  
+  .stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  
+  .stat-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 8px;
+  }
+  
+  .stat-card-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  
+  .stat-card-value.success {
+    color: #10b981;
+  }
+  
+  .stat-card-value.warning {
+    color: #f59e0b;
+  }
+  
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 0 40px 24px;
+  }
+  
+  .action-card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  .action-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .action-card p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 16px 0;
+  }
+  
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  
+  .btn-action:hover {
+    background: #2563eb;
+    color: white;
+  }
+  
+  .btn-action.secondary {
+    background: #10b981;
+  }
+  
+  .btn-action.secondary:hover {
+    background: #059669;
+  }
+  
+  .recent-messages {
+    padding: 0 40px 24px;
+  }
+  
+  .card-hl {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .card-hl h3 {
+    padding: 20px 24px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafbfc;
+  }
+  
+  .message-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  
+  .message-item {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .message-item:last-child {
+    border-bottom: none;
+  }
+  
+  .message-info {
+    flex: 1;
+  }
+  
+  .message-phone {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+  }
+  
+  .message-text {
+    font-size: 13px;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 400px;
+  }
+  
+  .message-date {
+    font-size: 12px;
+    color: #9ca3af;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-container">
+    <div class="page-header-hl">
+      <h1 class="page-title-hl">
+        <i class="fas fa-comments"></i>
+        Messagerie
+      </h1>
+    </div>
+    
+    {% if credits_info %}
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-title">Crédits Restants</div>
+        <div class="stat-card-value {% if credits_info.data.credits|float > 100 %}success{% elif credits_info.data.credits|float > 50 %}warning{% endif %}">
+          {{ credits_info.data.credits }} {{ credits_info.data.currency }}
+        </div>
+      </div>
+      
+      {% if subscription_info %}
+      <div class="stat-card">
+        <div class="stat-card-title">Abonnement</div>
+        <div class="stat-card-value">{{ subscription_info.data.name or 'N/A' }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    <div class="actions-grid">
+      {% if has_permission(current_user, 'messaging.send_sms') %}
+      <div class="action-card">
+        <h3><i class="fas fa-sms"></i> Envoyer un SMS</h3>
+        <p>Envoyez un SMS unique à un numéro de téléphone</p>
+        <a href="{{ url_for('messaging.send_sms') }}" class="btn-action">
+          <i class="fas fa-paper-plane"></i> Envoyer SMS
+        </a>
+      </div>
+      
+      <div class="action-card">
+        <h3><i class="fas fa-bullhorn"></i> SMS en Masse</h3>
+        <p>Créez une campagne SMS pour plusieurs destinataires</p>
+        <a href="{{ url_for('messaging.send_bulk_sms') }}" class="btn-action">
+          <i class="fas fa-users"></i> Campagne SMS
+        </a>
+      </div>
+      {% endif %}
+      
+      {% if has_permission(current_user, 'messaging.send_whatsapp') %}
+      <div class="action-card">
+        <h3><i class="fab fa-whatsapp"></i> Envoyer WhatsApp</h3>
+        <p>Envoyez un message WhatsApp unique</p>
+        <a href="{{ url_for('messaging.send_whatsapp') }}" class="btn-action secondary">
+          <i class="fab fa-whatsapp"></i> Envoyer WhatsApp
+        </a>
+      </div>
+      {% endif %}
+      
+      {% if has_permission(current_user, 'messaging.send_otp') %}
+      <div class="action-card">
+        <h3><i class="fas fa-key"></i> Envoyer OTP</h3>
+        <p>Générez et envoyez un code OTP par SMS ou WhatsApp</p>
+        <a href="{{ url_for('messaging.send_otp') }}" class="btn-action">
+          <i class="fas fa-shield-alt"></i> Envoyer OTP
+        </a>
+      </div>
+      {% endif %}
+      
+      {% if has_permission(current_user, 'messaging.read') %}
+      <div class="action-card">
+        <h3><i class="fas fa-history"></i> Historique SMS</h3>
+        <p>Consultez l'historique des SMS envoyés et reçus</p>
+        <a href="{{ url_for('messaging.sms_history') }}" class="btn-action">
+          <i class="fas fa-list"></i> Voir l'historique
+        </a>
+      </div>
+      
+      <div class="action-card">
+        <h3><i class="fas fa-address-book"></i> Contacts</h3>
+        <p>Gérez vos contacts et groupes de contacts</p>
+        <a href="{{ url_for('messaging.contacts_list') }}" class="btn-action">
+          <i class="fas fa-users"></i> Gérer les contacts
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    
+    {% if has_permission(current_user, 'messaging.read') %}
+    <div class="recent-messages">
+      <div class="card-hl">
+        <h3>Messages Récents</h3>
+        <ul class="message-list">
+          {% if sent_messages %}
+            {% for msg in sent_messages[:5] %}
+            <li class="message-item">
+              <div class="message-info">
+                <div class="message-phone">{{ msg.recipient or msg.phone or 'N/A' }}</div>
+                <div class="message-text">{{ msg.message or 'N/A' }}</div>
+              </div>
+              <div class="message-date">
+                {% if msg.created %}
+                  {% set dt = msg.created|int %}
+                  {% if dt > 10000000000 %}
+                    {{ (dt / 1000)|int }}
+                  {% else %}
+                    {{ dt }}
+                  {% endif %}
+                {% else %}
+                  N/A
+                {% endif %}
+              </div>
+            </li>
+            {% endfor %}
+          {% else %}
+            <li class="message-item">
+              <div class="message-info">
+                <div class="message-text" style="color: #9ca3af;">Aucun message récent</div>
+              </div>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

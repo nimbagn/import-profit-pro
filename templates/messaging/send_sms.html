@@ -1,0 +1,265 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Envoyer un SMS - Messagerie{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: #f5f7fa;
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0;
+    padding: 32px 40px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .page-title-hl {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .card-hl {
+    margin: 24px 40px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .card-hl h3 {
+    padding: 20px 24px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafbfc;
+  }
+  
+  .form-section {
+    padding: 24px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-hl-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  
+  .form-hl-input,
+  .form-hl-select,
+  .form-hl-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-hl-textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  
+  .form-hl-input:focus,
+  .form-hl-select:focus,
+  .form-hl-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .btn-hl {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-hl-primary {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  .btn-hl-primary:hover {
+    background: #2563eb;
+    color: white;
+  }
+  
+  .btn-hl-secondary {
+    background: #6b7280;
+    color: white;
+  }
+  
+  .btn-hl-secondary:hover {
+    background: #4b5563;
+    color: white;
+  }
+  
+  .help-text {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-container">
+    <div class="page-header-hl">
+      <h1 class="page-title-hl">
+        <i class="fas fa-sms"></i>
+        Envoyer un SMS
+      </h1>
+    </div>
+    
+    <div class="card-hl">
+      <h3>Nouveau SMS</h3>
+      <form method="POST" class="form-section">
+        <div class="form-group">
+          <label class="form-hl-label" for="phone">Numéro de téléphone *</label>
+          <input type="text" id="phone" name="phone" class="form-hl-input" 
+                 placeholder="+224601123456 ou 601123456" required>
+          <div class="help-text">Format E.164 (+224...) ou format local (601123456)</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-hl-label" for="message">Message *</label>
+          <textarea id="message" name="message" class="form-hl-textarea" 
+                    placeholder="Votre message ici..." required></textarea>
+          <div class="help-text">Longueur maximale recommandée: 160 caractères pour un SMS standard</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-hl-label" for="mode">Mode d'envoi *</label>
+          <select id="mode" name="mode" class="form-hl-select" required>
+            <option value="devices">Appareils Android (devices)</option>
+            <option value="credits">Gateways (credits)</option>
+          </select>
+        </div>
+        
+        <div id="devices-options" class="form-row">
+          <div class="form-group">
+            <label class="form-hl-label" for="device">Appareil Android</label>
+            <select id="device" name="device" class="form-hl-select">
+              <option value="">Sélectionner un appareil</option>
+              {% for device in devices %}
+              <option value="{{ device.unique_id or device.id }}">{{ device.name or device.unique_id or device.id }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-hl-label" for="sim">Slot SIM</label>
+            <select id="sim" name="sim" class="form-hl-select">
+              <option value="">Sélectionner</option>
+              <option value="1">SIM 1</option>
+              <option value="2">SIM 2</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-hl-label" for="priority">Priorité</label>
+            <select id="priority" name="priority" class="form-hl-select">
+              <option value="0">Haute (immédiat)</option>
+              <option value="1">Haute (immédiat)</option>
+              <option value="2" selected>Normale (en file)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="credits-options" class="form-row" style="display: none;">
+          <div class="form-group">
+            <label class="form-hl-label" for="gateway">Gateway / Partenaire</label>
+            <select id="gateway" name="gateway" class="form-hl-select">
+              <option value="">Sélectionner un gateway</option>
+              {% if rates.data %}
+                {% if rates.data.gateways %}
+                  {% for gateway in rates.data.gateways %}
+                  <option value="{{ gateway.id }}">{{ gateway.name or gateway.id }}</option>
+                  {% endfor %}
+                {% endif %}
+                {% if rates.data.partners %}
+                  {% for partner in rates.data.partners %}
+                  <option value="{{ partner.id }}">{{ partner.name or partner.id }}</option>
+                  {% endfor %}
+                {% endif %}
+              {% endif %}
+            </select>
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-paper-plane"></i> Envoyer
+          </button>
+          <a href="{{ url_for('messaging.dashboard') }}" class="btn-hl btn-hl-secondary">
+            <i class="fas fa-times"></i> Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('mode').addEventListener('change', function() {
+  const mode = this.value;
+  const devicesOptions = document.getElementById('devices-options');
+  const creditsOptions = document.getElementById('credits-options');
+  
+  if (mode === 'devices') {
+    devicesOptions.style.display = 'grid';
+    creditsOptions.style.display = 'none';
+    document.getElementById('device').required = true;
+    document.getElementById('gateway').required = false;
+  } else {
+    devicesOptions.style.display = 'none';
+    creditsOptions.style.display = 'grid';
+    document.getElementById('device').required = false;
+    document.getElementById('gateway').required = true;
+  }
+});
+</script>
+{% endblock %}
+

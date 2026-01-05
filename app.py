@@ -210,6 +210,9 @@ app.register_blueprint(promotion_bp)
 from orders import orders_bp
 app.register_blueprint(orders_bp)
 
+from messaging import messaging_bp
+app.register_blueprint(messaging_bp)
+
 # Création des tables et initialisation des données
 with app.app_context():
     try:

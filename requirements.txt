@@ -21,3 +21,4 @@ Flask-Compress>=1.14
 gunicorn>=21.2.0
 setuptools>=65.0.0
 wheel>=0.40.0
+requests>=2.31.0
