@@ -248,12 +248,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="period">Période</label>
-                        <select id="period" name="period" class="form-select">
+                        <select id="period" name="period" class="form-select" onchange="toggleCustomDates()">
                             <option value="all" {% if report.period == 'all' %}selected{% endif %}>Toutes les périodes</option>
                             <option value="today" {% if report.period == 'today' %}selected{% endif %}>Aujourd'hui</option>
                             <option value="week" {% if report.period == 'week' %}selected{% endif %}>Cette semaine</option>
                             <option value="month" {% if report.period == 'month' %}selected{% endif %}>Ce mois</option>
                             <option value="year" {% if report.period == 'year' %}selected{% endif %}>Cette année</option>
+                            <option value="custom" {% if report.period == 'custom' %}selected{% endif %}>Période personnalisée</option>
                         </select>
                     </div>
 
@@ -265,6 +266,22 @@
                             <option value="EUR" {% if report.currency == 'EUR' %}selected{% endif %}>EUR</option>
                             <option value="XOF" {% if report.currency == 'XOF' %}selected{% endif %}>XOF</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Dates personnalisées (affichées uniquement si période = custom) -->
+                <div id="custom-dates-section" class="form-row" style="display: {% if report.period == 'custom' %}grid{% else %}none{% endif %};">
+                    <div class="form-group">
+                        <label class="form-label" for="start_date">Date de début</label>
+                        <input type="date" id="start_date" name="start_date" class="form-input" 
+                               value="{{ report.start_date.strftime('%Y-%m-%d') if report.start_date else '' }}">
+                        <div class="help-text">Date de début de la période personnalisée</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="end_date">Date de fin</label>
+                        <input type="date" id="end_date" name="end_date" class="form-input" 
+                               value="{{ report.end_date.strftime('%Y-%m-%d') if report.end_date else '' }}">
+                        <div class="help-text">Date de fin de la période personnalisée</div>
                     </div>
                 </div>
 
@@ -317,6 +334,20 @@
                     <textarea id="message" name="message" class="form-textarea">{{ report.message or '' }}</textarea>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; align-items: center; gap: var(--space-sm);">
+                        <input type="checkbox" 
+                               id="is_active" 
+                               name="is_active" 
+                               {% if report.is_active %}checked{% endif %}
+                               style="width: auto; margin: 0;">
+                        <span>Rapport actif</span>
+                    </label>
+                    <div class="help-text">
+                        Désactivez cette option pour suspendre temporairement l'envoi automatique du rapport
+                    </div>
+                </div>
+
                 <div class="form-actions">
                     <button type="submit" class="btn-modern">
                         <i class="fas fa-save"></i> Enregistrer les Modifications
@@ -348,9 +379,22 @@ function updateScheduleInput() {
     }
 }
 
+// Afficher/masquer les dates personnalisées
+function toggleCustomDates() {
+    const periodSelect = document.getElementById('period');
+    const customDatesSection = document.getElementById('custom-dates-section');
+    
+    if (periodSelect.value === 'custom') {
+        customDatesSection.style.display = 'grid';
+    } else {
+        customDatesSection.style.display = 'none';
+    }
+}
+
 // Initialiser au chargement
 document.addEventListener('DOMContentLoaded', function() {
     updateScheduleInput();
+    toggleCustomDates();
 });
 </script>
 {% endblock %}

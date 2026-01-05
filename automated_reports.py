@@ -150,16 +150,48 @@ def edit_report(report_id):
             report.period = request.form.get('period', 'all')
             report.currency = request.form.get('currency', 'GNF')
             
+            # Gérer les dates personnalisées pour la période "custom"
+            if report.period == 'custom':
+                start_date_str = request.form.get('start_date', '').strip()
+                end_date_str = request.form.get('end_date', '').strip()
+                if start_date_str:
+                    try:
+                        from datetime import datetime
+                        report.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Format de date de début invalide', 'error')
+                        return redirect(url_for('automated_reports.edit_report', report_id=report_id))
+                else:
+                    report.start_date = None
+                
+                if end_date_str:
+                    try:
+                        from datetime import datetime
+                        report.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Format de date de fin invalide', 'error')
+                        return redirect(url_for('automated_reports.edit_report', report_id=report_id))
+                else:
+                    report.end_date = None
+            else:
+                report.start_date = None
+                report.end_date = None
+            
             report.whatsapp_account_id = request.form.get('whatsapp_account_id', '').strip()
             report.recipients = request.form.get('recipients', '').strip()
             report.group_ids = request.form.get('group_ids', '').strip()
             report.message = request.form.get('message', '').strip()
             
+            # Gérer le statut actif/inactif
+            is_active = request.form.get('is_active') == 'on' or request.form.get('is_active') == 'true'
+            old_is_active = report.is_active
+            report.is_active = is_active
+            
             report.next_run = calculate_next_run(report.schedule_type, report.schedule)
             
             db.session.commit()
             
-            # Replanifier le rapport
+            # Replanifier le rapport si nécessaire
             from scheduled_reports import scheduled_reports_manager
             scheduled_reports_manager.unschedule_report(report.id)
             if report.is_active:
