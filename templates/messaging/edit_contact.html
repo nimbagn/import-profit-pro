@@ -109,6 +109,24 @@
         margin-top: 0.25rem;
     }
 
+    .group-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
     .form-actions {
         display: flex;
         gap: 1rem;
@@ -208,20 +226,32 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="groups">Groupes</label>
-                    <select id="groups" name="groups" class="form-select" multiple>
+                    <label class="form-label">Groupes</label>
+                    {% if groups %}
+                    <div class="group-checkboxes">
                         {% for group in groups %}
-                        <option value="{{ group.id }}" 
-                                {% if contact.groups %}
-                                    {% for cg in contact.groups %}
-                                        {% if cg.id == group.id or cg == group.id %}selected{% endif %}
-                                    {% endfor %}
-                                {% endif %}>
-                            {{ group.name or group.id }}
-                        </option>
+                        <div class="checkbox-item">
+                            <input type="checkbox" 
+                                   name="group_ids" 
+                                   value="{{ group.id }}" 
+                                   id="group_{{ group.id }}"
+                                   {% if contact.groups %}
+                                       {% for cg in contact.groups %}
+                                           {% if cg.id == group.id or cg == group.id %}checked{% endif %}
+                                       {% endfor %}
+                                   {% endif %}>
+                            <label for="group_{{ group.id }}" style="margin: 0; font-weight: normal; cursor: pointer;">
+                                {{ group.name or group.id }}
+                            </label>
+                        </div>
                         {% endfor %}
-                    </select>
-                    <div class="help-text">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs groupes</div>
+                    </div>
+                    <div class="help-text">Sélectionnez un ou plusieurs groupes pour ce contact</div>
+                    {% else %}
+                    <div class="help-text" style="padding: 12px; background: #fef3c7; border-radius: 6px; color: #92400e;">
+                        Aucun groupe disponible. Les groupes peuvent être créés depuis l'API ou le dashboard Message Pro.
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="form-actions">
@@ -236,5 +266,20 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const groups = document.querySelectorAll('input[name="group_ids"]:checked');
+    const groupIds = Array.from(groups).map(g => g.value).join(',');
+    
+    if (groupIds) {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'groups';
+        hiddenInput.value = groupIds;
+        this.appendChild(hiddenInput);
+    }
+});
+</script>
 {% endblock %}
 
