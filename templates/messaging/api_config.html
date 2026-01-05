@@ -1,0 +1,199 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Configuration API Message Pro - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/messaging_responsive.css') }}">
+<style>
+    .config-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-2xl);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-xs) var(--space-md);
+        border-radius: var(--radius-full);
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-badge.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-badge.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .api-secret-input {
+        font-family: monospace;
+        font-size: 0.875rem;
+    }
+    
+    .info-box {
+        background: var(--bg-tertiary);
+        border-left: 4px solid var(--color-primary);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        margin: var(--space-md) 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header-hl" style="margin-bottom: var(--space-xl);">
+        <h1 class="page-title-hl">
+            <i class="fas fa-cog"></i>
+            Configuration API Message Pro
+        </h1>
+        <div style="margin-top: var(--space-sm);">
+            <a href="{{ url_for('messaging.dashboard') }}" class="btn-hl btn-hl-outline">
+                <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="config-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">
+                <i class="fas fa-key me-2"></i>Clé API
+            </h2>
+            {% if is_configured %}
+                <span class="status-badge success">
+                    <i class="fas fa-check-circle"></i>
+                    Configurée
+                </span>
+            {% else %}
+                <span class="status-badge warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Non configurée
+                </span>
+            {% endif %}
+        </div>
+
+        {% if has_env_config and not is_configured %}
+        <div class="info-box">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Note:</strong> Une clé API est configurée via les variables d'environnement. 
+            Vous pouvez également la configurer ici pour la gérer depuis l'interface.
+        </div>
+        {% endif %}
+
+        {% if connection_status %}
+        <div class="info-box" style="border-left-color: {% if connection_status.success %}#10b981{% else %}#ef4444{% endif %};">
+            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+                <i class="fas fa-{% if connection_status.success %}check-circle{% else %}times-circle{% endif %}"></i>
+                <strong>Statut de connexion:</strong> {{ connection_status.message }}
+            </div>
+            {% if connection_status.success and connection_status.credits %}
+                <div style="margin-top: var(--space-sm); font-size: 0.875rem;">
+                    <strong>Crédits disponibles:</strong> {{ connection_status.credits.get('credits', 'N/A') }}
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group" style="margin-bottom: var(--space-lg);">
+                <label for="api_secret" class="form-hl-label">
+                    <i class="fas fa-key me-2"></i>Clé API Secrète
+                </label>
+                <input type="password" 
+                       id="api_secret" 
+                       name="api_secret" 
+                       class="form-hl-input api-secret-input" 
+                       placeholder="Entrez votre clé API Message Pro"
+                       value="{{ api_secret if api_secret else '' }}"
+                       required>
+                <small style="color: var(--text-muted); font-size: 0.875rem; margin-top: var(--space-xs); display: block;">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Obtenez votre clé API depuis <a href="https://messagepro-gn.com" target="_blank">messagepro-gn.com</a> (Tools → API Keys)
+                </small>
+            </div>
+
+            <div style="display: flex; gap: var(--space-md); flex-wrap: wrap;">
+                <button type="submit" name="action" value="save" class="btn-hl btn-hl-primary">
+                    <i class="fas fa-save me-2"></i>
+                    {% if is_configured %}Mettre à jour{% else %}Enregistrer{% endif %}
+                </button>
+                {% if is_configured %}
+                <button type="submit" 
+                        name="action" 
+                        value="delete" 
+                        class="btn-hl btn-hl-outline"
+                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer la configuration API ?');">
+                    <i class="fas fa-trash me-2"></i>
+                    Supprimer
+                </button>
+                {% endif %}
+                <a href="{{ url_for('messaging.dashboard') }}" class="btn-hl btn-hl-secondary">
+                    <i class="fas fa-times me-2"></i>Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="config-card">
+        <h3 style="margin: 0 0 var(--space-md) 0; font-size: 1.25rem; font-weight: 700;">
+            <i class="fas fa-question-circle me-2"></i>Comment obtenir votre clé API ?
+        </h3>
+        <ol style="padding-left: var(--space-lg); line-height: 1.8;">
+            <li>Connectez-vous à votre compte sur <a href="https://messagepro-gn.com" target="_blank">messagepro-gn.com</a></li>
+            <li>Allez dans la section <strong>"Tools"</strong> → <strong>"API Keys"</strong></li>
+            <li>Créez une nouvelle clé API ou copiez une clé existante</li>
+            <li>Collez la clé dans le champ ci-dessus</li>
+            <li>Cliquez sur <strong>"Enregistrer"</strong> pour valider et tester la connexion</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+// Afficher/masquer la clé API
+document.addEventListener('DOMContentLoaded', function() {
+    const apiSecretInput = document.getElementById('api_secret');
+    if (apiSecretInput) {
+        // Ajouter un bouton pour afficher/masquer
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn-hl btn-hl-outline';
+        toggleBtn.style.cssText = 'margin-left: var(--space-sm); padding: var(--space-xs) var(--space-sm);';
+        toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        toggleBtn.onclick = function() {
+            if (apiSecretInput.type === 'password') {
+                apiSecretInput.type = 'text';
+                this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                apiSecretInput.type = 'password';
+                this.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        };
+        apiSecretInput.parentNode.appendChild(toggleBtn);
+    }
+});
+</script>
+{% endblock %}
+

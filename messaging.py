@@ -539,3 +539,91 @@ def api_verify_otp():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# =========================================================
+# ROUTES - CONFIGURATION API
+# =========================================================
+
+@messaging_bp.route('/config', methods=['GET', 'POST'])
+@login_required
+def api_config():
+    """Configuration de l'API Message Pro"""
+    if not has_permission(current_user, 'messaging.read'):
+        flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
+        return redirect(url_for('index'))
+    
+    from models import ApiConfig, db
+    
+    # Récupérer la configuration actuelle
+    config = ApiConfig.query.filter_by(api_name='messagepro').first()
+    api_secret = config.api_secret if config else None
+    is_configured = bool(api_secret)
+    
+    # Tester la connexion si configurée
+    connection_status = None
+    if is_configured:
+        try:
+            api = MessageProAPI(api_secret=api_secret)
+            credits = api.get_credits()
+            if credits.get('status') == 200:
+                connection_status = {
+                    'success': True,
+                    'message': 'Connexion réussie',
+                    'credits': credits.get('data', {})
+                }
+            else:
+                connection_status = {
+                    'success': False,
+                    'message': credits.get('message', 'Erreur de connexion')
+                }
+        except Exception as e:
+            connection_status = {
+                'success': False,
+                'message': f'Erreur: {str(e)}'
+            }
+    
+    if request.method == 'POST':
+        if not has_permission(current_user, 'messaging.update'):
+            flash('Vous n\'avez pas la permission de modifier la configuration', 'error')
+            return redirect(url_for('messaging.api_config'))
+        
+        new_api_secret = request.form.get('api_secret', '').strip()
+        action = request.form.get('action', 'save')
+        
+        if action == 'save':
+            if not new_api_secret:
+                flash('La clé API est obligatoire', 'error')
+            else:
+                try:
+                    # Tester la clé avant de l'enregistrer
+                    test_api = MessageProAPI(api_secret=new_api_secret)
+                    test_result = test_api.get_credits()
+                    
+                    if test_result.get('status') == 200:
+                        # Enregistrer la clé
+                        ApiConfig.set_api_secret('messagepro', new_api_secret, current_user.id)
+                        db.session.commit()
+                        flash('Clé API enregistrée avec succès!', 'success')
+                        return redirect(url_for('messaging.api_config'))
+                    else:
+                        flash(f'Clé API invalide: {test_result.get("message", "Erreur de connexion")}', 'error')
+                except Exception as e:
+                    flash(f'Erreur lors de la validation: {str(e)}', 'error')
+        elif action == 'delete':
+            if config:
+                config.is_active = False
+                config.api_secret = None
+                config.updated_by_id = current_user.id
+                db.session.commit()
+                flash('Configuration supprimée', 'success')
+                return redirect(url_for('messaging.api_config'))
+    
+    # Vérifier aussi la variable d'environnement
+    env_secret = os.getenv('MESSAGEPRO_API_SECRET')
+    has_env_config = bool(env_secret)
+    
+    return render_template('messaging/api_config.html',
+                         api_secret=api_secret,
+                         is_configured=is_configured,
+                         connection_status=connection_status,
+                         has_env_config=has_env_config)
+

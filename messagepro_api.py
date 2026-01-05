@@ -21,11 +21,24 @@ class MessageProAPI:
         Initialise le client API Message Pro
         
         Args:
-            api_secret: Clé secrète API (si None, lit depuis MESSAGEPRO_API_SECRET)
+            api_secret: Clé secrète API (si None, lit depuis la DB puis MESSAGEPRO_API_SECRET)
         """
-        self.api_secret = api_secret or os.getenv('MESSAGEPRO_API_SECRET')
+        if api_secret:
+            self.api_secret = api_secret
+        else:
+            # Essayer de récupérer depuis la base de données
+            try:
+                from models import ApiConfig
+                self.api_secret = ApiConfig.get_api_secret('messagepro')
+            except Exception:
+                self.api_secret = None
+            
+            # Si pas trouvé dans la DB, utiliser la variable d'environnement
+            if not self.api_secret:
+                self.api_secret = os.getenv('MESSAGEPRO_API_SECRET')
+        
         if not self.api_secret:
-            raise ValueError("MESSAGEPRO_API_SECRET doit être défini dans les variables d'environnement")
+            raise ValueError("MESSAGEPRO_API_SECRET doit être défini dans la base de données ou les variables d'environnement")
     
     def _make_request(self, method: str, endpoint: str, params: Optional[Dict] = None, 
                      data: Optional[Dict] = None, files: Optional[Dict] = None) -> Dict[str, Any]:

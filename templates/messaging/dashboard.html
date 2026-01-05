@@ -436,6 +436,21 @@
                 </div>
             </div>
             {% endif %}
+            
+            {% if has_permission(current_user, 'messaging.update') %}
+            <div class="action-card">
+                <div class="action-header">
+                    <i class="fas fa-cog" style="font-size: 2rem; color: #6366f1;"></i>
+                    <h3>Configuration API</h3>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0.5rem 0;">
+                    Configurez votre clé API Message Pro
+                </p>
+                <a href="{{ url_for('messaging.api_config') }}" class="btn-action-link">
+                    Configurer <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Recent Activity -->

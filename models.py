@@ -1983,3 +1983,47 @@ class ScheduledReport(db.Model):
     
     def __repr__(self):
         return f"<ScheduledReport {self.name} ({self.report_type})>"
+
+class ApiConfig(db.Model):
+    """Configuration des APIs externes (Message Pro, etc.)"""
+    __tablename__ = "api_configs"
+    id = PK()
+    api_name = db.Column(db.String(100), nullable=False, unique=True, index=True)  # Ex: 'messagepro'
+    api_secret = db.Column(db.Text, nullable=True)  # Clé API (stockée en clair pour simplicité, peut être chiffrée)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    updated_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    
+    updated_by = db.relationship("User", foreign_keys=[updated_by_id], lazy="joined")
+    
+    __table_args__ = (
+        db.Index("idx_apiconfig_name", "api_name"),
+        db.Index("idx_apiconfig_active", "is_active"),
+    )
+    
+    def __repr__(self):
+        return f"<ApiConfig {self.api_name} (active={self.is_active})>"
+    
+    @staticmethod
+    def get_api_secret(api_name: str) -> Optional[str]:
+        """Récupère la clé API depuis la base de données"""
+        config = ApiConfig.query.filter_by(api_name=api_name, is_active=True).first()
+        return config.api_secret if config else None
+    
+    @staticmethod
+    def set_api_secret(api_name: str, api_secret: str, user_id: Optional[int] = None) -> 'ApiConfig':
+        """Définit ou met à jour la clé API"""
+        config = ApiConfig.query.filter_by(api_name=api_name).first()
+        if config:
+            config.api_secret = api_secret
+            config.updated_by_id = user_id
+            config.updated_at = datetime.now(UTC)
+        else:
+            config = ApiConfig(
+                api_name=api_name,
+                api_secret=api_secret,
+                updated_by_id=user_id
+            )
+            db.session.add(config)
+        return config
