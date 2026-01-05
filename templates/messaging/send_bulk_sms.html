@@ -3,420 +3,392 @@
 
 {% block extra_css %}
 <style>
-  .main-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin-left: 280px !important;
-    margin-top: 70px !important;
-  }
-  
-  .content-wrapper {
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-  }
+    :root {
+        --primary-color: #4f46e5;
+        --primary-light: #e0e7ff;
+        --primary-hover: #4338ca;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --sidebar-width: 280px;
+    }
 
-  .page-container {
-    width: 100%;
-    min-height: calc(100vh - 70px);
-    padding: 0;
-    background: #f5f7fa;
-    margin: 0;
-  }
-  
-  .page-header-hl {
-    margin: 0;
-    padding: 32px 40px 24px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .page-title-hl i {
-    color: #3b82f6;
-    font-size: 24px;
-  }
-
-  .page-title-hl {
-    font-size: 28px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 16px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .card-hl {
-    margin: 24px 40px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    overflow: hidden;
-  }
-  
-  .card-hl h3 {
-    padding: 20px 24px;
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafbfc;
-  }
-  
-  .form-section {
-    padding: 24px;
-  }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  .form-hl-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 8px;
-  }
-  
-  .form-hl-input,
-  .form-hl-select,
-  .form-hl-textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  
-  .form-hl-textarea {
-    min-height: 120px;
-    resize: vertical;
-  }
-  
-  .form-hl-input:focus,
-  .form-hl-select:focus,
-  .form-hl-textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-  
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-  }
-  
-  .btn-hl {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .btn-hl-primary {
-    background: #3b82f6;
-    color: white;
-  }
-  
-  .btn-hl-primary:hover {
-    background: #2563eb;
-    color: white;
-  }
-  
-  .btn-hl-secondary {
-    background: #6b7280;
-    color: white;
-  }
-  
-  .btn-hl-secondary:hover {
-    background: #4b5563;
-    color: white;
-  }
-  
-  .help-text {
-    font-size: 12px;
-    color: #6b7280;
-    margin-top: 4px;
-  }
-  
-  .alert-info {
-    padding: 12px 16px;
-    background: #dbeafe;
-    border-left: 4px solid #3b82f6;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    color: #1e40af;
-  }
-  
-  .group-checkboxes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    margin-top: 8px;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 12px;
-    background: #f9fafb;
-    border-radius: 6px;
-  }
-  
-  .checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  
-  /* Responsive */
-  @media (max-width: 1024px) {
     .main-content {
-      margin-left: 0 !important;
-      width: 100% !important;
+        margin-left: var(--sidebar-width) !important;
+        margin-top: 70px !important;
+        background-color: var(--bg-color);
+        min-height: calc(100vh - 70px);
+        padding: 2rem;
     }
-    
-    .card-hl {
-      margin: 16px !important;
-    }
-    
-    .page-header-hl {
-      padding: 24px 20px !important;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .page-title-hl {
-      font-size: 24px !important;
-    }
-    
-    .card-hl {
-      margin: 12px !important;
-    }
-    
-    .form-section {
-      padding: 20px !important;
-    }
-    
-    .form-row {
-      grid-template-columns: 1fr !important;
-    }
-    
-    .table-container {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .page-header-hl {
-      padding: 20px 16px !important;
-    }
-    
-    .page-title-hl {
-      font-size: 20px !important;
-    }
-    
-    .card-hl {
-      margin: 8px !important;
-    }
-    
-    .form-section {
-      padding: 16px !important;
-    }
-    
-    .btn-hl {
-      width: 100%;
-      justify-content: center;
-    }
-  }
 
+    .content-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title-hl {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        background: linear-gradient(135deg, var(--primary-color), #818cf8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .modern-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .help-text {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    .btn-modern:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .alert-info {
+        padding: 1rem;
+        background: #dbeafe;
+        border-left: 4px solid var(--primary-color);
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+        color: #1e40af;
+    }
+
+    .group-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 0.5rem;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .checkbox-item label {
+        margin: 0;
+        font-weight: normal;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .group-checkboxes {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="main-content">
-  <div class="page-container">
     <div class="content-wrapper">
-    <div class="page-header-hl">
-      <h1 class="page-title-hl">
-        <i class="fas fa-bullhorn"></i>
-        SMS en Masse
-      </h1>
-    </div>
-    
-    <div class="card-hl">
-      <h3>Nouvelle Campagne SMS</h3>
-      <form method="POST" class="form-section">
-        <div class="alert-info">
-          <strong>Note:</strong> Vous pouvez envoyer à des numéros spécifiques OU à des groupes de contacts. Au moins l'un des deux est requis.
+        <div class="page-header">
+            <h1 class="page-title-hl">
+                <i class="fas fa-bullhorn page-title-icon"></i>
+                SMS en Masse
+            </h1>
         </div>
-        
-        <div class="form-group">
-          <label class="form-hl-label" for="campaign">Nom de la campagne *</label>
-          <input type="text" id="campaign" name="campaign" class="form-hl-input" 
-                 placeholder="Ex: Promotion Janvier 2026" required>
-          <div class="help-text">Ce nom apparaîtra dans le gestionnaire de campagnes</div>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-hl-label" for="message">Message *</label>
-          <textarea id="message" name="message" class="form-hl-textarea" 
-                    placeholder="Votre message ici..." required></textarea>
-          <div class="help-text">Longueur maximale recommandée: 160 caractères pour un SMS standard</div>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-hl-label" for="numbers">Numéros (séparés par des virgules)</label>
-            <textarea id="numbers" name="numbers" class="form-hl-textarea" 
-                      placeholder="+224601123456, +224601123457, 601123458" 
-                      style="min-height: 80px;"></textarea>
-            <div class="help-text">Format E.164 ou format local, séparés par des virgules</div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label">Groupes de contacts</label>
-            {% if groups %}
-            <div class="group-checkboxes">
-              {% for group in groups %}
-              <div class="checkbox-item">
-                <input type="checkbox" name="group_ids" value="{{ group.id }}" id="group_{{ group.id }}">
-                <label for="group_{{ group.id }}" style="margin: 0; font-weight: normal; cursor: pointer;">
-                  {{ group.name or group.id }}
-                </label>
-              </div>
-              {% endfor %}
+
+        <div class="modern-card">
+            <div class="card-header">
+                <h3 class="card-title">Nouvelle Campagne SMS</h3>
             </div>
-            {% else %}
-            <div class="help-text">Aucun groupe disponible. Créez des groupes depuis la gestion des contacts.</div>
-            {% endif %}
-          </div>
+
+            <form method="POST" class="form-section">
+                <div class="alert-info">
+                    <strong>Note:</strong> Vous pouvez envoyer à des numéros spécifiques OU à des groupes de contacts. Au moins l'un des deux est requis.
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="campaign">Nom de la campagne *</label>
+                    <input type="text" id="campaign" name="campaign" class="form-input" 
+                           placeholder="Ex: Promotion Janvier 2026" required>
+                    <div class="help-text">Ce nom apparaîtra dans le gestionnaire de campagnes</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="message">Message *</label>
+                    <textarea id="message" name="message" class="form-textarea" 
+                              placeholder="Votre message ici..." required></textarea>
+                    <div class="help-text">Longueur maximale recommandée: 160 caractères pour un SMS standard</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="numbers">Numéros (séparés par des virgules)</label>
+                        <textarea id="numbers" name="numbers" class="form-textarea" 
+                                  placeholder="+224601123456, +224601123457, 601123458" 
+                                  style="min-height: 80px;"></textarea>
+                        <div class="help-text">Format E.164 ou format local, séparés par des virgules</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Groupes de contacts</label>
+                        {% if groups %}
+                        <div class="group-checkboxes">
+                            {% for group in groups %}
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="groups[]" value="{{ group.id }}" id="group_{{ group.id }}">
+                                <label for="group_{{ group.id }}">
+                                    {{ group.name or group.id }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="help-text">Aucun groupe disponible. Créez des groupes depuis la gestion des contacts.</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="mode">Mode d'envoi *</label>
+                    <select id="mode" name="mode" class="form-select" required>
+                        <option value="devices">Appareils Android (devices)</option>
+                        <option value="credits">Gateways (credits)</option>
+                    </select>
+                </div>
+                
+                <div id="devices-options" class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="device">Appareil Android</label>
+                        <select id="device" name="device" class="form-select">
+                            <option value="">Sélectionner un appareil</option>
+                            {% for device in devices %}
+                            <option value="{{ device.unique_id or device.id }}">{{ device.name or device.unique_id or device.id }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="sim">Slot SIM</label>
+                        <select id="sim" name="sim" class="form-select">
+                            <option value="">Sélectionner</option>
+                            <option value="1">SIM 1</option>
+                            <option value="2">SIM 2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="priority">Priorité</label>
+                        <select id="priority" name="priority" class="form-select">
+                            <option value="0">Haute (immédiat)</option>
+                            <option value="1">Haute (immédiat)</option>
+                            <option value="2" selected>Normale (en file)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="credits-options" class="form-row" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="gateway">Gateway / Partenaire</label>
+                        <select id="gateway" name="gateway" class="form-select">
+                            <option value="">Sélectionner un gateway</option>
+                            {% if rates.data %}
+                                {% if rates.data.gateways %}
+                                    {% for gateway in rates.data.gateways %}
+                                    <option value="{{ gateway.id }}">{{ gateway.name or gateway.id }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if rates.data.partners %}
+                                    {% for partner in rates.data.partners %}
+                                    <option value="{{ partner.id }}">{{ partner.name or partner.id }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-modern">
+                        <i class="fas fa-paper-plane"></i> Créer la Campagne
+                    </button>
+                    <a href="{{ url_for('messaging.dashboard') }}" class="btn-modern btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
         </div>
-        
-        <div class="form-group">
-          <label class="form-hl-label" for="mode">Mode d'envoi *</label>
-          <select id="mode" name="mode" class="form-hl-select" required>
-            <option value="devices">Appareils Android (devices)</option>
-            <option value="credits">Gateways (credits)</option>
-          </select>
-        </div>
-        
-        <div id="devices-options" class="form-row">
-          <div class="form-group">
-            <label class="form-hl-label" for="device">Appareil Android</label>
-            <select id="device" name="device" class="form-hl-select">
-              <option value="">Sélectionner un appareil</option>
-              {% for device in devices %}
-              <option value="{{ device.unique_id or device.id }}">{{ device.name or device.unique_id or device.id }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label" for="sim">Slot SIM</label>
-            <select id="sim" name="sim" class="form-hl-select">
-              <option value="">Sélectionner</option>
-              <option value="1">SIM 1</option>
-              <option value="2">SIM 2</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label" for="priority">Priorité</label>
-            <select id="priority" name="priority" class="form-hl-select">
-              <option value="0">Haute (immédiat)</option>
-              <option value="1">Haute (immédiat)</option>
-              <option value="2" selected>Normale (en file)</option>
-            </select>
-          </div>
-        </div>
-        
-        <div id="credits-options" class="form-row" style="display: none;">
-          <div class="form-group">
-            <label class="form-hl-label" for="gateway">Gateway / Partenaire</label>
-            <select id="gateway" name="gateway" class="form-hl-select">
-              <option value="">Sélectionner un gateway</option>
-              {% if rates.data %}
-                {% if rates.data.gateways %}
-                  {% for gateway in rates.data.gateways %}
-                  <option value="{{ gateway.id }}">{{ gateway.name or gateway.id }}</option>
-                  {% endfor %}
-                {% endif %}
-                {% if rates.data.partners %}
-                  {% for partner in rates.data.partners %}
-                  <option value="{{ partner.id }}">{{ partner.name or partner.id }}</option>
-                  {% endfor %}
-                {% endif %}
-              {% endif %}
-            </select>
-          </div>
-        </div>
-        
-        <div style="display: flex; gap: 12px; margin-top: 24px;">
-          <button type="submit" class="btn-hl btn-hl-primary">
-            <i class="fas fa-paper-plane"></i> Créer la Campagne
-          </button>
-          <a href="{{ url_for('messaging.dashboard') }}" class="btn-hl btn-hl-secondary">
-            <i class="fas fa-times"></i> Annuler
-          </a>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 <script>
 document.getElementById('mode').addEventListener('change', function() {
-  const mode = this.value;
-  const devicesOptions = document.getElementById('devices-options');
-  const creditsOptions = document.getElementById('credits-options');
-  
-  if (mode === 'devices') {
-    devicesOptions.style.display = 'grid';
-    creditsOptions.style.display = 'none';
-    document.getElementById('device').required = true;
-    document.getElementById('gateway').required = false;
-  } else {
-    devicesOptions.style.display = 'none';
-    creditsOptions.style.display = 'grid';
-    document.getElementById('device').required = false;
-    document.getElementById('gateway').required = true;
-  }
+    const mode = this.value;
+    const devicesOptions = document.getElementById('devices-options');
+    const creditsOptions = document.getElementById('credits-options');
+    
+    if (mode === 'devices') {
+        devicesOptions.style.display = 'grid';
+        creditsOptions.style.display = 'none';
+        document.getElementById('device').required = true;
+        document.getElementById('gateway').required = false;
+    } else {
+        devicesOptions.style.display = 'none';
+        creditsOptions.style.display = 'grid';
+        document.getElementById('device').required = false;
+        document.getElementById('gateway').required = true;
+    }
 });
 
 document.querySelector('form').addEventListener('submit', function(e) {
-  const numbers = document.getElementById('numbers').value.trim();
-  const groups = document.querySelectorAll('input[name="group_ids"]:checked');
-  
-  if (!numbers && groups.length === 0) {
-    e.preventDefault();
-    alert('Vous devez spécifier au moins des numéros ou sélectionner des groupes');
-    return false;
-  }
-  
-  // Convertir les groupes sélectionnés en chaîne séparée par des virgules
-  if (groups.length > 0) {
-    const groupIds = Array.from(groups).map(g => g.value).join(',');
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.name = 'groups';
-    hiddenInput.value = groupIds;
-    this.appendChild(hiddenInput);
-  }
+    const numbers = document.getElementById('numbers').value.trim();
+    const groups = document.querySelectorAll('input[name="groups[]"]:checked');
+    
+    if (!numbers && groups.length === 0) {
+        e.preventDefault();
+        alert('Vous devez spécifier au moins des numéros ou sélectionner des groupes');
+        return false;
+    }
 });
 </script>
 {% endblock %}
-

@@ -3,344 +3,382 @@
 
 {% block extra_css %}
 <style>
-  .main-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin-left: 280px !important;
-    margin-top: 70px !important;
-  }
-  
-  .page-container {
-    width: 100%;
-    min-height: calc(100vh - 70px);
-    padding: 0;
-    background: #f5f7fa;
-    margin: 0;
-  }
-  
-  .content-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-  }
-  
-  .page-header-hl {
-    margin: 0;
-    padding: 32px 40px 24px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .page-title-hl {
-    font-size: 28px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 16px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .page-title-hl i {
-    color: #25d366;
-    font-size: 24px;
-  }
-  
-  .card-hl {
-    margin: 24px 40px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    overflow: hidden;
-  }
-  
-  .card-hl h3 {
-    padding: 20px 24px;
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafbfc;
-  }
-  
-  .form-section {
-    padding: 24px;
-  }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  .form-hl-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 8px;
-  }
-  
-  .form-hl-input,
-  .form-hl-select,
-  .form-hl-textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  
-  .form-hl-textarea {
-    min-height: 120px;
-    resize: vertical;
-  }
-  
-  .form-hl-input:focus,
-  .form-hl-select:focus,
-  .form-hl-textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-  
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-  }
-  
-  .btn-hl {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .btn-hl-primary {
-    background: #25d366;
-    color: white;
-  }
-  
-  .btn-hl-primary:hover {
-    background: #128c7e;
-    color: white;
-  }
-  
-  .btn-hl-secondary {
-    background: #6b7280;
-    color: white;
-  }
-  
-  .btn-hl-secondary:hover {
-    background: #4b5563;
-    color: white;
-  }
-  
-  .help-text {
-    font-size: 12px;
-    color: #6b7280;
-    margin-top: 4px;
-  }
-  
-  .file-upload {
-    padding: 12px;
-    border: 2px dashed #d1d5db;
-    border-radius: 6px;
-    text-align: center;
-    background: #f9fafb;
-    transition: border-color 0.2s;
-  }
-  
-  .file-upload:hover {
-    border-color: #3b82f6;
-  }
-  
-  .file-upload input[type="file"] {
-    display: none;
-  }
-  
-  .file-upload-label {
-    cursor: pointer;
-    color: #3b82f6;
-    font-weight: 500;
-  }
+    :root {
+        --primary-color: #25d366;
+        --primary-light: #dcfce7;
+        --primary-hover: #128c7e;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --sidebar-width: 280px;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width) !important;
+        margin-top: 70px !important;
+        background-color: var(--bg-color);
+        min-height: calc(100vh - 70px);
+        padding: 2rem;
+    }
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title-hl {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        background: linear-gradient(135deg, var(--primary-color), #34d399);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .modern-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .help-text {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    .btn-modern:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .file-upload {
+        padding: 1rem;
+        border: 2px dashed var(--border-color);
+        border-radius: 0.5rem;
+        text-align: center;
+        background: #f9fafb;
+        transition: border-color 0.2s;
+    }
+
+    .file-upload:hover {
+        border-color: var(--primary-color);
+    }
+
+    .file-upload input[type="file"] {
+        display: none;
+    }
+
+    .file-upload-label {
+        cursor: pointer;
+        color: var(--primary-color);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="main-content">
-  <div class="page-container">
     <div class="content-wrapper">
-      <div class="page-header-hl">
-        <h1 class="page-title-hl">
-          <i class="fab fa-whatsapp"></i>
-          Envoyer un Message WhatsApp
-        </h1>
-      </div>
-      
-      <div class="card-hl">
-      <h3>Nouveau Message WhatsApp</h3>
-      <form method="POST" enctype="multipart/form-data" class="form-section">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-hl-label" for="account">Compte WhatsApp *</label>
-            <select id="account" name="account" class="form-hl-select" required>
-              <option value="">Sélectionner un compte</option>
-              {% for account in accounts %}
-              <option value="{{ account.unique_id or account.id }}">{{ account.name or account.phone or account.unique_id }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label" for="recipient">Destinataire *</label>
-            <input type="text" id="recipient" name="recipient" class="form-hl-input" 
-                   placeholder="+224601123456 ou adresse groupe" required>
-            <div class="help-text">Numéro E.164 ou adresse de groupe WhatsApp</div>
-          </div>
+        <div class="page-header">
+            <h1 class="page-title-hl">
+                <i class="fab fa-whatsapp page-title-icon"></i>
+                Envoyer un Message WhatsApp
+            </h1>
         </div>
-        
-        <div class="form-group">
-          <label class="form-hl-label" for="type">Type de message *</label>
-          <select id="type" name="type" class="form-hl-select" required>
-            <option value="text">Texte</option>
-            <option value="media">Média (Image/Audio/Video)</option>
-            <option value="document">Document</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-hl-label" for="message">Message / Légende *</label>
-          <textarea id="message" name="message" class="form-hl-textarea" 
-                    placeholder="Votre message ici..." required></textarea>
-        </div>
-        
-        <div id="media-options" style="display: none;">
-          <div class="form-group">
-            <label class="form-hl-label">Fichier Média</label>
-            <div class="file-upload">
-              <label for="media_file" class="file-upload-label">
-                <i class="fas fa-upload"></i> Cliquez pour téléverser un fichier média
-              </label>
-              <input type="file" id="media_file" name="media_file" accept="image/*,video/*,audio/*">
-              <div class="help-text">Formats supportés: JPG, PNG, GIF, MP4, MP3, OGG</div>
+
+        <div class="modern-card">
+            <div class="card-header">
+                <h3 class="card-title">Nouveau Message WhatsApp</h3>
             </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label" for="media_url">OU URL Média</label>
-            <input type="url" id="media_url" name="media_url" class="form-hl-input" 
-                   placeholder="https://example.com/image.jpg">
-            <div class="help-text">Lien direct vers le fichier média</div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label" for="media_type">Type de média (si URL)</label>
-            <select id="media_type" name="media_type" class="form-hl-select">
-              <option value="">Sélectionner</option>
-              <option value="image">Image</option>
-              <option value="audio">Audio</option>
-              <option value="video">Video</option>
-            </select>
-          </div>
+
+            <form method="POST" enctype="multipart/form-data" class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="account">Compte WhatsApp *</label>
+                        <select id="account" name="account" class="form-select" required>
+                            <option value="">Sélectionner un compte</option>
+                            {% for account in accounts %}
+                            <option value="{{ account.unique_id or account.id }}">{{ account.name or account.phone or account.unique_id }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="recipient">Destinataire *</label>
+                        <input type="text" id="recipient" name="recipient" class="form-input" 
+                               placeholder="+224601123456 ou adresse groupe" required>
+                        <div class="help-text">Numéro E.164 ou adresse de groupe WhatsApp</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="type">Type de message *</label>
+                    <select id="type" name="type" class="form-select" required>
+                        <option value="text">Texte</option>
+                        <option value="media">Média (Image/Audio/Video)</option>
+                        <option value="document">Document</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="message">Message / Légende *</label>
+                    <textarea id="message" name="message" class="form-textarea" 
+                              placeholder="Votre message ici..." required></textarea>
+                </div>
+                
+                <div id="media-options" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Fichier Média</label>
+                        <div class="file-upload">
+                            <label for="media_file" class="file-upload-label">
+                                <i class="fas fa-upload"></i> Cliquez pour téléverser un fichier média
+                            </label>
+                            <input type="file" id="media_file" name="media_file" accept="image/*,video/*,audio/*">
+                        </div>
+                        <div class="help-text">Formats supportés: JPG, PNG, GIF, MP4, MP3, OGG</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="media_url">OU URL Média</label>
+                        <input type="url" id="media_url" name="media_url" class="form-input" 
+                               placeholder="https://example.com/image.jpg">
+                        <div class="help-text">Lien direct vers le fichier média</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="media_type">Type de média (si URL)</label>
+                        <select id="media_type" name="media_type" class="form-select">
+                            <option value="">Sélectionner</option>
+                            <option value="image">Image</option>
+                            <option value="audio">Audio</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="document-options" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Fichier Document</label>
+                        <div class="file-upload">
+                            <label for="document_file" class="file-upload-label">
+                                <i class="fas fa-file-upload"></i> Cliquez pour téléverser un document
+                            </label>
+                            <input type="file" id="document_file" name="document_file" accept=".pdf,.xml,.xls,.xlsx,.doc,.docx">
+                        </div>
+                        <div class="help-text">Formats supportés: PDF, XML, XLS, XLSX, DOC, DOCX</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="document_url">OU URL Document</label>
+                        <input type="url" id="document_url" name="document_url" class="form-input" 
+                               placeholder="https://example.com/document.pdf">
+                        <div class="help-text">Lien direct vers le document</div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="document_name">Nom du document (si URL)</label>
+                            <input type="text" id="document_name" name="document_name" class="form-input" 
+                                   placeholder="document.pdf">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="document_type">Type de document (si URL)</label>
+                            <select id="document_type" name="document_type" class="form-select">
+                                <option value="">Sélectionner</option>
+                                <option value="pdf">PDF</option>
+                                <option value="xml">XML</option>
+                                <option value="xls">XLS</option>
+                                <option value="xlsx">XLSX</option>
+                                <option value="doc">DOC</option>
+                                <option value="docx">DOCX</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="priority">Priorité</label>
+                    <select id="priority" name="priority" class="form-select">
+                        <option value="1">Haute (immédiat)</option>
+                        <option value="2" selected>Normale</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-modern">
+                        <i class="fab fa-whatsapp"></i> Envoyer
+                    </button>
+                    <a href="{{ url_for('messaging.dashboard') }}" class="btn-modern btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
         </div>
-        
-        <div id="document-options" style="display: none;">
-          <div class="form-group">
-            <label class="form-hl-label">Fichier Document</label>
-            <div class="file-upload">
-              <label for="document_file" class="file-upload-label">
-                <i class="fas fa-file-upload"></i> Cliquez pour téléverser un document
-              </label>
-              <input type="file" id="document_file" name="document_file" accept=".pdf,.xml,.xls,.xlsx,.doc,.docx">
-              <div class="help-text">Formats supportés: PDF, XML, XLS, XLSX, DOC, DOCX</div>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-hl-label" for="document_url">OU URL Document</label>
-            <input type="url" id="document_url" name="document_url" class="form-hl-input" 
-                   placeholder="https://example.com/document.pdf">
-            <div class="help-text">Lien direct vers le document</div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-hl-label" for="document_name">Nom du document (si URL)</label>
-              <input type="text" id="document_name" name="document_name" class="form-hl-input" 
-                     placeholder="document.pdf">
-            </div>
-            
-            <div class="form-group">
-              <label class="form-hl-label" for="document_type">Type de document (si URL)</label>
-              <select id="document_type" name="document_type" class="form-hl-select">
-                <option value="">Sélectionner</option>
-                <option value="pdf">PDF</option>
-                <option value="xml">XML</option>
-                <option value="xls">XLS</option>
-                <option value="xlsx">XLSX</option>
-                <option value="doc">DOC</option>
-                <option value="docx">DOCX</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-hl-label" for="priority">Priorité</label>
-          <select id="priority" name="priority" class="form-hl-select">
-            <option value="1">Haute (immédiat)</option>
-            <option value="2" selected>Normale</option>
-          </select>
-        </div>
-        
-        <div style="display: flex; gap: 12px; margin-top: 24px;">
-          <button type="submit" class="btn-hl btn-hl-primary">
-            <i class="fab fa-whatsapp"></i> Envoyer
-          </button>
-          <a href="{{ url_for('messaging.dashboard') }}" class="btn-hl btn-hl-secondary">
-            <i class="fas fa-times"></i> Annuler
-          </a>
-        </div>
-      </form>
-      </div>
     </div>
-  </div>
 </div>
 
 <script>
 document.getElementById('type').addEventListener('change', function() {
-  const type = this.value;
-  const mediaOptions = document.getElementById('media-options');
-  const documentOptions = document.getElementById('document-options');
-  
-  mediaOptions.style.display = type === 'media' ? 'block' : 'none';
-  documentOptions.style.display = type === 'document' ? 'block' : 'none';
+    const type = this.value;
+    const mediaOptions = document.getElementById('media-options');
+    const documentOptions = document.getElementById('document-options');
+    
+    mediaOptions.style.display = type === 'media' ? 'block' : 'none';
+    documentOptions.style.display = type === 'document' ? 'block' : 'none';
 });
 
 document.getElementById('media_file').addEventListener('change', function(e) {
-  if (e.target.files.length > 0) {
-    const label = document.querySelector('label[for="media_file"]');
-    label.innerHTML = '<i class="fas fa-check"></i> Fichier sélectionné: ' + e.target.files[0].name;
-  }
+    if (e.target.files.length > 0) {
+        const label = document.querySelector('label[for="media_file"]');
+        label.innerHTML = '<i class="fas fa-check"></i> Fichier sélectionné: ' + e.target.files[0].name;
+    }
 });
 
 document.getElementById('document_file').addEventListener('change', function(e) {
-  if (e.target.files.length > 0) {
-    const label = document.querySelector('label[for="document_file"]');
-    label.innerHTML = '<i class="fas fa-check"></i> Fichier sélectionné: ' + e.target.files[0].name;
-  }
+    if (e.target.files.length > 0) {
+        const label = document.querySelector('label[for="document_file"]');
+        label.innerHTML = '<i class="fas fa-check"></i> Fichier sélectionné: ' + e.target.files[0].name;
+    }
 });
 </script>
 {% endblock %}
-
