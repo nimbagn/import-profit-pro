@@ -331,39 +331,71 @@ def vehicle_new():
     users = User.query.filter_by(is_active=True).all()
     
     if request.method == 'POST':
-        plate_number = request.form.get('plate_number')
-        brand = request.form.get('brand')
-        model = request.form.get('model')
-        year = request.form.get('year')
-        color = request.form.get('color')
-        vin = request.form.get('vin')
-        whatsapp = request.form.get('whatsapp')
-        current_user_id = request.form.get('current_user_id') or None
-        acquisition_date = request.form.get('acquisition_date') or None
-        
-        if not plate_number:
-            flash('Le numéro d\'immatriculation est obligatoire', 'error')
+        try:
+            plate_number = request.form.get('plate_number', '').strip()
+            brand = request.form.get('brand', '').strip() or None
+            model = request.form.get('model', '').strip() or None
+            year = request.form.get('year', '').strip()
+            color = request.form.get('color', '').strip() or None
+            vin = request.form.get('vin', '').strip() or None
+            whatsapp = request.form.get('whatsapp', '').strip() or None
+            current_user_id = request.form.get('current_user_id', '').strip()
+            acquisition_date = request.form.get('acquisition_date', '').strip()
+            
+            if not plate_number:
+                flash('Le numéro d\'immatriculation est obligatoire', 'error')
+                return render_template('referentiels/vehicle_form.html', users=users)
+            
+            # Vérifier si le véhicule existe déjà
+            if Vehicle.query.filter_by(plate_number=plate_number).first():
+                flash('Ce véhicule existe déjà', 'error')
+                return render_template('referentiels/vehicle_form.html', users=users)
+            
+            # Convertir current_user_id
+            current_user_id_int = None
+            if current_user_id and current_user_id.isdigit():
+                try:
+                    current_user_id_int = int(current_user_id)
+                    # Vérifier que l'utilisateur existe
+                    if not User.query.get(current_user_id_int):
+                        current_user_id_int = None
+                except (ValueError, TypeError):
+                    current_user_id_int = None
+            
+            # Convertir year
+            year_int = None
+            if year and year.isdigit():
+                try:
+                    year_int = int(year)
+                except (ValueError, TypeError):
+                    year_int = None
+            
+            # Convertir acquisition_date
+            acquisition_date_obj = None
+            if acquisition_date:
+                try:
+                    acquisition_date_obj = datetime.strptime(acquisition_date, '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    acquisition_date_obj = None
+            
+            vehicle = Vehicle(
+                plate_number=plate_number,
+                brand=brand,
+                model=model,
+                year=year_int,
+                color=color,
+                vin=vin,
+                whatsapp=whatsapp,
+                current_user_id=current_user_id_int,
+                acquisition_date=acquisition_date_obj,
+                status='active'
+            )
+            db.session.add(vehicle)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erreur lors de la création du véhicule: {str(e)}', 'error')
             return render_template('referentiels/vehicle_form.html', users=users)
-        
-        # Vérifier si le véhicule existe déjà
-        if Vehicle.query.filter_by(plate_number=plate_number).first():
-            flash('Ce véhicule existe déjà', 'error')
-            return render_template('referentiels/vehicle_form.html', users=users)
-        
-        vehicle = Vehicle(
-            plate_number=plate_number,
-            brand=brand,
-            model=model,
-            year=int(year) if year else None,
-            color=color,
-            vin=vin,
-            whatsapp=whatsapp,
-            current_user_id=int(current_user_id) if current_user_id else None,
-            acquisition_date=datetime.strptime(acquisition_date, '%Y-%m-%d').date() if acquisition_date else None,
-            status='active'
-        )
-        db.session.add(vehicle)
-        db.session.commit()
         
         flash(f'Véhicule "{plate_number}" créé avec succès', 'success')
         return redirect(url_for('referentiels.vehicles_list'))
