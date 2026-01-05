@@ -84,6 +84,9 @@ class Config:
     MAIL_PASSWORD = env("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = env("MAIL_DEFAULT_SENDER", env("MAIL_USERNAME"))
     MAIL_SUPPRESS_SEND = env("MAIL_SUPPRESS_SEND", "0") == "1"  # Pour les tests
+    
+    # Configuration Message Pro API
+    MESSAGEPRO_API_SECRET = env("MESSAGEPRO_API_SECRET", None)
 
 class DevelopmentConfig(Config):
     DEBUG = True
