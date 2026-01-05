@@ -83,15 +83,23 @@
           <input type="text" id="plate_number" name="plate_number" class="form-hl-input" value="{{ vehicle.plate_number if vehicle else '' }}" required autofocus>
         </div>
         <div class="form-group" style="margin-bottom: var(--space-lg);">
-          <label for="current_user_id" class="form-hl-label">Conducteur</label>
-          <select id="current_user_id" name="current_user_id" class="form-hl-select">
-            <option value="">Aucun</option>
-            {% for user in users %}
-            <option value="{{ user.id }}" {% if vehicle and vehicle.current_user_id == user.id %}selected{% endif %}>
-              {{ user.full_name or user.username }}
-            </option>
-            {% endfor %}
+          <label for="current_user_id" class="form-hl-label">
+            <i class="fas fa-user me-2"></i>Conducteur
+          </label>
+          <select id="current_user_id" name="current_user_id" class="form-hl-select" style="padding: var(--space-sm) var(--space-md);">
+            <option value="">-- Sélectionner un conducteur --</option>
+            {% if users %}
+              {% for user in users|sort(attribute='full_name') %}
+              <option value="{{ user.id }}" {% if vehicle and vehicle.current_user_id == user.id %}selected{% endif %}>
+                {{ user.full_name or user.username }}{% if user.region %} - {{ user.region.name }}{% endif %}{% if user.role %} ({{ user.role.name }}){% endif %}
+              </option>
+              {% endfor %}
+            {% endif %}
           </select>
+          <small style="color: var(--text-muted); font-size: 0.875rem; margin-top: var(--space-xs); display: block;">
+            <i class="fas fa-info-circle me-1"></i>
+            Sélectionnez le personnel qui conduit ce véhicule
+          </small>
         </div>
       </div>
       

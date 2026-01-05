@@ -328,7 +328,10 @@ def vehicle_new():
         flash('Vous n\'avez pas la permission de créer un véhicule', 'error')
         return redirect(url_for('referentiels.vehicles_list'))
     
-    users = User.query.filter_by(is_active=True).all()
+    users = User.query.options(
+        joinedload(User.region),
+        joinedload(User.role)
+    ).filter_by(is_active=True).order_by(User.full_name, User.username).all()
     
     if request.method == 'POST':
         try:
@@ -411,7 +414,11 @@ def vehicle_edit(id):
         return redirect(url_for('referentiels.vehicles_list'))
     
     vehicle = Vehicle.query.get_or_404(id)
-    users = User.query.filter_by(is_active=True).all()
+    from sqlalchemy.orm import joinedload
+    users = User.query.options(
+        joinedload(User.region),
+        joinedload(User.role)
+    ).filter_by(is_active=True).order_by(User.full_name, User.username).all()
     
     if request.method == 'POST':
         vehicle.plate_number = request.form.get('plate_number')
