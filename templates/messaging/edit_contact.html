@@ -1,0 +1,240 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Modifier un Contact - Messagerie{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --primary-light: #e0e7ff;
+        --primary-hover: #4338ca;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --sidebar-width: 280px;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width) !important;
+        margin-top: 70px !important;
+        background-color: var(--bg-color);
+        min-height: calc(100vh - 70px);
+        padding: 2rem;
+    }
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title-hl {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title-icon {
+        background: linear-gradient(135deg, var(--primary-color), #818cf8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .modern-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: #ffffff;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .help-text {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    .btn-modern:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1 class="page-title-hl">
+                <i class="fas fa-edit page-title-icon"></i>
+                Modifier un Contact
+            </h1>
+        </div>
+
+        <div class="modern-card">
+            <div class="card-header">
+                <h3 class="card-title">Informations du Contact</h3>
+            </div>
+
+            <form method="POST" class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="name">Nom du Contact *</label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           class="form-input" 
+                           value="{{ contact.name or '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Numéro de Téléphone *</label>
+                    <input type="text" 
+                           id="phone" 
+                           name="phone" 
+                           class="form-input" 
+                           value="{{ contact.phone or '' }}"
+                           placeholder="+224601123456 ou 601123456"
+                           required>
+                    <div class="help-text">Format E.164 (+224...) ou format local (601123456)</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="groups">Groupes</label>
+                    <select id="groups" name="groups" class="form-select" multiple>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}" 
+                                {% if contact.groups %}
+                                    {% for cg in contact.groups %}
+                                        {% if cg.id == group.id or cg == group.id %}selected{% endif %}
+                                    {% endfor %}
+                                {% endif %}>
+                            {{ group.name or group.id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="help-text">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs groupes</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-modern">
+                        <i class="fas fa-save"></i> Enregistrer les modifications
+                    </button>
+                    <a href="{{ url_for('messaging.contacts_list') }}" class="btn-modern btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

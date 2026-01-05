@@ -545,6 +545,7 @@
                             {% if has_permission(current_user, 'messaging.manage_contacts') %}
                             <td>
                                 <div class="actions-cell">
+                                    {% if contact.id %}
                                     <a href="{{ url_for('messaging.edit_contact', contact_id=contact.id) }}" 
                                        class="btn-icon" 
                                        title="Modifier">
@@ -556,6 +557,9 @@
                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce contact ?');">
                                         <i class="fas fa-trash"></i>
                                     </a>
+                                    {% else %}
+                                    <span style="color: var(--text-secondary); font-size: 0.75rem;">N/A</span>
+                                    {% endif %}
                                 </div>
                             </td>
                             {% endif %}

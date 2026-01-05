@@ -434,6 +434,75 @@ def create_contact():
         groups = api.get_groups(limit=100) if 'api' in locals() else []
         return render_template('messaging/create_contact.html', groups=groups.get('data', []) if isinstance(groups, dict) else [])
 
+@messaging_bp.route('/contacts/<int:contact_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_contact(contact_id):
+    """Modifier un contact"""
+    if not has_permission(current_user, 'messaging.manage_contacts'):
+        flash('Vous n\'avez pas la permission de gérer les contacts', 'error')
+        return redirect(url_for('messaging.contacts_list'))
+    
+    try:
+        api = MessageProAPI()
+        
+        # Récupérer le contact existant
+        contacts = api.get_contacts(limit=1000, page=1)
+        contact = None
+        for c in contacts.get('data', []):
+            if c.get('id') == contact_id:
+                contact = c
+                break
+        
+        if not contact:
+            flash('Contact introuvable', 'error')
+            return redirect(url_for('messaging.contacts_list'))
+        
+        if request.method == 'POST':
+            phone = request.form.get('phone', '').strip()
+            name = request.form.get('name', '').strip()
+            groups = request.form.get('groups', '').strip()
+            
+            if not phone or not name:
+                flash('Le numéro et le nom sont obligatoires', 'error')
+            else:
+                # L'API Message Pro utilise create/contact pour créer ou mettre à jour
+                result = api.create_contact(phone=phone, name=name, groups=groups)
+                
+                if result.get('status') == 200:
+                    flash('Contact modifié avec succès!', 'success')
+                    return redirect(url_for('messaging.contacts_list'))
+                else:
+                    flash(f"Erreur: {result.get('message', 'Erreur inconnue')}", 'error')
+        
+        groups = api.get_groups(limit=100)
+        return render_template('messaging/edit_contact.html', 
+                             contact=contact, 
+                             groups=groups.get('data', []))
+    except Exception as e:
+        flash(f'Erreur: {str(e)}', 'error')
+        return redirect(url_for('messaging.contacts_list'))
+
+@messaging_bp.route('/contacts/<int:contact_id>/delete', methods=['POST', 'GET'])
+@login_required
+def delete_contact(contact_id):
+    """Supprimer un contact"""
+    if not has_permission(current_user, 'messaging.manage_contacts'):
+        flash('Vous n\'avez pas la permission de gérer les contacts', 'error')
+        return redirect(url_for('messaging.contacts_list'))
+    
+    try:
+        api = MessageProAPI()
+        result = api.delete_contact(contact_id)
+        
+        if result.get('status') == 200:
+            flash('Contact supprimé avec succès!', 'success')
+        else:
+            flash(f"Erreur: {result.get('message', 'Erreur inconnue')}", 'error')
+    except Exception as e:
+        flash(f'Erreur: {str(e)}', 'error')
+    
+    return redirect(url_for('messaging.contacts_list'))
+
 # =========================================================
 # ROUTES API JSON
 # =========================================================
