@@ -1,0 +1,142 @@
+/* =========================================================
+   MESSAGING RESPONSIVE - Styles communs pour tous les templates messaging
+   Centrage, ergonomie et responsive pour tous les supports
+   ========================================================= */
+
+/* Wrapper pour centrer le contenu */
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Responsive général */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .page-header-hl {
+    padding: 24px 20px !important;
+  }
+  
+  .card-hl {
+    margin: 16px !important;
+  }
+  
+  .stats-grid,
+  .actions-grid,
+  .recent-messages {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-title-hl {
+    font-size: 24px !important;
+  }
+  
+  .card-hl {
+    margin: 12px !important;
+    border-radius: 6px;
+  }
+  
+  .form-section {
+    padding: 20px !important;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .stats-grid,
+  .actions-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+  
+  .message-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  
+  .message-date {
+    margin-left: 0 !important;
+    align-self: flex-end;
+  }
+  
+  .message-text {
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header-hl {
+    padding: 20px 16px !important;
+  }
+  
+  .page-title-hl {
+    font-size: 20px !important;
+  }
+  
+  .card-hl {
+    margin: 8px !important;
+  }
+  
+  .form-section {
+    padding: 16px !important;
+  }
+  
+  .stat-card {
+    padding: 20px !important;
+  }
+  
+  .stat-card-value {
+    font-size: 28px !important;
+  }
+  
+  .action-card {
+    padding: 20px !important;
+  }
+  
+  .action-card h3 {
+    font-size: 16px !important;
+  }
+  
+  .btn-hl,
+  .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .pagination-buttons {
+    width: 100%;
+  }
+  
+  .btn-pagination {
+    flex: 1;
+  }
+}
+

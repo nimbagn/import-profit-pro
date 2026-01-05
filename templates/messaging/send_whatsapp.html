@@ -19,6 +19,12 @@
     margin: 0;
   }
   
+  .content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
   .page-header-hl {
     margin: 0;
     padding: 32px 40px 24px;
@@ -34,6 +40,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+  
+  .page-title-hl i {
+    color: #25d366;
+    font-size: 24px;
   }
   
   .card-hl {
@@ -169,14 +180,15 @@
 {% block content %}
 <div class="main-content">
   <div class="page-container">
-    <div class="page-header-hl">
-      <h1 class="page-title-hl">
-        <i class="fab fa-whatsapp"></i>
-        Envoyer un Message WhatsApp
-      </h1>
-    </div>
-    
-    <div class="card-hl">
+    <div class="content-wrapper">
+      <div class="page-header-hl">
+        <h1 class="page-title-hl">
+          <i class="fab fa-whatsapp"></i>
+          Envoyer un Message WhatsApp
+        </h1>
+      </div>
+      
+      <div class="card-hl">
       <h3>Nouveau Message WhatsApp</h3>
       <form method="POST" enctype="multipart/form-data" class="form-section">
         <div class="form-row">

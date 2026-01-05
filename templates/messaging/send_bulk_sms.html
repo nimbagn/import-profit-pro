@@ -11,6 +11,12 @@
     margin-top: 70px !important;
   }
   
+  .content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
   .page-container {
     width: 100%;
     min-height: calc(100vh - 70px);
@@ -26,6 +32,11 @@
     border-bottom: 1px solid #e5e7eb;
   }
   
+  .page-title-hl i {
+    color: #3b82f6;
+    font-size: 24px;
+  }
+
   .page-title-hl {
     font-size: 28px;
     font-weight: 600;
@@ -168,12 +179,77 @@
     align-items: center;
     gap: 8px;
   }
+
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      width: 100% !important;
+    }
+    
+    .card-hl {
+      margin: 16px !important;
+    }
+    
+    .page-header-hl {
+      padding: 24px 20px !important;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .page-title-hl {
+      font-size: 24px !important;
+    }
+    
+    .card-hl {
+      margin: 12px !important;
+    }
+    
+    .form-section {
+      padding: 20px !important;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .page-header-hl {
+      padding: 20px 16px !important;
+    }
+    
+    .page-title-hl {
+      font-size: 20px !important;
+    }
+    
+    .card-hl {
+      margin: 8px !important;
+    }
+    
+    .form-section {
+      padding: 16px !important;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="main-content">
   <div class="page-container">
+    <div class="content-wrapper">
     <div class="page-header-hl">
       <h1 class="page-title-hl">
         <i class="fas fa-bullhorn"></i>
