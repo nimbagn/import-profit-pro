@@ -8,7 +8,7 @@ Système de commandes avec validation hiérarchique
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, UTC, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from models import (
     db, CommercialOrder, CommercialOrderClient, CommercialOrderItem,
     StockItem, User, Region, Depot, Vehicle, StockOutgoing, StockOutgoingDetail,
@@ -487,8 +487,16 @@ def order_new():
         except: pass
         # #endregion
         # Récupérer les données du formulaire
-        order_date = request.form.get('order_date') or datetime.now(UTC)
-        notes = request.form.get('notes')
+        order_date_str = request.form.get('order_date', '').strip()
+        notes = request.form.get('notes', '').strip() or None
+        
+        # Convertir order_date
+        order_date = datetime.now(UTC)
+        if order_date_str:
+            try:
+                order_date = datetime.strptime(order_date_str, '%Y-%m-%d')
+            except (ValueError, TypeError):
+                order_date = datetime.now(UTC)
         
         # Générer la référence
         reference = generate_order_reference()
@@ -503,7 +511,7 @@ def order_new():
         try:
             order = CommercialOrder(
                 reference=reference,
-                order_date=datetime.strptime(order_date, '%Y-%m-%d') if isinstance(order_date, str) else order_date,
+                order_date=order_date,
                 commercial_id=current_user.id,
                 region_id=current_user.region_id,
                 notes=notes,
@@ -583,15 +591,37 @@ def order_new():
             j = 0
             items_for_client = 0
             while True:
-                item_id = request.form.get(f'client_{i}_item_{j}_id', type=int)
-                if not item_id:
+                item_id_str = request.form.get(f'client_{i}_item_{j}_id', '').strip()
+                if not item_id_str:
                     break
                 
-                quantity = request.form.get(f'client_{i}_item_{j}_qty', type=Decimal)
-                unit_price = request.form.get(f'client_{i}_item_{j}_price', type=Decimal)
-                item_notes = request.form.get(f'client_{i}_item_{j}_notes', '').strip()
+                try:
+                    item_id = int(item_id_str)
+                except (ValueError, TypeError):
+                    j += 1
+                    continue
                 
-                if quantity and quantity > 0:
+                # Convertir quantity et unit_price en Decimal de manière sécurisée
+                quantity_str = request.form.get(f'client_{i}_item_{j}_qty', '').strip()
+                unit_price_str = request.form.get(f'client_{i}_item_{j}_price', '').strip()
+                item_notes = request.form.get(f'client_{i}_item_{j}_notes', '').strip() or None
+                
+                quantity = None
+                unit_price = None
+                
+                try:
+                    if quantity_str:
+                        quantity = Decimal(str(quantity_str))
+                except (ValueError, TypeError, InvalidOperation):
+                    quantity = None
+                
+                try:
+                    if unit_price_str:
+                        unit_price = Decimal(str(unit_price_str))
+                except (ValueError, TypeError, InvalidOperation):
+                    unit_price = None
+                
+                if quantity and quantity > 0 and unit_price and unit_price >= 0:
                     order_item = CommercialOrderItem(
                         order_client_id=order_client.id,
                         stock_item_id=item_id,
@@ -626,8 +656,15 @@ def order_new():
         except: pass
         # #endregion
         
-        if i == 0:
-            flash('Veuillez ajouter au moins un client avec des articles', 'error')
+        if clients_processed == 0:
+            flash('Veuillez ajouter au moins un client', 'error')
+            db.session.rollback()
+            return redirect(url_for('orders.order_new'))
+        
+        # Vérifier qu'au moins un client a des articles
+        total_items = sum(1 for client in order.clients for item in client.items)
+        if total_items == 0:
+            flash('Veuillez ajouter au moins un article à un client', 'error')
             db.session.rollback()
             return redirect(url_for('orders.order_new'))
         
