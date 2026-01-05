@@ -621,6 +621,57 @@
                 </a>
                 {% endif %}
                 
+                {% if has_permission(current_user, 'messaging.read') %}
+                <div class="menu-group">
+                    <div class="menu-group-title {% if request.endpoint and 'messaging' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                        <span>Messagerie</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="menu-group-content {% if request.endpoint and 'messaging' in request.endpoint %}expanded{% endif %}">
+                        <a href="{{ url_for('messaging.dashboard') }}" class="menu-subitem {% if request.endpoint == 'messaging.dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard
+                        </a>
+                        {% if has_permission(current_user, 'messaging.send_sms') %}
+                        <a href="{{ url_for('messaging.send_sms') }}" class="menu-subitem {% if request.endpoint == 'messaging.send_sms' %}active{% endif %}">
+                            <i class="fas fa-sms"></i>
+                            Envoyer SMS
+                        </a>
+                        <a href="{{ url_for('messaging.send_bulk_sms') }}" class="menu-subitem {% if request.endpoint == 'messaging.send_bulk_sms' %}active{% endif %}">
+                            <i class="fas fa-bullhorn"></i>
+                            SMS en Masse
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'messaging.send_whatsapp') %}
+                        <a href="{{ url_for('messaging.send_whatsapp') }}" class="menu-subitem {% if request.endpoint == 'messaging.send_whatsapp' %}active{% endif %}">
+                            <i class="fab fa-whatsapp"></i>
+                            Envoyer WhatsApp
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'messaging.send_otp') %}
+                        <a href="{{ url_for('messaging.send_otp') }}" class="menu-subitem {% if request.endpoint == 'messaging.send_otp' %}active{% endif %}">
+                            <i class="fas fa-key"></i>
+                            Envoyer OTP
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'messaging.read') %}
+                        <a href="{{ url_for('messaging.sms_history') }}" class="menu-subitem {% if request.endpoint == 'messaging.sms_history' %}active{% endif %}">
+                            <i class="fas fa-history"></i>
+                            Historique SMS
+                        </a>
+                        <a href="{{ url_for('messaging.whatsapp_history') }}" class="menu-subitem {% if request.endpoint == 'messaging.whatsapp_history' %}active{% endif %}">
+                            <i class="fab fa-whatsapp"></i>
+                            Historique WhatsApp
+                        </a>
+                        <a href="{{ url_for('messaging.contacts_list') }}" class="menu-subitem {% if request.endpoint == 'messaging.contacts_list' or request.endpoint == 'messaging.create_contact' %}active{% endif %}">
+                            <i class="fas fa-address-book"></i>
+                            Contacts
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
                 {% if current_user.role and current_user.role.code in ['rh', 'rh_manager', 'rh_assistant', 'rh_recruiter', 'rh_analyst'] or has_permission(current_user, 'users.read') %}
                 <div class="menu-group">
                     <div class="menu-group-title {% if request.endpoint and 'rh' in request.endpoint %}expanded{% endif %}" onclick="toggleMenuGroup(this)">

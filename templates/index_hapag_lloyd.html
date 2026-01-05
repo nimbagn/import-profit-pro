@@ -472,6 +472,18 @@
     {% endif %}
     
     {% if has_permission(current_user, 'stock_items.read') %}
+    {% if has_permission(current_user, 'messaging.read') %}
+    <a href="{{ url_for('messaging.dashboard') }}" class="module-card">
+        <div class="module-icon" style="background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);">
+            <i class="fab fa-whatsapp"></i>
+        </div>
+        <div class="module-info">
+            <h3>Messagerie</h3>
+            <p>SMS, WhatsApp, OTP</p>
+        </div>
+    </a>
+    {% endif %}
+    
     <a href="{{ url_for('price_lists.lists') }}" class="module-card">
       <div class="module-icon">
         <i class="fas fa-tags"></i>
