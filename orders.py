@@ -466,11 +466,18 @@ def order_new():
         return redirect(url_for('orders.orders_list'))
     
     # Vérifier que l'utilisateur est commercial
-    if current_user.role and current_user.role.code != 'commercial':
+    user_role_code = None
+    try:
+        if current_user.role:
+            user_role_code = current_user.role.code
+    except (AttributeError, TypeError):
+        user_role_code = None
+    
+    if user_role_code != 'commercial':
         # #region agent log
         try:
             with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
-                f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:282","message":"user is not commercial","data":{"user_role":current_user.role.code if current_user.role else None},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}) + "\n")
+                f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:282","message":"user is not commercial","data":{"user_role":user_role_code},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}) + "\n")
         except: pass
         # #endregion
         flash('Seuls les commerciaux peuvent créer des commandes', 'error')
@@ -694,75 +701,95 @@ def order_new():
         return redirect(url_for('orders.order_detail', id=order.id))
     
     # GET : Afficher le formulaire
-    # #region agent log
     try:
-        with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:405","message":"GET request - loading form","data":{},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}) + "\n")
-    except: pass
-    # #endregion
-    
-    stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
-    # #region agent log
-    try:
-        with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:410","message":"stock items loaded","data":{"stock_items_count":len(stock_items) if stock_items else 0},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}) + "\n")
-    except: pass
-    # #endregion
-    
-    # Récupérer la fiche de prix active pour les prix de vente
-    from datetime import date
-    today = date.today()
-    
-    active_price_list = PriceList.query.filter(
-        PriceList.is_active == True,
-        PriceList.start_date <= today,
-        db.or_(
-            PriceList.end_date.is_(None),
-            PriceList.end_date >= today
-        )
-    ).order_by(PriceList.start_date.desc()).first()
-    
-    # Créer un dictionnaire de prix par nom d'article (PriceListItem est lié à Article)
-    # On fait le lien entre Article et StockItem par le nom (car Article n'a pas de SKU)
-    prices_by_name = {}
-    if active_price_list:
-        for price_item in active_price_list.items:
-            if price_item.article:
-                # Utiliser le prix grossiste (wholesale_price) par défaut, sinon détaillant
-                price = price_item.wholesale_price or price_item.retail_price
-                if price:
-                    prices_by_name[price_item.article.name.lower()] = float(price)
-    
-    # Convertir les stock_items en format JSON pour le JavaScript avec prix
-    stock_items_json = []
-    for item in stock_items:
+        # #region agent log
         try:
-            item_data = {
-                'id': int(item.id),
-                'name': str(item.name) if item.name else '',
-                'sku': str(item.sku) if item.sku else '',
-                'default_price': None
-            }
-            
-            # Chercher le prix dans la fiche de prix active par nom d'article
-            item_name_lower = item.name.lower() if item.name else ''
-            if item_name_lower in prices_by_name:
-                item_data['default_price'] = float(prices_by_name[item_name_lower])
-            # Sinon utiliser le prix d'achat comme référence (peut être modifié)
-            elif item.purchase_price_gnf:
-                try:
-                    item_data['default_price'] = float(item.purchase_price_gnf)
-                except (ValueError, TypeError):
-                    item_data['default_price'] = None
-            
-            stock_items_json.append(item_data)
+            with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:405","message":"GET request - loading form","data":{},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}) + "\n")
+        except: pass
+        # #endregion
+        
+        stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
+        # #region agent log
+        try:
+            with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"id":"log_entry","timestamp":int(time.time()*1000),"location":"orders.py:410","message":"stock items loaded","data":{"stock_items_count":len(stock_items) if stock_items else 0},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}) + "\n")
+        except: pass
+        # #endregion
+        
+        # Récupérer la fiche de prix active pour les prix de vente
+        from datetime import date
+        today = date.today()
+        
+        active_price_list = None
+        try:
+            active_price_list = PriceList.query.filter(
+                PriceList.is_active == True,
+                PriceList.start_date <= today,
+                db.or_(
+                    PriceList.end_date.is_(None),
+                    PriceList.end_date >= today
+                )
+            ).order_by(PriceList.start_date.desc()).first()
         except Exception as e:
-            print(f"⚠️ Erreur lors de la conversion de l'article {item.id}: {e}")
-            continue
-    
-    return render_template('orders/order_form.html',
-                         stock_items=stock_items_json,
-                         today=datetime.now(UTC).strftime('%Y-%m-%d'))
+            print(f"⚠️ Erreur lors de la récupération de la fiche de prix: {e}")
+            active_price_list = None
+        
+        # Créer un dictionnaire de prix par nom d'article (PriceListItem est lié à Article)
+        # On fait le lien entre Article et StockItem par le nom (car Article n'a pas de SKU)
+        prices_by_name = {}
+        if active_price_list:
+            try:
+                for price_item in active_price_list.items:
+                    if price_item and price_item.article:
+                        # Utiliser le prix grossiste (wholesale_price) par défaut, sinon détaillant
+                        price = price_item.wholesale_price or price_item.retail_price
+                        if price:
+                            try:
+                                prices_by_name[price_item.article.name.lower()] = float(price)
+                            except (ValueError, TypeError):
+                                continue
+            except Exception as e:
+                print(f"⚠️ Erreur lors du traitement de la fiche de prix: {e}")
+                prices_by_name = {}
+        
+        # Convertir les stock_items en format JSON pour le JavaScript avec prix
+        stock_items_json = []
+        for item in stock_items:
+            try:
+                item_data = {
+                    'id': int(item.id),
+                    'name': str(item.name) if item.name else '',
+                    'sku': str(item.sku) if item.sku else '',
+                    'default_price': None
+                }
+                
+                # Chercher le prix dans la fiche de prix active par nom d'article
+                item_name_lower = item.name.lower() if item.name else ''
+                if item_name_lower in prices_by_name:
+                    item_data['default_price'] = float(prices_by_name[item_name_lower])
+                # Sinon utiliser le prix d'achat comme référence (peut être modifié)
+                elif item.purchase_price_gnf:
+                    try:
+                        item_data['default_price'] = float(item.purchase_price_gnf)
+                    except (ValueError, TypeError):
+                        item_data['default_price'] = None
+                
+                stock_items_json.append(item_data)
+            except Exception as e:
+                print(f"⚠️ Erreur lors de la conversion de l'article {item.id}: {e}")
+                continue
+        
+        return render_template('orders/order_form.html',
+                             stock_items=stock_items_json,
+                             today=datetime.now(UTC).strftime('%Y-%m-%d'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors du chargement du formulaire: {str(e)}', 'error')
+        print(f"❌ Erreur dans order_new (GET): {e}")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for('orders.orders_list'))
 
 @orders_bp.route('/<int:id>')
 @login_required
