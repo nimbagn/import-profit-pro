@@ -105,14 +105,25 @@ def stream_messages(room_id):
                         last_message_id = message.id
                 
                 # Sleep après avoir envoyé les données pour éviter de bloquer trop longtemps
-                time.sleep(1)  # Vérifier toutes les 1 seconde
+                # Utiliser un sleep plus court et gérer les interruptions
+                try:
+                    time.sleep(1)  # Vérifier toutes les 1 seconde
+                except (KeyboardInterrupt, SystemExit):
+                    # Interruption par Gunicorn (timeout ou shutdown)
+                    break
                 
         except GeneratorExit:
             # Connexion fermée par le client
             pass
+        except (KeyboardInterrupt, SystemExit):
+            # Interruption par Gunicorn
+            break
         except Exception as e:
             print(f"⚠️ Erreur dans le stream SSE: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            except:
+                pass  # Ignorer si le générateur est déjà fermé
     
     return Response(
         stream_with_context(event_stream()),
@@ -225,13 +236,24 @@ def stream_rooms():
                         })}\n\n"
                 
                 # Sleep après avoir envoyé les données pour éviter de bloquer trop longtemps
-                time.sleep(2)  # Vérifier toutes les 2 secondes
+                # Utiliser un sleep plus court et gérer les interruptions
+                try:
+                    time.sleep(2)  # Vérifier toutes les 2 secondes
+                except (KeyboardInterrupt, SystemExit):
+                    # Interruption par Gunicorn (timeout ou shutdown)
+                    break
                 
         except GeneratorExit:
             pass
+        except (KeyboardInterrupt, SystemExit):
+            # Interruption par Gunicorn
+            break
         except Exception as e:
             print(f"⚠️ Erreur dans le stream SSE rooms: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            except:
+                pass  # Ignorer si le générateur est déjà fermé
     
     return Response(
         stream_with_context(event_stream()),

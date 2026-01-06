@@ -1,31 +1,39 @@
 # Configuration Gunicorn pour Render
-# Augmente le timeout pour les connexions SSE (Server-Sent Events)
+# Optimisée pour les connexions SSE (Server-Sent Events)
 
 import multiprocessing
 
-# Workers
+# Nombre de workers
 workers = 2
-worker_class = "sync"
+
+# Timeout augmenté pour les connexions SSE (5 minutes)
+# Les connexions SSE peuvent rester ouvertes longtemps
+timeout = 300
+
+# Keep-alive pour les connexions longues
+keepalive = 65
+
+# Worker class - utiliser sync pour compatibilité maximale
+worker_class = 'sync'
+
+# Worker connections
 worker_connections = 1000
 
-# Timeout pour les connexions longues (SSE, WebSocket, etc.)
-# Par défaut Gunicorn a un timeout de 30 secondes
-# On l'augmente à 300 secondes (5 minutes) pour les connexions SSE
-# Les heartbeats sont envoyés toutes les 10 secondes pour maintenir la connexion active
-timeout = 300
-graceful_timeout = 30
-keepalive = 5
-
-# Logging
-accesslog = "-"
-errorlog = "-"
-loglevel = "info"
-
-# Performance
+# Max requests - recycler les workers après N requêtes pour éviter les fuites mémoire
 max_requests = 1000
 max_requests_jitter = 50
+
+# Logging
+accesslog = '-'
+errorlog = '-'
+loglevel = 'info'
+
+# Graceful timeout pour l'arrêt propre
+graceful_timeout = 30
+
+# Preload app pour meilleure performance
 preload_app = True
 
-# Bind - sera défini dans Procfile avec $PORT
-# bind sera défini via --bind dans Procfile
+import os
 
+# Bind sera défini dans la commande start

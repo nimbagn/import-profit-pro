@@ -583,8 +583,14 @@ def api_read_status(room_id):
     if not membership:
         return jsonify({'error': 'Accès refusé'}), 403
     
-    data = request.get_json()
-    message_ids = data.get('message_ids', [])
+    # Gérer les erreurs de parsing JSON
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Données JSON invalides ou manquantes'}), 400
+        message_ids = data.get('message_ids', [])
+    except Exception as e:
+        return jsonify({'error': f'Erreur de parsing JSON: {str(e)}'}), 400
     
     if not message_ids:
         return jsonify({'read_statuses': {}}), 200
