@@ -144,7 +144,7 @@ class ScheduledReportsManager:
                         recipients = [r.strip() for r in report_config.recipients.split(',') if r.strip()]
                     
                     # Récupérer les membres des groupes
-                    if report_config.group_ids:
+                    if report_config.group_ids and report_config.group_ids.strip():
                         api = MessageProAPI()
                         groups = [g.strip() for g in report_config.group_ids.split(',') if g.strip()]
                         for group_id in groups:
