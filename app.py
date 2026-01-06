@@ -216,6 +216,18 @@ app.register_blueprint(messaging_bp)
 from automated_reports import automated_reports_bp
 app.register_blueprint(automated_reports_bp)
 
+# Initialiser le gestionnaire de rapports automatiques
+try:
+    from scheduled_reports import scheduled_reports_manager
+    scheduled_reports_manager.init_app(app)
+    with app.app_context():
+        scheduled_reports_manager.load_all_scheduled_reports()
+        print("✅ Rapports automatiques chargés et planifiés")
+except Exception as e:
+    print(f"⚠️  Erreur lors de l'initialisation des rapports automatiques: {e}")
+    import traceback
+    traceback.print_exc()
+
 # Création des tables et initialisation des données
 with app.app_context():
     try:

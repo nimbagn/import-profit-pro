@@ -141,26 +141,36 @@ class ScheduledReportsManager:
                     # Récupérer les destinataires
                     recipients = []
                     if report_config.recipients:
-                        recipients = report_config.recipients.split(',')
-                    if report_config.group_ids:
+                        recipients = [r.strip() for r in report_config.recipients.split(',') if r.strip()]
+                    
                     # Récupérer les membres des groupes
-                    api = MessageProAPI()
-                    groups = report_config.group_ids.split(',')
-                    for group_id in groups:
-                        try:
-                            # Récupérer les contacts du groupe
-                            contacts_result = api.get_contacts(limit=1000, page=1)
-                            if contacts_result and contacts_result.get('data'):
-                                for contact in contacts_result.get('data', []):
-                                    if contact.get('groups'):
-                                        contact_groups = contact.get('groups', [])
-                                        if isinstance(contact_groups, str):
-                                            contact_groups = [g.strip() for g in contact_groups.split(',')]
-                                        if str(group_id) in [str(g) for g in contact_groups] or group_id in contact_groups:
+                    if report_config.group_ids:
+                        api = MessageProAPI()
+                        groups = [g.strip() for g in report_config.group_ids.split(',') if g.strip()]
+                        for group_id in groups:
+                            try:
+                                # Récupérer les contacts du groupe
+                                contacts_result = api.get_contacts_by_group(int(group_id), limit=1000, page=1)
+                                if contacts_result and contacts_result.get('status') == 200:
+                                    contacts_data = contacts_result.get('data', [])
+                                    if isinstance(contacts_data, list):
+                                        for contact in contacts_data:
                                             if contact.get('phone'):
-                                                recipients.append(contact.get('phone'))
-                        except Exception as e:
-                            logger.error(f"Erreur lors de la récupération du groupe {group_id}: {e}")
+                                                phone = contact.get('phone').strip()
+                                                if phone and phone not in recipients:
+                                                    recipients.append(phone)
+                            except Exception as e:
+                                logger.error(f"Erreur lors de la récupération du groupe {group_id}: {e}")
+                                import traceback
+                                traceback.print_exc()
+                    
+                    if not recipients:
+                        error_msg = f"Aucun destinataire trouvé pour le rapport {report_config.id}"
+                        logger.error(error_msg)
+                        report_config.last_error = error_msg
+                        from models import db
+                        db.session.commit()
+                        return
                     
                     # Envoyer le rapport
                     self.send_report_via_whatsapp(
@@ -247,6 +257,11 @@ class ScheduledReportsManager:
     def schedule_report(self, report_config):
         """Planifie un rapport"""
         try:
+            # Vérifier que le rapport est actif
+            if not report_config.is_active:
+                logger.info(f"Rapport {report_config.id} est inactif, non planifié")
+                return False
+            
             # Créer un trigger selon le planning
             if report_config.schedule_type == 'daily':
                 hour, minute = map(int, report_config.schedule.split(':'))
@@ -257,7 +272,14 @@ class ScheduledReportsManager:
                 hour, minute = map(int, time.split(':'))
                 day_map = {'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4, 'SAT': 5, 'SUN': 6}
                 trigger = CronTrigger(day_of_week=day_map.get(day.upper(), 0), hour=hour, minute=minute)
+            elif report_config.schedule_type == 'monthly':
+                # Format: "DD HH:MM" (ex: "01 18:00" pour le 1er de chaque mois)
+                day_str, time_str = report_config.schedule.split(' ', 1)
+                day = int(day_str)
+                hour, minute = map(int, time_str.split(':'))
+                trigger = CronTrigger(day=day, hour=hour, minute=minute)
             else:
+                logger.error(f"Type de planning non supporté: {report_config.schedule_type}")
                 return False
             
             # Ajouter la tâche au scheduler

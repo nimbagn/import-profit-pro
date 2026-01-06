@@ -96,9 +96,13 @@ def create_report():
             
             # Planifier le rapport
             from scheduled_reports import scheduled_reports_manager
-            scheduled_reports_manager.schedule_report(report)
+            success = scheduled_reports_manager.schedule_report(report)
             
-            flash('Rapport automatique créé avec succès!', 'success')
+            if success:
+                flash('Rapport automatique créé et planifié avec succès!', 'success')
+            else:
+                flash('Rapport créé mais erreur lors de la planification. Vérifiez les logs.', 'warning')
+            
             return redirect(url_for('automated_reports.reports_list'))
             
         except Exception as e:
