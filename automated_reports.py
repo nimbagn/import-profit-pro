@@ -127,9 +127,37 @@ def create_report():
         logger.error(f"Erreur lors de la récupération des comptes WhatsApp: {e}")
         accounts = []
     
+    # Récupérer les contacts pour la sélection
+    contacts = []
+    try:
+        api = MessageProAPI()
+        contacts_result = api.get_contacts(limit=500, page=1)
+        if contacts_result and contacts_result.get('status') == 200:
+            contacts_data = contacts_result.get('data', [])
+            if isinstance(contacts_data, list):
+                contacts = contacts_data
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des contacts: {e}")
+        contacts = []
+    
+    # Récupérer les groupes pour la sélection
+    groups = []
+    try:
+        api = MessageProAPI()
+        groups_result = api.get_groups(limit=100, page=1)
+        if groups_result and groups_result.get('status') == 200:
+            groups_data = groups_result.get('data', [])
+            if isinstance(groups_data, list):
+                groups = groups_data
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des groupes: {e}")
+        groups = []
+    
     return render_template('automated_reports/create.html', 
                          depots=depots, 
-                         accounts=accounts)
+                         accounts=accounts,
+                         contacts=contacts,
+                         groups=groups)
 
 @automated_reports_bp.route('/<int:report_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -223,10 +251,38 @@ def edit_report(report_id):
         logger.error(f"Erreur lors de la récupération des comptes WhatsApp: {e}")
         accounts = []
     
+    # Récupérer les contacts pour la sélection
+    contacts = []
+    try:
+        api = MessageProAPI()
+        contacts_result = api.get_contacts(limit=500, page=1)
+        if contacts_result and contacts_result.get('status') == 200:
+            contacts_data = contacts_result.get('data', [])
+            if isinstance(contacts_data, list):
+                contacts = contacts_data
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des contacts: {e}")
+        contacts = []
+    
+    # Récupérer les groupes pour la sélection
+    groups = []
+    try:
+        api = MessageProAPI()
+        groups_result = api.get_groups(limit=100, page=1)
+        if groups_result and groups_result.get('status') == 200:
+            groups_data = groups_result.get('data', [])
+            if isinstance(groups_data, list):
+                groups = groups_data
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des groupes: {e}")
+        groups = []
+    
     return render_template('automated_reports/edit.html', 
                          report=report, 
                          depots=depots, 
-                         accounts=accounts)
+                         accounts=accounts,
+                         contacts=contacts,
+                         groups=groups)
 
 @automated_reports_bp.route('/<int:report_id>/toggle', methods=['POST'])
 @login_required
