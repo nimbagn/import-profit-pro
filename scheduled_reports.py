@@ -136,6 +136,31 @@ class ScheduledReportsManager:
                         period=report_config.period or 'all',
                         currency=report_config.currency or 'GNF'
                     )
+                elif report_config.report_type == 'stock_summary':
+                    pdf_buffer = self.generate_stock_inventory_pdf(
+                        depot_id=report_config.depot_id,
+                        period=report_config.period or 'all',
+                        currency=report_config.currency or 'GNF'
+                    )
+                elif report_config.report_type == 'orders_summary':
+                    pdf_buffer = self.generate_orders_summary_pdf(
+                        period=report_config.period or 'all',
+                        currency=report_config.currency or 'GNF'
+                    )
+                elif report_config.report_type == 'sales_statistics':
+                    pdf_buffer = self.generate_sales_statistics_pdf(
+                        period=report_config.period or 'all',
+                        currency=report_config.currency or 'GNF'
+                    )
+                elif report_config.report_type == 'stock_alerts':
+                    pdf_buffer = self.generate_stock_alerts_pdf(
+                        depot_id=report_config.depot_id
+                    )
+                elif report_config.report_type == 'daily_summary':
+                    pdf_buffer = self.generate_daily_summary_pdf(
+                        depot_id=report_config.depot_id,
+                        currency=report_config.currency or 'GNF'
+                    )
                 
                 if pdf_buffer:
                     # Récupérer les destinataires

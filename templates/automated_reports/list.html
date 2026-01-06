@@ -273,12 +273,17 @@
 <div class="main-content">
     <div class="content-wrapper">
         <div class="page-header">
-            <h1 class="page-title-hl">
-                <i class="fas fa-clock page-title-icon"></i>
-                Rapports Automatiques
-            </h1>
-            <a href="{{ url_for('automated_reports.create_report') }}" class="btn-modern">
-                <i class="fas fa-plus"></i> Nouveau Rapport
+            <div>
+                <h1 class="page-title-hl">
+                    <i class="fas fa-chart-line page-title-icon"></i>
+                    Rapports Automatiques Intelligents
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.95rem;">
+                    Automatisez l'envoi de <strong>toutes vos statistiques</strong> directement sur WhatsApp
+                </p>
+            </div>
+            <a href="{{ url_for('automated_reports.create_report') }}" class="btn-modern" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                <i class="fas fa-plus-circle"></i> Nouveau Rapport
             </a>
         </div>
 
@@ -320,11 +325,19 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge badge-type">
+                                <span class="badge badge-type" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                                     {% if report.report_type == 'stock_inventory' %}
-                                        <i class="fas fa-boxes" style="margin-right: 4px;"></i> Inventaire Stock
+                                        <span style="font-size: 1.2rem;">📦</span> Inventaire Stock
                                     {% elif report.report_type == 'stock_summary' %}
-                                        <i class="fas fa-chart-bar" style="margin-right: 4px;"></i> Récap Stock
+                                        <span style="font-size: 1.2rem;">📊</span> Récap Stock
+                                    {% elif report.report_type == 'orders_summary' %}
+                                        <span style="font-size: 1.2rem;">🛒</span> Résumé Commandes
+                                    {% elif report.report_type == 'sales_statistics' %}
+                                        <span style="font-size: 1.2rem;">💰</span> Stats Ventes
+                                    {% elif report.report_type == 'stock_alerts' %}
+                                        <span style="font-size: 1.2rem;">⚠️</span> Alertes Stock
+                                    {% elif report.report_type == 'daily_summary' %}
+                                        <span style="font-size: 1.2rem;">📈</span> Résumé Quotidien
                                     {% else %}
                                         <i class="fas fa-file-alt" style="margin-right: 4px;"></i> {{ report.report_type }}
                                     {% endif %}

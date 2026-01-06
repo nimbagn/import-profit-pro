@@ -1941,7 +1941,7 @@ class ScheduledReport(db.Model):
     id = PK()
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    report_type = db.Column(db.Enum("stock_inventory", "stock_summary", "order_summary", name="report_type_enum"), 
+    report_type = db.Column(db.Enum("stock_inventory", "stock_summary", "orders_summary", "sales_statistics", "stock_alerts", "daily_summary", name="report_type_enum"), 
                             nullable=False, index=True)
     schedule_type = db.Column(db.Enum("daily", "weekly", "monthly", name="schedule_type_enum"), 
                              nullable=False, default="daily")

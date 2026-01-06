@@ -228,10 +228,29 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="report_type">Type de Rapport *</label>
-                        <select id="report_type" name="report_type" class="form-select" required>
-                            <option value="stock_inventory" {% if report.report_type == 'stock_inventory' %}selected{% endif %}>Inventaire de Stock</option>
-                            <option value="stock_summary" {% if report.report_type == 'stock_summary' %}selected{% endif %}>Récapitulatif Stock</option>
+                        <select id="report_type" name="report_type" class="form-select" required onchange="updateReportTypeDescription()">
+                            <option value="stock_inventory" data-icon="📦" data-desc="Rapport détaillé des stocks par dépôt avec quantités restantes, valeurs et mouvements" {% if report.report_type == 'stock_inventory' %}selected{% endif %}>📦 Inventaire de Stock</option>
+                            <option value="stock_summary" data-icon="📊" data-desc="Vue d'ensemble des mouvements de stock avec entrées, sorties et soldes" {% if report.report_type == 'stock_summary' %}selected{% endif %}>📊 Récapitulatif Stock</option>
+                            <option value="orders_summary" data-icon="🛒" data-desc="Résumé des commandes commerciales avec clients, articles et valeurs totales" {% if report.report_type == 'orders_summary' %}selected{% endif %}>🛒 Résumé des Commandes</option>
+                            <option value="sales_statistics" data-icon="💰" data-desc="Statistiques de ventes avec chiffre d'affaires, top produits et tendances" {% if report.report_type == 'sales_statistics' %}selected{% endif %}>💰 Statistiques de Ventes</option>
+                            <option value="stock_alerts" data-icon="⚠️" data-desc="Alertes de stock faible avec articles nécessitant un réapprovisionnement" {% if report.report_type == 'stock_alerts' %}selected{% endif %}>⚠️ Alertes Stock Faible</option>
+                            <option value="daily_summary" data-icon="📈" data-desc="Résumé quotidien complet : stocks, commandes, ventes et indicateurs clés" {% if report.report_type == 'daily_summary' %}selected{% endif %}>📈 Résumé Quotidien</option>
                         </select>
+                        <div id="report-type-description" class="help-text" style="margin-top: 0.75rem; padding: 0.75rem; background: var(--primary-light); border-radius: 0.5rem; border-left: 3px solid var(--primary-color);">
+                            {% if report.report_type == 'stock_inventory' %}
+                            <strong>📦 Inventaire de Stock :</strong> Rapport détaillé des stocks par dépôt avec quantités restantes, valeurs et mouvements
+                            {% elif report.report_type == 'stock_summary' %}
+                            <strong>📊 Récapitulatif Stock :</strong> Vue d'ensemble des mouvements de stock avec entrées, sorties et soldes
+                            {% elif report.report_type == 'orders_summary' %}
+                            <strong>🛒 Résumé des Commandes :</strong> Résumé des commandes commerciales avec clients, articles et valeurs totales
+                            {% elif report.report_type == 'sales_statistics' %}
+                            <strong>💰 Statistiques de Ventes :</strong> Statistiques de ventes avec chiffre d'affaires, top produits et tendances
+                            {% elif report.report_type == 'stock_alerts' %}
+                            <strong>⚠️ Alertes Stock Faible :</strong> Alertes de stock faible avec articles nécessitant un réapprovisionnement
+                            {% elif report.report_type == 'daily_summary' %}
+                            <strong>📈 Résumé Quotidien :</strong> Résumé quotidien complet : stocks, commandes, ventes et indicateurs clés
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -495,10 +514,24 @@ function toggleCustomDates() {
         document.getElementById('group_ids').value = groupIds;
     }
 
+    function updateReportTypeDescription() {
+        const select = document.getElementById('report_type');
+        const selectedOption = select.options[select.selectedIndex];
+        const description = selectedOption.getAttribute('data-desc');
+        const icon = selectedOption.getAttribute('data-icon') || '📊';
+        const text = selectedOption.text;
+        
+        const descDiv = document.getElementById('report-type-description');
+        if (descDiv && description) {
+            descDiv.innerHTML = `<strong>${icon} ${text.split(' ').slice(1).join(' ')} :</strong> ${description}`;
+        }
+    }
+
 // Initialiser au chargement
 document.addEventListener('DOMContentLoaded', function() {
     updateScheduleInput();
     toggleCustomDates();
+    updateReportTypeDescription();
 });
 </script>
 {% endblock %}

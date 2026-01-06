@@ -1037,4 +1037,183 @@ class PDFGenerator:
         
         buffer.seek(0)
         return buffer
+    
+    def generate_orders_summary_pdf(self, orders_data, total_value=0, period='all', currency='GNF', exchange_rate=None):
+        """Génère un PDF de résumé des commandes"""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                               rightMargin=2*cm, leftMargin=2*cm,
+                               topMargin=3*cm, bottomMargin=2*cm)
+        
+        story = []
+        
+        # Titre
+        title_text = 'RÉSUMÉ DES COMMANDES COMMERCIALES'
+        story.append(Paragraph(title_text, self.styles['CustomTitle']))
+        story.append(Spacer(1, 0.3*cm))
+        
+        # Informations
+        info_data = [
+            ['Période:', period.upper()],
+            ['Date:', datetime.now(UTC).strftime('%d/%m/%Y %H:%M')],
+            ['Devise:', currency]
+        ]
+        
+        info_table = Table(info_data, colWidths=[4*cm, 12*cm])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f5f7fa')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c3e50')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
+        ]))
+        
+        story.append(info_table)
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Tableau des commandes
+        if orders_data:
+            headers = [['ID', 'Date', 'Clients', 'Valeur']]
+            table_data = headers + [[
+                str(order['id']),
+                order['date'],
+                str(order['clients_count']),
+                self.format_currency(order['value'], currency, exchange_rate)
+            ] for order in orders_data]
+            
+            # Ajouter la ligne de total
+            total_formatted = self.format_currency(total_value, currency, exchange_rate)
+            table_data.append(['TOTAL', '', '', total_formatted])
+            
+            orders_table = Table(table_data, colWidths=[2*cm, 4*cm, 3*cm, 7*cm])
+            orders_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003d82')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -2), colors.HexColor('#2c3e50')),
+                ('FONTSIZE', (0, 1), (-1, -2), 9),
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f5f7fa')),
+                ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor('#003d82')),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
+            ]))
+            
+            story.append(orders_table)
+        else:
+            story.append(Paragraph("Aucune commande trouvée pour cette période.", self.styles['CustomNormal']))
+        
+        # Générer le PDF
+        def header_footer(c, d):
+            self.create_header_footer(c, d, 'Résumé des Commandes', A4)
+        
+        doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+        
+        buffer.seek(0)
+        return buffer
+    
+    def generate_stock_alerts_pdf(self, alerts_data, threshold=10, depot_id=None):
+        """Génère un PDF d'alertes de stock faible"""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                               rightMargin=2*cm, leftMargin=2*cm,
+                               topMargin=3*cm, bottomMargin=2*cm)
+        
+        story = []
+        
+        # Titre
+        title_text = '⚠️ ALERTES DE STOCK FAIBLE'
+        story.append(Paragraph(title_text, self.styles['CustomTitle']))
+        story.append(Spacer(1, 0.3*cm))
+        
+        # Informations
+        info_data = [
+            ['Seuil d\'alerte:', f"< {threshold} unités"],
+            ['Date:', datetime.now(UTC).strftime('%d/%m/%Y %H:%M')],
+        ]
+        
+        if depot_id:
+            info_data.append(['Dépôt:', f"ID: {depot_id}"])
+        
+        info_table = Table(info_data, colWidths=[4*cm, 12*cm])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#fff3cd')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#856404')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ffeaa7')),
+        ]))
+        
+        story.append(info_table)
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Tableau des alertes
+        if alerts_data:
+            headers = [['Article', 'SKU', 'Stock Actuel']]
+            table_data = headers + [[
+                alert['name'],
+                alert['sku'],
+                str(int(alert['current_stock']))
+            ] for alert in alerts_data]
+            
+            alerts_table = Table(table_data, colWidths=[7*cm, 4*cm, 5*cm])
+            alerts_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc3545')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2c3e50')),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e6ed')),
+            ]))
+            
+            story.append(alerts_table)
+        else:
+            story.append(Paragraph("✅ Aucune alerte de stock faible.", self.styles['CustomNormal']))
+        
+        # Générer le PDF
+        def header_footer(c, d):
+            self.create_header_footer(c, d, 'Alertes de Stock', A4)
+        
+        doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+        
+        buffer.seek(0)
+        return buffer
+    
+    def generate_simple_info_pdf(self, title="Rapport", message="", currency='GNF'):
+        """Génère un PDF simple avec un titre et un message"""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                               rightMargin=2*cm, leftMargin=2*cm,
+                               topMargin=3*cm, bottomMargin=2*cm)
+        
+        story = []
+        
+        # Titre
+        story.append(Paragraph(title, self.styles['CustomTitle']))
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Message
+        if message:
+            story.append(Paragraph(message, self.styles['CustomNormal']))
+        
+        story.append(Spacer(1, 0.3*cm))
+        story.append(Paragraph(f"Date de génération: {datetime.now(UTC).strftime('%d/%m/%Y %H:%M')}", self.styles['Label']))
+        
+        # Générer le PDF
+        def header_footer(c, d):
+            self.create_header_footer(c, d, title, A4)
+        
+        doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+        
+        buffer.seek(0)
+        return buffer
 

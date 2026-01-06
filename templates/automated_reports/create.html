@@ -214,8 +214,18 @@
             </div>
 
             <form method="POST" class="form-section">
-                <div class="alert-info">
-                    <strong>💡 Astuce:</strong> Configurez un rapport automatique pour recevoir des PDFs (inventaires, stocks, etc.) directement sur WhatsApp à des heures programmées.
+                <div class="alert-info" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 2.5rem;">📊</div>
+                        <div>
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 700;">Rapports Automatiques Intelligents</h3>
+                            <p style="margin: 0; opacity: 0.95; line-height: 1.6;">
+                                Automatisez l'envoi de <strong>toutes vos statistiques</strong> directement sur WhatsApp ! 
+                                Recevez des rapports détaillés sur vos stocks, commandes, ventes, et bien plus encore, 
+                                à des heures programmées. Restez informé en temps réel de l'état de votre entreprise.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -234,10 +244,17 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="report_type">Type de Rapport *</label>
-                        <select id="report_type" name="report_type" class="form-select" required>
-                            <option value="stock_inventory">Inventaire de Stock</option>
-                            <option value="stock_summary">Récapitulatif Stock</option>
+                        <select id="report_type" name="report_type" class="form-select" required onchange="updateReportTypeDescription()">
+                            <option value="stock_inventory" data-icon="📦" data-desc="Rapport détaillé des stocks par dépôt avec quantités restantes, valeurs et mouvements">📦 Inventaire de Stock</option>
+                            <option value="stock_summary" data-icon="📊" data-desc="Vue d'ensemble des mouvements de stock avec entrées, sorties et soldes">📊 Récapitulatif Stock</option>
+                            <option value="orders_summary" data-icon="🛒" data-desc="Résumé des commandes commerciales avec clients, articles et valeurs totales">🛒 Résumé des Commandes</option>
+                            <option value="sales_statistics" data-icon="💰" data-desc="Statistiques de ventes avec chiffre d'affaires, top produits et tendances">💰 Statistiques de Ventes</option>
+                            <option value="stock_alerts" data-icon="⚠️" data-desc="Alertes de stock faible avec articles nécessitant un réapprovisionnement">⚠️ Alertes Stock Faible</option>
+                            <option value="daily_summary" data-icon="📈" data-desc="Résumé quotidien complet : stocks, commandes, ventes et indicateurs clés">📈 Résumé Quotidien</option>
                         </select>
+                        <div id="report-type-description" class="help-text" style="margin-top: 0.75rem; padding: 0.75rem; background: var(--primary-light); border-radius: 0.5rem; border-left: 3px solid var(--primary-color);">
+                            <strong>📦 Inventaire de Stock :</strong> Rapport détaillé des stocks par dépôt avec quantités restantes, valeurs et mouvements
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -457,6 +474,19 @@ function updateGroupsField() {
     const checkboxes = document.querySelectorAll('.group-checkbox:checked');
     const groupIds = Array.from(checkboxes).map(cb => cb.value).filter(v => v).join(', ');
     document.getElementById('group_ids').value = groupIds;
+}
+
+function updateReportTypeDescription() {
+    const select = document.getElementById('report_type');
+    const selectedOption = select.options[select.selectedIndex];
+    const description = selectedOption.getAttribute('data-desc');
+    const icon = selectedOption.getAttribute('data-icon') || '📊';
+    const text = selectedOption.text;
+    
+    const descDiv = document.getElementById('report-type-description');
+    if (descDiv && description) {
+        descDiv.innerHTML = `<strong>${icon} ${text.split(' ').slice(1).join(' ')} :</strong> ${description}`;
+    }
 }
 </script>
 {% endblock %}
