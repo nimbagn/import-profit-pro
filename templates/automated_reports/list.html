@@ -192,6 +192,28 @@
         background: var(--primary-light);
         border-color: var(--primary-color);
         color: var(--primary-color);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+    
+    .btn-icon[title="Modifier"] {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: var(--primary-light);
+    }
+    
+    .btn-icon[title="Modifier"]:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    /* Style pour le nom du rapport cliquable */
+    td a strong:hover {
+        color: var(--primary-hover) !important;
+    }
+    
+    td a:hover {
+        text-decoration: none;
     }
 
     .btn-icon-danger:hover {
@@ -284,7 +306,13 @@
                         {% for report in reports %}
                         <tr>
                             <td>
-                                <strong>{{ report.name }}</strong>
+                                <a href="{{ url_for('automated_reports.edit_report', report_id=report.id) }}" 
+                                   style="text-decoration: none; color: var(--text-main); display: block;">
+                                    <strong style="color: var(--primary-color); cursor: pointer; transition: color 0.2s;">
+                                        {{ report.name }}
+                                        <i class="fas fa-edit" style="font-size: 0.75rem; margin-left: 0.5rem; opacity: 0.6;"></i>
+                                    </strong>
+                                </a>
                                 {% if report.description %}
                                 <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
                                     {{ report.description[:50] }}{% if report.description|length > 50 %}...{% endif %}
@@ -368,7 +396,8 @@
                                     </button>
                                     <a href="{{ url_for('automated_reports.edit_report', report_id=report.id) }}" 
                                        class="btn-icon" 
-                                       title="Modifier">
+                                       title="Modifier le rapport"
+                                       style="border-color: var(--primary-color); color: var(--primary-color); background: var(--primary-light);">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button onclick="toggleReport({{ report.id }}, {{ 'true' if report.is_active else 'false' }})" 
