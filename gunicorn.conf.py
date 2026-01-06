@@ -1,8 +1,6 @@
 # Configuration Gunicorn pour Render
 # Optimisée pour les connexions SSE (Server-Sent Events)
 
-import multiprocessing
-
 # Nombre de workers
 workers = 2
 
@@ -15,9 +13,6 @@ keepalive = 65
 
 # Worker class - utiliser sync pour compatibilité maximale
 worker_class = 'sync'
-
-# Worker connections
-worker_connections = 1000
 
 # Max requests - recycler les workers après N requêtes pour éviter les fuites mémoire
 max_requests = 1000
@@ -33,7 +28,3 @@ graceful_timeout = 30
 
 # Preload app pour meilleure performance
 preload_app = True
-
-import os
-
-# Bind sera défini dans la commande start
