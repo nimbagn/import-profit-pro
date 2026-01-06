@@ -35,6 +35,10 @@
     <link href="{{ url_for('static', filename='css/force_responsive_global.css') }}" rel="stylesheet">
     <!-- CSS Responsive Unified - Responsive unifié et amélioré -->
     <link href="{{ url_for('static', filename='css/responsive_unified.css') }}" rel="stylesheet">
+    <!-- CSS iPad Responsive - Optimisations spécifiques pour iPad et tablettes -->
+    <link href="{{ url_for('static', filename='css/ipad_responsive.css') }}" rel="stylesheet">
+    <!-- CSS iPad Fix Global - Corrections pour tous les templates (PRIORITÉ ÉLEVÉE) -->
+    <link href="{{ url_for('static', filename='css/ipad_fix_global.css') }}" rel="stylesheet">
     <!-- CSS Responsive Promotion -->
     {% if request.endpoint and 'promotion' in request.endpoint %}
     <link href="{{ url_for('static', filename='css/promotion_responsive.css') }}" rel="stylesheet">

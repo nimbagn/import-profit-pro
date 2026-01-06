@@ -342,11 +342,105 @@
 }
 
 /* =========================================================
+   IPAD & TABLETTE (768px - 1024px) - OPTIMISATIONS
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Sidebar visible mais optimisée */
+    .sidebar {
+        width: 240px !important;
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-240px);
+    }
+    
+    /* Contenu principal avec sidebar */
+    .main-content {
+        margin-left: 240px !important;
+        padding: 1.5rem !important;
+        width: calc(100% - 240px) !important;
+    }
+    
+    /* Header ajusté */
+    .top-header {
+        left: 240px !important;
+        width: calc(100% - 240px) !important;
+    }
+    
+    /* Grilles adaptatives - 2 colonnes sur iPad */
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.25rem !important;
+    }
+    
+    .stats-grid,
+    .modules-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.25rem !important;
+    }
+    
+    /* Cards avec padding optimal */
+    .card-hl,
+    .modern-card,
+    .card {
+        padding: 1.5rem !important;
+    }
+    
+    /* Tableaux avec scroll smooth */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0.5rem;
+    }
+    
+    /* Typographie adaptée */
+    h1 { font-size: 2rem !important; }
+    h2 { font-size: 1.75rem !important; }
+    h3 { font-size: 1.5rem !important; }
+    
+    /* Formulaires optimisés */
+    .form-input,
+    .form-select,
+    .form-textarea {
+        font-size: 16px !important;
+        padding: 0.875rem 1rem !important;
+    }
+    
+    /* Boutons avec touch targets */
+    .btn-modern,
+    .btn-hl,
+    .btn {
+        min-height: 44px !important;
+        padding: 0.75rem 1.25rem !important;
+    }
+    
+    /* Content wrapper */
+    .content-wrapper {
+        max-width: 100% !important;
+        padding: 0 1rem !important;
+    }
+}
+
+/* iPad Paysage */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .stats-grid,
+    .modules-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* =========================================================
    OVERRIDE SPÉCIFIQUE POUR PAGES PROBLÉMATIQUES
    ========================================================= */
 
-/* Pages avec margin-left inline */
-@media (max-width: 1024px) {
+/* Pages avec margin-left inline - Mobile uniquement */
+@media (max-width: 767px) {
     /* Stocks */
     .stocks-page,
     .warehouse-dashboard,

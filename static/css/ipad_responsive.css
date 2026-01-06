@@ -1,0 +1,438 @@
+/* =========================================================
+   IPAD & TABLETTE RESPONSIVE - IMPORT PROFIT PRO
+   Optimisations spécifiques pour iPad (768px - 1024px)
+   Amélioration de la visibilité et de l'ergonomie
+   ========================================================= */
+
+/* =========================================================
+   IPAD PORTRAIT (768px - 1024px)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    /* Sidebar optimisée pour iPad */
+    .sidebar {
+        width: 260px !important;
+        transform: translateX(0);
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-260px);
+    }
+    
+    /* Contenu principal */
+    .main-content {
+        margin-left: 260px !important;
+        padding: 1.5rem !important;
+        width: calc(100% - 260px) !important;
+    }
+    
+    /* Header */
+    .top-header {
+        left: 260px !important;
+        width: calc(100% - 260px) !important;
+    }
+    
+    /* Grilles adaptatives */
+    .form-row,
+    .form-grid,
+    .stats-grid,
+    .modules-grid,
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.25rem !important;
+    }
+    
+    /* Cards et conteneurs */
+    .card-hl,
+    .modern-card,
+    .card {
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* Tableaux */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modern-table,
+    table {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Boutons */
+    .btn-modern,
+    .btn-hl,
+    .btn {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.95rem !important;
+        min-height: 44px !important;
+    }
+    
+    /* Typographie */
+    h1 { font-size: 2rem !important; }
+    h2 { font-size: 1.75rem !important; }
+    h3 { font-size: 1.5rem !important; }
+    
+    /* Formulaires */
+    .form-input,
+    .form-select,
+    .form-textarea,
+    input,
+    select,
+    textarea {
+        font-size: 16px !important; /* Évite le zoom iOS */
+        padding: 0.875rem 1rem !important;
+    }
+    
+    /* Espacement */
+    .page-header {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .content-wrapper {
+        max-width: 100% !important;
+        padding: 0 1rem !important;
+    }
+}
+
+/* =========================================================
+   IPAD PAYSAGE (768px - 1024px)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    /* Sidebar optimisée */
+    .sidebar {
+        width: 240px !important;
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-240px);
+    }
+    
+    /* Contenu principal */
+    .main-content {
+        margin-left: 240px !important;
+        padding: 1.25rem !important;
+        width: calc(100% - 240px) !important;
+    }
+    
+    /* Header */
+    .top-header {
+        left: 240px !important;
+        width: calc(100% - 240px) !important;
+    }
+    
+    /* Grilles adaptatives - 3 colonnes en paysage */
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .stats-grid,
+    .modules-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .actions-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    /* Cards */
+    .card-hl,
+    .modern-card,
+    .card {
+        padding: 1.25rem !important;
+    }
+    
+    /* Tableaux - plus d'espace en paysage */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modern-table {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Typographie compacte */
+    h1 { font-size: 1.875rem !important; }
+    h2 { font-size: 1.625rem !important; }
+    h3 { font-size: 1.375rem !important; }
+    
+    /* Formulaires */
+    .form-input,
+    .form-select,
+    .form-textarea {
+        font-size: 16px !important;
+        padding: 0.75rem 0.875rem !important;
+    }
+}
+
+/* =========================================================
+   IPAD PRO (1024px - 1366px)
+   ========================================================= */
+@media (min-width: 1024px) and (max-width: 1366px) {
+    /* Sidebar standard */
+    .sidebar {
+        width: 280px !important;
+    }
+    
+    /* Contenu principal */
+    .main-content {
+        margin-left: 280px !important;
+        padding: 2rem !important;
+    }
+    
+    /* Grilles optimisées */
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem !important;
+    }
+    
+    .stats-grid,
+    .modules-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.5rem !important;
+    }
+    
+    /* Cards */
+    .card-hl,
+    .modern-card {
+        padding: 1.75rem !important;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS SPÉCIFIQUES IPAD
+   ========================================================= */
+
+/* Touch targets optimisés */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Boutons et liens cliquables */
+    .btn-modern,
+    .btn-hl,
+    .btn-icon,
+    a.btn,
+    button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    /* Icônes dans les boutons */
+    .btn-modern i,
+    .btn-hl i {
+        font-size: 1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    /* Actions dans les tableaux */
+    .actions-cell {
+        gap: 0.75rem !important;
+    }
+    
+    .btn-icon {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    /* Menu sidebar */
+    .menu-item,
+    .menu-subitem {
+        padding: 0.875rem 1rem !important;
+        font-size: 0.95rem !important;
+    }
+    
+    /* Formulaires */
+    .form-label {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.625rem !important;
+    }
+    
+    .help-text {
+        font-size: 0.8rem !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Tableaux */
+    .modern-table th,
+    .modern-table td {
+        padding: 0.875rem 0.75rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Badges */
+    .badge {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Modales */
+    .modal-dialog {
+        max-width: 90% !important;
+        margin: 2rem auto !important;
+    }
+    
+    /* Alerts */
+    .alert {
+        padding: 1rem 1.25rem !important;
+        font-size: 0.95rem !important;
+    }
+}
+
+/* =========================================================
+   OPTIMISATIONS VISIBILITÉ IPAD
+   ========================================================= */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Amélioration du contraste */
+    .text-muted,
+    .text-secondary {
+        color: #6b7280 !important;
+    }
+    
+    /* Bordures plus visibles */
+    .card-hl,
+    .modern-card,
+    .card {
+        border: 1px solid #e5e7eb !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+    
+    /* Focus states améliorés */
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+        outline: none !important;
+    }
+    
+    /* Hover states */
+    .btn-modern:hover,
+    .btn-hl:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* Espacement amélioré */
+    .page-header {
+        padding-bottom: 1rem !important;
+        border-bottom: 2px solid #e5e7eb !important;
+        margin-bottom: 2rem !important;
+    }
+    
+    /* Sections */
+    .form-section {
+        padding: 1.5rem !important;
+    }
+    
+    /* Grilles avec espacement optimal */
+    .stats-grid > *,
+    .modules-grid > * {
+        margin-bottom: 0 !important;
+    }
+}
+
+/* =========================================================
+   CORRECTIONS SPÉCIFIQUES POUR IPAD
+   ========================================================= */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Empêcher le zoom sur les inputs */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="tel"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    /* Scroll smooth */
+    .sidebar,
+    .main-content,
+    .table-responsive {
+        -webkit-overflow-scrolling: touch !important;
+        scroll-behavior: smooth !important;
+    }
+    
+    /* Empêcher le scroll horizontal */
+    body,
+    html {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+    
+    /* Images responsives */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    /* Videos responsives */
+    video,
+    iframe {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS ERGONOMIQUES IPAD
+   ========================================================= */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Espacement entre les éléments interactifs */
+    .btn-modern + .btn-modern,
+    .btn-hl + .btn-hl {
+        margin-left: 0.75rem !important;
+    }
+    
+    /* Form actions */
+    .form-actions {
+        gap: 1rem !important;
+        margin-top: 2rem !important;
+        padding-top: 1.5rem !important;
+    }
+    
+    /* Table responsive wrapper */
+    .table-responsive {
+        border-radius: 0.5rem !important;
+        border: 1px solid #e5e7eb !important;
+        padding: 0.5rem !important;
+    }
+    
+    /* Cards avec ombre améliorée */
+    .card-hl,
+    .modern-card {
+        transition: box-shadow 0.3s ease !important;
+    }
+    
+    .card-hl:hover,
+    .modern-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    }
+    
+    /* Navigation améliorée */
+    .menu-group-title {
+        font-size: 0.95rem !important;
+        padding: 0.875rem 1rem !important;
+    }
+    
+    .menu-subitem {
+        font-size: 0.9rem !important;
+        padding: 0.75rem 1rem 0.75rem 2.5rem !important;
+    }
+}
+
