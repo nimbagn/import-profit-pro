@@ -31,7 +31,19 @@ def reports_list():
         flash('Vous n\'avez pas la permission d\'accéder aux rapports automatiques', 'error')
         return redirect(url_for('index'))
     
-    reports = ScheduledReport.query.order_by(ScheduledReport.created_at.desc()).all()
+    # Filtrer les rapports selon l'utilisateur
+    # - Admin/Superadmin : voit tous les rapports
+    # - Autres utilisateurs : voient uniquement leurs propres rapports
+    query = ScheduledReport.query
+    
+    if current_user.role and current_user.role.code in ['admin', 'superadmin']:
+        # Admin voit tous les rapports
+        pass
+    else:
+        # Utilisateur normal : uniquement ses propres rapports
+        query = query.filter(ScheduledReport.created_by_id == current_user.id)
+    
+    reports = query.order_by(ScheduledReport.created_at.desc()).all()
     return render_template('automated_reports/list.html', reports=reports)
 
 @automated_reports_bp.route('/create', methods=['GET', 'POST'])
@@ -112,7 +124,11 @@ def create_report():
             return redirect(url_for('automated_reports.create_report'))
     
     # GET - Afficher le formulaire
-    depots = Depot.query.filter_by(is_active=True).order_by(Depot.name).all()
+    # Filtrer les dépôts par région
+    from utils_region_filter import filter_depots_by_region
+    depots_query = Depot.query.filter_by(is_active=True)
+    depots_query = filter_depots_by_region(depots_query)
+    depots = depots_query.order_by(Depot.name).all()
     
     # Récupérer les comptes WhatsApp disponibles
     accounts = []
@@ -168,6 +184,13 @@ def edit_report(report_id):
         return redirect(url_for('automated_reports.reports_list'))
     
     report = ScheduledReport.query.get_or_404(report_id)
+    
+    # Vérifier que l'utilisateur peut modifier ce rapport
+    # Admin peut modifier tous les rapports, autres utilisateurs uniquement leurs propres rapports
+    if not (current_user.role and current_user.role.code in ['admin', 'superadmin']):
+        if report.created_by_id != current_user.id:
+            flash('Vous n\'avez pas la permission de modifier ce rapport. Vous ne pouvez modifier que vos propres rapports.', 'error')
+            return redirect(url_for('automated_reports.reports_list'))
     
     if request.method == 'POST':
         try:
@@ -237,7 +260,11 @@ def edit_report(report_id):
             logger.error(f"Erreur lors de la modification du rapport: {e}")
             flash(f'Erreur lors de la modification: {str(e)}', 'error')
     
-    depots = Depot.query.filter_by(is_active=True).order_by(Depot.name).all()
+    # Filtrer les dépôts par région
+    from utils_region_filter import filter_depots_by_region
+    depots_query = Depot.query.filter_by(is_active=True)
+    depots_query = filter_depots_by_region(depots_query)
+    depots = depots_query.order_by(Depot.name).all()
     
     accounts = []
     try:
@@ -292,6 +319,11 @@ def toggle_report(report_id):
         return jsonify({'error': 'Permission refusée'}), 403
     
     report = ScheduledReport.query.get_or_404(report_id)
+    
+    # Vérifier que l'utilisateur peut modifier ce rapport
+    if not (current_user.role and current_user.role.code in ['admin', 'superadmin']):
+        if report.created_by_id != current_user.id:
+            return jsonify({'error': 'Vous ne pouvez modifier que vos propres rapports'}), 403
     report.is_active = not report.is_active
     
     from scheduled_reports import scheduled_reports_manager
@@ -318,6 +350,12 @@ def delete_report(report_id):
     
     report = ScheduledReport.query.get_or_404(report_id)
     
+    # Vérifier que l'utilisateur peut supprimer ce rapport
+    if not (current_user.role and current_user.role.code in ['admin', 'superadmin']):
+        if report.created_by_id != current_user.id:
+            flash('Vous ne pouvez supprimer que vos propres rapports.', 'error')
+            return redirect(url_for('automated_reports.reports_list'))
+    
     from scheduled_reports import scheduled_reports_manager
     scheduled_reports_manager.unschedule_report(report.id)
     
@@ -335,6 +373,11 @@ def test_report(report_id):
         return jsonify({'error': 'Permission refusée'}), 403
     
     report = ScheduledReport.query.get_or_404(report_id)
+    
+    # Vérifier que l'utilisateur peut tester ce rapport
+    if not (current_user.role and current_user.role.code in ['admin', 'superadmin']):
+        if report.created_by_id != current_user.id:
+            return jsonify({'error': 'Vous ne pouvez tester que vos propres rapports'}), 403
     
     try:
         from scheduled_reports import scheduled_reports_manager
