@@ -116,8 +116,8 @@ def stream_messages(room_id):
             # Connexion fermée par le client
             pass
         except (KeyboardInterrupt, SystemExit):
-            # Interruption par Gunicorn
-            break
+            # Interruption par Gunicorn - arrêter le générateur
+            return
         except Exception as e:
             print(f"⚠️ Erreur dans le stream SSE: {e}")
             try:
@@ -241,13 +241,13 @@ def stream_rooms():
                     time.sleep(2)  # Vérifier toutes les 2 secondes
                 except (KeyboardInterrupt, SystemExit):
                     # Interruption par Gunicorn (timeout ou shutdown)
-                    break
+                    return
                 
         except GeneratorExit:
             pass
         except (KeyboardInterrupt, SystemExit):
-            # Interruption par Gunicorn
-            break
+            # Interruption par Gunicorn - arrêter le générateur
+            return
         except Exception as e:
             print(f"⚠️ Erreur dans le stream SSE rooms: {e}")
             try:
