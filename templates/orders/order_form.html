@@ -188,8 +188,43 @@
     border-left: 4px solid var(--color-primary);
   }
   
+  .search-result-item.selected {
+    background: var(--color-primary) !important;
+    color: white !important;
+    transform: scale(1.02);
+    border-left: 4px solid var(--hl-orange);
+  }
+  
+  .search-result-item.selected .search-result-name,
+  .search-result-item.selected .search-result-details {
+    color: white !important;
+  }
+  
   .search-result-item:last-child {
     border-bottom: none;
+  }
+  
+  /* Animations pour notifications */
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
   }
   
   .search-result-info {
@@ -1113,8 +1148,14 @@
           </label>
           <div class="search-input-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" id="itemSearch" placeholder="🔍 Tapez le nom ou SKU de l'article pour rechercher... (Appuyez sur Entrée pour voir tous les articles)" autocomplete="off">
+            <input type="text" id="itemSearch" placeholder="🔍 Tapez le nom ou SKU de l'article... (Flèches ↑↓ pour naviguer, Entrée pour sélectionner)" autocomplete="off" autofocus>
             <div id="searchResults"></div>
+          </div>
+          <div style="margin-top: var(--space-sm); display: flex; gap: var(--space-xs); flex-wrap: wrap; align-items: center;">
+            <small style="color: rgba(255, 255, 255, 0.9); font-size: 0.8rem; display: flex; align-items: center; gap: var(--space-xs);">
+              <i class="fas fa-keyboard"></i>
+              <span>Astuce: Utilisez les flèches ↑↓ et Entrée pour sélectionner rapidement</span>
+            </small>
           </div>
           <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md); flex-wrap: wrap; align-items: center;">
             <div class="added-items-badge" id="addedItemsBadge" style="display: none;">
@@ -1454,12 +1495,20 @@ function removeItemRow(button) {
   }
 }
 
-// Recherche d'articles avec tri par pertinence
+// Variable globale pour la navigation au clavier
+let selectedResultIndex = -1;
+let currentSearchResults = [];
+
+// Recherche d'articles avec tri par pertinence et navigation clavier
 function searchItems(query) {
   const resultsDiv = document.getElementById('searchResults');
   
+  // Réinitialiser la sélection
+  selectedResultIndex = -1;
+  
   if (!query || query.length < 1) {
     resultsDiv.style.display = 'none';
+    currentSearchResults = [];
     return;
   }
   
@@ -1510,6 +1559,9 @@ function searchItems(query) {
   .sort((a, b) => b.score - a.score)
   .map(result => result.item);
   
+  // Stocker les résultats pour la navigation clavier
+  currentSearchResults = filtered.slice(0, 30); // Augmenter à 30 résultats
+  
   resultsDiv.innerHTML = '';
   
   if (filtered.length === 0) {
@@ -1527,11 +1579,12 @@ function searchItems(query) {
     return;
   }
   
-  // Afficher jusqu'à 20 résultats (au lieu de 10)
-  filtered.slice(0, 20).forEach((item, index) => {
+  // Afficher jusqu'à 30 résultats avec navigation clavier
+  currentSearchResults.forEach((item, index) => {
     const div = document.createElement('div');
     div.className = 'search-result-item';
     div.dataset.itemIndex = index;
+    div.id = `search-result-${index}`;
     
     // Stocker l'item dans un attribut data pour y accéder facilement
     div.dataset.itemId = item.id;
@@ -1539,17 +1592,15 @@ function searchItems(query) {
     div.dataset.itemSku = item.sku || '';
     div.dataset.itemPrice = item.default_price || '';
     
+    // Gestion du clic
     div.onclick = function() { 
-      const itemData = {
-        id: parseInt(this.dataset.itemId),
-        name: this.dataset.itemName,
-        sku: this.dataset.itemSku,
-        default_price: this.dataset.itemPrice ? parseFloat(this.dataset.itemPrice) : null
-      };
-      addItemRow(itemData);
-      document.getElementById('itemSearch').value = '';
-      resultsDiv.style.display = 'none';
-      updateAddedItemsBadge();
+      selectAndAddItem(this);
+    };
+    
+    // Gestion du hover pour feedback visuel
+    div.onmouseenter = function() {
+      selectedResultIndex = index;
+      updateSelectedResult();
     };
     
     const priceDisplay = item.default_price 
@@ -1569,7 +1620,7 @@ function searchItems(query) {
       </div>
       <div style="display: flex; align-items: center; gap: var(--space-md);">
         ${priceDisplay}
-        <button type="button" class="search-result-add" onclick="event.stopPropagation(); const itemData = {id: ${item.id}, name: '${item.name.replace(/'/g, "\\'")}', sku: '${(item.sku || '').replace(/'/g, "\\'")}', default_price: ${item.default_price || 'null'}}; addItemRow(itemData); document.getElementById('itemSearch').value = ''; document.getElementById('searchResults').style.display = 'none'; updateAddedItemsBadge();">
+        <button type="button" class="search-result-add" onclick="event.stopPropagation(); selectAndAddItem(document.getElementById('search-result-${index}'));">
           <i class="fas fa-plus"></i>
           Ajouter
         </button>
@@ -1579,12 +1630,12 @@ function searchItems(query) {
   });
   
   // Afficher un message si plus de résultats
-  if (filtered.length > 20) {
+  if (filtered.length > 30) {
     const moreDiv = document.createElement('div');
     moreDiv.style.cssText = 'padding: var(--space-md); text-align: center; background: var(--bg-tertiary); border-top: 1px solid var(--gray-200);';
     moreDiv.innerHTML = `
       <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: var(--space-sm);">
-        ${filtered.length - 20} autre(s) résultat(s) trouvé(s)
+        ${filtered.length - 30} autre(s) résultat(s) trouvé(s)
       </p>
       <button type="button" onclick="toggleAllItemsList(); document.getElementById('allItemsFilter').value = '${query.replace(/'/g, "\\'")}'; filterAllItems();" style="padding: var(--space-sm) var(--space-md); background: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.875rem;">
         <i class="fas fa-list me-2"></i>Voir tous les résultats
@@ -1594,6 +1645,77 @@ function searchItems(query) {
   }
   
   resultsDiv.style.display = 'block';
+}
+
+// Fonction pour sélectionner et ajouter un article
+function selectAndAddItem(element) {
+  const itemData = {
+    id: parseInt(element.dataset.itemId),
+    name: element.dataset.itemName,
+    sku: element.dataset.itemSku,
+    default_price: element.dataset.itemPrice ? parseFloat(element.dataset.itemPrice) : null
+  };
+  addItemRow(itemData);
+  document.getElementById('itemSearch').value = '';
+  document.getElementById('searchResults').style.display = 'none';
+  updateAddedItemsBadge();
+  selectedResultIndex = -1;
+  currentSearchResults = [];
+  
+  // Feedback visuel
+  showNotification('Article ajouté avec succès!', 'success');
+  
+  // Remettre le focus sur la recherche pour ajouter rapidement un autre article
+  setTimeout(() => {
+    document.getElementById('itemSearch').focus();
+  }, 100);
+}
+
+// Mettre à jour la sélection visuelle
+function updateSelectedResult() {
+  const resultsDiv = document.getElementById('searchResults');
+  if (!resultsDiv) return;
+  
+  const items = resultsDiv.querySelectorAll('.search-result-item');
+  items.forEach((item, index) => {
+    if (index === selectedResultIndex) {
+      item.classList.add('selected');
+      item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+}
+
+// Notification visuelle
+function showNotification(message, type = 'success') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#10b981' : '#ef4444'};
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  notification.innerHTML = `
+    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+    <span>${message}</span>
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 2000);
 }
 
 // Fonction pour mettre en évidence les correspondances
@@ -1615,17 +1737,27 @@ function toggleAllItemsList() {
     renderAllItems();
     // Focus sur le filtre
     setTimeout(() => {
-      document.getElementById('allItemsFilter').focus();
+      const filterInput = document.getElementById('allItemsFilter');
+      if (filterInput) {
+        filterInput.focus();
+      }
     }, 100);
+    // Scroll vers la section
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } else {
     section.style.display = 'none';
     btnText.textContent = 'Voir tous les articles';
+    // Remettre le focus sur la recherche
+    setTimeout(() => {
+      document.getElementById('itemSearch').focus();
+    }, 100);
   }
 }
 
 // Rendre tous les articles dans la grille
 function renderAllItems(filterQuery = '') {
   const container = document.getElementById('allItemsList');
+  const countElement = document.getElementById('allItemsCount');
   container.innerHTML = '';
   
   let itemsToShow = stockItems;
@@ -1639,11 +1771,17 @@ function renderAllItems(filterQuery = '') {
     );
   }
   
+  // Mettre à jour le compteur
+  if (countElement) {
+    countElement.textContent = itemsToShow.length;
+  }
+  
   if (itemsToShow.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; padding: var(--space-2xl); text-align: center; color: var(--text-muted);">
         <i class="fas fa-search" style="font-size: 2rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
         <p style="font-weight: 600;">Aucun article trouvé</p>
+        <p style="font-size: 0.875rem; margin-top: var(--space-xs);">Essayez avec un autre terme de recherche</p>
       </div>
     `;
     return;
@@ -1660,11 +1798,11 @@ function renderAllItems(filterQuery = '') {
     card.innerHTML = `
       <div class="item-card-header">
         <div class="item-card-name">${item.name}</div>
-        <div class="item-card-sku">${item.sku || 'N/A'}</div>
+        <div class="item-card-sku"><i class="fas fa-barcode me-1"></i>${item.sku || 'N/A'}</div>
       </div>
       ${priceDisplay}
       <div class="item-card-actions">
-        <button type="button" class="item-card-add-btn" onclick="addItemRow({id: ${item.id}, name: '${item.name.replace(/'/g, "\\'")}', sku: '${(item.sku || '').replace(/'/g, "\\'")}', default_price: ${item.default_price || 'null'}}); updateAddedItemsBadge();">
+        <button type="button" class="item-card-add-btn" onclick="addItemRow({id: ${item.id}, name: '${item.name.replace(/'/g, "\\'")}', sku: '${(item.sku || '').replace(/'/g, "\\'")}', default_price: ${item.default_price || 'null'}}); updateAddedItemsBadge(); showNotification('Article ajouté avec succès!', 'success');">
           <i class="fas fa-plus"></i>
           Ajouter
         </button>
@@ -1884,20 +2022,69 @@ document.addEventListener('DOMContentLoaded', function() {
     updateAddedItemsBadge();
   }, 100);
   
-  // Gestion de la recherche
+  // Gestion de la recherche avec navigation clavier
   const searchInput = document.getElementById('itemSearch');
   if (searchInput) {
     searchInput.addEventListener('input', function() {
       searchItems(this.value);
+      selectedResultIndex = -1;
     });
     
-    // Raccourci clavier : Entrée pour voir tous les articles
+    // Navigation clavier améliorée
     searchInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !this.value.trim()) {
+      const resultsDiv = document.getElementById('searchResults');
+      const isResultsVisible = resultsDiv && resultsDiv.style.display !== 'none';
+      
+      // Entrée : sélectionner l'article sélectionné ou voir tous les articles
+      if (e.key === 'Enter') {
         e.preventDefault();
-        toggleAllItemsList();
+        if (isResultsVisible && selectedResultIndex >= 0 && currentSearchResults[selectedResultIndex]) {
+          const selectedElement = document.getElementById(`search-result-${selectedResultIndex}`);
+          if (selectedElement) {
+            selectAndAddItem(selectedElement);
+          }
+        } else if (!this.value.trim()) {
+          toggleAllItemsList();
+        } else if (isResultsVisible && currentSearchResults.length > 0) {
+          // Sélectionner le premier résultat si aucun n'est sélectionné
+          selectedResultIndex = 0;
+          const firstElement = document.getElementById('search-result-0');
+          if (firstElement) {
+            selectAndAddItem(firstElement);
+          }
+        }
+      }
+      // Flèche bas : sélectionner le résultat suivant
+      else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (isResultsVisible && currentSearchResults.length > 0) {
+          selectedResultIndex = (selectedResultIndex + 1) % currentSearchResults.length;
+          updateSelectedResult();
+        }
+      }
+      // Flèche haut : sélectionner le résultat précédent
+      else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (isResultsVisible && currentSearchResults.length > 0) {
+          selectedResultIndex = selectedResultIndex <= 0 
+            ? currentSearchResults.length - 1 
+            : selectedResultIndex - 1;
+          updateSelectedResult();
+        }
+      }
+      // Échap : fermer les résultats
+      else if (e.key === 'Escape') {
+        if (isResultsVisible) {
+          resultsDiv.style.display = 'none';
+          selectedResultIndex = -1;
+        }
       }
     });
+    
+    // Focus automatique au chargement de la page
+    setTimeout(() => {
+      searchInput.focus();
+    }, 300);
   }
   
   // Gestion du filtre de la liste complète
