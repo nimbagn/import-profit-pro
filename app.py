@@ -3001,7 +3001,10 @@ def articles_import():
                     purchase_currency = 'USD'
                     if currency_col and pd.notna(row.get(currency_col)):
                         currency_val = str(row[currency_col]).strip().upper()
-                        if currency_val in ['USD', 'EUR', 'GNF', 'XOF', 'FCFA']:
+                        # Normaliser FCFA en XOF
+                        if currency_val == 'FCFA':
+                            currency_val = 'XOF'
+                        if currency_val in ['USD', 'EUR', 'GNF', 'XOF']:
                             purchase_currency = currency_val
                     
                     # Poids
