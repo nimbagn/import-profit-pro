@@ -1131,13 +1131,35 @@ def index():
         recent_promotion_sales = []
         if has_permission(current_user, 'promotion.read'):
             try:
-                from models import PromotionSale
+                from models import PromotionSale, PromotionMember
                 from utils_region_filter import filter_sales_by_region
-                recent_sales_query = PromotionSale.query.order_by(PromotionSale.sale_date.desc(), PromotionSale.created_at.desc())
+                from sqlalchemy.orm import load_only
+                # Utiliser load_only pour éviter de charger les colonnes manquantes (home_latitude, home_longitude)
+                recent_sales_query = PromotionSale.query.options(
+                    load_only(PromotionSale.id, PromotionSale.member_id, PromotionSale.gamme_id,
+                             PromotionSale.quantity, PromotionSale.total_amount_gnf,
+                             PromotionSale.commission_gnf, PromotionSale.sale_date,
+                             PromotionSale.created_at)
+                ).order_by(PromotionSale.sale_date.desc(), PromotionSale.created_at.desc())
                 recent_sales_query = filter_sales_by_region(recent_sales_query)
                 recent_promotion_sales = recent_sales_query.limit(5).all()
+                
+                # Charger les membres avec load_only pour éviter les colonnes manquantes
+                member_ids = [s.member_id for s in recent_promotion_sales if s.member_id]
+                if member_ids:
+                    members = PromotionMember.query.options(
+                        load_only(PromotionMember.id, PromotionMember.full_name, PromotionMember.team_id,
+                                 PromotionMember.phone, PromotionMember.is_active)
+                    ).filter(PromotionMember.id.in_(member_ids)).all()
+                    members_map = {m.id: m for m in members}
+                    # Assigner les membres aux ventes
+                    for sale in recent_promotion_sales:
+                        if sale.member_id:
+                            sale.member = members_map.get(sale.member_id)
             except Exception as e:
                 print(f"⚠️ Erreur lors de la récupération des ventes promotion récentes: {e}")
+                import traceback
+                traceback.print_exc()
                 recent_promotion_sales = []
         
         # Mettre en cache les statistiques si elles ont été recalculées (cache 5 minutes)

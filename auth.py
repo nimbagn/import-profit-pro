@@ -432,8 +432,13 @@ def users_list():
         query = query.filter_by(region_id=region_id)
     
     # Trier par date de création (plus récent en premier), puis par ID si created_at est NULL
-    from sqlalchemy import desc, nullslast
-    users = query.order_by(nullslast(desc(User.created_at)), desc(User.id)).all()
+    # Compatible MySQL : utiliser une expression conditionnelle au lieu de NULLS LAST
+    from sqlalchemy import desc, case
+    users = query.order_by(
+        case((User.created_at.is_(None), 1), else_=0),
+        desc(User.created_at),
+        desc(User.id)
+    ).all()
     roles = Role.query.all()
     regions = Region.query.order_by(Region.name).all()
     return render_template('auth/users_list.html', users=users, roles=roles, regions=regions, selected_region_id=region_id)
