@@ -317,23 +317,20 @@ def personnel_new():
         if not username or not email or not password or not role_id:
             flash('Veuillez remplir tous les champs obligatoires', 'error')
             roles = Role.query.all()
-            from utils_region_filter import get_user_accessible_regions
-    regions = get_user_accessible_regions()
+            regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
         
         # Vérifier si l'utilisateur existe déjà
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur existe déjà', 'error')
             roles = Role.query.all()
-            from utils_region_filter import get_user_accessible_regions
-    regions = get_user_accessible_regions()
+            regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
         
         if User.query.filter_by(email=email).first():
             flash('Cet email est déjà utilisé', 'error')
             roles = Role.query.all()
-            from utils_region_filter import get_user_accessible_regions
-    regions = get_user_accessible_regions()
+            regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
         
         # Créer l'utilisateur
@@ -396,8 +393,7 @@ def personnel_edit(user_id):
         if not username or not email or not role_id:
             flash('Veuillez remplir tous les champs obligatoires', 'error')
             roles = Role.query.all()
-            from utils_region_filter import get_user_accessible_regions
-    regions = get_user_accessible_regions()
+            regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=user, roles=roles, regions=regions)
         
         # Vérifier si le username existe déjà (pour un autre utilisateur)
@@ -405,8 +401,7 @@ def personnel_edit(user_id):
         if existing_user and existing_user.id != user.id:
             flash('Ce nom d\'utilisateur existe déjà', 'error')
             roles = Role.query.all()
-            from utils_region_filter import get_user_accessible_regions
-    regions = get_user_accessible_regions()
+            regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=user, roles=roles, regions=regions)
         
         # Vérifier si l'email existe déjà (pour un autre utilisateur)
