@@ -854,27 +854,6 @@ def index():
                     Employee.query.filter_by(employment_status='active')
                 ).count()
                 # Contrats filtrés par région (via l'employé)
-                contracts_query = EmployeeContract.query.join(Employee).filter(
-                    or_(
-                        EmployeeContract.status == 'active',
-                        and_(
-                            EmployeeContract.end_date.is_(None),
-                            EmployeeContract.status != 'terminated'
-                        )
-                    )
-                )
-                contracts_query = filter_employees_by_region(Employee.query).join(
-                    EmployeeContract, Employee.id == EmployeeContract.employee_id
-                ).filter(
-                    or_(
-                        EmployeeContract.status == 'active',
-                        and_(
-                            EmployeeContract.end_date.is_(None),
-                            EmployeeContract.status != 'terminated'
-                        )
-                    )
-                )
-                # Alternative : filtrer via join avec Employee
                 region_id = get_user_region_id()
                 if region_id is not None:
                     contracts_query = EmployeeContract.query.join(Employee).filter(
