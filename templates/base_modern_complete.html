@@ -44,7 +44,7 @@
     <link href="{{ url_for('static', filename='css/orders_tablet_responsive.css') }}" rel="stylesheet">
     {% endif %}
     <!-- CSS Login Tablet Responsive - Optimisations pour tablettes et mobiles -->
-    {% if request.endpoint and ('auth.login' in request.endpoint or request.endpoint == 'auth.login') %}
+    {% if request.endpoint and request.endpoint == 'auth.login' %}
     <link href="{{ url_for('static', filename='css/login_tablet_responsive.css') }}" rel="stylesheet">
     {% endif %}
     <!-- CSS Responsive Promotion -->
