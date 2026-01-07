@@ -1890,6 +1890,16 @@ def outgoings_list():
         joinedload(StockOutgoing.details).joinedload(StockOutgoingDetail.stock_item)
     )
     
+    # IMPORTANT: Filtrer selon le rôle de l'utilisateur
+    # - Commercial : voit uniquement SES sorties (commercial_id == current_user.id)
+    # - Admin : voit toutes les sorties
+    # - Autres rôles : filtrer par région
+    if current_user.role and current_user.role.code == 'commercial':
+        query = query.filter(StockOutgoing.commercial_id == current_user.id)
+    elif current_user.role and current_user.role.code in ['admin', 'superadmin']:
+        # Admin voit toutes les sorties sans filtre supplémentaire
+        pass
+    else:
     # Filtrer par région : seules les sorties des dépôts/véhicules accessibles
     accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
     accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
@@ -1997,6 +2007,24 @@ def outgoings_export_excel():
             joinedload(StockOutgoing.user),
             joinedload(StockOutgoing.details).joinedload(StockOutgoingDetail.stock_item)
         )
+        
+        # IMPORTANT: Filtrer selon le rôle de l'utilisateur (même logique que outgoings_list)
+        from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
+        if current_user.role and current_user.role.code == 'commercial':
+            query = query.filter(StockOutgoing.commercial_id == current_user.id)
+        elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+            # Filtrer par région pour les autres rôles
+            accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
+            accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
+            if accessible_depot_ids or accessible_vehicle_ids:
+                query = query.filter(
+                    or_(
+                        StockOutgoing.depot_id.in_(accessible_depot_ids) if accessible_depot_ids else False,
+                        StockOutgoing.vehicle_id.in_(accessible_vehicle_ids) if accessible_vehicle_ids else False
+                    )
+                )
+            else:
+                query = query.filter(False)
         
         # Appliquer les filtres
         if search:
@@ -2301,6 +2329,28 @@ def outgoing_detail(id):
         return redirect(url_for('stocks.outgoings_list'))
     
     outgoing = StockOutgoing.query.get_or_404(id)
+    
+    # IMPORTANT: Vérifier les permissions d'accès selon le rôle
+    # - Commercial : accède uniquement à SES sorties
+    # - Admin : accès à toutes les sorties
+    # - Autres rôles : vérifier l'accès par région
+    if current_user.role and current_user.role.code == 'commercial':
+        if outgoing.commercial_id != current_user.id:
+            flash('Vous n\'avez pas accès à cette sortie. Vous ne pouvez voir que vos propres sorties.', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
+    elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+        # Vérifier l'accès par région pour les autres rôles
+        from utils_region_filter import can_access_depot, can_access_vehicle
+        can_access = False
+        if outgoing.depot_id:
+            can_access = can_access_depot(outgoing.depot_id)
+        elif outgoing.vehicle_id:
+            can_access = can_access_vehicle(outgoing.vehicle_id)
+        
+        if not can_access:
+            flash('Vous n\'avez pas accès à cette sortie.', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
+    
     return render_template('stocks/outgoing_detail.html', outgoing=outgoing)
 
 @stocks_bp.route('/outgoings/<int:id>/preview')
@@ -2312,6 +2362,23 @@ def outgoing_preview(id):
         return redirect(url_for('stocks.outgoings_list'))
     
     outgoing = StockOutgoing.query.get_or_404(id)
+    
+    # Vérifier les permissions d'accès (même logique que outgoing_detail)
+    if current_user.role and current_user.role.code == 'commercial':
+        if outgoing.commercial_id != current_user.id:
+            flash('Vous n\'avez pas accès à cette sortie.', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
+    elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+        from utils_region_filter import can_access_depot, can_access_vehicle
+        can_access = False
+        if outgoing.depot_id:
+            can_access = can_access_depot(outgoing.depot_id)
+        elif outgoing.vehicle_id:
+            can_access = can_access_vehicle(outgoing.vehicle_id)
+        if not can_access:
+            flash('Vous n\'avez pas accès à cette sortie.', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
+    
     return render_template('stocks/outgoing_preview.html', outgoing=outgoing)
 
 @stocks_bp.route('/outgoings/<int:id>/pdf')
@@ -2321,6 +2388,24 @@ def outgoing_pdf(id):
     if not has_permission(current_user, 'outgoings.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.outgoings_list'))
+    
+    outgoing = StockOutgoing.query.get_or_404(id)
+    
+    # Vérifier les permissions d'accès (même logique que outgoing_detail)
+    if current_user.role and current_user.role.code == 'commercial':
+        if outgoing.commercial_id != current_user.id:
+            flash('Vous n\'avez pas accès à cette sortie.', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
+    elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+        from utils_region_filter import can_access_depot, can_access_vehicle
+        can_access = False
+        if outgoing.depot_id:
+            can_access = can_access_depot(outgoing.depot_id)
+        elif outgoing.vehicle_id:
+            can_access = can_access_vehicle(outgoing.vehicle_id)
+        if not can_access:
+            flash('Vous n\'avez pas accès à cette sortie.', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
     
     from pdf_generator import PDFGenerator
     from flask import make_response
@@ -2380,6 +2465,16 @@ def returns_list():
             joinedload(StockReturn.details).joinedload(StockReturnDetail.stock_item)
         )
         
+        # IMPORTANT: Filtrer selon le rôle de l'utilisateur
+        # - Commercial : voit uniquement SES retours (commercial_id == current_user.id)
+        # - Admin : voit tous les retours
+        # - Autres rôles : filtrer par région
+        if current_user.role and current_user.role.code == 'commercial':
+            query = query.filter(StockReturn.commercial_id == current_user.id)
+        elif current_user.role and current_user.role.code in ['admin', 'superadmin']:
+            # Admin voit tous les retours sans filtre supplémentaire
+            pass
+        else:
         # Filtrer par région : seuls les retours des dépôts/véhicules accessibles
         accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
         accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
@@ -2666,6 +2761,24 @@ def returns_export_excel():
             joinedload(StockReturn.user),
             joinedload(StockReturn.details).joinedload(StockReturnDetail.stock_item)
         )
+        
+        # IMPORTANT: Filtrer selon le rôle de l'utilisateur (même logique que returns_list)
+        from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
+        if current_user.role and current_user.role.code == 'commercial':
+            query = query.filter(StockReturn.commercial_id == current_user.id)
+        elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+            # Filtrer par région pour les autres rôles
+            accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
+            accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
+            if accessible_depot_ids or accessible_vehicle_ids:
+                query = query.filter(
+                    or_(
+                        StockReturn.depot_id.in_(accessible_depot_ids) if accessible_depot_ids else False,
+                        StockReturn.vehicle_id.in_(accessible_vehicle_ids) if accessible_vehicle_ids else False
+                    )
+                )
+            else:
+                query = query.filter(False)
         
         # Appliquer les filtres
         if search:
@@ -3091,6 +3204,27 @@ def return_detail(id):
             flash('Erreur lors de la récupération du retour', 'error')
             return redirect(url_for('stocks.returns_list'))
     
+    # IMPORTANT: Vérifier les permissions d'accès selon le rôle
+    # - Commercial : accède uniquement à SES retours
+    # - Admin : accès à tous les retours
+    # - Autres rôles : vérifier l'accès par région
+    if current_user.role and current_user.role.code == 'commercial':
+        if return_.commercial_id != current_user.id:
+            flash('Vous n\'avez pas accès à ce retour. Vous ne pouvez voir que vos propres retours.', 'error')
+            return redirect(url_for('stocks.returns_list'))
+    elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+        # Vérifier l'accès par région pour les autres rôles
+        from utils_region_filter import can_access_depot, can_access_vehicle
+        can_access = False
+        if return_.depot_id:
+            can_access = can_access_depot(return_.depot_id)
+        elif return_.vehicle_id:
+            can_access = can_access_vehicle(return_.vehicle_id)
+        
+        if not can_access:
+            flash('Vous n\'avez pas accès à ce retour.', 'error')
+            return redirect(url_for('stocks.returns_list'))
+    
     return render_template('stocks/return_detail.html', return_=return_)
 
 @stocks_bp.route('/returns/<int:id>/preview')
@@ -3102,6 +3236,23 @@ def return_preview(id):
         return redirect(url_for('stocks.returns_list'))
     
     return_ = StockReturn.query.get_or_404(id)
+    
+    # Vérifier les permissions d'accès (même logique que return_detail)
+    if current_user.role and current_user.role.code == 'commercial':
+        if return_.commercial_id != current_user.id:
+            flash('Vous n\'avez pas accès à ce retour.', 'error')
+            return redirect(url_for('stocks.returns_list'))
+    elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+        from utils_region_filter import can_access_depot, can_access_vehicle
+        can_access = False
+        if return_.depot_id:
+            can_access = can_access_depot(return_.depot_id)
+        elif return_.vehicle_id:
+            can_access = can_access_vehicle(return_.vehicle_id)
+        if not can_access:
+            flash('Vous n\'avez pas accès à ce retour.', 'error')
+            return redirect(url_for('stocks.returns_list'))
+    
     return render_template('stocks/return_preview.html', return_=return_)
 
 @stocks_bp.route('/returns/<int:id>/pdf')
@@ -3117,6 +3268,22 @@ def return_pdf(id):
     
     try:
         return_ = StockReturn.query.get_or_404(id)
+        
+        # Vérifier les permissions d'accès (même logique que return_detail)
+        if current_user.role and current_user.role.code == 'commercial':
+            if return_.commercial_id != current_user.id:
+                flash('Vous n\'avez pas accès à ce retour.', 'error')
+                return redirect(url_for('stocks.returns_list'))
+        elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
+            from utils_region_filter import can_access_depot, can_access_vehicle
+            can_access = False
+            if return_.depot_id:
+                can_access = can_access_depot(return_.depot_id)
+            elif return_.vehicle_id:
+                can_access = can_access_vehicle(return_.vehicle_id)
+            if not can_access:
+                flash('Vous n\'avez pas accès à ce retour.', 'error')
+                return redirect(url_for('stocks.returns_list'))
         pdf_gen = PDFGenerator()
         pdf_buffer = pdf_gen.generate_return_pdf(return_)
         
@@ -3399,23 +3566,23 @@ def generate_stock_summary_pdf_data(depot_id=None, period='all', currency='GNF',
     depots_query = filter_depots_by_region(depots_query)
     accessible_depots = depots_query.all()
     
-    stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
-    
-    # Préparer les données pour le PDF
+        stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
+        
+        # Préparer les données pour le PDF
     depot_name = 'Tous les dépôts'
     if depot_id:
         depot = next((d for d in accessible_depots if d.id == depot_id), None)
         if depot:
             depot_name = depot.name
     
-    stock_data = {
+        stock_data = {
         'depot_name': depot_name,
         'period': period,
         'start_date': period_start_date,
         'end_date': period_end_date,
-        'items': []
-    }
-    
+            'items': []
+        }
+        
     # Calculer les quantités restantes pour chaque article
     for item in stock_items:
         if stock_item_id and item.id != stock_item_id:
@@ -3424,7 +3591,7 @@ def generate_stock_summary_pdf_data(depot_id=None, period='all', currency='GNF',
         # Calculer le stock initial (avant la période)
         initial_stock = Decimal('0')
         if period_start_date:
-            if depot_id:
+        if depot_id:
                 initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
                     or_(
                         StockMovement.to_depot_id == depot_id,
@@ -4360,20 +4527,20 @@ def stock_summary():
         
         # N'afficher que les articles avec du stock restant (stock actuel > 0)
         if total_stock > 0:
-            stock_summary.append({
-                'item': item,
-                'total_stock': total_stock,
-                'depot_stock': total_depot_stock,
-                'vehicle_stock': total_vehicle_stock,
-                'depot_balances': depot_balances,  # Balance par dépôt
-                'vehicle_balances': vehicle_balances,  # Balance par véhicule
-                'entries': entries,
-                'exits': exits,
-                'movements_count': len(movements),
+        stock_summary.append({
+            'item': item,
+            'total_stock': total_stock,
+            'depot_stock': total_depot_stock,
+            'vehicle_stock': total_vehicle_stock,
+            'depot_balances': depot_balances,  # Balance par dépôt
+            'vehicle_balances': vehicle_balances,  # Balance par véhicule
+            'entries': entries,
+            'exits': exits,
+            'movements_count': len(movements),
                 'value': (total_stock * float(item.purchase_price_gnf) if total_stock > 0 and item.purchase_price_gnf else 0),
                 'initial_stock': float(initial_stock),
                 'final_stock_calculated': final_stock_calculated
-            })
+        })
     
     # Utiliser les dépôts et véhicules déjà filtrés par région pour les filtres
     depots = sorted(accessible_depots, key=lambda d: d.name)
