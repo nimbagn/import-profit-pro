@@ -14,6 +14,9 @@ from sqlalchemy import func, desc, and_, or_
 from models import (db, User, Role, Region, UserActivityLog, Employee, EmployeeContract, 
                    EmployeeTraining, EmployeeEvaluation, EmployeeAbsence, Depot)
 from auth import has_permission, require_permission
+from utils_region_filter import (filter_users_by_region, filter_employees_by_region, 
+                                 get_user_region_id, can_access_region, get_user_accessible_regions,
+                                 get_user_accessible_depots)
 import json
 
 # Créer le blueprint
@@ -31,58 +34,86 @@ def index():
         flash('Accès refusé. Vous devez avoir un rôle RH pour accéder à cette page.', 'error')
         return redirect(url_for('index'))
     
-    # Statistiques générales
-    total_users = User.query.count()
-    active_users = User.query.filter_by(is_active=True).count()
-    inactive_users = User.query.filter_by(is_active=False).count()
+    # Statistiques générales (filtrées par région)
+    users_query = User.query
+    users_query = filter_users_by_region(users_query)
+    total_users = users_query.count()
+    active_users = filter_users_by_region(User.query.filter_by(is_active=True)).count()
+    inactive_users = filter_users_by_region(User.query.filter_by(is_active=False)).count()
     
-    # Statistiques employés externes
-    total_employees = Employee.query.count()
-    active_employees = Employee.query.filter_by(employment_status='active').count()
+    # Statistiques employés externes (filtrées par région)
+    employees_query = Employee.query
+    employees_query = filter_employees_by_region(employees_query)
+    total_employees = employees_query.count()
+    active_employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).count()
     
     # Statistiques récentes (30 derniers jours)
     last_30_days = datetime.now(UTC) - timedelta(days=30)
     
-    # Activités récentes
-    recent_activities_count = UserActivityLog.query.filter(
+    # Activités récentes (filtrées par région)
+    recent_activities_query = UserActivityLog.query.join(User).filter(
         UserActivityLog.created_at >= last_30_days
-    ).count()
+    )
+    if region_id is not None:
+        recent_activities_query = recent_activities_query.filter(User.region_id == region_id)
+    recent_activities_count = recent_activities_query.count()
     
-    # Connexions récentes
-    recent_logins = UserActivityLog.query.filter(
+    # Connexions récentes (filtrées par région)
+    recent_logins_query = UserActivityLog.query.join(User).filter(
         and_(
             UserActivityLog.action == 'login',
             UserActivityLog.created_at >= last_30_days
         )
-    ).count()
+    )
+    if region_id is not None:
+        recent_logins_query = recent_logins_query.filter(User.region_id == region_id)
+    recent_logins = recent_logins_query.count()
     
-    # Utilisateurs par rôle
-    users_by_role = db.session.query(
+    # Utilisateurs par rôle (filtrés par région)
+    users_by_role_query = db.session.query(
         Role.name,
         Role.code,
         func.count(User.id).label('count')
-    ).join(User).group_by(Role.id, Role.name, Role.code).all()
+    ).join(User)
+    # Appliquer le filtre par région
+    region_id = get_user_region_id()
+    if region_id is not None:
+        users_by_role_query = users_by_role_query.filter(User.region_id == region_id)
+    users_by_role = users_by_role_query.group_by(Role.id, Role.name, Role.code).all()
     
-    # Activités par type (30 derniers jours)
-    activities_by_type = db.session.query(
+    # Activités par type (30 derniers jours) - filtrées par région
+    activities_by_type_query = db.session.query(
         UserActivityLog.action,
         func.count(UserActivityLog.id).label('count')
-    ).filter(
+    ).join(User).filter(
         UserActivityLog.created_at >= last_30_days
-    ).group_by(UserActivityLog.action).order_by(desc('count')).limit(10).all()
+    )
+    # Appliquer le filtre par région
+    if region_id is not None:
+        activities_by_type_query = activities_by_type_query.filter(User.region_id == region_id)
+    activities_by_type = activities_by_type_query.group_by(UserActivityLog.action).order_by(desc('count')).limit(10).all()
     
-    # Top 5 utilisateurs les plus actifs (30 derniers jours)
-    top_active_users = db.session.query(
+    # Top 5 utilisateurs les plus actifs (30 derniers jours) - filtrés par région
+    top_active_users_query = db.session.query(
         User.id,
         User.username,
         User.full_name,
         func.count(UserActivityLog.id).label('activity_count')
     ).join(UserActivityLog).filter(
         UserActivityLog.created_at >= last_30_days
-    ).group_by(User.id, User.username, User.full_name).order_by(desc('activity_count')).limit(5).all()
+    )
+    # Appliquer le filtre par région
+    region_id = get_user_region_id()
+    if region_id is not None:
+        top_active_users_query = top_active_users_query.filter(User.region_id == region_id)
+    top_active_users = top_active_users_query.group_by(User.id, User.username, User.full_name).order_by(desc('activity_count')).limit(5).all()
     
-    # Contrats actifs
-    active_contracts = EmployeeContract.query.filter(
+    # Contrats actifs (filtrés par région)
+    contracts_query = EmployeeContract.query.join(Employee)
+    region_id = get_user_region_id()
+    if region_id is not None:
+        contracts_query = contracts_query.filter(Employee.region_id == region_id)
+    active_contracts = contracts_query.filter(
         or_(
             EmployeeContract.status == 'active',
             and_(
@@ -92,8 +123,12 @@ def index():
         )
     ).count()
     
-    # Formations en cours
-    ongoing_trainings = EmployeeTraining.query.filter(
+    # Formations en cours (filtrées par région)
+    trainings_query = EmployeeTraining.query.join(Employee)
+    region_id = get_user_region_id()
+    if region_id is not None:
+        trainings_query = trainings_query.filter(Employee.region_id == region_id)
+    ongoing_trainings = trainings_query.filter(
         and_(
             EmployeeTraining.status == 'in_progress',
             EmployeeTraining.start_date <= date.today(),
@@ -104,8 +139,11 @@ def index():
         )
     ).count()
     
-    # Absences en attente
-    pending_absences = EmployeeAbsence.query.filter_by(status='pending').count()
+    # Absences en attente (filtrées par région)
+    absences_query = EmployeeAbsence.query.join(Employee)
+    if region_id is not None:
+        absences_query = absences_query.filter(Employee.region_id == region_id)
+    pending_absences = absences_query.filter_by(status='pending').count()
     
     return render_template('rh/index.html',
                          total_users=total_users,
@@ -140,10 +178,11 @@ def personnel_list():
     is_active = request.args.get('is_active', type=str)
     search = request.args.get('search', '').strip()
     
-    # Construire la requête
+    # Construire la requête (filtrée par région de l'utilisateur)
     query = User.query
+    query = filter_users_by_region(query)
     
-    # Filtre par région
+    # Filtre par région (si spécifié dans les paramètres)
     if region_id:
         query = query.filter_by(region_id=region_id)
     
@@ -193,7 +232,8 @@ def personnel_list():
     ).join(User).group_by(Region.id, Region.name).all()
     
     roles = Role.query.order_by(Role.name).all()
-    regions = Region.query.order_by(Region.name).all()
+    from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
     
     return render_template('rh/personnel_list.html',
                          users=users,
@@ -277,20 +317,23 @@ def personnel_new():
         if not username or not email or not password or not role_id:
             flash('Veuillez remplir tous les champs obligatoires', 'error')
             roles = Role.query.all()
-            regions = Region.query.order_by(Region.name).all()
+            from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
         
         # Vérifier si l'utilisateur existe déjà
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur existe déjà', 'error')
             roles = Role.query.all()
-            regions = Region.query.order_by(Region.name).all()
+            from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
         
         if User.query.filter_by(email=email).first():
             flash('Cet email est déjà utilisé', 'error')
             roles = Role.query.all()
-            regions = Region.query.order_by(Region.name).all()
+            from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
         
         # Créer l'utilisateur
@@ -326,7 +369,8 @@ def personnel_new():
         return redirect(redirect_url)
     
     roles = Role.query.all()
-    regions = Region.query.order_by(Region.name).all()
+    from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
     return render_template('rh/personnel_form.html', user=None, roles=roles, regions=regions)
 
 @rh_bp.route('/personnel/<int:user_id>/edit', methods=['GET', 'POST'])
@@ -352,7 +396,8 @@ def personnel_edit(user_id):
         if not username or not email or not role_id:
             flash('Veuillez remplir tous les champs obligatoires', 'error')
             roles = Role.query.all()
-            regions = Region.query.order_by(Region.name).all()
+            from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=user, roles=roles, regions=regions)
         
         # Vérifier si le username existe déjà (pour un autre utilisateur)
@@ -360,7 +405,8 @@ def personnel_edit(user_id):
         if existing_user and existing_user.id != user.id:
             flash('Ce nom d\'utilisateur existe déjà', 'error')
             roles = Role.query.all()
-            regions = Region.query.order_by(Region.name).all()
+            from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=user, roles=roles, regions=regions)
         
         # Vérifier si l'email existe déjà (pour un autre utilisateur)
@@ -368,7 +414,7 @@ def personnel_edit(user_id):
         if existing_email and existing_email.id != user.id:
             flash('Cet email est déjà utilisé', 'error')
             roles = Role.query.all()
-            regions = Region.query.order_by(Region.name).all()
+            regions = get_user_accessible_regions()
             return render_template('rh/personnel_form.html', user=user, roles=roles, regions=regions)
         
         # Sauvegarder les changements pour le log
@@ -407,7 +453,8 @@ def personnel_edit(user_id):
         return redirect(url_for('rh.personnel_detail', user_id=user.id))
     
     roles = Role.query.all()
-    regions = Region.query.order_by(Region.name).all()
+    from utils_region_filter import get_user_accessible_regions
+    regions = get_user_accessible_regions()
     return render_template('rh/personnel_form.html', user=user, roles=roles, regions=regions)
 
 # =========================================================
@@ -458,23 +505,34 @@ def activites_list():
     # Trier par date (plus récent en premier)
     activities = query.order_by(desc(UserActivityLog.created_at)).limit(limit).all()
     
-    # Statistiques globales
-    total_activities = UserActivityLog.query.count()
+    # Statistiques globales (filtrées par région)
+    total_activities_query = UserActivityLog.query.join(User)
+    if region_id is not None:
+        total_activities_query = total_activities_query.filter(User.region_id == region_id)
+    total_activities = total_activities_query.count()
     
-    # Activités par type
-    activities_by_type = db.session.query(
+    # Activités par type (filtrées par région)
+    activities_by_type_query = db.session.query(
         UserActivityLog.action,
         func.count(UserActivityLog.id).label('count')
-    ).group_by(UserActivityLog.action).all()
+    ).join(User)
+    if region_id is not None:
+        activities_by_type_query = activities_by_type_query.filter(User.region_id == region_id)
+    activities_by_type = activities_by_type_query.group_by(UserActivityLog.action).all()
     
-    # Activités par utilisateur (top 10)
-    top_users = db.session.query(
+    # Activités par utilisateur (top 10) - filtrées par région
+    top_users_query = db.session.query(
         User.username,
         func.count(UserActivityLog.id).label('count')
-    ).join(UserActivityLog).group_by(User.id, User.username).order_by(desc('count')).limit(10).all()
+    ).join(UserActivityLog).join(User)
+    if region_id is not None:
+        top_users_query = top_users_query.filter(User.region_id == region_id)
+    top_users = top_users_query.group_by(User.id, User.username).order_by(desc('count')).limit(10).all()
     
-    # Liste des utilisateurs pour le filtre
-    users = User.query.order_by(User.username).all()
+    # Liste des utilisateurs pour le filtre (filtrée par région)
+    users_query = User.query
+    users_query = filter_users_by_region(users_query)
+    users = users_query.order_by(User.username).all()
     
     # Liste des actions uniques
     actions = db.session.query(UserActivityLog.action).distinct().all()
@@ -504,36 +562,48 @@ def statistiques():
     days = request.args.get('days', 30, type=int)
     date_from = datetime.now(UTC) - timedelta(days=days)
     
-    # Statistiques générales
-    total_users = User.query.count()
-    active_users = User.query.filter_by(is_active=True).count()
+    # Statistiques générales (filtrées par région)
+    users_query = User.query
+    users_query = filter_users_by_region(users_query)
+    total_users = users_query.count()
+    active_users = filter_users_by_region(User.query.filter_by(is_active=True)).count()
     
-    # Connexions dans la période
-    logins_count = UserActivityLog.query.filter(
+    # Connexions dans la période (filtrées par région)
+    region_id = get_user_region_id()
+    logins_query = UserActivityLog.query.join(User).filter(
         and_(
             UserActivityLog.action == 'login',
             UserActivityLog.created_at >= date_from
         )
-    ).count()
+    )
+    if region_id is not None:
+        logins_query = logins_query.filter(User.region_id == region_id)
+    logins_count = logins_query.count()
     
-    # Utilisateurs actifs (qui se sont connectés dans la période)
-    active_users_period = db.session.query(func.count(func.distinct(UserActivityLog.user_id))).filter(
+    # Utilisateurs actifs (qui se sont connectés dans la période) - filtrés par région
+    active_users_period_query = db.session.query(func.count(func.distinct(UserActivityLog.user_id))).join(User).filter(
         and_(
             UserActivityLog.action == 'login',
             UserActivityLog.created_at >= date_from
         )
-    ).scalar()
+    )
+    if region_id is not None:
+        active_users_period_query = active_users_period_query.filter(User.region_id == region_id)
+    active_users_period = active_users_period_query.scalar()
     
-    # Activités par jour (pour graphique)
-    activities_by_day = db.session.query(
+    # Activités par jour (pour graphique) - filtrées par région
+    activities_by_day_query = db.session.query(
         func.date(UserActivityLog.created_at).label('date'),
         func.count(UserActivityLog.id).label('count')
-    ).filter(
+    ).join(User).filter(
         UserActivityLog.created_at >= date_from
-    ).group_by(func.date(UserActivityLog.created_at)).order_by('date').all()
+    )
+    if region_id is not None:
+        activities_by_day_query = activities_by_day_query.filter(User.region_id == region_id)
+    activities_by_day = activities_by_day_query.group_by(func.date(UserActivityLog.created_at)).order_by('date').all()
     
-    # Activités par type
-    activities_by_type = db.session.query(
+    # Activités par type (filtrées par région)
+    activities_by_type_query = db.session.query(
         UserActivityLog.action,
         func.count(UserActivityLog.id).label('count')
     ).filter(
@@ -662,8 +732,9 @@ def employees_list():
     region_id = request.args.get('region_id', type=int)
     search = request.args.get('search', '').strip()
     
-    # Construire la requête
+    # Construire la requête (filtrée par région)
     query = Employee.query
+    query = filter_employees_by_region(query)
     
     if department:
         query = query.filter(Employee.department.like(f'%{department}%'))
@@ -687,16 +758,21 @@ def employees_list():
     
     employees = query.order_by(desc(Employee.created_at)).all()
     
-    # Statistiques
-    total_employees = Employee.query.count()
-    active_employees = Employee.query.filter_by(employment_status='active').count()
+    # Statistiques (filtrées par région)
+    total_employees = filter_employees_by_region(Employee.query).count()
+    active_employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).count()
     
-    # Par département
-    departments = db.session.query(Employee.department, func.count(Employee.id).label('count')).filter(
+    # Par département (filtré par région)
+    departments_query = db.session.query(Employee.department, func.count(Employee.id).label('count')).filter(
         Employee.department.isnot(None)
-    ).group_by(Employee.department).all()
+    )
+    region_id = get_user_region_id()
+    if region_id is not None:
+        departments_query = departments_query.filter(Employee.region_id == region_id)
+    departments = departments_query.group_by(Employee.department).all()
     
-    regions = Region.query.order_by(Region.name).all()
+    # Régions accessibles (toutes pour admin, uniquement sa région pour les autres)
+    regions = get_user_accessible_regions()
     
     return render_template('rh/employees_list.html',
                          employees=employees,
@@ -754,17 +830,17 @@ def employee_new():
         # Validation
         if not employee_number or not first_name or not last_name:
             flash('Veuillez remplir tous les champs obligatoires', 'error')
-            regions = Region.query.all()
-            depots = Depot.query.all()
-            employees = Employee.query.filter_by(employment_status='active').all()
+            regions = get_user_accessible_regions()
+            depots = get_user_accessible_depots()
+            employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).all()
             return render_template('rh/employee_form.html', employee=None, regions=regions, depots=depots, employees=employees)
         
         # Vérifier si le numéro d'employé existe déjà
         if Employee.query.filter_by(employee_number=employee_number).first():
             flash('Ce numéro d\'employé existe déjà', 'error')
-            regions = Region.query.all()
-            depots = Depot.query.all()
-            employees = Employee.query.filter_by(employment_status='active').all()
+            regions = get_user_accessible_regions()
+            depots = get_user_accessible_depots()
+            employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).all()
             return render_template('rh/employee_form.html', employee=None, regions=regions, depots=depots, employees=employees)
         
         # Créer l'employé
@@ -1411,8 +1487,11 @@ def contracts_list():
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
     
-    # Construire la requête
+    # Construire la requête (filtrée par région)
     query = EmployeeContract.query.join(Employee)
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(Employee.region_id == region_id)
     
     if status:
         query = query.filter(EmployeeContract.status == status)
@@ -1433,9 +1512,12 @@ def contracts_list():
     
     contracts = query.order_by(desc(EmployeeContract.start_date)).all()
     
-    # Statistiques
-    total_contracts = EmployeeContract.query.count()
-    active_contracts = EmployeeContract.query.filter_by(status='active').count()
+    # Statistiques (filtrées par région)
+    contracts_stats_query = EmployeeContract.query.join(Employee)
+    if region_id is not None:
+        contracts_stats_query = contracts_stats_query.filter(Employee.region_id == region_id)
+    total_contracts = contracts_stats_query.count()
+    active_contracts = contracts_stats_query.filter(EmployeeContract.status == 'active').count()
     
     return render_template('rh/contracts_list.html', 
                          contracts=contracts,
@@ -1459,8 +1541,11 @@ def trainings_list():
     status = request.args.get('status', '')
     training_type = request.args.get('type', '')
     
-    # Construire la requête
+    # Construire la requête (filtrée par région)
     query = EmployeeTraining.query.join(Employee)
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(Employee.region_id == region_id)
     
     if status:
         query = query.filter(EmployeeTraining.status == status)
@@ -1469,9 +1554,12 @@ def trainings_list():
     
     trainings = query.order_by(desc(EmployeeTraining.start_date)).all()
     
-    # Statistiques
-    total_trainings = EmployeeTraining.query.count()
-    ongoing_trainings = EmployeeTraining.query.filter_by(status='in_progress').count()
+    # Statistiques (filtrées par région)
+    trainings_stats_query = EmployeeTraining.query.join(Employee)
+    if region_id is not None:
+        trainings_stats_query = trainings_stats_query.filter(Employee.region_id == region_id)
+    total_trainings = trainings_stats_query.count()
+    ongoing_trainings = trainings_stats_query.filter(EmployeeTraining.status == 'in_progress').count()
     
     return render_template('rh/trainings_list.html',
                          trainings=trainings,
@@ -1494,8 +1582,11 @@ def evaluations_list():
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
     
-    # Construire la requête
+    # Construire la requête (filtrée par région)
     query = EmployeeEvaluation.query.join(Employee)
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(Employee.region_id == region_id)
     
     if evaluation_type:
         query = query.filter(EmployeeEvaluation.evaluation_type == evaluation_type)
@@ -1514,8 +1605,11 @@ def evaluations_list():
     
     evaluations = query.order_by(desc(EmployeeEvaluation.evaluation_date)).all()
     
-    # Statistiques
-    total_evaluations = EmployeeEvaluation.query.count()
+    # Statistiques (filtrées par région)
+    evaluations_stats_query = EmployeeEvaluation.query.join(Employee)
+    if region_id is not None:
+        evaluations_stats_query = evaluations_stats_query.filter(Employee.region_id == region_id)
+    total_evaluations = evaluations_stats_query.count()
     
     return render_template('rh/evaluations_list.html',
                          evaluations=evaluations,
@@ -1539,8 +1633,11 @@ def absences_list():
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
     
-    # Construire la requête
+    # Construire la requête (filtrée par région)
     query = EmployeeAbsence.query.join(Employee)
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(Employee.region_id == region_id)
     
     if status:
         query = query.filter(EmployeeAbsence.status == status)
@@ -1561,9 +1658,12 @@ def absences_list():
     
     absences = query.order_by(desc(EmployeeAbsence.start_date)).all()
     
-    # Statistiques
-    total_absences = EmployeeAbsence.query.count()
-    pending_absences = EmployeeAbsence.query.filter_by(status='pending').count()
+    # Statistiques (filtrées par région)
+    absences_stats_query = EmployeeAbsence.query.join(Employee)
+    if region_id is not None:
+        absences_stats_query = absences_stats_query.filter(Employee.region_id == region_id)
+    total_absences = absences_stats_query.count()
+    pending_absences = absences_stats_query.filter(EmployeeAbsence.status == 'pending').count()
     
     return render_template('rh/absences_list.html',
                          absences=absences,

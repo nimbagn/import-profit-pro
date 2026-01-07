@@ -284,3 +284,15 @@ def filter_commercial_orders_by_region(query):
         query = query.filter(CommercialOrder.region_id == region_id)
     return query
 
+
+def filter_employees_by_region(query):
+    """
+    Filtre les employés externes selon la région de l'utilisateur connecté
+    Les admins voient tous les employés
+    """
+    from models import Employee
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(Employee.region_id == region_id)
+    return query
+

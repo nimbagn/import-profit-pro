@@ -10,6 +10,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, UTC
 from models import db, User, Role, Region, UserActivityLog
+from utils_region_filter import filter_users_by_region, get_user_accessible_regions
 import re
 import os
 
@@ -411,7 +412,7 @@ def register():
         return redirect(redirect_url)
     
     roles = Role.query.all()
-    regions = Region.query.order_by(Region.name).all()
+    regions = get_user_accessible_regions()
     return render_template('auth/register.html', roles=roles, regions=regions)
 
 @auth_bp.route('/users')
