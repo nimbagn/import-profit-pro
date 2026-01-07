@@ -2189,7 +2189,7 @@ def simulation_edit(id):
 @app.route('/simulations/<int:id>/delete', methods=['POST'])
 @login_required
 def simulation_delete(id):
-    """Supprimer une simulation (admin uniquement)"""
+    """Supprimer une simulation (admin uniquement) - Suppression définitive"""
     from auth import is_admin
     
     # Vérifier que l'utilisateur est admin
@@ -2202,24 +2202,53 @@ def simulation_delete(id):
         
         # Récupérer la simulation
         simulation = Simulation.query.get_or_404(id)
+        simulation_id = simulation.id
         
-        # Supprimer d'abord tous les items associés
-        SimulationItem.query.filter_by(simulation_id=id).delete()
+        # Supprimer d'abord tous les items associés (explicitement pour éviter les problèmes de cascade)
+        deleted_items_count = SimulationItem.query.filter_by(simulation_id=simulation_id).delete(synchronize_session=False)
+        print(f"🗑️  {deleted_items_count} SimulationItem(s) supprimé(s) pour la simulation #{simulation_id}")
+        
+        # Flush pour s'assurer que les items sont supprimés avant la simulation
+        db.session.flush()
         
         # Supprimer la simulation
         db.session.delete(simulation)
+        
+        # Commit définitif
         db.session.commit()
         
-        flash(f'Simulation #{id} supprimée avec succès', 'success')
+        # Vérifier que la simulation a bien été supprimée
+        verification = Simulation.query.get(simulation_id)
+        if verification is not None:
+            # Si la simulation existe encore, essayer une suppression SQL directe
+            print(f"⚠️  La simulation #{simulation_id} existe encore après commit, tentative de suppression SQL directe...")
+            from sqlalchemy import text
+            db.session.execute(text("DELETE FROM simulation_items WHERE simulation_id = :id"), {"id": simulation_id})
+            db.session.execute(text("DELETE FROM simulations WHERE id = :id"), {"id": simulation_id})
+            db.session.commit()
+            print(f"✅ Suppression SQL directe effectuée pour la simulation #{simulation_id}")
+        
+        flash(f'Simulation #{simulation_id} supprimée définitivement avec succès', 'success')
         return redirect(url_for('simulations_list'))
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Erreur lors de la suppression de la simulation: {e}")
+        print(f"❌ Erreur lors de la suppression de la simulation #{id}: {e}")
         import traceback
         traceback.print_exc()
-        flash(f'Erreur lors de la suppression: {str(e)}', 'error')
-        return redirect(url_for('simulation_detail', id=id))
+        
+        # Tentative de suppression SQL directe en cas d'erreur
+        try:
+            from sqlalchemy import text
+            db.session.execute(text("DELETE FROM simulation_items WHERE simulation_id = :id"), {"id": id})
+            db.session.execute(text("DELETE FROM simulations WHERE id = :id"), {"id": id})
+            db.session.commit()
+            flash(f'Simulation #{id} supprimée définitivement (via SQL direct)', 'success')
+            return redirect(url_for('simulations_list'))
+        except Exception as sql_error:
+            print(f"❌ Erreur lors de la suppression SQL directe: {sql_error}")
+            flash(f'Erreur lors de la suppression: {str(e)}', 'error')
+            return redirect(url_for('simulation_detail', id=id))
 
 @app.route('/simulations/new', methods=['GET', 'POST'])
 @login_required
