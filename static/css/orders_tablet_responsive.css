@@ -316,7 +316,7 @@
 }
 
 /* =========================================================
-   AMÉLIORATIONS ERGONOMIQUES TABLETTE
+   AMÉLIORATIONS ERGONOMIQUES TABLETTE - FORMULAIRE COMMANDE
    ========================================================= */
 @media (min-width: 768px) and (max-width: 1024px) {
     /* Touch targets optimisés */
@@ -376,6 +376,105 @@
         padding: 0.5rem 0.75rem !important;
         font-size: 0.85rem !important;
         font-weight: 600 !important;
+    }
+    
+    /* Formulaire de commande - Optimisations spécifiques */
+    .order-form .form-container {
+        padding: 1.5rem !important;
+    }
+    
+    .order-form .form-hl {
+        padding: 1.5rem !important;
+    }
+    
+    /* Section recherche d'articles */
+    .order-form .search-section {
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .order-form .search-input-wrapper input {
+        font-size: 16px !important; /* Évite le zoom iOS */
+        padding: 0.875rem 1rem !important;
+        padding-left: 50px !important;
+    }
+    
+    /* Tableaux clients - Scroll optimisé */
+    .order-form .clients-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 1rem 0 !important;
+        border-radius: 0.5rem !important;
+    }
+    
+    .order-form .clients-table {
+        min-width: 900px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .order-form .clients-table th {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .order-form .clients-table td {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Inputs et selects - Taille optimale pour tablette */
+    .order-form .form-hl-input,
+    .order-form .form-hl-select,
+    .order-form .client-info input,
+    .order-form .client-info select,
+    .order-form .items-list input {
+        font-size: 16px !important; /* Évite le zoom iOS */
+        padding: 0.75rem 1rem !important;
+        min-height: 44px !important;
+    }
+    
+    /* Boutons d'action */
+    .order-form .form-actions {
+        flex-wrap: wrap;
+        gap: 1rem !important;
+        margin-top: 1.5rem !important;
+    }
+    
+    .order-form .form-actions .btn-hl {
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 200px;
+        min-height: 48px !important;
+    }
+    
+    /* Total de commande */
+    .order-form #orderTotal {
+        font-size: 1.25rem !important;
+        padding: 1rem 1.5rem !important;
+        margin-top: 1.5rem !important;
+    }
+    
+    /* Grilles adaptatives */
+    .order-form .form-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    /* Client header */
+    .order-form .client-header {
+        padding: 1rem !important;
+        flex-wrap: wrap;
+        gap: 0.75rem !important;
+    }
+    
+    /* Section title */
+    .order-form .section-title {
+        flex-wrap: wrap;
+        gap: 1rem !important;
+    }
+    
+    .order-form .section-title .btn-hl {
+        min-width: auto;
+        flex: 1 1 auto;
     }
 }
 
