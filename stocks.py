@@ -1900,20 +1900,20 @@ def outgoings_list():
         # Admin voit toutes les sorties sans filtre supplémentaire
         pass
     else:
-    # Filtrer par région : seules les sorties des dépôts/véhicules accessibles
-    accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
-    accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
-    
-    if accessible_depot_ids or accessible_vehicle_ids:
-        query = query.filter(
-            or_(
-                StockOutgoing.depot_id.in_(accessible_depot_ids) if accessible_depot_ids else False,
-                StockOutgoing.vehicle_id.in_(accessible_vehicle_ids) if accessible_vehicle_ids else False
+        # Filtrer par région : seules les sorties des dépôts/véhicules accessibles
+        accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
+        accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
+        
+        if accessible_depot_ids or accessible_vehicle_ids:
+            query = query.filter(
+                or_(
+                    StockOutgoing.depot_id.in_(accessible_depot_ids) if accessible_depot_ids else False,
+                    StockOutgoing.vehicle_id.in_(accessible_vehicle_ids) if accessible_vehicle_ids else False
+                )
             )
-        )
-    else:
-        # Aucun dépôt/véhicule accessible, retourner une requête vide
-        query = query.filter(False)
+        else:
+            # Aucun dépôt/véhicule accessible, retourner une requête vide
+            query = query.filter(False)
     
     # Appliquer les filtres
     if search:
@@ -2475,20 +2475,20 @@ def returns_list():
             # Admin voit tous les retours sans filtre supplémentaire
             pass
         else:
-        # Filtrer par région : seuls les retours des dépôts/véhicules accessibles
-        accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
-        accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
-        
-        if accessible_depot_ids or accessible_vehicle_ids:
-            query = query.filter(
-                or_(
-                    StockReturn.depot_id.in_(accessible_depot_ids) if accessible_depot_ids else False,
-                    StockReturn.vehicle_id.in_(accessible_vehicle_ids) if accessible_vehicle_ids else False
+            # Filtrer par région : seuls les retours des dépôts/véhicules accessibles
+            accessible_depot_ids = [d.id for d in filter_depots_by_region(Depot.query).all()]
+            accessible_vehicle_ids = [v.id for v in filter_vehicles_by_region(Vehicle.query).all()]
+            
+            if accessible_depot_ids or accessible_vehicle_ids:
+                query = query.filter(
+                    or_(
+                        StockReturn.depot_id.in_(accessible_depot_ids) if accessible_depot_ids else False,
+                        StockReturn.vehicle_id.in_(accessible_vehicle_ids) if accessible_vehicle_ids else False
+                    )
                 )
-            )
-        else:
-            # Aucun dépôt/véhicule accessible, retourner une requête vide
-            query = query.filter(False)
+            else:
+                # Aucun dépôt/véhicule accessible, retourner une requête vide
+                query = query.filter(False)
         
         # Appliquer les filtres
         if search:
@@ -3566,16 +3566,16 @@ def generate_stock_summary_pdf_data(depot_id=None, period='all', currency='GNF',
     depots_query = filter_depots_by_region(depots_query)
     accessible_depots = depots_query.all()
     
-        stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
-        
-        # Préparer les données pour le PDF
+    stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
+    
+    # Préparer les données pour le PDF
     depot_name = 'Tous les dépôts'
     if depot_id:
         depot = next((d for d in accessible_depots if d.id == depot_id), None)
         if depot:
             depot_name = depot.name
     
-        stock_data = {
+    stock_data = {
         'depot_name': depot_name,
         'period': period,
         'start_date': period_start_date,
@@ -3591,7 +3591,7 @@ def generate_stock_summary_pdf_data(depot_id=None, period='all', currency='GNF',
         # Calculer le stock initial (avant la période)
         initial_stock = Decimal('0')
         if period_start_date:
-        if depot_id:
+            if depot_id:
                 initial_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
                     or_(
                         StockMovement.to_depot_id == depot_id,
@@ -4527,16 +4527,16 @@ def stock_summary():
         
         # N'afficher que les articles avec du stock restant (stock actuel > 0)
         if total_stock > 0:
-        stock_summary.append({
-            'item': item,
-            'total_stock': total_stock,
-            'depot_stock': total_depot_stock,
-            'vehicle_stock': total_vehicle_stock,
-            'depot_balances': depot_balances,  # Balance par dépôt
-            'vehicle_balances': vehicle_balances,  # Balance par véhicule
-            'entries': entries,
-            'exits': exits,
-            'movements_count': len(movements),
+            stock_summary.append({
+                'item': item,
+                'total_stock': total_stock,
+                'depot_stock': total_depot_stock,
+                'vehicle_stock': total_vehicle_stock,
+                'depot_balances': depot_balances,  # Balance par dépôt
+                'vehicle_balances': vehicle_balances,  # Balance par véhicule
+                'entries': entries,
+                'exits': exits,
+                'movements_count': len(movements),
                 'value': (total_stock * float(item.purchase_price_gnf) if total_stock > 0 and item.purchase_price_gnf else 0),
                 'initial_stock': float(initial_stock),
                 'final_stock_calculated': final_stock_calculated
