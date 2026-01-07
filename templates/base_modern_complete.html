@@ -793,6 +793,12 @@
                         {% endif %}
                         </button>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        {% if current_user.region %}
+                        <li><div class="dropdown-item-text" style="padding: 0.5rem 1rem; color: var(--text-secondary); font-size: 0.85rem; border-bottom: 1px solid var(--gray-200);">
+                            <i class="fas fa-map-marker-alt me-2" style="color: var(--hl-orange);"></i>
+                            <strong>Région:</strong> {{ current_user.region.name }}{% if current_user.region.code %} ({{ current_user.region.code }}){% endif %}
+                        </div></li>
+                        {% endif %}
                         <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">
                             <i class="fas fa-user-circle me-2"></i>
                             Mon Profil
