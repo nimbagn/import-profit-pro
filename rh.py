@@ -1380,6 +1380,205 @@ def absence_reject(absence_id):
         return redirect(url_for('rh.employees_list'))
     
     absence = EmployeeAbsence.query.get_or_404(absence_id)
+    
+    try:
+        absence.status = 'rejected'
+        absence.rejected_at = datetime.now(UTC)
+        absence.rejected_by_id = current_user.id
+        db.session.commit()
+        flash('Absence rejetée avec succès', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors du rejet: {str(e)}', 'error')
+    
+    return redirect(url_for('rh.employee_absences_list', employee_id=absence.employee_id))
+
+# =========================================================
+# ROUTES GLOBALES POUR LISTES (TOUS LES EMPLOYÉS)
+# =========================================================
+
+@rh_bp.route('/contracts')
+@login_required
+def contracts_list():
+    """Liste de tous les contrats (tous employés)"""
+    if not has_rh_permission(current_user, 'contracts.read'):
+        flash('Accès refusé', 'error')
+        return redirect(url_for('rh.index'))
+    
+    # Filtres
+    status = request.args.get('status', '')
+    contract_type = request.args.get('type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    # Construire la requête
+    query = EmployeeContract.query.join(Employee)
+    
+    if status:
+        query = query.filter(EmployeeContract.status == status)
+    if contract_type:
+        query = query.filter(EmployeeContract.contract_type == contract_type)
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(EmployeeContract.start_date >= date_from_obj)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            query = query.filter(EmployeeContract.start_date <= date_to_obj)
+        except ValueError:
+            pass
+    
+    contracts = query.order_by(desc(EmployeeContract.start_date)).all()
+    
+    # Statistiques
+    total_contracts = EmployeeContract.query.count()
+    active_contracts = EmployeeContract.query.filter_by(status='active').count()
+    
+    return render_template('rh/contracts_list.html', 
+                         contracts=contracts,
+                         employees=None,  # Pas de filtre par employé
+                         total_contracts=total_contracts,
+                         active_contracts=active_contracts,
+                         selected_status=status,
+                         selected_type=contract_type,
+                         date_from=date_from,
+                         date_to=date_to)
+
+@rh_bp.route('/trainings')
+@login_required
+def trainings_list():
+    """Liste de toutes les formations (tous employés)"""
+    if not has_rh_permission(current_user, 'trainings.read'):
+        flash('Accès refusé', 'error')
+        return redirect(url_for('rh.index'))
+    
+    # Filtres
+    status = request.args.get('status', '')
+    training_type = request.args.get('type', '')
+    
+    # Construire la requête
+    query = EmployeeTraining.query.join(Employee)
+    
+    if status:
+        query = query.filter(EmployeeTraining.status == status)
+    if training_type:
+        query = query.filter(EmployeeTraining.training_type == training_type)
+    
+    trainings = query.order_by(desc(EmployeeTraining.start_date)).all()
+    
+    # Statistiques
+    total_trainings = EmployeeTraining.query.count()
+    ongoing_trainings = EmployeeTraining.query.filter_by(status='in_progress').count()
+    
+    return render_template('rh/trainings_list.html',
+                         trainings=trainings,
+                         employees=None,  # Pas de filtre par employé
+                         total_trainings=total_trainings,
+                         ongoing_trainings=ongoing_trainings,
+                         selected_status=status,
+                         selected_type=training_type)
+
+@rh_bp.route('/evaluations')
+@login_required
+def evaluations_list():
+    """Liste de toutes les évaluations (tous employés)"""
+    if not has_rh_permission(current_user, 'evaluations.read'):
+        flash('Accès refusé', 'error')
+        return redirect(url_for('rh.index'))
+    
+    # Filtres
+    evaluation_type = request.args.get('type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    # Construire la requête
+    query = EmployeeEvaluation.query.join(Employee)
+    
+    if evaluation_type:
+        query = query.filter(EmployeeEvaluation.evaluation_type == evaluation_type)
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(EmployeeEvaluation.evaluation_date >= date_from_obj)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            query = query.filter(EmployeeEvaluation.evaluation_date <= date_to_obj)
+        except ValueError:
+            pass
+    
+    evaluations = query.order_by(desc(EmployeeEvaluation.evaluation_date)).all()
+    
+    # Statistiques
+    total_evaluations = EmployeeEvaluation.query.count()
+    
+    return render_template('rh/evaluations_list.html',
+                         evaluations=evaluations,
+                         employees=None,  # Pas de filtre par employé
+                         total_evaluations=total_evaluations,
+                         selected_type=evaluation_type,
+                         date_from=date_from,
+                         date_to=date_to)
+
+@rh_bp.route('/absences')
+@login_required
+def absences_list():
+    """Liste de toutes les absences (tous employés)"""
+    if not has_rh_permission(current_user, 'absences.read'):
+        flash('Accès refusé', 'error')
+        return redirect(url_for('rh.index'))
+    
+    # Filtres
+    status = request.args.get('status', '')
+    absence_type = request.args.get('type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    # Construire la requête
+    query = EmployeeAbsence.query.join(Employee)
+    
+    if status:
+        query = query.filter(EmployeeAbsence.status == status)
+    if absence_type:
+        query = query.filter(EmployeeAbsence.absence_type == absence_type)
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(EmployeeAbsence.start_date >= date_from_obj)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            query = query.filter(EmployeeAbsence.end_date <= date_to_obj)
+        except ValueError:
+            pass
+    
+    absences = query.order_by(desc(EmployeeAbsence.start_date)).all()
+    
+    # Statistiques
+    total_absences = EmployeeAbsence.query.count()
+    pending_absences = EmployeeAbsence.query.filter_by(status='pending').count()
+    
+    return render_template('rh/absences_list.html',
+                         absences=absences,
+                         employees=None,  # Pas de filtre par employé
+                         total_absences=total_absences,
+                         pending_absences=pending_absences,
+                         selected_status=status,
+                         selected_type=absence_type,
+                         date_from=date_from,
+                         date_to=date_to)
+    if not has_rh_permission(current_user, 'absences.update'):
+        flash('Accès refusé', 'error')
+        return redirect(url_for('rh.employees_list'))
+    
+    absence = EmployeeAbsence.query.get_or_404(absence_id)
     absence.status = 'rejected'
     absence.rejection_reason = request.form.get('rejection_reason', '')
     absence.approved_by_id = current_user.id

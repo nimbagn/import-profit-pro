@@ -1,5 +1,5 @@
 {% extends "base_modern_complete.html" %}
-{% block title %}Contrats - {{ employee.full_name }} - Import Profit Pro{% endblock %}
+{% block title %}Contrats{% if employee %} - {{ employee.full_name }}{% endif %} - Import Profit Pro{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -107,16 +107,24 @@
   
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
     <div>
+      {% if employee %}
       <a href="{{ url_for('rh.employee_detail', employee_id=employee.id) }}" class="btn-hl btn-hl-outline" style="margin-bottom: var(--space-md);">
         <i class="fas fa-arrow-left me-2"></i>Retour à l'employé
       </a>
+      {% else %}
+      <a href="{{ url_for('rh.index') }}" class="btn-hl btn-hl-outline" style="margin-bottom: var(--space-md);">
+        <i class="fas fa-arrow-left me-2"></i>Retour au Dashboard RH
+      </a>
+      {% endif %}
       <h1 class="page-title-hl" style="margin-top: var(--space-md);">
-        <i class="fas fa-file-contract me-2"></i>Contrats - {{ employee.full_name }}
+        <i class="fas fa-file-contract me-2"></i>Contrats{% if employee %} - {{ employee.full_name }}{% endif %}
       </h1>
     </div>
+    {% if employee %}
     <a href="{{ url_for('rh.contract_new', employee_id=employee.id) }}" class="btn-hl btn-hl-primary">
       <i class="fas fa-plus me-2"></i>Nouveau Contrat
     </a>
+    {% endif %}
   </div>
 
   <div class="card-hl">
@@ -129,6 +137,7 @@
       <table class="table-premium">
         <thead>
           <tr>
+            {% if not employee %}<th>Employé</th>{% endif %}
             <th>Numéro</th>
             <th>Type</th>
             <th>Date début</th>
@@ -142,6 +151,13 @@
         <tbody>
           {% for contract in contracts %}
           <tr>
+            {% if not employee %}
+            <td>
+              <a href="{{ url_for('rh.employee_detail', employee_id=contract.employee.id) }}" style="color: var(--color-primary); text-decoration: none;">
+                <strong>{{ contract.employee.full_name }}</strong>
+              </a>
+            </td>
+            {% endif %}
             <td><strong>{{ contract.contract_number }}</strong></td>
             <td>{{ contract.contract_type|upper }}</td>
             <td>{{ contract.start_date.strftime('%d/%m/%Y') }}</td>
@@ -182,7 +198,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--text-secondary);">
+            <td colspan="{% if employee %}8{% else %}9{% endif %}" style="text-align: center; padding: var(--space-xl); color: var(--text-secondary);">
               Aucun contrat enregistré
             </td>
           </tr>
