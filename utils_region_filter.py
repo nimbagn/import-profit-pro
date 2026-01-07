@@ -316,3 +316,45 @@ def filter_employees_by_region(query):
         query = query.filter(Employee.region_id == region_id)
     return query
 
+
+def filter_receptions_by_region(query):
+    """
+    Filtre les réceptions selon la région de l'utilisateur connecté
+    Une réception appartient à une région si le dépôt appartient à cette région
+    Les admins voient toutes les réceptions
+    """
+    from models import Reception
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Récupérer les IDs des dépôts de la région
+        depot_ids = [d.id for d in Depot.query.filter_by(region_id=region_id).all()]
+        
+        if depot_ids:
+            query = query.filter(Reception.depot_id.in_(depot_ids))
+        else:
+            # Aucun dépôt dans la région, retourner une requête vide
+            query = query.filter(False)
+    
+    return query
+
+
+def filter_inventory_sessions_by_region(query):
+    """
+    Filtre les sessions d'inventaire selon la région de l'utilisateur connecté
+    Une session appartient à une région si le dépôt appartient à cette région
+    Les admins voient toutes les sessions
+    """
+    from models import InventorySession
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Récupérer les IDs des dépôts de la région
+        depot_ids = [d.id for d in Depot.query.filter_by(region_id=region_id).all()]
+        
+        if depot_ids:
+            query = query.filter(InventorySession.depot_id.in_(depot_ids))
+        else:
+            # Aucun dépôt dans la région, retourner une requête vide
+            query = query.filter(False)
+    
+    return query
+

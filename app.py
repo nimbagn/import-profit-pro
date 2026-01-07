@@ -751,7 +751,9 @@ def index():
         # Utiliser le cache pour les statistiques si disponible (avec clé incluant la région)
         from utils_region_filter import (
             get_user_region_id, filter_depots_by_region, filter_vehicles_by_region,
-            filter_stock_movements_by_region, filter_depot_stocks_by_region, filter_vehicle_stocks_by_region
+            filter_stock_movements_by_region, filter_depot_stocks_by_region, filter_vehicle_stocks_by_region,
+            filter_receptions_by_region, filter_inventory_sessions_by_region, filter_users_by_region,
+            filter_employees_by_region
         )
         user_region_id = get_user_region_id()
         cache_key = f'dashboard_stats_{user_region_id if user_region_id else "all"}'
@@ -782,15 +784,18 @@ def index():
             vehicles_query = filter_vehicles_by_region(vehicles_query)
             stats['vehicles_count'] = vehicles_query.count()
             
-            stats['families_count'] = Family.query.count()
-            stats['stock_items_count'] = StockItem.query.filter_by(is_active=True).count()
+            stats['families_count'] = Family.query.count()  # Pas de filtre par région (référentiel global)
+            stats['stock_items_count'] = StockItem.query.filter_by(is_active=True).count()  # Pas de filtre par région (référentiel global)
             
             # Stocks avec filtrage par région
             movements_query = StockMovement.query
             movements_query = filter_stock_movements_by_region(movements_query)
             stats['movements_count'] = movements_query.count()
             
-            stats['receptions_count'] = Reception.query.count()  # Les réceptions peuvent être filtrées si nécessaire
+            # Réceptions filtrées par région
+            receptions_query = Reception.query
+            receptions_query = filter_receptions_by_region(receptions_query)
+            stats['receptions_count'] = receptions_query.count()
             
             depot_stocks_query = DepotStock.query
             depot_stocks_query = filter_depot_stocks_by_region(depot_stocks_query)
@@ -800,9 +805,13 @@ def index():
             vehicle_stocks_query = filter_vehicle_stocks_by_region(vehicle_stocks_query)
             stats['vehicle_stocks_count'] = vehicle_stocks_query.count()
             
-            # Inventaires
-            stats['inventory_sessions_count'] = InventorySession.query.count()
-            stats['inventory_pending'] = InventorySession.query.filter_by(status='draft').count()
+            # Inventaires filtrés par région
+            inventory_query = InventorySession.query
+            inventory_query = filter_inventory_sessions_by_region(inventory_query)
+            stats['inventory_sessions_count'] = inventory_query.count()
+            stats['inventory_pending'] = filter_inventory_sessions_by_region(
+                InventorySession.query.filter_by(status='draft')
+            ).count()
             
             # Flotte avec filtrage par région
             vehicles_for_docs_query = Vehicle.query
@@ -822,7 +831,7 @@ def index():
             stats['price_lists_count'] = PriceList.query.count()
             stats['price_lists_active'] = PriceList.query.filter_by(is_active=True).count()
             
-            # Statistiques RH (toujours calculées pour l'admin)
+            # Statistiques RH filtrées par région
             try:
                 from models import User, Employee, EmployeeContract, EmployeeTraining, EmployeeAbsence
                 from sqlalchemy.exc import SQLAlchemyError
@@ -831,11 +840,21 @@ def index():
                 # Annuler toute transaction en cours en cas d'erreur précédente
                 db.session.rollback()
                 
-                stats['total_users'] = User.query.count()
-                stats['active_users'] = User.query.filter_by(is_active=True).count()
-                stats['total_employees'] = Employee.query.count()
-                stats['active_employees'] = Employee.query.filter_by(employment_status='active').count()
-                stats['active_contracts'] = EmployeeContract.query.filter(
+                # Utilisateurs filtrés par région
+                users_query = User.query
+                users_query = filter_users_by_region(users_query)
+                stats['total_users'] = users_query.count()
+                stats['active_users'] = filter_users_by_region(User.query.filter_by(is_active=True)).count()
+                
+                # Employés filtrés par région
+                employees_query = Employee.query
+                employees_query = filter_employees_by_region(employees_query)
+                stats['total_employees'] = employees_query.count()
+                stats['active_employees'] = filter_employees_by_region(
+                    Employee.query.filter_by(employment_status='active')
+                ).count()
+                # Contrats filtrés par région (via l'employé)
+                contracts_query = EmployeeContract.query.join(Employee).filter(
                     or_(
                         EmployeeContract.status == 'active',
                         and_(
@@ -843,9 +862,68 @@ def index():
                             EmployeeContract.status != 'terminated'
                         )
                     )
-                ).count()
-                stats['pending_absences'] = EmployeeAbsence.query.filter_by(status='pending').count()
-                stats['ongoing_trainings'] = EmployeeTraining.query.filter_by(status='in_progress').count()
+                )
+                contracts_query = filter_employees_by_region(Employee.query).join(
+                    EmployeeContract, Employee.id == EmployeeContract.employee_id
+                ).filter(
+                    or_(
+                        EmployeeContract.status == 'active',
+                        and_(
+                            EmployeeContract.end_date.is_(None),
+                            EmployeeContract.status != 'terminated'
+                        )
+                    )
+                )
+                # Alternative : filtrer via join avec Employee
+                region_id = get_user_region_id()
+                if region_id is not None:
+                    contracts_query = EmployeeContract.query.join(Employee).filter(
+                        and_(
+                            Employee.region_id == region_id,
+                            or_(
+                                EmployeeContract.status == 'active',
+                                and_(
+                                    EmployeeContract.end_date.is_(None),
+                                    EmployeeContract.status != 'terminated'
+                                )
+                            )
+                        )
+                    )
+                else:
+                    contracts_query = EmployeeContract.query.filter(
+                        or_(
+                            EmployeeContract.status == 'active',
+                            and_(
+                                EmployeeContract.end_date.is_(None),
+                                EmployeeContract.status != 'terminated'
+                            )
+                        )
+                    )
+                stats['active_contracts'] = contracts_query.count()
+                
+                # Absences filtrées par région (via l'employé)
+                if region_id is not None:
+                    absences_query = EmployeeAbsence.query.join(Employee).filter(
+                        and_(
+                            Employee.region_id == region_id,
+                            EmployeeAbsence.status == 'pending'
+                        )
+                    )
+                else:
+                    absences_query = EmployeeAbsence.query.filter_by(status='pending')
+                stats['pending_absences'] = absences_query.count()
+                
+                # Formations filtrées par région (via l'employé)
+                if region_id is not None:
+                    trainings_query = EmployeeTraining.query.join(Employee).filter(
+                        and_(
+                            Employee.region_id == region_id,
+                            EmployeeTraining.status == 'in_progress'
+                        )
+                    )
+                else:
+                    trainings_query = EmployeeTraining.query.filter_by(status='in_progress')
+                stats['ongoing_trainings'] = trainings_query.count()
             except (Exception, SQLAlchemyError) as e:
                 print(f"⚠️ Erreur lors du calcul des statistiques RH: {e}")
                 db.session.rollback()  # Annuler la transaction en cas d'erreur
