@@ -599,7 +599,8 @@ def maintenance_complete(vehicle_id, maint_id):
 @login_required
 def vehicle_odometer(vehicle_id):
     """Historique des relevés odomètre d'un véhicule"""
-    if not has_permission(current_user, 'vehicles.read'):
+    # Le magasinier peut voir l'historique de l'odomètre pour le suivi des véhicules
+    if not has_permission(current_user, 'vehicles.read') and not (current_user.role and current_user.role.code == 'warehouse'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
