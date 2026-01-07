@@ -39,6 +39,8 @@
     <link href="{{ url_for('static', filename='css/ipad_responsive.css') }}" rel="stylesheet">
     <!-- CSS iPad Fix Global - Corrections pour tous les templates (PRIORITÉ ÉLEVÉE) -->
     <link href="{{ url_for('static', filename='css/ipad_fix_global.css') }}" rel="stylesheet">
+    <!-- CSS Android Tablet Fix - Corrections spécifiques pour Android 9+ (PRIORITÉ ÉLEVÉE) -->
+    <link href="{{ url_for('static', filename='css/android_tablet_fix.css') }}" rel="stylesheet">
     <!-- CSS Orders Tablet Responsive - Optimisations pour tablettes et mobiles -->
     {% if request.endpoint and 'orders' in request.endpoint %}
     <link href="{{ url_for('static', filename='css/orders_tablet_responsive.css') }}" rel="stylesheet">
@@ -1096,19 +1098,59 @@
             });
 
         // Fonction pour toggle les groupes de menus (style Hapag-Lloyd)
+        // Compatible Android 9+ / Chrome 77+
         function toggleMenuGroup(element) {
+            if (!element) return;
+            
             const menuGroup = element.closest('.menu-group');
+            if (!menuGroup) return;
+            
             const menuContent = menuGroup.querySelector('.menu-group-content');
+            if (!menuContent) return;
+            
             const isExpanded = element.classList.contains('expanded');
             
             if (isExpanded) {
                 element.classList.remove('expanded');
                 menuContent.classList.remove('expanded');
+                menuContent.style.maxHeight = '0';
+                menuContent.style.display = 'none';
             } else {
                 element.classList.add('expanded');
                 menuContent.classList.add('expanded');
+                menuContent.style.maxHeight = '1000px';
+                menuContent.style.display = 'block';
             }
         }
+        
+        // Fix pour Android - Gérer les événements touch
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ajouter les event listeners pour les menu groups sur Android
+            const menuGroupTitles = document.querySelectorAll('.menu-group-title');
+            menuGroupTitles.forEach(function(title) {
+                // Supprimer l'ancien onclick si présent
+                title.removeAttribute('onclick');
+                
+                // Ajouter les event listeners compatibles Android
+                title.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleMenuGroup(this);
+                });
+                
+                // Support touch pour Android
+                title.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleMenuGroup(this);
+                });
+                
+                // S'assurer que c'est cliquable
+                title.style.cursor = 'pointer';
+                title.style.userSelect = 'none';
+                title.style.webkitUserSelect = 'none';
+            });
+        });
     </script>
     
     {% if has_permission(current_user, 'chat.read') %}

@@ -1,0 +1,556 @@
+/* =========================================================
+   ANDROID TABLET FIX - CORRECTIONS POUR ANDROID 9+
+   Optimisations spécifiques pour tablettes Android
+   Compatibilité Chrome 77+ (Android 9)
+   ========================================================= */
+
+/* =========================================================
+   ANDROID TABLET PORTRAIT & PAYSAGE (768px - 1024px)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Forcer la sidebar visible et fonctionnelle */
+    .sidebar {
+        display: block !important;
+        width: 240px !important;
+        transform: translateX(0) !important;
+        position: fixed !important;
+        z-index: 1000 !important;
+        -webkit-transform: translateX(0) !important;
+        -ms-transform: translateX(0) !important;
+    }
+    
+    /* Menu toggle toujours visible sur Android */
+    .menu-toggle,
+    .mobile-menu-toggle {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001 !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Header ajusté */
+    .top-header {
+        left: 240px !important;
+        width: calc(100% - 240px) !important;
+        position: fixed !important;
+        z-index: 999 !important;
+    }
+    
+    /* Contenu principal avec sidebar */
+    .main-content {
+        margin-left: 240px !important;
+        width: calc(100% - 240px) !important;
+        padding: 1.5rem !important;
+        margin-top: 70px !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* Override tous les margin-left: 0 sur Android tablet */
+    .main-content[style*="margin-left: 0"],
+    .main-content[style*="margin-left:0"],
+    .page-container[style*="margin-left: 0"],
+    .page-container[style*="margin-left:0"],
+    .dashboard-container[style*="margin-left: 0"],
+    .dashboard-container[style*="margin-left:0"] {
+        margin-left: 240px !important;
+    }
+    
+    /* Menu items - Touch targets optimisés */
+    .menu-item,
+    .menu-group-title,
+    .menu-subitem {
+        min-height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 0.875rem 1rem !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2) !important;
+        cursor: pointer !important;
+    }
+    
+    /* Menu group toggle - Compatible Android */
+    .menu-group-title {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+    }
+    
+    /* Formulaires - Éviter le zoom sur focus (Android) */
+    .form-hl-input,
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        padding: 0.875rem 1rem !important;
+        min-height: 48px !important;
+        touch-action: manipulation !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    /* Boutons - Touch targets optimisés */
+    .btn-hl,
+    .btn-modern,
+    .btn,
+    button[type="submit"],
+    button[type="button"] {
+        min-height: 48px !important;
+        min-width: 48px !important;
+        padding: 0.75rem 1.25rem !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+    }
+    
+    /* Tables - Scroll horizontal smooth */
+    .table-responsive,
+    .clients-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overflow-scrolling: touch !important;
+        touch-action: pan-x !important;
+    }
+    
+    /* Cards - Padding optimisé */
+    .card-hl,
+    .modern-card,
+    .card {
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* Content wrapper */
+    .content-wrapper {
+        max-width: 100% !important;
+        padding: 0 1rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Search section - Optimisé pour Android */
+    .search-section {
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .search-input-wrapper input {
+        font-size: 16px !important;
+        padding: 1rem 1.25rem !important;
+        min-height: 48px !important;
+    }
+    
+    /* Search results - Scroll optimisé */
+    #searchResults {
+        max-height: 400px !important;
+        -webkit-overflow-scrolling: touch !important;
+        overflow-scrolling: touch !important;
+    }
+    
+    /* Search result items - Touch optimisé */
+    .search-result-item {
+        min-height: 60px !important;
+        padding: 1rem !important;
+        touch-action: manipulation !important;
+    }
+    
+    .search-result-add {
+        min-height: 48px !important;
+        min-width: 48px !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    /* Item cards - Touch optimisé */
+    .item-card {
+        min-height: 140px !important;
+        touch-action: manipulation !important;
+    }
+    
+    .item-card-add-btn {
+        min-height: 48px !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    /* Clients table - Scroll optimisé */
+    .clients-table {
+        min-width: 800px !important;
+    }
+    
+    .clients-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-x !important;
+    }
+    
+    /* Form rows - Grid adaptatif */
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.25rem !important;
+    }
+    
+    /* Typographie lisible */
+    h1 { font-size: 2rem !important; }
+    h2 { font-size: 1.75rem !important; }
+    h3 { font-size: 1.5rem !important; }
+    h4 { font-size: 1.25rem !important; }
+    
+    /* Labels - Lisible */
+    label {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Overlay sidebar - Compatible Android */
+    .sidebar-overlay {
+        display: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 999 !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        backdrop-filter: blur(4px) !important;
+    }
+    
+    .sidebar-overlay.active {
+        display: block !important;
+    }
+}
+
+/* =========================================================
+   ANDROID TABLET PAYSAGE (768px - 1024px landscape)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .sidebar {
+        width: 220px !important;
+    }
+    
+    .main-content {
+        margin-left: 220px !important;
+        width: calc(100% - 220px) !important;
+    }
+    
+    .top-header {
+        left: 220px !important;
+        width: calc(100% - 220px) !important;
+    }
+    
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* =========================================================
+   ANDROID MOBILE (< 768px)
+   ========================================================= */
+@media (max-width: 767px) {
+    /* Sidebar masquée par défaut */
+    .sidebar {
+        width: 280px !important;
+        transform: translateX(-100%) !important;
+        -webkit-transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        -webkit-transition: -webkit-transform 0.3s ease-in-out !important;
+        z-index: 2000 !important;
+        position: fixed !important;
+    }
+    
+    .sidebar.mobile-open {
+        transform: translateX(0) !important;
+        -webkit-transform: translateX(0) !important;
+    }
+    
+    /* Main content full width */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 1rem !important;
+        margin-top: 70px !important;
+    }
+    
+    .top-header {
+        left: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Menu toggle toujours visible */
+    .menu-toggle,
+    .mobile-menu-toggle {
+        display: block !important;
+        visibility: visible !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+    }
+    
+    /* Overlay actif sur mobile */
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar-overlay.active {
+        display: block !important;
+    }
+}
+
+/* =========================================================
+   FIXES SPÉCIFIQUES ANDROID 9 / CHROME 77
+   ========================================================= */
+
+/* Fix pour les propriétés CSS non supportées */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* backdrop-filter fallback pour Android */
+    .sidebar-header {
+        background: rgba(0, 56, 101, 0.95) !important;
+    }
+    
+    /* Transform avec préfixes */
+    .sidebar {
+        -webkit-transform: translateX(0) !important;
+        -ms-transform: translateX(0) !important;
+        transform: translateX(0) !important;
+    }
+    
+    /* Flexbox avec préfixes si nécessaire */
+    .menu-item,
+    .menu-group-title,
+    .menu-subitem {
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: -ms-flexbox !important;
+        display: flex !important;
+    }
+    
+    /* Grid avec fallback */
+    .form-row,
+    .form-grid {
+        display: -ms-grid !important;
+        display: grid !important;
+    }
+}
+
+/* =========================================================
+   TOUCH EVENTS - ANDROID OPTIMISATION
+   ========================================================= */
+@media (max-width: 1024px) {
+    /* Désactiver le highlight par défaut */
+    * {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    /* Touch targets minimum 48px */
+    a,
+    button,
+    input[type="button"],
+    input[type="submit"],
+    .btn,
+    .menu-item,
+    .menu-group-title,
+    .menu-subitem {
+        min-height: 48px !important;
+        min-width: 48px !important;
+    }
+    
+    /* Touch action pour meilleure performance */
+    .sidebar,
+    .main-content,
+    .table-responsive,
+    .clients-table-container {
+        touch-action: pan-y !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* =========================================================
+   FIX ZOOM AUTOMATIQUE ANDROID
+   ========================================================= */
+@media (max-width: 1024px) {
+    /* Empêcher le zoom sur focus des inputs */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+    
+    /* Fix pour les selects Android */
+    select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.75rem center !important;
+        background-size: 12px !important;
+        padding-right: 2.5rem !important;
+    }
+}
+
+/* =========================================================
+   FIX SCROLL SMOOTH ANDROID
+   ========================================================= */
+@media (max-width: 1024px) {
+    html {
+        -webkit-overflow-scrolling: touch !important;
+        overflow-scrolling: touch !important;
+    }
+    
+    .sidebar,
+    .main-content,
+    #searchResults,
+    .table-responsive,
+    .clients-table-container {
+        -webkit-overflow-scrolling: touch !important;
+        overflow-scrolling: touch !important;
+    }
+}
+
+/* =========================================================
+   FIX VISIBILITÉ MENU ANDROID
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* S'assurer que le menu est toujours visible */
+    .sidebar {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: block !important;
+    }
+    
+    /* Menu toggle visible */
+    .menu-toggle,
+    .mobile-menu-toggle {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: block !important;
+    }
+    
+    /* Menu items visibles */
+    .menu-item,
+    .menu-group-title,
+    .menu-subitem {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: flex !important;
+    }
+    
+    /* Menu group content visible quand expanded */
+    .menu-group-content.expanded {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: block !important;
+        max-height: 1000px !important;
+    }
+    
+    /* Menu group title - Clicable sur Android */
+    .menu-group-title {
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2) !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* Chevron visible */
+    .menu-group-title i {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: inline-block !important;
+    }
+}
+
+/* =========================================================
+   FIX FORMULAIRE COMMANDE ANDROID
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Formulaire de commande - Visible et fonctionnel */
+    .form-hl,
+    .form-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 1.5rem !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Section recherche - Visible */
+    .search-section {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Inputs de recherche - Touch optimisé */
+    #itemSearch {
+        font-size: 16px !important;
+        padding: 1rem 1.25rem !important;
+        min-height: 48px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Boutons - Touch optimisé */
+    .btn-hl,
+    .btn-show-all-items,
+    button[type="submit"],
+    button[type="button"] {
+        min-height: 48px !important;
+        min-width: 48px !important;
+        padding: 0.75rem 1.25rem !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+        cursor: pointer !important;
+    }
+    
+    /* Table clients - Scroll horizontal */
+    .clients-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    /* Clients table - Largeur minimale */
+    .clients-table {
+        min-width: 800px !important;
+    }
+    
+    /* Inputs dans le tableau - Touch optimisé */
+    .clients-table input,
+    .clients-table select,
+    .clients-table textarea {
+        font-size: 16px !important;
+        padding: 0.75rem !important;
+        min-height: 44px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Section title - Visible */
+    .section-title {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* All items section - Visible quand ouvert */
+    .all-items-section {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
+

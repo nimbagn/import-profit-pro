@@ -345,16 +345,24 @@
    IPAD & TABLETTE (768px - 1024px) - OPTIMISATIONS
    ========================================================= */
 @media (min-width: 768px) and (max-width: 1024px) {
-    /* Sidebar visible mais optimisée */
+    /* Sidebar visible mais optimisée - FORCER VISIBILITÉ */
     .sidebar {
         width: 240px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: translateX(0) !important;
+        -webkit-transform: translateX(0) !important;
+        position: fixed !important;
+        z-index: 1000 !important;
     }
     
     .sidebar.collapsed {
         transform: translateX(-240px);
+        -webkit-transform: translateX(-240px);
     }
     
-    /* Contenu principal avec sidebar */
+    /* Contenu principal avec sidebar - FORCER MARGIN */
     .main-content {
         margin-left: 240px !important;
         padding: 1.5rem !important;
