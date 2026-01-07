@@ -437,7 +437,7 @@
                         <span>Prévisions & Ventes</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
-                    <div class="menu-group-content {% if request.endpoint and ('forecast' in request.endpoint or 'orders' in request.endpoint) %}expanded{% endif %}">
+                    <div class="menu-group-content {% if request.endpoint and ('forecast' in request.endpoint or 'orders' in request.endpoint or 'commercial_clients' in request.endpoint) %}expanded{% endif %}">
                         {% if has_permission(current_user, 'forecast.read') %}
                         <a href="{{ url_for('forecast_dashboard') }}" class="menu-subitem {% if request.endpoint == 'forecast_dashboard' %}active{% endif %}">
                             <i class="fas fa-tachometer-alt"></i>
@@ -474,6 +474,12 @@
                         <a href="{{ url_for('orders.orders_list') }}" class="menu-subitem {% if request.endpoint and 'orders' in request.endpoint %}active{% endif %}">
                             <i class="fas fa-shopping-cart"></i>
                             Commandes Commerciales
+                        </a>
+                        {% endif %}
+                        {% if current_user.role and current_user.role.code == 'commercial' %}
+                        <a href="{{ url_for('commercial_clients.clients_list') }}" class="menu-subitem {% if request.endpoint and 'commercial_clients' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-users"></i>
+                            Mes Clients
                         </a>
                         {% endif %}
                     </div>

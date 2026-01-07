@@ -1586,9 +1586,21 @@ function addClientColumn() {
       </h4>
     </div>
     <div class="client-info">
-      <input type="text" name="client_${clientId}_name" placeholder="Nom du client *" required>
-      <input type="text" name="client_${clientId}_phone" placeholder="Téléphone">
-      <textarea name="client_${clientId}_address" placeholder="Adresse complète" rows="2"></textarea>
+      <div style="position: relative;">
+        <input type="text" name="client_${clientId}_name" placeholder="Nom du client *" required id="client_${clientId}_name">
+        <button type="button" class="btn-search-client" onclick="searchClientByPhone(${clientId})" title="Rechercher par téléphone" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: var(--color-primary); color: white; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <div style="position: relative;">
+        <input type="text" name="client_${clientId}_phone" placeholder="Téléphone" id="client_${clientId}_phone" 
+               onblur="searchClientByPhone(${clientId})" 
+               onkeypress="if(event.key === 'Enter') { event.preventDefault(); searchClientByPhone(${clientId}); }">
+        <span id="client_${clientId}_phone_status" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem;"></span>
+      </div>
+      <textarea name="client_${clientId}_address" placeholder="Adresse complète" rows="2" id="client_${clientId}_address"></textarea>
+      <input type="hidden" name="client_${clientId}_latitude" id="client_${clientId}_latitude">
+      <input type="hidden" name="client_${clientId}_longitude" id="client_${clientId}_longitude">
       <select name="client_${clientId}_payment_type" onchange="togglePaymentDueDate(${clientId}, this.value); calculateClientTotal(${clientId}); calculateOrderTotal();">
         <option value="cash">💵 Comptant</option>
         <option value="credit">📅 Crédit</option>
@@ -2396,6 +2408,86 @@ document.addEventListener('DOMContentLoaded', function() {
       searchResults.style.display = 'none';
     }
   });
+  
+  // Rechercher un client par téléphone
+  window.searchClientByPhone = function(clientId) {
+    const phoneInput = document.getElementById(`client_${clientId}_phone`);
+    const nameInput = document.getElementById(`client_${clientId}_name`);
+    const addressTextarea = document.getElementById(`client_${clientId}_address`);
+    const latitudeInput = document.getElementById(`client_${clientId}_latitude`);
+    const longitudeInput = document.getElementById(`client_${clientId}_longitude`);
+    const statusSpan = document.getElementById(`client_${clientId}_phone_status`);
+    
+    if (!phoneInput || !phoneInput.value.trim()) {
+      if (statusSpan) {
+        statusSpan.innerHTML = '';
+        statusSpan.style.color = '';
+      }
+      return;
+    }
+    
+    const phone = phoneInput.value.trim();
+    
+    // Afficher un indicateur de chargement
+    if (statusSpan) {
+      statusSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      statusSpan.style.color = 'var(--color-primary)';
+    }
+    
+    // Appel API pour rechercher le client
+    fetch(`{{ url_for('commercial_clients.search_by_phone') }}?phone=${encodeURIComponent(phone)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.client) {
+          // Remplir les champs avec les données du client
+          if (nameInput) {
+            nameInput.value = data.client.full_name || '';
+          }
+          if (addressTextarea) {
+            addressTextarea.value = data.client.address || '';
+          }
+          if (latitudeInput) {
+            latitudeInput.value = data.client.latitude || '';
+          }
+          if (longitudeInput) {
+            longitudeInput.value = data.client.longitude || '';
+          }
+          
+          // Afficher un indicateur de succès
+          if (statusSpan) {
+            statusSpan.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i>';
+            statusSpan.style.color = '#10b981';
+            setTimeout(() => {
+              statusSpan.innerHTML = '';
+            }, 3000);
+          }
+          
+          showNotification(`Client ${data.client.full_name} trouvé et chargé`, 'success');
+        } else {
+          // Client non trouvé
+          if (statusSpan) {
+            statusSpan.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>';
+            statusSpan.style.color = '#ef4444';
+            setTimeout(() => {
+              statusSpan.innerHTML = '';
+            }, 3000);
+          }
+          
+          // Ne pas effacer les champs déjà remplis
+          // L'utilisateur peut continuer à saisir manuellement
+        }
+      })
+      .catch(error => {
+        console.error('Erreur lors de la recherche du client:', error);
+        if (statusSpan) {
+          statusSpan.innerHTML = '<i class="fas fa-times-circle" style="color: #ef4444;"></i>';
+          statusSpan.style.color = '#ef4444';
+          setTimeout(() => {
+            statusSpan.innerHTML = '';
+          }, 3000);
+        }
+      });
+  };
 });
 </script>
 {% endblock %}

@@ -1,0 +1,299 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if is_edit %}Modifier le Client{% else %}Nouveau Client{% endif %} - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 800px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .form-group {
+    margin-bottom: var(--space-lg);
+  }
+  
+  .form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 0.875rem;
+  }
+  
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: var(--space-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-input:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .gps-section {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  
+  .gps-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .gps-coords {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .gps-help {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 12px;
+    padding: 12px;
+    background: #eff6ff;
+    border-radius: 6px;
+    border-left: 3px solid #3b82f6;
+  }
+  
+  .btn-get-location {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  
+  .btn-get-location:hover {
+    background: #2563eb;
+  }
+  
+  .btn-get-location:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 240px !important;
+    }
+    
+    .gps-coords {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-lg);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-xl); display: flex; align-items: center; gap: var(--space-md);">
+      <i class="fas fa-{{ 'edit' if is_edit else 'user-plus' }}" style="color: var(--color-primary);"></i>
+      {% if is_edit %}Modifier le Client{% else %}Nouveau Client{% endif %}
+    </h1>
+    
+    <form method="POST" id="clientForm">
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-user me-2"></i>Prénom *
+        </label>
+        <input type="text" name="first_name" class="form-input" 
+               value="{{ client.first_name if client else '' }}" 
+               placeholder="Prénom du client" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-user me-2"></i>Nom *
+        </label>
+        <input type="text" name="last_name" class="form-input" 
+               value="{{ client.last_name if client else '' }}" 
+               placeholder="Nom du client" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-phone me-2"></i>Téléphone *
+        </label>
+        <input type="tel" name="phone" class="form-input" 
+               value="{{ client.phone if client else '' }}" 
+               placeholder="Ex: +224 612 345 678" required>
+        <small style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px; display: block;">
+          Ce numéro sera utilisé pour retrouver rapidement le client lors de la saisie de commande
+        </small>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-map-marker-alt me-2"></i>Adresse
+        </label>
+        <textarea name="address" class="form-textarea" rows="3" 
+                  placeholder="Adresse complète du client">{{ client.address if client else '' }}</textarea>
+      </div>
+      
+      <div class="gps-section">
+        <h4>
+          <i class="fas fa-map-pin" style="color: #3b82f6;"></i>
+          Géolocalisation GPS
+        </h4>
+        <div class="gps-coords">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Latitude</label>
+            <input type="number" name="latitude" class="form-input" 
+                   value="{{ client.latitude if client and client.latitude else '' }}" 
+                   placeholder="Ex: 9.5370" step="0.00000001" min="-90" max="90">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Longitude</label>
+            <input type="number" name="longitude" class="form-input" 
+                   value="{{ client.longitude if client and client.longitude else '' }}" 
+                   placeholder="Ex: -13.6781" step="0.00000001" min="-180" max="180">
+          </div>
+        </div>
+        <button type="button" class="btn-get-location" onclick="getCurrentLocation()" id="btnGetLocation">
+          <i class="fas fa-crosshairs"></i>
+          Obtenir ma position GPS
+        </button>
+        <div class="gps-help">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Astuce:</strong> Cliquez sur "Obtenir ma position GPS" pour capturer automatiquement vos coordonnées. 
+          Vous pouvez aussi les saisir manuellement ou les laisser vides.
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-sticky-note me-2"></i>Notes
+        </label>
+        <textarea name="notes" class="form-textarea" rows="4" 
+                  placeholder="Notes supplémentaires sur le client">{{ client.notes if client else '' }}</textarea>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-save me-2"></i>
+          {% if is_edit %}Enregistrer les modifications{% else %}Créer le client{% endif %}
+        </button>
+        <a href="{{ url_for('commercial_clients.clients_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-times me-2"></i>Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function getCurrentLocation() {
+  const btn = document.getElementById('btnGetLocation');
+  const latInput = document.querySelector('input[name="latitude"]');
+  const lngInput = document.querySelector('input[name="longitude"]');
+  
+  if (!navigator.geolocation) {
+    alert('La géolocalisation n\'est pas supportée par votre navigateur');
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Récupération de la position...';
+  
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      if (latInput) latInput.value = lat.toFixed(8);
+      if (lngInput) lngInput.value = lng.toFixed(8);
+      
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> Position obtenue';
+      
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-crosshairs"></i> Obtenir ma position GPS';
+      }, 2000);
+    },
+    function(error) {
+      let message = 'Erreur lors de la récupération de la position: ';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          message += 'Permission refusée. Veuillez autoriser l\'accès à la localisation.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          message += 'Position indisponible.';
+          break;
+        case error.TIMEOUT:
+          message += 'Délai d\'attente dépassé.';
+          break;
+        default:
+          message += 'Erreur inconnue.';
+          break;
+      }
+      alert(message);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-crosshairs"></i> Obtenir ma position GPS';
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+</script>
+{% endblock %}
+

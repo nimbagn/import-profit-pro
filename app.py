@@ -178,6 +178,9 @@ app.register_blueprint(inventaires_bp)
 from flotte import flotte_bp
 app.register_blueprint(flotte_bp)
 
+from commercial_clients import commercial_clients_bp
+app.register_blueprint(commercial_clients_bp)
+
 from price_lists import price_lists_bp
 app.register_blueprint(price_lists_bp)
 

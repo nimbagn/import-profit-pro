@@ -1000,6 +1000,43 @@ class CommercialOrderItem(db.Model):
         return f"<CommercialOrderItem client={self.order_client_id} item={self.stock_item_id} qty={self.quantity}>"
 
 # =========================================================
+# CLIENTS COMMERCIAUX AVEC GÉOLOCALISATION
+# =========================================================
+
+class CommercialClient(db.Model):
+    """Clients des commerciaux avec géolocalisation GPS"""
+    __tablename__ = "commercial_clients"
+    id = PK()
+    commercial_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE", index=True)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False, index=True)  # Indexé pour recherche rapide
+    address = db.Column(db.String(255), nullable=True)
+    latitude = db.Column(db.Numeric(10, 8), nullable=True)  # Coordonnée GPS latitude
+    longitude = db.Column(db.Numeric(11, 8), nullable=True)  # Coordonnée GPS longitude
+    notes = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    commercial = db.relationship("User", foreign_keys=[commercial_id], lazy="joined")
+    
+    __table_args__ = (
+        db.Index("idx_commercialclient_commercial", "commercial_id"),
+        db.Index("idx_commercialclient_phone", "phone"),
+        db.Index("idx_commercialclient_active", "is_active"),
+        db.UniqueConstraint("commercial_id", "phone", name="uq_commercial_phone"),  # Un numéro unique par commercial
+    )
+    
+    @property
+    def full_name(self):
+        """Retourne le nom complet"""
+        return f"{self.first_name} {self.last_name}".strip()
+    
+    def __repr__(self):
+        return f"<CommercialClient {self.full_name} ({self.phone}) - Commercial: {self.commercial_id}>"
+
+# =========================================================
 # RÉCAPITULATIFS DE CHARGEMENT DE STOCK
 # =========================================================
 

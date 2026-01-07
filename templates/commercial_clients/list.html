@@ -1,0 +1,329 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Mes Clients - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: #f5f7fa;
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0;
+    padding: 32px 40px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .page-title-hl {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .page-title-hl i {
+    color: #3b82f6;
+    font-size: 24px;
+  }
+  
+  .card-hl {
+    margin: 24px 40px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .clients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    padding: 24px;
+  }
+  
+  .client-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  
+  .client-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+  
+  .client-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  
+  .client-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+  
+  .client-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn-icon {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  
+  .btn-icon:hover {
+    background: #f3f4f6;
+    color: #3b82f6;
+  }
+  
+  .client-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .client-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #6b7280;
+  }
+  
+  .client-info-item i {
+    width: 16px;
+    color: #9ca3af;
+  }
+  
+  .client-info-item strong {
+    color: #374151;
+  }
+  
+  .gps-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .no-gps {
+    color: #9ca3af;
+    font-size: 12px;
+  }
+  
+  .search-section {
+    padding: 24px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .search-input-wrapper {
+    position: relative;
+    max-width: 400px;
+  }
+  
+  .search-input-wrapper input {
+    width: 100%;
+    padding: 12px 16px;
+    padding-left: 45px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  
+  .search-input-wrapper i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: #6b7280;
+  }
+  
+  .empty-state i {
+    font-size: 48px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+  }
+  
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 240px !important;
+    }
+    
+    .clients-grid {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+    }
+    
+    .page-header-hl {
+      padding: 20px;
+    }
+    
+    .card-hl {
+      margin: 16px;
+    }
+    
+    .clients-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-users"></i>
+      Mes Clients
+    </h1>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+      <a href="{{ url_for('commercial_clients.client_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>Nouveau Client
+      </a>
+      <a href="{{ url_for('orders.order_new') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-shopping-cart me-2"></i>Nouvelle Commande
+      </a>
+    </div>
+  </div>
+  
+  <div class="card-hl">
+    <div class="search-section">
+      <form method="GET" action="{{ url_for('commercial_clients.clients_list') }}" style="display: flex; gap: 12px; align-items: center;">
+        <div class="search-input-wrapper">
+          <i class="fas fa-search"></i>
+          <input type="text" name="search" value="{{ search }}" placeholder="Rechercher par nom, téléphone, adresse...">
+        </div>
+        <button type="submit" class="btn-hl btn-hl-primary">
+          <i class="fas fa-search me-2"></i>Rechercher
+        </button>
+        {% if search %}
+        <a href="{{ url_for('commercial_clients.clients_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-times me-2"></i>Effacer
+        </a>
+        {% endif %}
+      </form>
+    </div>
+    
+    {% if clients %}
+    <div class="clients-grid">
+      {% for client in clients %}
+      <div class="client-card">
+        <div class="client-card-header">
+          <h3 class="client-name">{{ client.full_name }}</h3>
+          <div class="client-actions">
+            <a href="{{ url_for('commercial_clients.client_edit', client_id=client.id) }}" class="btn-icon" title="Modifier">
+              <i class="fas fa-edit"></i>
+            </a>
+            <form method="POST" action="{{ url_for('commercial_clients.client_delete', client_id=client.id) }}" 
+                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce client ?');" style="display: inline;">
+              <button type="submit" class="btn-icon" title="Supprimer">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="client-info">
+          <div class="client-info-item">
+            <i class="fas fa-phone"></i>
+            <strong>Téléphone:</strong> <span>{{ client.phone }}</span>
+          </div>
+          {% if client.address %}
+          <div class="client-info-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <strong>Adresse:</strong> <span>{{ client.address }}</span>
+          </div>
+          {% endif %}
+          {% if client.latitude and client.longitude %}
+          <div class="client-info-item">
+            <i class="fas fa-map-pin"></i>
+            <span class="gps-badge">
+              <i class="fas fa-location-dot"></i>
+              GPS: {{ "%.6f"|format(client.latitude|float) }}, {{ "%.6f"|format(client.longitude|float) }}
+            </span>
+          </div>
+          {% else %}
+          <div class="client-info-item">
+            <i class="fas fa-map-pin"></i>
+            <span class="no-gps">Géolocalisation non définie</span>
+          </div>
+          {% endif %}
+          {% if client.notes %}
+          <div class="client-info-item" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #f3f4f6;">
+            <i class="fas fa-sticky-note"></i>
+            <span style="font-size: 13px; color: #6b7280;">{{ client.notes[:100] }}{% if client.notes|length > 100 %}...{% endif %}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-users"></i>
+      <h3 style="color: #374151; margin: 16px 0 8px 0;">Aucun client trouvé</h3>
+      <p style="margin-bottom: 24px;">
+        {% if search %}
+        Aucun client ne correspond à votre recherche "{{ search }}"
+        {% else %}
+        Vous n'avez pas encore de clients enregistrés.
+        {% endif %}
+      </p>
+      <a href="{{ url_for('commercial_clients.client_new') }}" class="btn-hl btn-hl-primary">
+        <i class="fas fa-plus me-2"></i>Créer votre premier client
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
