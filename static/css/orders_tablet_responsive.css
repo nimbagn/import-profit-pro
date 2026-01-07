@@ -1,0 +1,332 @@
+/* =========================================================
+   ORDERS TABLET & MOBILE RESPONSIVE - IMPORT PROFIT PRO
+   Optimisations spécifiques pour tablettes et mobiles
+   Pages: /orders/, /orders/new, /orders/<id>
+   ========================================================= */
+
+/* =========================================================
+   TABLETTE PORTRAIT (768px - 1024px)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Formulaire de commande */
+    .form-container {
+        padding: 1.5rem !important;
+        max-width: 100% !important;
+    }
+    
+    .form-hl {
+        padding: 1.5rem !important;
+    }
+    
+    /* Section recherche d'articles */
+    .search-section {
+        padding: 1.5rem !important;
+    }
+    
+    /* Grilles adaptatives - 2 colonnes */
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    /* Tableaux clients */
+    .clients-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .clients-table {
+        min-width: 800px;
+    }
+    
+    /* Cards */
+    .card-hl,
+    .modern-card {
+        padding: 1.5rem !important;
+        margin: 1rem !important;
+    }
+    
+    /* Boutons */
+    .btn-modern,
+    .btn-hl {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.95rem !important;
+        min-height: 44px !important;
+    }
+    
+    /* Inputs et selects */
+    .form-input,
+    .form-select,
+    .form-hl-input,
+    .form-hl-select {
+        font-size: 16px !important; /* Évite le zoom iOS */
+        padding: 0.875rem 1rem !important;
+    }
+    
+    /* Typographie */
+    .page-title-hl {
+        font-size: 1.75rem !important;
+    }
+    
+    /* Filtres */
+    .filters-section {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    /* Tableaux de commandes */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modern-table {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Client header */
+    .client-header {
+        flex-wrap: wrap !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Items grid */
+    .items-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+}
+
+/* =========================================================
+   TABLETTE PAYSAGE (768px - 1024px landscape)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    /* Grilles adaptatives - 3 colonnes en paysage */
+    .form-row,
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .filters-section {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    /* Tableaux clients - plus d'espace */
+    .clients-table {
+        min-width: 900px;
+    }
+}
+
+/* =========================================================
+   MOBILE PORTRAIT (< 768px)
+   ========================================================= */
+@media (max-width: 767px) {
+    /* Formulaire de commande */
+    .form-container {
+        padding: 1rem !important;
+        margin: 1rem auto !important;
+    }
+    
+    .form-hl {
+        padding: 1rem !important;
+    }
+    
+    /* Section recherche */
+    .search-section {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Grilles - 1 colonne sur mobile */
+    .form-row,
+    .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .filters-section {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    /* Tableaux clients - scroll horizontal */
+    .clients-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+    }
+    
+    .clients-table {
+        min-width: 700px;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Cards */
+    .card-hl,
+    .modern-card {
+        padding: 1rem !important;
+        margin: 0.75rem !important;
+    }
+    
+    /* Boutons pleine largeur */
+    .btn-modern,
+    .btn-hl {
+        width: 100% !important;
+        padding: 0.875rem 1rem !important;
+        font-size: 0.95rem !important;
+        min-height: 44px !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    /* Inputs et selects */
+    .form-input,
+    .form-select,
+    .form-hl-input,
+    .form-hl-select {
+        font-size: 16px !important;
+        padding: 0.875rem 1rem !important;
+        width: 100% !important;
+    }
+    
+    /* Typographie */
+    .page-title-hl {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Client header - empilé */
+    .client-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Items grid - 1 colonne */
+    .items-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Tableaux de commandes */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modern-table {
+        font-size: 0.85rem !important;
+        min-width: 600px;
+    }
+    
+    /* Page header */
+    .page-header-hl {
+        padding: 1rem !important;
+    }
+}
+
+/* =========================================================
+   PETIT MOBILE (< 480px)
+   ========================================================= */
+@media (max-width: 480px) {
+    .form-container {
+        padding: 0.75rem !important;
+        margin: 0.75rem auto !important;
+    }
+    
+    .form-hl {
+        padding: 0.75rem !important;
+    }
+    
+    .search-section {
+        padding: 0.75rem !important;
+    }
+    
+    .card-hl,
+    .modern-card {
+        padding: 0.75rem !important;
+        margin: 0.5rem !important;
+    }
+    
+    .page-title-hl {
+        font-size: 1.25rem !important;
+    }
+    
+    .clients-table {
+        min-width: 600px;
+        font-size: 0.8rem !important;
+    }
+    
+    .modern-table {
+        font-size: 0.8rem !important;
+        min-width: 500px;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS ERGONOMIQUES TABLETTE
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Touch targets optimisés */
+    .btn-modern,
+    .btn-hl,
+    .btn-icon,
+    button,
+    a.btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Espacement amélioré */
+    .form-group {
+        margin-bottom: 1.25rem !important;
+    }
+    
+    /* Focus states améliorés */
+    .form-input:focus,
+    .form-select:focus,
+    .form-hl-input:focus,
+    .form-hl-select:focus {
+        border-color: #003865 !important;
+        box-shadow: 0 0 0 3px rgba(0, 56, 101, 0.1) !important;
+        outline: none !important;
+    }
+    
+    /* Scroll smooth */
+    .clients-table-container,
+    .table-responsive {
+        -webkit-overflow-scrolling: touch !important;
+        scroll-behavior: smooth !important;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS VISIBILITÉ TABLETTE
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Contraste amélioré */
+    .form-label,
+    .form-hl-label {
+        font-weight: 600 !important;
+        color: #374151 !important;
+    }
+    
+    /* Bordures plus visibles */
+    .card-hl,
+    .modern-card {
+        border: 1px solid #e5e7eb !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+    
+    /* Badges plus visibles */
+    .badge,
+    .badge-status {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+    }
+}
+

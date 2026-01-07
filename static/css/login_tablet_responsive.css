@@ -1,0 +1,242 @@
+/* =========================================================
+   LOGIN TABLET & MOBILE RESPONSIVE - IMPORT PROFIT PRO
+   Optimisations spécifiques pour tablettes et mobiles
+   Page: /auth/login
+   ========================================================= */
+
+/* =========================================================
+   TABLETTE PORTRAIT (768px - 1024px)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .login-container {
+        padding: 1.5rem !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+    }
+    
+    .login-card {
+        max-width: 500px !important;
+        padding: 2rem 2rem !important;
+        max-height: calc(100vh - 3rem) !important;
+    }
+    
+    .login-title {
+        font-size: 1.75rem !important;
+    }
+    
+    .login-logo {
+        font-size: 3rem !important;
+    }
+    
+    .form-control {
+        font-size: 16px !important; /* Évite le zoom iOS */
+        padding: 0.875rem 1rem !important;
+    }
+    
+    .btn-login {
+        padding: 0.875rem 1.5rem !important;
+        font-size: 1rem !important;
+        min-height: 44px !important;
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem !important;
+    }
+}
+
+/* =========================================================
+   TABLETTE PAYSAGE (768px - 1024px landscape)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .login-container {
+        padding: 1rem !important;
+    }
+    
+    .login-card {
+        max-width: 550px !important;
+        padding: 1.75rem 2rem !important;
+        max-height: calc(100vh - 2rem) !important;
+    }
+    
+    .login-header {
+        margin-bottom: 1rem !important;
+    }
+    
+    .login-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .login-logo {
+        font-size: 2.5rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+    
+    .login-footer {
+        margin-top: 1rem !important;
+        padding-top: 0.875rem !important;
+    }
+}
+
+/* =========================================================
+   MOBILE PORTRAIT (< 768px)
+   ========================================================= */
+@media (max-width: 767px) {
+    .login-container {
+        padding: 0.75rem !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+    }
+    
+    .login-card {
+        padding: 1.5rem 1.25rem !important;
+        max-width: 100% !important;
+        border-radius: 16px !important;
+        max-height: calc(100vh - 1.5rem) !important;
+    }
+    
+    .login-header {
+        margin-bottom: 1.25rem !important;
+    }
+    
+    .login-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .login-logo {
+        font-size: 2.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .login-subtitle {
+        font-size: 0.85rem !important;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+    
+    .form-control {
+        padding: 0.875rem 1rem !important;
+        font-size: 16px !important; /* Évite le zoom iOS */
+    }
+    
+    .btn-login {
+        padding: 0.875rem 1.25rem !important;
+        font-size: 0.95rem !important;
+        min-height: 44px !important;
+    }
+    
+    .form-check {
+        margin-bottom: 1rem !important;
+    }
+    
+    .login-footer {
+        margin-top: 1rem !important;
+        padding-top: 0.875rem !important;
+    }
+}
+
+/* =========================================================
+   PETIT MOBILE (< 480px)
+   ========================================================= */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 0.5rem !important;
+    }
+    
+    .login-card {
+        padding: 1.25rem 1rem !important;
+        border-radius: 16px !important;
+        max-height: calc(100vh - 1rem) !important;
+    }
+    
+    .login-header {
+        margin-bottom: 1rem !important;
+    }
+    
+    .login-title {
+        font-size: 1.35rem !important;
+    }
+    
+    .login-logo {
+        font-size: 2.25rem !important;
+        margin-bottom: 0.375rem !important;
+    }
+    
+    .login-subtitle {
+        font-size: 0.8rem !important;
+    }
+    
+    .form-group {
+        margin-bottom: 0.875rem !important;
+    }
+    
+    .form-control {
+        padding: 0.75rem 0.875rem !important;
+        font-size: 16px !important;
+    }
+    
+    .form-check {
+        margin-bottom: 0.875rem !important;
+    }
+    
+    .btn-login {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
+    }
+    
+    .login-footer {
+        margin-top: 0.875rem !important;
+        padding-top: 0.75rem !important;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS ERGONOMIQUES TABLETTE
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Touch targets optimisés */
+    .btn-login,
+    .form-check-input {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Focus states améliorés */
+    .form-control:focus {
+        border-color: #003865 !important;
+        box-shadow: 0 0 0 4px rgba(0, 56, 101, 0.15) !important;
+        outline: none !important;
+    }
+    
+    /* Hover states améliorés */
+    .btn-login:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(0, 56, 101, 0.4) !important;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS VISIBILITÉ TABLETTE
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Contraste amélioré */
+    .form-label {
+        font-weight: 600 !important;
+        color: #374151 !important;
+    }
+    
+    /* Bordures plus visibles */
+    .login-card {
+        border: 2px solid rgba(0, 56, 101, 0.15) !important;
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.12),
+            0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    }
+}
+

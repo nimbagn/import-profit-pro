@@ -39,6 +39,14 @@
     <link href="{{ url_for('static', filename='css/ipad_responsive.css') }}" rel="stylesheet">
     <!-- CSS iPad Fix Global - Corrections pour tous les templates (PRIORITÉ ÉLEVÉE) -->
     <link href="{{ url_for('static', filename='css/ipad_fix_global.css') }}" rel="stylesheet">
+    <!-- CSS Orders Tablet Responsive - Optimisations pour tablettes et mobiles -->
+    {% if request.endpoint and 'orders' in request.endpoint %}
+    <link href="{{ url_for('static', filename='css/orders_tablet_responsive.css') }}" rel="stylesheet">
+    {% endif %}
+    <!-- CSS Login Tablet Responsive - Optimisations pour tablettes et mobiles -->
+    {% if request.endpoint and ('auth.login' in request.endpoint or request.endpoint == 'auth.login') %}
+    <link href="{{ url_for('static', filename='css/login_tablet_responsive.css') }}" rel="stylesheet">
+    {% endif %}
     <!-- CSS Responsive Promotion -->
     {% if request.endpoint and 'promotion' in request.endpoint %}
     <link href="{{ url_for('static', filename='css/promotion_responsive.css') }}" rel="stylesheet">
