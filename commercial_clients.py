@@ -34,7 +34,6 @@ def clients_list():
         # Admin/supervisor peut voir tous les clients
         query = CommercialClient.query.filter_by(is_active=True)
         if search:
-            from sqlalchemy import or_
             query = query.filter(
                 or_(
                     CommercialClient.first_name.ilike(f'%{search}%'),
