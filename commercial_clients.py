@@ -10,6 +10,7 @@ from models import db, CommercialClient
 from auth import has_permission
 from datetime import datetime, UTC
 from decimal import Decimal, InvalidOperation
+from sqlalchemy import or_
 
 commercial_clients_bp = Blueprint('commercial_clients', __name__, url_prefix='/commercial-clients')
 
@@ -33,8 +34,9 @@ def clients_list():
         # Admin/supervisor peut voir tous les clients
         query = CommercialClient.query.filter_by(is_active=True)
         if search:
+            from sqlalchemy import or_
             query = query.filter(
-                db.or_(
+                or_(
                     CommercialClient.first_name.ilike(f'%{search}%'),
                     CommercialClient.last_name.ilike(f'%{search}%'),
                     CommercialClient.phone.ilike(f'%{search}%'),
