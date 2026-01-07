@@ -19,11 +19,23 @@ def get_user_region_id():
     
     # ⚠️ RÈGLE FONDAMENTALE : Les admins voient TOUT (pas de filtre par région)
     # Retourner None désactive tous les filtres de région pour l'admin
-    if hasattr(current_user, 'role') and current_user.role:
-        if current_user.role.code in ['admin', 'superadmin']:
-            return None  # Admin voit toutes les régions - aucun filtre appliqué
+    # Vérifier le rôle avec gestion d'erreur
+    try:
+        if hasattr(current_user, 'role') and current_user.role:
+            role_code = getattr(current_user.role, 'code', None)
+            if role_code in ['admin', 'superadmin']:
+                return None  # Admin voit toutes les régions - aucun filtre appliqué
+    except Exception as e:
+        # En cas d'erreur, continuer avec le filtrage par région
+        print(f"⚠️ Erreur lors de la vérification du rôle: {e}")
     
-    return current_user.region_id if hasattr(current_user, 'region_id') else None
+    # Retourner la région de l'utilisateur
+    region_id = getattr(current_user, 'region_id', None)
+    if region_id is None:
+        # Debug : afficher un avertissement si l'utilisateur n'a pas de région
+        print(f"⚠️ Utilisateur {current_user.id} ({current_user.username}) n'a pas de région assignée")
+    
+    return region_id
 
 
 def filter_depots_by_region(query):
