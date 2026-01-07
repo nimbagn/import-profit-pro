@@ -1,0 +1,237 @@
+/* =========================================================
+   MENU TABLET OPTIMIZATION - OPTIMISATIONS MENUS TABLETTES
+   Améliorations spécifiques pour le comportement des menus sur tablettes
+   ========================================================= */
+
+/* =========================================================
+   TABLETTE PORTRAIT & PAYSAGE (768px - 1024px)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Menu sidebar - Toujours visible et fonctionnel */
+    .sidebar {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: translateX(0) !important;
+        -webkit-transform: translateX(0) !important;
+        position: fixed !important;
+        z-index: 1000 !important;
+    }
+    
+    /* Menu groups - Animation fluide */
+    .menu-group-content {
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        overflow: hidden !important;
+    }
+    
+    .menu-group-content.expanded {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Menu group title - Touch optimisé */
+    .menu-group-title {
+        min-height: 48px !important;
+        padding: 0.875rem 1rem !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2) !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    
+    .menu-group-title:hover {
+        background: rgba(255, 255, 255, 0.12) !important;
+    }
+    
+    .menu-group-title:active {
+        background: rgba(255, 255, 255, 0.18) !important;
+    }
+    
+    /* Chevron animation */
+    .menu-group-title i.fa-chevron-down {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .menu-group-title.expanded i.fa-chevron-down {
+        transform: rotate(180deg) !important;
+    }
+    
+    /* Menu items - Touch targets optimisés */
+    .menu-item,
+    .menu-subitem {
+        min-height: 48px !important;
+        padding: 0.875rem 1rem !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.15) !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .menu-subitem {
+        padding-left: 2.5rem !important;
+    }
+    
+    /* Menu subitem active state */
+    .menu-subitem.active {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-left: 3px solid var(--hl-orange) !important;
+    }
+    
+    /* Menu toggle - Visible mais discret */
+    .menu-toggle {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        touch-action: manipulation !important;
+    }
+    
+    .mobile-menu-toggle {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* Overlay - Non utilisé sur tablettes (menu toujours visible) */
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar-overlay.active {
+        display: none !important;
+    }
+    
+    /* Scrollbar optimisée pour tablettes */
+    .sidebar::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-radius: 3px !important;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* Amélioration de la visibilité des icônes */
+    .menu-item i,
+    .menu-subitem i {
+        width: 20px !important;
+        font-size: 1rem !important;
+        margin-right: 0.75rem !important;
+        opacity: 0.9 !important;
+    }
+    
+    /* Espacement entre groupes */
+    .menu-group {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Sidebar header - Optimisé */
+    .sidebar-header {
+        padding: 1rem !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background: linear-gradient(180deg, var(--hl-blue) 0%, var(--hl-blue-dark) 100%) !important;
+    }
+    
+    .sidebar-header h4 {
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+    }
+}
+
+/* =========================================================
+   TABLETTE PAYSAGE (768px - 1024px landscape)
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    /* Menu plus compact en paysage */
+    .menu-group-title {
+        padding: 0.75rem 0.875rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .menu-item,
+    .menu-subitem {
+        padding: 0.75rem 0.875rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .menu-subitem {
+        padding-left: 2.25rem !important;
+    }
+    
+    .sidebar-header {
+        padding: 0.75rem !important;
+    }
+    
+    .sidebar-header h4 {
+        font-size: 1rem !important;
+    }
+}
+
+/* =========================================================
+   AMÉLIORATIONS ERGONOMIQUES TABLETTE
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Feedback visuel au touch */
+    .menu-group-title:active,
+    .menu-item:active,
+    .menu-subitem:active {
+        transform: scale(0.98) !important;
+        transition: transform 0.1s ease !important;
+    }
+    
+    /* Amélioration de la lisibilité */
+    .menu-group-title {
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
+    }
+    
+    /* Séparation visuelle entre groupes */
+    .menu-group + .menu-group {
+        margin-top: 0.5rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-top: 0.5rem !important;
+    }
+}
+
+/* =========================================================
+   FIX POUR MENU GROUPS QUI NE S'OUVRENT PAS
+   ========================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Forcer la visibilité quand expanded */
+    .menu-group-content.expanded {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        max-height: none !important;
+        height: auto !important;
+    }
+    
+    /* S'assurer que le contenu est accessible */
+    .menu-group-content:not(.expanded) {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+    }
+}
+

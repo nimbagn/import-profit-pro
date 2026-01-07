@@ -29,6 +29,8 @@
     <link href="{{ url_for('static', filename='css/mobile_fix.css') }}" rel="stylesheet">
     <!-- CSS Menu Responsive - Optimisations Menu pour tous les écrans -->
     <link href="{{ url_for('static', filename='css/menu_responsive.css') }}" rel="stylesheet">
+    <!-- CSS Menu Tablet Optimization - Optimisations spécifiques tablettes -->
+    <link href="{{ url_for('static', filename='css/menu_tablet_optimization.css') }}" rel="stylesheet">
     <!-- CSS Header & Footer Mobile Fix - Corrections menu mobile, profil et footer -->
     <link href="{{ url_for('static', filename='css/header_footer_mobile_fix.css') }}" rel="stylesheet">
     <!-- CSS Force Responsive Global - Force responsive sur TOUTES les pages (PRIORITÉ MAXIMALE - DERNIER) -->
@@ -999,11 +1001,26 @@
             }
             
             // Fermer le menu en cliquant sur un lien du menu
+            // Sur tablettes (768px-1024px), le menu reste ouvert
+            // Sur mobile (< 768px), le menu se ferme après clic
             const menuLinks = document.querySelectorAll('.sidebar-menu a');
             menuLinks.forEach(link => {
                 link.addEventListener('click', function() {
-        if (window.innerWidth <= 1024) {
+                    // Fermer uniquement sur mobile, pas sur tablette
+                    if (window.innerWidth < 768) {
                         closeSidebar();
+                    }
+                });
+                
+                // Support touch pour Android
+                link.addEventListener('touchend', function(e) {
+                    if (window.innerWidth < 768) {
+                        e.preventDefault();
+                        closeSidebar();
+                        // Naviguer manuellement si nécessaire
+                        if (this.href && this.href !== '#') {
+                            window.location.href = this.href;
+                        }
                     }
                 });
             });
@@ -1098,7 +1115,7 @@
             });
 
         // Fonction pour toggle les groupes de menus (style Hapag-Lloyd)
-        // Compatible Android 9+ / Chrome 77+
+        // Compatible Android 9+ / Chrome 77+ et optimisé pour tablettes
         function toggleMenuGroup(element) {
             if (!element) return;
             
@@ -1111,45 +1128,111 @@
             const isExpanded = element.classList.contains('expanded');
             
             if (isExpanded) {
+                // Fermer le groupe
                 element.classList.remove('expanded');
                 menuContent.classList.remove('expanded');
-                menuContent.style.maxHeight = '0';
-                menuContent.style.display = 'none';
+                
+                // Animation fluide pour tablettes
+                if (window.innerWidth >= 768 && window.innerWidth <= 1024) {
+                    menuContent.style.maxHeight = menuContent.scrollHeight + 'px';
+                    // Force reflow
+                    menuContent.offsetHeight;
+                    menuContent.style.maxHeight = '0';
+                    menuContent.style.opacity = '0';
+                } else {
+                    menuContent.style.maxHeight = '0';
+                    menuContent.style.opacity = '0';
+                }
             } else {
+                // Ouvrir le groupe
                 element.classList.add('expanded');
                 menuContent.classList.add('expanded');
-                menuContent.style.maxHeight = '1000px';
-                menuContent.style.display = 'block';
+                
+                // Animation fluide pour tablettes
+                if (window.innerWidth >= 768 && window.innerWidth <= 1024) {
+                    menuContent.style.display = 'block';
+                    menuContent.style.opacity = '0';
+                    menuContent.style.maxHeight = '0';
+                    // Force reflow
+                    menuContent.offsetHeight;
+                    menuContent.style.maxHeight = menuContent.scrollHeight + 'px';
+                    menuContent.style.opacity = '1';
+                } else {
+                    menuContent.style.display = 'block';
+                    menuContent.style.maxHeight = '1000px';
+                    menuContent.style.opacity = '1';
+                }
             }
         }
         
-        // Fix pour Android - Gérer les événements touch
+        // Fix pour Android et tablettes - Gérer les événements touch
         document.addEventListener('DOMContentLoaded', function() {
-            // Ajouter les event listeners pour les menu groups sur Android
+            // Ajouter les event listeners pour les menu groups sur Android et tablettes
             const menuGroupTitles = document.querySelectorAll('.menu-group-title');
             menuGroupTitles.forEach(function(title) {
                 // Supprimer l'ancien onclick si présent
                 title.removeAttribute('onclick');
                 
-                // Ajouter les event listeners compatibles Android
+                // Variable pour éviter les doubles déclenchements
+                let touchStartTime = 0;
+                let touchStartY = 0;
+                
+                // Ajouter les event listeners compatibles Android et tablettes
                 title.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleMenuGroup(this);
+                    // Sur desktop, comportement normal
+                    if (window.innerWidth > 1024) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleMenuGroup(this);
+                        return;
+                    }
+                    
+                    // Sur tablette et mobile, vérifier que ce n'est pas un scroll
+                    const touchDuration = Date.now() - touchStartTime;
+                    if (touchDuration < 300) { // Moins de 300ms = tap, pas scroll
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleMenuGroup(this);
+                    }
                 });
                 
-                // Support touch pour Android
+                // Support touch pour Android et tablettes
+                title.addEventListener('touchstart', function(e) {
+                    touchStartTime = Date.now();
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+                
                 title.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleMenuGroup(this);
+                    const touchEndTime = Date.now();
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const touchDuration = touchEndTime - touchStartTime;
+                    const touchDistance = Math.abs(touchEndY - touchStartY);
+                    
+                    // Si c'est un tap (court et peu de mouvement), toggle
+                    if (touchDuration < 300 && touchDistance < 10) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleMenuGroup(this);
+                    }
                 });
                 
                 // S'assurer que c'est cliquable
                 title.style.cursor = 'pointer';
                 title.style.userSelect = 'none';
                 title.style.webkitUserSelect = 'none';
+                title.style.touchAction = 'manipulation';
             });
+            
+            // Sur tablettes, garder les groupes ouverts par défaut si la page correspond
+            if (window.innerWidth >= 768 && window.innerWidth <= 1024) {
+                const activeMenuGroup = document.querySelector('.menu-group-content.expanded');
+                if (activeMenuGroup) {
+                    // S'assurer que le contenu est visible
+                    activeMenuGroup.style.display = 'block';
+                    activeMenuGroup.style.opacity = '1';
+                    activeMenuGroup.style.maxHeight = activeMenuGroup.scrollHeight + 'px';
+                }
+            }
         });
     </script>
     
