@@ -74,6 +74,38 @@ except Exception as e:
 from auth import login_manager, init_rate_limiter
 login_manager.init_app(app)
 
+# Context processor pour rendre l'information de région disponible dans tous les templates
+@app.context_processor
+def inject_region_info():
+    """Injecte l'information de région dans tous les templates"""
+    from utils_region_filter import get_user_region_id
+    from models import Region
+    
+    region_info = {
+        'user_region_id': None,
+        'user_region_name': None,
+        'is_admin': False,
+        'is_filtered_by_region': False
+    }
+    
+    if current_user.is_authenticated:
+        # Vérifier si c'est un admin
+        if hasattr(current_user, 'role') and current_user.role:
+            if current_user.role.code in ['admin', 'superadmin']:
+                region_info['is_admin'] = True
+                region_info['is_filtered_by_region'] = False
+            else:
+                # Utilisateur normal - filtré par région
+                region_id = get_user_region_id()
+                if region_id:
+                    region = Region.query.get(region_id)
+                    if region:
+                        region_info['user_region_id'] = region_id
+                        region_info['user_region_name'] = region.name
+                        region_info['is_filtered_by_region'] = True
+    
+    return {'region_info': region_info}
+
 # Initialiser le rate limiting pour la protection contre les attaques brute force
 limiter = init_rate_limiter(app)
 
@@ -2989,12 +3021,22 @@ def articles_import():
                             db.session.flush()
                         category_id = category.id
                     
-                    # Prix
+                    # Prix (amélioration de la conversion)
                     purchase_price = Decimal('0')
                     if price_col and pd.notna(row.get(price_col)):
                         try:
-                            purchase_price = Decimal(str(row[price_col]))
-                        except:
+                            price_val = str(row[price_col]).strip()
+                            # Nettoyer la valeur : enlever les espaces, remplacer virgule par point
+                            price_val = price_val.replace(' ', '').replace(',', '.')
+                            # Enlever les caractères non numériques sauf le point et le signe moins
+                            import re
+                            price_val = re.sub(r'[^\d.-]', '', price_val)
+                            if price_val and price_val not in ['', '.', '-']:
+                                purchase_price = Decimal(price_val)
+                            else:
+                                purchase_price = Decimal('0')
+                        except (ValueError, InvalidOperation, Exception) as e:
+                            print(f"⚠️ Erreur conversion prix ligne {idx + 2}: {e}, valeur originale: {row.get(price_col)}")
                             purchase_price = Decimal('0')
                     
                     # Devise
