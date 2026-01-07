@@ -25,8 +25,9 @@ login_manager.login_message_category = 'info'
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Charger l'utilisateur depuis la base de données"""
-    return User.query.get(int(user_id))
+    """Charger l'utilisateur depuis la base de données avec sa région"""
+    from sqlalchemy.orm import joinedload
+    return User.query.options(joinedload(User.region), joinedload(User.role)).get(int(user_id))
 
 # Rate limiting pour la protection contre les attaques brute force
 limiter = None

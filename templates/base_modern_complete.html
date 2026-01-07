@@ -743,6 +743,18 @@
             
                     <div class="user-menu">
                 {% if current_user.is_authenticated %}
+                <!-- Badge de région visible -->
+                {% if current_user.region %}
+                <div class="region-badge-header" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; background: linear-gradient(135deg, rgba(0, 56, 101, 0.1) 0%, rgba(0, 82, 165, 0.1) 100%); border: 1px solid rgba(0, 56, 101, 0.2); border-radius: 20px; margin-right: 1rem; font-size: 0.85rem; color: var(--hl-blue); font-weight: 500;">
+                    <i class="fas fa-map-marker-alt" style="color: var(--hl-orange);"></i>
+                    <span>{{ current_user.region.name }}{% if current_user.region.code %} ({{ current_user.region.code }}){% endif %}</span>
+                </div>
+                {% elif current_user.role and current_user.role.code in ['admin', 'superadmin'] %}
+                <div class="region-badge-header" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; background: linear-gradient(135deg, rgba(0, 56, 101, 0.1) 0%, rgba(0, 82, 165, 0.1) 100%); border: 1px solid rgba(0, 56, 101, 0.2); border-radius: 20px; margin-right: 1rem; font-size: 0.85rem; color: var(--hl-blue); font-weight: 500;">
+                    <i class="fas fa-shield-alt" style="color: var(--hl-orange);"></i>
+                    <span>Vue Globale</span>
+                </div>
+                {% endif %}
                 <div class="dropdown">
                     <button class="btn btn-link text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user me-2"></i>
