@@ -1495,10 +1495,58 @@
             <i class="fas fa-users"></i>
             Clients et Articles
           </h3>
-          <button type="button" class="btn-hl btn-hl-primary" onclick="addClientColumn()">
-            <i class="fas fa-plus me-2"></i>Ajouter un Client
-          </button>
+          <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+            <button type="button" class="btn-hl btn-hl-primary" onclick="addClientColumn()">
+              <i class="fas fa-plus me-2"></i>Ajouter un Client
+            </button>
+            <a href="{{ url_for('commercial_clients.clients_list') }}" class="btn-hl btn-hl-outline" target="_blank" title="Gérer mes clients">
+              <i class="fas fa-users me-2"></i>Mes Clients
+            </a>
+          </div>
         </div>
+        
+        <!-- Section recherche rapide de client -->
+        {% if current_user.role and current_user.role.code == 'commercial' %}
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-xl);">
+          <h4 style="margin: 0 0 var(--space-md) 0; color: #1e40af; font-size: 1.125rem; display: flex; align-items: center; gap: var(--space-sm);">
+            <i class="fas fa-search" style="color: #3b82f6;"></i>
+            Recherche Rapide de Client
+          </h4>
+          <p style="margin: 0 0 var(--space-md) 0; color: #1e3a8a; font-size: 0.875rem;">
+            <i class="fas fa-info-circle me-2"></i>
+            Recherchez un client existant par téléphone ou sélectionnez-le dans la liste pour l'ajouter rapidement à la commande
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: var(--space-md); align-items: end;">
+            <div>
+              <label style="display: block; font-weight: 600; color: #1e40af; margin-bottom: var(--space-xs); font-size: 0.875rem;">
+                <i class="fas fa-phone me-2"></i>Rechercher par téléphone
+              </label>
+              <div style="position: relative;">
+                <input type="text" id="quickClientSearch" placeholder="Entrez le numéro de téléphone (ex: +224 612 345 678)" 
+                       style="width: 100%; padding: var(--space-md); padding-right: 120px; border: 2px solid #3b82f6; border-radius: var(--radius-md); font-size: 1rem;"
+                       onkeypress="if(event.key === 'Enter') { event.preventDefault(); quickSearchClient(); }">
+                <button type="button" onclick="quickSearchClient()" 
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #3b82f6; color: white; border: none; padding: 0.625rem 1rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+                  <i class="fas fa-search me-2"></i>Rechercher
+                </button>
+              </div>
+            </div>
+            <div>
+              <label style="display: block; font-weight: 600; color: #1e40af; margin-bottom: var(--space-xs); font-size: 0.875rem;">
+                <i class="fas fa-list me-2"></i>Ou sélectionner un client
+              </label>
+              <select id="selectExistingClient" onchange="selectClientFromList(this.value)" 
+                      style="padding: var(--space-md); border: 2px solid #3b82f6; border-radius: var(--radius-md); font-size: 1rem; min-width: 250px; background: white; cursor: pointer;">
+                <option value="">-- Sélectionner un client --</option>
+                <!-- Les clients seront chargés dynamiquement -->
+              </select>
+            </div>
+          </div>
+          <div id="quickSearchResult" style="margin-top: var(--space-md); display: none;">
+            <!-- Résultat de la recherche sera affiché ici -->
+          </div>
+        </div>
+        {% endif %}
         
         <div class="clients-table-container" style="width: 100%; overflow-x: auto;">
           <table class="clients-table" id="clientsTable" style="margin: 0 auto;">
@@ -2488,6 +2536,193 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
   };
+  
+  // Recherche rapide de client (section dédiée)
+  window.quickSearchClient = function() {
+    const searchInput = document.getElementById('quickClientSearch');
+    const resultDiv = document.getElementById('quickSearchResult');
+    
+    if (!searchInput || !searchInput.value.trim()) {
+      if (resultDiv) {
+        resultDiv.style.display = 'none';
+      }
+      return;
+    }
+    
+    const phone = searchInput.value.trim();
+    
+    // Afficher le chargement
+    if (resultDiv) {
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<div style="text-align: center; padding: var(--space-md);"><i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: #3b82f6;"></i><p style="margin-top: var(--space-sm); color: #6b7280;">Recherche en cours...</p></div>';
+    }
+    
+    // Appel API
+    fetch(`{{ url_for('commercial_clients.search_by_phone') }}?phone=${encodeURIComponent(phone)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.client) {
+          // Afficher le résultat avec bouton pour ajouter
+          if (resultDiv) {
+            resultDiv.innerHTML = `
+              <div style="background: white; border: 2px solid #10b981; border-radius: var(--radius-md); padding: var(--space-lg);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+                  <div>
+                    <h5 style="margin: 0 0 var(--space-xs) 0; color: #1f2937; font-size: 1.125rem; font-weight: 600;">
+                      <i class="fas fa-check-circle" style="color: #10b981; margin-right: var(--space-xs);"></i>
+                      Client trouvé
+                    </h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">${data.client.full_name}</p>
+                  </div>
+                  <button type="button" onclick="addClientFromSearch(${JSON.stringify(data.client).replace(/"/g, '&quot;')})" 
+                          style="background: #10b981; color: white; border: none; padding: 0.625rem 1.25rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+                    <i class="fas fa-plus me-2"></i>Ajouter à la commande
+                  </button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); font-size: 0.875rem;">
+                  <div><strong>Téléphone:</strong> ${data.client.phone || '-'}</div>
+                  <div><strong>Adresse:</strong> ${data.client.address || '-'}</div>
+                  ${data.client.latitude && data.client.longitude ? `<div><strong>GPS:</strong> ${data.client.latitude.toFixed(6)}, ${data.client.longitude.toFixed(6)}</div>` : ''}
+                </div>
+              </div>
+            `;
+          }
+        } else {
+          // Client non trouvé
+          if (resultDiv) {
+            resultDiv.innerHTML = `
+              <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: var(--radius-md); padding: var(--space-lg); text-align: center;">
+                <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #ef4444; margin-bottom: var(--space-sm);"></i>
+                <h5 style="margin: 0 0 var(--space-xs) 0; color: #991b1b; font-size: 1rem;">Client non trouvé</h5>
+                <p style="margin: 0 0 var(--space-md) 0; color: #6b7280; font-size: 0.875rem;">
+                  Aucun client avec le numéro <strong>${phone}</strong> n'a été trouvé dans votre listing.
+                </p>
+                <div style="display: flex; gap: var(--space-sm); justify-content: center;">
+                  <a href="{{ url_for('commercial_clients.client_new') }}" target="_blank" 
+                     style="background: #3b82f6; color: white; border: none; padding: 0.625rem 1.25rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.875rem; text-decoration: none; display: inline-flex; align-items: center; gap: var(--space-xs);">
+                    <i class="fas fa-plus"></i> Créer ce client
+                  </a>
+                  <button type="button" onclick="addClientColumn(); document.getElementById('quickClientSearch').value = ''; document.getElementById('quickSearchResult').style.display = 'none';" 
+                          style="background: #6b7280; color: white; border: none; padding: 0.625rem 1.25rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+                    <i class="fas fa-user-plus"></i> Ajouter manuellement
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Erreur lors de la recherche:', error);
+        if (resultDiv) {
+          resultDiv.innerHTML = `
+            <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: var(--radius-md); padding: var(--space-lg); text-align: center;">
+              <i class="fas fa-times-circle" style="font-size: 2rem; color: #ef4444; margin-bottom: var(--space-sm);"></i>
+              <p style="margin: 0; color: #991b1b;">Erreur lors de la recherche. Veuillez réessayer.</p>
+            </div>
+          `;
+        }
+      });
+  };
+  
+  // Ajouter un client depuis la recherche
+  window.addClientFromSearch = function(clientData) {
+    // Ajouter une colonne client
+    addClientColumn();
+    const clientId = clientCount - 1;
+    
+    // Remplir les champs
+    const nameInput = document.getElementById(`client_${clientId}_name`);
+    const phoneInput = document.getElementById(`client_${clientId}_phone`);
+    const addressTextarea = document.getElementById(`client_${clientId}_address`);
+    const latitudeInput = document.getElementById(`client_${clientId}_latitude`);
+    const longitudeInput = document.getElementById(`client_${clientId}_longitude`);
+    
+    if (nameInput) nameInput.value = clientData.full_name || '';
+    if (phoneInput) phoneInput.value = clientData.phone || '';
+    if (addressTextarea) addressTextarea.value = clientData.address || '';
+    if (latitudeInput) latitudeInput.value = clientData.latitude || '';
+    if (longitudeInput) longitudeInput.value = clientData.longitude || '';
+    
+    // Réinitialiser la recherche
+    const searchInput = document.getElementById('quickClientSearch');
+    const resultDiv = document.getElementById('quickSearchResult');
+    if (searchInput) searchInput.value = '';
+    if (resultDiv) resultDiv.style.display = 'none';
+    
+    // Réinitialiser le select
+    const selectClient = document.getElementById('selectExistingClient');
+    if (selectClient) selectClient.value = '';
+    
+    showNotification(`Client ${clientData.full_name} ajouté à la commande`, 'success');
+    
+    // Scroll vers le client ajouté
+    setTimeout(() => {
+      const clientHeader = document.querySelectorAll('th.client-col')[clientId];
+      if (clientHeader) {
+        clientHeader.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        clientHeader.style.background = '#eff6ff';
+        setTimeout(() => {
+          clientHeader.style.background = '';
+        }, 2000);
+      }
+    }, 100);
+  };
+  
+  // Sélectionner un client depuis la liste
+  window.selectClientFromList = function(clientId) {
+    if (!clientId) return;
+    
+    // Récupérer les données du client depuis le select
+    const select = document.getElementById('selectExistingClient');
+    const option = select.options[select.selectedIndex];
+    if (!option || !option.dataset.clientData) return;
+    
+    try {
+      const clientData = JSON.parse(option.dataset.clientData);
+      addClientFromSearch(clientData);
+    } catch (e) {
+      console.error('Erreur lors du parsing des données client:', e);
+    }
+  };
+  
+  // Charger la liste des clients existants
+  {% if current_user.role and current_user.role.code == 'commercial' %}
+  fetch('{{ url_for("commercial_clients.api_clients_list") }}')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.clients) {
+        const select = document.getElementById('selectExistingClient');
+        if (select) {
+          // Vider le select sauf l'option par défaut
+          while (select.options.length > 1) {
+            select.remove(1);
+          }
+          
+          // Ajouter les clients
+          data.clients.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = `${client.full_name} - ${client.phone}`;
+            // Stocker toutes les données du client
+            option.dataset.clientData = JSON.stringify(client);
+            select.appendChild(option);
+          });
+          
+          if (data.clients.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Aucun client enregistré';
+            option.disabled = true;
+            select.appendChild(option);
+          }
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Erreur lors du chargement de la liste des clients:', error);
+    });
+  {% endif %}
 });
 </script>
 {% endblock %}

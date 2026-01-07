@@ -299,3 +299,36 @@ def search_by_phone():
     else:
         return jsonify({'success': False, 'message': 'Client non trouvé'})
 
+@commercial_clients_bp.route('/api/list', methods=['GET'])
+@login_required
+def api_clients_list():
+    """API JSON pour récupérer la liste des clients (pour select dans formulaire commande)"""
+    # Seuls les commerciaux peuvent accéder
+    if not (current_user.role and current_user.role.code == 'commercial'):
+        return jsonify({'success': False, 'message': 'Accès non autorisé'}), 403
+    
+    # Récupérer tous les clients actifs du commercial
+    clients = CommercialClient.query.filter_by(
+        commercial_id=current_user.id,
+        is_active=True
+    ).order_by(CommercialClient.last_name, CommercialClient.first_name).all()
+    
+    clients_data = []
+    for client in clients:
+        clients_data.append({
+            'id': client.id,
+            'first_name': client.first_name,
+            'last_name': client.last_name,
+            'full_name': client.full_name,
+            'phone': client.phone,
+            'address': client.address or '',
+            'latitude': float(client.latitude) if client.latitude else None,
+            'longitude': float(client.longitude) if client.longitude else None,
+            'notes': client.notes or ''
+        })
+    
+    return jsonify({
+        'success': True,
+        'clients': clients_data
+    })
+
