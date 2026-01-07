@@ -774,7 +774,8 @@ def vehicle_detail(vehicle_id):
 @login_required
 def odometer_new(vehicle_id):
     """Ajouter un nouveau relevé odomètre"""
-    if not has_permission(current_user, 'vehicles.update'):
+    # Le magasinier peut aussi ajouter des relevés odomètre pour le suivi des véhicules
+    if not has_permission(current_user, 'vehicles.update') and not (current_user.role and current_user.role.code == 'warehouse'):
         flash('Vous n\'avez pas la permission d\'ajouter un relevé', 'error')
         return redirect(url_for('flotte.vehicle_odometer', vehicle_id=vehicle_id))
     

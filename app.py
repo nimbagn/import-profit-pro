@@ -264,7 +264,7 @@ with app.app_context():
                         'receptions': ['read', 'create', 'update'],
                         'outgoings': ['read', 'create', 'update'],
                         'returns': ['read', 'create', 'update'],
-                        'vehicles': ['read'],
+                        'vehicles': ['read', 'update'],  # Ajout de 'update' pour permettre la saisie de l'odomètre
                         'regions': ['read'],
                         'depots': ['read'],
                         'families': ['read'],
@@ -350,7 +350,8 @@ with app.app_context():
                         'trainings': ['read', 'create', 'update'],
                         'evaluations': ['read', 'create'],
                         'absences': ['read', 'create', 'update'],
-                        'reports': ['read']
+                        'reports': ['read'],
+                        'analytics': ['read']  # Ajout pour permettre l'accès aux statistiques
                     }
                 },
                 {
