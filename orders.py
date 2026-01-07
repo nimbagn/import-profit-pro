@@ -207,8 +207,10 @@ def orders_list():
         except: pass
         # #endregion
     elif current_user.role and current_user.role.code == 'warehouse':
-        # Le magasinier voit uniquement les commandes validées (pour générer les bons de sortie)
+        # Le magasinier voit uniquement les commandes validées de sa région (pour générer les bons de sortie)
         query = query.filter(CommercialOrder.status == 'validated')
+        # Filtrer également par région pour le magasinier
+        query = filter_commercial_orders_by_region(query)
         # Compter le nombre de commandes validées pour debug
         validated_count = query.count()
         # #region agent log
