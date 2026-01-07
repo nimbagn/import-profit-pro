@@ -281,6 +281,33 @@
             gap: var(--space-md);
         }
         
+        /* Badge de région dans le header - Responsive */
+        .region-badge-header {
+            transition: all 0.3s ease;
+        }
+        
+        .region-badge-header:hover {
+            background: linear-gradient(135deg, rgba(0, 56, 101, 0.15) 0%, rgba(0, 82, 165, 0.15) 100%) !important;
+            border-color: rgba(0, 56, 101, 0.3) !important;
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 768px) {
+            .region-badge-header {
+                font-size: 0.75rem !important;
+                padding: 0.3rem 0.6rem !important;
+                margin-right: 0.5rem !important;
+            }
+            
+            .region-badge-header span {
+                display: none;
+            }
+            
+            .region-badge-header i {
+                font-size: 1rem;
+            }
+        }
+        
         /* Contenu principal - Style Hapag-Lloyd */
             .main-content {
             margin-left: 280px;
