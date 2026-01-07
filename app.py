@@ -1144,8 +1144,11 @@ def index():
                 recent_sales_query = filter_sales_by_region(recent_sales_query)
                 recent_promotion_sales = recent_sales_query.limit(5).all()
                 
-                # Charger les membres avec load_only pour éviter les colonnes manquantes
+                # Charger les membres et gammes avec load_only pour éviter les colonnes manquantes
+                from models import PromotionGamme
                 member_ids = [s.member_id for s in recent_promotion_sales if s.member_id]
+                gamme_ids = [s.gamme_id for s in recent_promotion_sales if s.gamme_id]
+                
                 if member_ids:
                     members = PromotionMember.query.options(
                         load_only(PromotionMember.id, PromotionMember.full_name, PromotionMember.team_id,
@@ -1156,6 +1159,16 @@ def index():
                     for sale in recent_promotion_sales:
                         if sale.member_id:
                             sale.member = members_map.get(sale.member_id)
+                
+                if gamme_ids:
+                    gammes = PromotionGamme.query.options(
+                        load_only(PromotionGamme.id, PromotionGamme.name)
+                    ).filter(PromotionGamme.id.in_(gamme_ids)).all()
+                    gammes_map = {g.id: g for g in gammes}
+                    # Assigner les gammes aux ventes
+                    for sale in recent_promotion_sales:
+                        if sale.gamme_id:
+                            sale.gamme = gammes_map.get(sale.gamme_id)
             except Exception as e:
                 print(f"⚠️ Erreur lors de la récupération des ventes promotion récentes: {e}")
                 import traceback
