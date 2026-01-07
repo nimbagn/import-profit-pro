@@ -271,6 +271,26 @@ def get_user_accessible_regions():
     return []
 
 
+def get_user_accessible_depots():
+    """
+    Retourne la liste des dépôts accessibles par l'utilisateur connecté
+    Les admins voient tous les dépôts
+    """
+    if not current_user or not current_user.is_authenticated:
+        return []
+    
+    # Les admins voient tous les dépôts
+    if hasattr(current_user, 'role') and current_user.role:
+        if current_user.role.code in ['admin', 'superadmin']:
+            return Depot.query.order_by(Depot.name).all()
+    
+    # Sinon, retourner uniquement les dépôts de la région de l'utilisateur
+    if hasattr(current_user, 'region_id') and current_user.region_id:
+        return Depot.query.filter_by(region_id=current_user.region_id).order_by(Depot.name).all()
+    
+    return []
+
+
 def filter_commercial_orders_by_region(query):
     """
     Filtre les commandes commerciales selon la région de l'utilisateur connecté
