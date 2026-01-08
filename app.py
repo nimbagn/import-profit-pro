@@ -983,10 +983,21 @@ def index():
                 sales_query = filter_sales_by_region(sales_query)
                 stats['promotion_sales_today'] = sales_query.count()
                 
-                # Retours en attente
-                stats['promotion_returns_pending'] = PromotionReturn.query.filter_by(status='pending').count()
+                # Retours en attente (avec gestion d'erreur spécifique)
+                try:
+                    # Utiliser load_only pour éviter de charger des colonnes qui pourraient ne pas exister
+                    from sqlalchemy.orm import load_only
+                    stats['promotion_returns_pending'] = PromotionReturn.query.options(
+                        load_only(PromotionReturn.id, PromotionReturn.status)
+                    ).filter_by(status='pending').count()
+                except Exception as returns_error:
+                    print(f"⚠️ Erreur lors du calcul des retours en attente: {returns_error}")
+                    db.session.rollback()
+                    stats['promotion_returns_pending'] = 0
             except (Exception, SQLAlchemyError) as e:
                 print(f"⚠️ Erreur lors du calcul des statistiques promotion: {e}")
+                import traceback
+                traceback.print_exc()
                 db.session.rollback()  # Annuler la transaction en cas d'erreur
                 stats['promotion_teams'] = 0
                 stats['promotion_members'] = 0
