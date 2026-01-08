@@ -4540,15 +4540,53 @@ def stock_summary():
                 initial_stock = balance
             else:
                 # Balance initiale pour tous les dépôts et véhicules accessibles
-                initial_all_movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
-                initial_all_movements_query = filter_stock_movements_by_region(initial_all_movements_query)
-                period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
-                initial_all_movements_query = initial_all_movements_query.filter(StockMovement.movement_date < period_start_naive)
-                initial_all_movements = initial_all_movements_query.all()
+                # Calculer séparément pour les dépôts et véhicules accessibles
+                initial_stock_depots = Decimal('0')
+                initial_stock_vehicles = Decimal('0')
                 
-                # Calculer la balance globale initiale
-                for m in initial_all_movements:
-                    initial_stock += m.quantity
+                # Stock initial des dépôts accessibles
+                for depot in accessible_depots:
+                    initial_depot_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                        or_(
+                            StockMovement.to_depot_id == depot.id,
+                            StockMovement.from_depot_id == depot.id
+                        )
+                    )
+                    initial_depot_movements_query = filter_stock_movements_by_region(initial_depot_movements_query)
+                    period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                    initial_depot_movements_query = initial_depot_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                    initial_depot_movements = initial_depot_movements_query.all()
+                    
+                    balance = Decimal('0')
+                    for m in initial_depot_movements:
+                        if m.to_depot_id == depot.id:
+                            balance += m.quantity  # Entrée
+                        elif m.from_depot_id == depot.id:
+                            balance -= abs(m.quantity)  # Sortie
+                    initial_stock_depots += balance
+                
+                # Stock initial des véhicules accessibles
+                for vehicle in accessible_vehicles:
+                    initial_vehicle_movements_query = StockMovement.query.filter_by(stock_item_id=item.id).filter(
+                        or_(
+                            StockMovement.to_vehicle_id == vehicle.id,
+                            StockMovement.from_vehicle_id == vehicle.id
+                        )
+                    )
+                    initial_vehicle_movements_query = filter_stock_movements_by_region(initial_vehicle_movements_query)
+                    period_start_naive = period_start_date.replace(tzinfo=None) if period_start_date.tzinfo else period_start_date
+                    initial_vehicle_movements_query = initial_vehicle_movements_query.filter(StockMovement.movement_date < period_start_naive)
+                    initial_vehicle_movements = initial_vehicle_movements_query.all()
+                    
+                    balance = Decimal('0')
+                    for m in initial_vehicle_movements:
+                        if m.to_vehicle_id == vehicle.id:
+                            balance += m.quantity  # Entrée
+                        elif m.from_vehicle_id == vehicle.id:
+                            balance -= abs(m.quantity)  # Sortie
+                    initial_stock_vehicles += balance
+                
+                initial_stock = initial_stock_depots + initial_stock_vehicles
         else:
             # Si pas de période, le stock initial est 0
             initial_stock = Decimal('0')

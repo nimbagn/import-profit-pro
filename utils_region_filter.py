@@ -136,7 +136,9 @@ def filter_sales_by_region(query):
 def filter_stock_movements_by_region(query):
     """
     Filtre les mouvements de stock selon la région de l'utilisateur connecté
-    Un mouvement appartient à une région si le dépôt source ou destination appartient à cette région
+    Un mouvement appartient à une région si :
+    - Le dépôt source ou destination appartient à cette région, OU
+    - Le véhicule source ou destination appartient à cette région (via son conducteur)
     Les admins voient tous les mouvements
     """
     region_id = get_user_region_id()
@@ -144,16 +146,38 @@ def filter_stock_movements_by_region(query):
         # Récupérer les IDs des dépôts de la région
         depot_ids = [d.id for d in Depot.query.filter_by(region_id=region_id).all()]
         
+        # Récupérer les IDs des véhicules de la région (via leur conducteur)
+        vehicle_ids = []
+        vehicles = Vehicle.query.filter_by(status='active').all()
+        for vehicle in vehicles:
+            if vehicle.current_user_id:
+                user = User.query.get(vehicle.current_user_id)
+                if user and user.region_id == region_id:
+                    vehicle_ids.append(vehicle.id)
+        
+        # Filtrer les mouvements liés aux dépôts OU véhicules de la région
+        conditions = []
         if depot_ids:
-            # Filtrer les mouvements liés aux dépôts de la région
-            query = query.filter(
+            conditions.append(
                 or_(
                     StockMovement.from_depot_id.in_(depot_ids),
                     StockMovement.to_depot_id.in_(depot_ids)
                 )
             )
+        if vehicle_ids:
+            conditions.append(
+                or_(
+                    StockMovement.from_vehicle_id.in_(vehicle_ids),
+                    StockMovement.to_vehicle_id.in_(vehicle_ids)
+                )
+            )
+        
+        if conditions:
+            # Utiliser or_() pour combiner les conditions dépôts et véhicules
+            from sqlalchemy import or_
+            query = query.filter(or_(*conditions))
         else:
-            # Aucun dépôt dans la région, retourner une requête vide
+            # Aucun dépôt ni véhicule dans la région, retourner une requête vide
             query = query.filter(False)
     
     return query
