@@ -3028,19 +3028,6 @@ def return_new():
             'status': 'draft'
         }
         
-        # Ajouter reason seulement si la colonne existe dans la base de données
-        # Vérifier dynamiquement si la colonne existe pour éviter les erreurs
-        try:
-            from sqlalchemy import inspect
-            inspector = inspect(db.engine)
-            columns = [col['name'] for col in inspector.get_columns('stock_returns')]
-            if 'reason' in columns:
-                return_data['reason'] = reason
-        except Exception as e:
-            # Si la vérification échoue, on omet reason pour éviter l'erreur
-            print(f"⚠️ Impossible de vérifier la colonne reason: {e}")
-            pass
-        
         # Ajouter les champs spécifiques selon le type
         if return_type == 'supplier':
             return_data['supplier_name'] = supplier_name
@@ -3052,9 +3039,57 @@ def return_new():
             if original_outgoing_id:
                 return_data['original_outgoing_id'] = int(original_outgoing_id)
         
+        # Vérifier si la colonne reason existe dans la base de données
+        # Si elle n'existe pas, ne pas l'inclure dans return_data
+        try:
+            from sqlalchemy import inspect, text
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('stock_returns')]
+            if 'reason' in columns:
+                return_data['reason'] = reason
+            else:
+                # La colonne n'existe pas, on l'omet
+                print("⚠️ Colonne 'reason' n'existe pas dans stock_returns, elle sera omise")
+        except Exception as e:
+            # Si la vérification échoue, on omet reason pour éviter l'erreur
+            print(f"⚠️ Impossible de vérifier la colonne reason: {e}")
+            # Ne pas inclure reason dans return_data
+        
+        # Créer l'objet StockReturn
         return_ = StockReturn(**return_data)
+        
+        # Si reason n'existe pas dans la base mais est dans le modèle,
+        # le retirer de l'objet avant l'insertion
+        if 'reason' not in return_data and hasattr(return_, 'reason'):
+            # Retirer reason de l'objet pour éviter qu'il soit inclus dans l'INSERT
+            try:
+                # Utiliser __dict__ pour retirer l'attribut
+                if 'reason' in return_.__dict__:
+                    delattr(return_, 'reason')
+            except:
+                pass
+        
         db.session.add(return_)
-        db.session.flush()
+        
+        # Utiliser une requête SQL directe si reason n'existe pas
+        try:
+            db.session.flush()
+        except Exception as flush_error:
+            # Si l'erreur est due à reason, réessayer sans reason
+            if 'reason' in str(flush_error).lower() or 'unknown column' in str(flush_error).lower():
+                db.session.rollback()
+                # Retirer reason de return_data et recréer l'objet
+                return_data.pop('reason', None)
+                if hasattr(return_, 'reason'):
+                    try:
+                        delattr(return_, 'reason')
+                    except:
+                        pass
+                return_ = StockReturn(**return_data)
+                db.session.add(return_)
+                db.session.flush()
+            else:
+                raise
         
         # Traiter les articles
         items_data = request.form.getlist('items[]')
