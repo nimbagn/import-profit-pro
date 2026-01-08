@@ -4176,7 +4176,13 @@ def stock_summary_api():
     
     # Récupérer les dernières opérations pour l'API aussi
     # Charger toutes les relations nécessaires pour éviter N+1
-    recent_movements_query_api = StockMovement.query.options(
+    # Appliquer les filtres régionaux AVANT limit() et joinedload()
+    from utils_region_filter import filter_stock_movements_by_region
+    recent_movements_query_api = StockMovement.query
+    recent_movements_query_api = filter_stock_movements_by_region(recent_movements_query_api)
+    
+    # Ensuite appliquer les options et le limit
+    recent_movements_query_api = recent_movements_query_api.options(
         joinedload(StockMovement.stock_item),
         joinedload(StockMovement.from_depot),
         joinedload(StockMovement.to_depot),
@@ -4184,10 +4190,6 @@ def stock_summary_api():
         joinedload(StockMovement.to_vehicle),
         joinedload(StockMovement.user)
     ).order_by(StockMovement.created_at.desc()).limit(20)
-    
-    # Appliquer les filtres régionaux
-    from utils_region_filter import filter_stock_movements_by_region
-    recent_movements_query_api = filter_stock_movements_by_region(recent_movements_query_api)
     
     # Appliquer les filtres si spécifiés
     if depot_id:

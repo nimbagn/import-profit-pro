@@ -954,10 +954,25 @@ def index():
                 teams_query = filter_teams_by_region(teams_query)
                 stats['promotion_teams'] = teams_query.count()
                 
-                # Membres
-                members_query = PromotionMember.query.filter_by(is_active=True)
-                members_query = filter_members_by_region(members_query)
-                stats['promotion_members'] = members_query.count()
+                # Membres filtrés par région (utiliser count() directement avec join pour éviter de charger toutes les colonnes)
+                region_id = get_user_region_id()
+                if region_id is not None:
+                    # Compter directement avec join pour éviter de charger toutes les colonnes (home_latitude, home_longitude)
+                    from sqlalchemy import func, and_
+                    members_count = db.session.query(func.count(PromotionMember.id)).join(
+                        PromotionTeam, PromotionMember.team_id == PromotionTeam.id
+                    ).join(
+                        User, PromotionTeam.team_leader_id == User.id
+                    ).filter(
+                        and_(
+                            PromotionMember.is_active == True,
+                            User.region_id == region_id
+                        )
+                    ).scalar()
+                    stats['promotion_members'] = members_count or 0
+                else:
+                    # Admin : compter tous les membres actifs
+                    stats['promotion_members'] = PromotionMember.query.filter_by(is_active=True).count()
                 
                 # Gammes
                 stats['promotion_gammes'] = PromotionGamme.query.filter_by(is_active=True).count()
