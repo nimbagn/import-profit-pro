@@ -2765,7 +2765,19 @@ def returns_export_excel():
     
     try:
         # Construire la requête (même logique que returns_list)
+        # Utiliser load_only pour éviter de charger la colonne 'reason' qui n'existe pas en MySQL
+        from sqlalchemy.orm import load_only
+        from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
         query = StockReturn.query.options(
+            load_only(
+                StockReturn.id, StockReturn.reference, StockReturn.return_date,
+                StockReturn.return_type, StockReturn.client_name, StockReturn.client_phone,
+                StockReturn.original_outgoing_id, StockReturn.original_order_id,
+                StockReturn.supplier_name, StockReturn.original_reception_id,
+                StockReturn.commercial_id, StockReturn.vehicle_id, StockReturn.depot_id,
+                StockReturn.user_id, StockReturn.notes, StockReturn.status,
+                StockReturn.created_at, StockReturn.updated_at
+            ),
             joinedload(StockReturn.depot),
             joinedload(StockReturn.vehicle),
             joinedload(StockReturn.commercial),
@@ -2774,7 +2786,6 @@ def returns_export_excel():
         )
         
         # IMPORTANT: Filtrer selon le rôle de l'utilisateur (même logique que returns_list)
-        from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
         if current_user.role and current_user.role.code == 'commercial':
             query = query.filter(StockReturn.commercial_id == current_user.id)
         elif current_user.role and current_user.role.code not in ['admin', 'superadmin']:
