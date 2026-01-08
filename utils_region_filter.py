@@ -55,20 +55,13 @@ def filter_vehicles_by_region(query):
     Un véhicule appartient à une région si son conducteur appartient à cette région
     Les admins voient tous les véhicules
     """
-    from sqlalchemy import or_
     region_id = get_user_region_id()
     if region_id is not None:
         # Filtrer les véhicules dont le conducteur appartient à la région
-        # Utiliser outerjoin pour inclure les véhicules sans conducteur (mais les exclure du filtre)
-        query = query.outerjoin(User, Vehicle.current_user_id == User.id).filter(
-            or_(
-                User.region_id == region_id,
-                Vehicle.current_user_id.is_(None)  # Exclure les véhicules sans conducteur du filtre
-            )
+        # Utiliser join explicite avec condition pour éviter les ambiguïtés
+        query = query.join(User, Vehicle.current_user_id == User.id).filter(
+            User.region_id == region_id
         )
-        # En fait, on veut seulement les véhicules avec un conducteur de la région
-        # Exclure les véhicules sans conducteur
-        query = query.filter(Vehicle.current_user_id.isnot(None))
     return query
 
 
