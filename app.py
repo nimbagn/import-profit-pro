@@ -1001,7 +1001,10 @@ def index():
             stats['recent_movements'] = recent_movements_query.count()
             
             stats['recent_receptions'] = Reception.query.filter(Reception.reception_date >= seven_days_ago).count()
-            stats['recent_sessions'] = InventorySession.query.filter(InventorySession.session_date >= seven_days_ago).count()
+            # Filtrer les sessions d'inventaire récentes par région
+            recent_sessions_query = InventorySession.query.filter(InventorySession.session_date >= seven_days_ago)
+            recent_sessions_query = filter_inventory_sessions_by_region(recent_sessions_query)
+            stats['recent_sessions'] = recent_sessions_query.count()
             
             # Ajouter la région de l'utilisateur pour l'affichage
             stats['user_region_id'] = user_region_id
@@ -1179,7 +1182,10 @@ def index():
         # Récupérer les sessions d'inventaire récentes (seulement si l'utilisateur a la permission)
         recent_inventories = []
         if has_permission(current_user, 'inventory.read'):
-            recent_inventories = InventorySession.query.order_by(InventorySession.session_date.desc()).limit(3).all()
+            from utils_region_filter import filter_inventory_sessions_by_region
+            recent_inventories_query = InventorySession.query.order_by(InventorySession.session_date.desc())
+            recent_inventories_query = filter_inventory_sessions_by_region(recent_inventories_query)
+            recent_inventories = recent_inventories_query.limit(3).all()
         
         # Récupérer les fiches de prix récentes (seulement si l'utilisateur a la permission)
         recent_price_lists = []
