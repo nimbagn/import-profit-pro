@@ -2878,7 +2878,7 @@ def returns_export_excel():
                         'Article (SKU)': detail.stock_item.sku if detail.stock_item else '',
                         'Article': detail.stock_item.name if detail.stock_item else '',
                         'Quantité': float(detail.quantity),
-                        'Raison': return_.reason or '',
+                        'Raison': getattr(return_, 'reason', None) or '',
                         'Utilisateur': return_.user.username if return_.user else '',
                         'Statut': return_.status or 'draft',
                         'Notes': return_.notes or ''
