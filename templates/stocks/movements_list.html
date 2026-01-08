@@ -35,6 +35,7 @@
   .badge-type { padding: var(--space-xs) var(--space-md); border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
   .type-transfer { background: rgba(0, 56, 101, 0.1); color: var(--hl-blue); }
   .type-reception { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+  .type-reception_return { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
   .type-adjustment { background: rgba(255, 102, 0, 0.1); color: var(--hl-orange); }
   .type-inventory { background: rgba(0, 56, 101, 0.15); color: var(--hl-blue); }
   
@@ -533,6 +534,7 @@
           <option value="">Tous les types</option>
           <option value="transfer" {% if movement_type == 'transfer' %}selected{% endif %}>Transfert</option>
           <option value="reception" {% if movement_type == 'reception' %}selected{% endif %}>Réception</option>
+          <option value="reception_return" {% if movement_type == 'reception_return' %}selected{% endif %}>Retour Fournisseur</option>
           <option value="adjustment" {% if movement_type == 'adjustment' %}selected{% endif %}>Ajustement</option>
           <option value="inventory" {% if movement_type == 'inventory' %}selected{% endif %}>Inventaire</option>
         </select>
@@ -644,15 +646,16 @@
           </td>
           <td data-label="Type">
             {% set type_badges = {
-              'transfer': {'color': 'var(--hl-blue)', 'icon': 'fa-exchange-alt', 'bg': 'rgba(0, 56, 101, 0.1)'},
-              'reception': {'color': 'var(--color-success)', 'icon': 'fa-arrow-down', 'bg': 'rgba(16, 185, 129, 0.1)'},
-              'adjustment': {'color': 'var(--hl-orange)', 'icon': 'fa-adjust', 'bg': 'rgba(255, 102, 0, 0.1)'},
-              'inventory': {'color': 'var(--hl-blue)', 'icon': 'fa-clipboard-check', 'bg': 'rgba(0, 56, 101, 0.15)'}
+              'transfer': {'color': 'var(--hl-blue)', 'icon': 'fa-exchange-alt', 'bg': 'rgba(0, 56, 101, 0.1)', 'label': 'Transfert'},
+              'reception': {'color': 'var(--color-success)', 'icon': 'fa-arrow-down', 'bg': 'rgba(16, 185, 129, 0.1)', 'label': 'Réception'},
+              'reception_return': {'color': '#ef4444', 'icon': 'fa-undo', 'bg': 'rgba(239, 68, 68, 0.1)', 'label': 'Retour Fournisseur'},
+              'adjustment': {'color': 'var(--hl-orange)', 'icon': 'fa-adjust', 'bg': 'rgba(255, 102, 0, 0.1)', 'label': 'Ajustement'},
+              'inventory': {'color': 'var(--hl-blue)', 'icon': 'fa-clipboard-check', 'bg': 'rgba(0, 56, 101, 0.15)', 'label': 'Inventaire'}
             } %}
-            {% set badge = type_badges.get(movement.movement_type, {'color': 'var(--text-muted)', 'icon': 'fa-circle', 'bg': 'var(--bg-tertiary)'}) %}
+            {% set badge = type_badges.get(movement.movement_type, {'color': 'var(--text-muted)', 'icon': 'fa-circle', 'bg': 'var(--bg-tertiary)', 'label': movement.movement_type|title}) %}
             <span class="badge-hl badge-hl-primary" style="background: {{ badge.bg }}; color: {{ badge.color }};">
               <i class="fas {{ badge.icon }}"></i>
-              {{ movement.movement_type|title }}
+              {{ badge.label }}
             </span>
           </td>
           <td data-label="Article"><strong>{{ movement.stock_item.sku }}</strong> - {{ movement.stock_item.name }}</td>
