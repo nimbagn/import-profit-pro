@@ -148,12 +148,10 @@ def filter_stock_movements_by_region(query):
         
         # Récupérer les IDs des véhicules de la région (via leur conducteur)
         vehicle_ids = []
-        vehicles = Vehicle.query.filter_by(status='active').all()
-        for vehicle in vehicles:
-            if vehicle.current_user_id:
-                user = User.query.get(vehicle.current_user_id)
-                if user and user.region_id == region_id:
-                    vehicle_ids.append(vehicle.id)
+        vehicles = Vehicle.query.join(User, Vehicle.current_user_id == User.id).filter(
+            User.region_id == region_id
+        ).all()
+        vehicle_ids = [v.id for v in vehicles]
         
         # Filtrer les mouvements liés aux dépôts OU véhicules de la région
         conditions = []
@@ -177,7 +175,7 @@ def filter_stock_movements_by_region(query):
             from sqlalchemy import or_
             query = query.filter(or_(*conditions))
         else:
-            # Aucun dépôt ni véhicule dans la région, retourner une requête vide
+            # Aucun dépôt/véhicule dans la région, retourner une requête vide
             query = query.filter(False)
     
     return query
