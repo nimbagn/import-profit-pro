@@ -74,19 +74,30 @@ def generate_movement_reference(movement_type='transfer', existing_references=No
 
 def get_movement_form_data():
     """Helper pour récupérer les données du formulaire de mouvement (filtrées par région)"""
-    from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
-    
-    depots_query = Depot.query.filter_by(is_active=True)
-    depots_query = filter_depots_by_region(depots_query)
-    
-    vehicles_query = Vehicle.query.filter_by(status='active')
-    vehicles_query = filter_vehicles_by_region(vehicles_query)
-    
-    return {
-        'stock_items': StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all(),
-        'depots': depots_query.order_by(Depot.name).all(),
-        'vehicles': vehicles_query.order_by(Vehicle.plate_number).all()
-    }
+    try:
+        from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
+        
+        depots_query = Depot.query.filter_by(is_active=True)
+        depots_query = filter_depots_by_region(depots_query)
+        
+        vehicles_query = Vehicle.query.filter_by(status='active')
+        vehicles_query = filter_vehicles_by_region(vehicles_query)
+        
+        return {
+            'stock_items': StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all(),
+            'depots': depots_query.order_by(Depot.name).all(),
+            'vehicles': vehicles_query.order_by(Vehicle.plate_number).all()
+        }
+    except Exception as e:
+        import traceback
+        error_msg = f"Erreur dans get_movement_form_data(): {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_msg}")
+        # Retourner des données vides en cas d'erreur pour éviter un crash complet
+        return {
+            'stock_items': [],
+            'depots': [],
+            'vehicles': []
+        }
 
 # =========================================================
 # STOCKS DÉPÔT
