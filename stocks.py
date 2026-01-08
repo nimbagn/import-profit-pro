@@ -2457,7 +2457,18 @@ def returns_list():
     
     try:
         # Construire la requête avec optimisation N+1
+        # Utiliser load_only pour éviter de charger la colonne 'reason' qui n'existe pas en MySQL
+        from sqlalchemy.orm import load_only
         query = StockReturn.query.options(
+            load_only(
+                StockReturn.id, StockReturn.reference, StockReturn.return_date,
+                StockReturn.return_type, StockReturn.client_name, StockReturn.client_phone,
+                StockReturn.original_outgoing_id, StockReturn.original_order_id,
+                StockReturn.supplier_name, StockReturn.original_reception_id,
+                StockReturn.commercial_id, StockReturn.vehicle_id, StockReturn.depot_id,
+                StockReturn.user_id, StockReturn.notes, StockReturn.status,
+                StockReturn.created_at, StockReturn.updated_at
+            ),
             joinedload(StockReturn.depot),
             joinedload(StockReturn.vehicle),
             joinedload(StockReturn.commercial),
