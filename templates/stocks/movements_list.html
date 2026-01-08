@@ -293,13 +293,13 @@
     }
     
     /* Actions en colonne sur mobile */
-    .table-hl td:has(.btn-hl) {
+    .table-hl td[data-label="Actions"] {
       flex-direction: column;
       align-items: stretch;
       gap: var(--space-xs);
     }
     
-    .table-hl td .btn-hl {
+    .table-hl td[data-label="Actions"] .btn-hl {
       width: 100%;
       justify-content: center;
     }
