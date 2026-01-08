@@ -27,6 +27,7 @@ WHERE u.region_id IS NULL
 DO $$
 DECLARE
     default_region_id BIGINT;
+    rows_updated INTEGER;
 BEGIN
     -- Récupérer la première région disponible
     SELECT id INTO default_region_id FROM regions ORDER BY id LIMIT 1;
@@ -41,7 +42,8 @@ BEGIN
           AND r.code NOT IN ('admin', 'superadmin')
           AND u.is_active = true;
         
-        RAISE NOTICE 'Mise à jour des utilisateurs sans région : % utilisateur(s) mis à jour', SQL%ROWCOUNT;
+        GET DIAGNOSTICS rows_updated = ROW_COUNT;
+        RAISE NOTICE 'Mise à jour des utilisateurs sans région : % utilisateur(s) mis à jour', rows_updated;
     ELSE
         RAISE NOTICE 'Aucune région trouvée dans la base de données. Veuillez créer au moins une région.';
     END IF;
@@ -64,6 +66,7 @@ WHERE d.region_id IS NULL;
 DO $$
 DECLARE
     default_region_id BIGINT;
+    rows_updated INTEGER;
 BEGIN
     SELECT id INTO default_region_id FROM regions ORDER BY id LIMIT 1;
     
@@ -72,7 +75,8 @@ BEGIN
         SET region_id = default_region_id
         WHERE region_id IS NULL;
         
-        RAISE NOTICE 'Mise à jour des dépôts sans région : % dépôt(s) mis à jour', SQL%ROWCOUNT;
+        GET DIAGNOSTICS rows_updated = ROW_COUNT;
+        RAISE NOTICE 'Mise à jour des dépôts sans région : % dépôt(s) mis à jour', rows_updated;
     END IF;
 END $$;
 
@@ -148,6 +152,7 @@ WHERE e.region_id IS NULL
 DO $$
 DECLARE
     default_region_id BIGINT;
+    rows_updated INTEGER;
 BEGIN
     SELECT id INTO default_region_id FROM regions ORDER BY id LIMIT 1;
     
@@ -157,7 +162,8 @@ BEGIN
         WHERE region_id IS NULL
           AND employment_status = 'active';
         
-        RAISE NOTICE 'Mise à jour des employés sans région : % employé(s) mis à jour', SQL%ROWCOUNT;
+        GET DIAGNOSTICS rows_updated = ROW_COUNT;
+        RAISE NOTICE 'Mise à jour des employés sans région : % employé(s) mis à jour', rows_updated;
     END IF;
 END $$;
 
