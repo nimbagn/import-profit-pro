@@ -379,9 +379,20 @@
       Filtres et Recherche
     </h3>
     <form method="GET" action="{{ url_for('stocks.movements_list') }}" class="filters-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
-      <div class="form-group">
-        <label class="form-hl-label">Recherche</label>
-        <input type="text" name="search" value="{{ search or '' }}" class="form-hl-input" placeholder="Référence, BL, fournisseur...">
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label class="form-hl-label">
+          <i class="fas fa-search me-2" style="color: var(--color-primary);"></i>Recherche rapide
+        </label>
+        <input type="text" 
+               name="search" 
+               value="{{ search or '' }}" 
+               class="form-hl-input" 
+               placeholder="Rechercher par référence, BL, fournisseur, nom d'article, SKU..."
+               style="font-size: 1rem; padding: 0.75rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md);"
+               autofocus>
+        <small style="display: block; color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">
+          <i class="fas fa-info-circle me-1"></i>Recherche dans les références, BL, fournisseurs, noms d'articles et SKU
+        </small>
       </div>
       <div class="form-group">
         <label class="form-hl-label">Type</label>
@@ -479,7 +490,7 @@
             <th>Source<br><small style="font-weight: normal; color: var(--text-muted);">(Sortie)</small></th>
             <th>Destination<br><small style="font-weight: normal; color: var(--text-muted);">(Entrée)</small></th>
             <th>Utilisateur</th>
-            {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+            {% if current_user.is_authenticated and current_user.role and (current_user.role.code == 'admin' or current_user.role.code == 'warehouse') %}
             <th>Actions</th>
             {% endif %}
           </tr>
@@ -563,14 +574,19 @@
             {% endif %}
           </td>
           <td>{{ movement.user.username if movement.user else '-' }}</td>
-          {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+          {% if current_user.is_authenticated and current_user.role and (current_user.role.code == 'admin' or current_user.role.code == 'warehouse') %}
           <td>
-            <div style="display: flex; gap: var(--space-xs);">
+            <div style="display: flex; gap: var(--space-xs); align-items: center; flex-wrap: wrap;">
               <a href="{{ url_for('stocks.movement_edit', id=movement.id) }}" 
-                 class="btn-hl btn-hl-primary" 
-                 style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                 class="btn-hl" 
+                 style="padding: 0.5rem 0.75rem; font-size: 0.875rem; background: #3b82f6; color: white; border-color: #3b82f6; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; gap: 0.375rem; transition: all 0.2s; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);"
+                 title="Modifier ce mouvement"
+                 onmouseover="this.style.background='#2563eb'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.3)'"
+                 onmouseout="this.style.background='#3b82f6'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(59, 130, 246, 0.2)'">
                 <i class="fas fa-edit"></i>
+                <span>Modifier</span>
               </a>
+              {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
               <form method="POST" action="{{ url_for('stocks.movement_delete', id=movement.id) }}" 
                     style="display: inline;"
                     onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce mouvement ? Cette action est irréversible.');">
@@ -579,10 +595,15 @@
                 {% endif %}
                 <button type="submit" 
                         class="btn-hl" 
-                        style="padding: 0.25rem 0.5rem; font-size: 0.875rem; background: var(--color-danger); color: white; border-color: var(--color-danger);">
+                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem; background: var(--color-danger); color: white; border-color: var(--color-danger); border-radius: var(--radius-md); display: inline-flex; align-items: center; gap: 0.375rem; transition: all 0.2s; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);"
+                        title="Supprimer ce mouvement"
+                        onmouseover="this.style.background='#dc2626'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 8px rgba(239, 68, 68, 0.3)'"
+                        onmouseout="this.style.background='var(--color-danger)'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(239, 68, 68, 0.2)'">
                   <i class="fas fa-trash"></i>
+                  <span>Supprimer</span>
                 </button>
               </form>
+              {% endif %}
             </div>
           </td>
           {% endif %}

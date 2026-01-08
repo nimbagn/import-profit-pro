@@ -252,7 +252,8 @@ def movements_list():
     user_id = request.args.get('user_id', type=int)
     
     # Construire la requête avec optimisation N+1
-    query = StockMovement.query.options(
+    # Joindre StockItem pour permettre la recherche par nom/SKU
+    query = StockMovement.query.join(StockItem, StockMovement.stock_item_id == StockItem.id).options(
         joinedload(StockMovement.stock_item),
         joinedload(StockMovement.from_depot),
         joinedload(StockMovement.to_depot),
@@ -269,11 +270,14 @@ def movements_list():
         query = query.filter(StockMovement.movement_type == movement_type)
     
     if search:
+        search_pattern = f'%{search}%'
         query = query.filter(
             or_(
-                StockMovement.reference.like(f'%{search}%'),
-                StockMovement.supplier_name.like(f'%{search}%'),
-                StockMovement.bl_number.like(f'%{search}%')
+                StockMovement.reference.like(search_pattern),
+                StockMovement.supplier_name.like(search_pattern),
+                StockMovement.bl_number.like(search_pattern),
+                StockItem.name.like(search_pattern),
+                StockItem.sku.like(search_pattern)
             )
         )
     
@@ -581,9 +585,11 @@ def movement_detail_by_reference(reference):
 @stocks_bp.route('/movements/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def movement_edit(id):
-    """Modifier un mouvement (admin uniquement)"""
+    """Modifier un mouvement (admin et magasinier)"""
+    # Permettre aux admins et aux magasiniers de modifier les mouvements
     from auth import is_admin
-    if not is_admin(current_user):
+    can_edit = is_admin(current_user) or (hasattr(current_user, 'role') and current_user.role and current_user.role.code == 'warehouse')
+    if not can_edit:
         flash('Vous n\'avez pas la permission de modifier un mouvement', 'error')
         return redirect(url_for('stocks.movements_list'))
     
