@@ -654,10 +654,68 @@
   {% else %}
   <div class="card-hl" style="text-align: center; padding: var(--space-3xl);">
     <i class="fas fa-exchange-alt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: var(--space-md);"></i>
-    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun mouvement</h3>
-    <p style="color: var(--text-secondary);">Commencez par créer votre premier mouvement</p>
+    <h3 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Aucun mouvement trouvé</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+      {% if search or movement_type or date_from or date_to or stock_item_id or depot_id or vehicle_id or user_id %}
+        Aucun mouvement ne correspond à vos critères de recherche. Essayez de modifier vos filtres.
+      {% else %}
+        Commencez par créer votre premier mouvement
+      {% endif %}
+    </p>
+    {% if search or movement_type or date_from or date_to or stock_item_id or depot_id or vehicle_id or user_id %}
+    <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-primary">
+      <i class="fas fa-times me-2"></i>Réinitialiser les filtres
+    </a>
+    {% endif %}
   </div>
   {% endif %}
 </div>
+
+<script>
+// Améliorer la recherche avec indicateur visuel et recherche avec Enter
+(function() {
+  const searchInput = document.querySelector('input[name="search"]');
+  if (searchInput) {
+    // Indicateur visuel lors de la saisie
+    searchInput.addEventListener('input', function() {
+      if (this.value.length > 0) {
+        this.style.borderColor = '#3b82f6';
+        this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+      } else {
+        this.style.borderColor = 'var(--gray-300)';
+        this.style.boxShadow = 'none';
+      }
+    });
+    
+    // Permettre la recherche avec Enter
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.form.submit();
+      }
+    });
+  }
+  
+  // Améliorer la visibilité des boutons d'édition au survol de la ligne
+  const tableRows = document.querySelectorAll('.table-hl tbody tr');
+  tableRows.forEach(row => {
+    const editBtn = row.querySelector('a[href*="movement_edit"]');
+    if (editBtn) {
+      row.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+        if (editBtn) {
+          editBtn.style.transform = 'scale(1.05)';
+        }
+      });
+      row.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '';
+        if (editBtn) {
+          editBtn.style.transform = 'scale(1)';
+        }
+      });
+    }
+  });
+})();
+</script>
 {% endblock %}
 
