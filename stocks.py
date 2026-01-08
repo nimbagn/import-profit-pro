@@ -5313,10 +5313,15 @@ def stock_history():
         # Inverser l'ordre pour l'affichage : du plus récent au plus ancien
         data['movements'].reverse()
     
-    # Récupérer les données pour les filtres
+    # Récupérer les données pour les filtres (filtrées par région)
+    from utils_region_filter import filter_depots_by_region, filter_vehicles_by_region
     stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()
-    depots = Depot.query.filter_by(is_active=True).order_by(Depot.name).all()
-    vehicles = Vehicle.query.filter_by(status='active').order_by(Vehicle.plate_number).all()
+    depots_query = Depot.query.filter_by(is_active=True)
+    depots_query = filter_depots_by_region(depots_query)
+    depots = depots_query.order_by(Depot.name).all()
+    vehicles_query = Vehicle.query.filter_by(status='active')
+    vehicles_query = filter_vehicles_by_region(vehicles_query)
+    vehicles = vehicles_query.order_by(Vehicle.plate_number).all()
     
     # Calculer les totaux globaux
     total_movements = len(movements)
