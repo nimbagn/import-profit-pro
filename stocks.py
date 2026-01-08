@@ -4041,8 +4041,10 @@ def stock_summary_api():
         if stock_item_id and item.id != stock_item_id:
             continue
         
-        # Calculer la balance du stock à partir des mouvements
+        # Calculer la balance du stock à partir des mouvements (filtrés par région)
+        from utils_region_filter import filter_stock_movements_by_region
         movements_query = StockMovement.query.filter_by(stock_item_id=item.id)
+        movements_query = filter_stock_movements_by_region(movements_query)
         if date_filter is not None:
             movements_query = movements_query.filter(date_filter)
         movements = movements_query.all()
@@ -4137,13 +4139,15 @@ def stock_summary_api():
         if depot_id and depot.id != depot_id:
             continue
             
-        # Filtrer les mouvements pour ce dépôt
+        # Filtrer les mouvements pour ce dépôt (filtrés par région)
+        from utils_region_filter import filter_stock_movements_by_region
         depot_movements_query = StockMovement.query.filter(
             or_(
                 StockMovement.to_depot_id == depot.id,
                 StockMovement.from_depot_id == depot.id
             )
         )
+        depot_movements_query = filter_stock_movements_by_region(depot_movements_query)
         
         # Appliquer le filtre de date si spécifié
         if date_filter is not None:
