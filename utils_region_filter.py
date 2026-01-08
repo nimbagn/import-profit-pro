@@ -173,7 +173,6 @@ def filter_stock_movements_by_region(query):
         
         if conditions:
             # Utiliser or_() pour combiner les conditions dépôts et véhicules
-            from sqlalchemy import or_
             query = query.filter(or_(*conditions))
         else:
             # Aucun dépôt/véhicule dans la région, retourner une requête vide
