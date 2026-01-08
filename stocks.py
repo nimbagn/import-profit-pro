@@ -5269,7 +5269,9 @@ def stock_history():
         data['final_stock'] = float(running_balance)
         
         # Calculer les totaux par article
+        # Entrées : mouvements positifs (réceptions, transferts entrants, retours clients)
         entries = sum(float(m.quantity) for m in data['movements'] if float(m.quantity) > 0)
+        # Sorties : mouvements négatifs (ventes, transferts sortants, retours fournisseurs)
         exits = sum(abs(float(m.quantity)) for m in data['movements'] if float(m.quantity) < 0)
         data['total_entries'] = entries
         data['total_exits'] = exits
