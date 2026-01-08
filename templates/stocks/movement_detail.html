@@ -3,6 +3,60 @@
 
 {% block extra_css %}
 <style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
+  }
+  
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-lg);
+  }
+  
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .info-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .info-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  
   .movement-quantity-positive {
     font-weight: 700;
     font-size: 1.1rem;
@@ -31,6 +85,172 @@
   .balance-negative {
     color: #dc2626;
     font-size: 1.1rem;
+  }
+  
+  /* Responsive - iPad (768px - 1024px) */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .page-container {
+      padding: 0;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: 1rem;
+      margin-right: 1rem;
+      width: calc(100% - 2rem);
+    }
+    
+    .info-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+    }
+    
+    /* Source et Destination en colonne sur iPad portrait */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: var(--space-md) !important;
+    }
+    
+    .table-hl {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-hl table {
+      min-width: 600px;
+    }
+  }
+  
+  /* Responsive - Mobile (max-width: 768px) */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 0.5rem !important;
+    }
+    
+    .page-header-hl {
+      margin: var(--space-md);
+      padding: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .page-title-hl {
+      font-size: 1.5rem;
+      margin-bottom: var(--space-md);
+    }
+    
+    .page-header-hl > div {
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    
+    .page-header-hl .btn-hl {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .card-hl {
+      margin: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+    
+    /* Source et Destination en colonne */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: var(--space-md) !important;
+    }
+    
+    /* Tableau responsive en cartes */
+    .table-hl {
+      overflow-x: visible;
+    }
+    
+    .table-hl table {
+      min-width: 100%;
+      display: block;
+    }
+    
+    .table-hl thead {
+      display: none;
+    }
+    
+    .table-hl tbody {
+      display: block;
+    }
+    
+    .table-hl tr {
+      display: block;
+      margin-bottom: var(--space-md);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      padding: var(--space-md);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table-hl td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border: none;
+      border-bottom: 1px solid var(--gray-100);
+      text-align: left !important;
+      font-size: 0.875rem;
+    }
+    
+    .table-hl td:last-child {
+      border-bottom: none;
+    }
+    
+    .table-hl td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-right: var(--space-sm);
+      flex-shrink: 0;
+      min-width: 100px;
+    }
+    
+    .movement-quantity-positive,
+    .movement-quantity-negative {
+      font-size: 1rem;
+      padding: 0.5rem;
+    }
+  }
+  
+  /* Responsive - Petit mobile (max-width: 480px) */
+  @media (max-width: 480px) {
+    .page-header-hl,
+    .card-hl {
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
+      width: calc(100% - 1rem);
+    }
+    
+    .page-title-hl {
+      font-size: 1.25rem;
+    }
+    
+    .table-hl td {
+      font-size: 0.8rem;
+      padding: 0.5rem 0;
+    }
+    
+    .table-hl td::before {
+      min-width: 80px;
+      font-size: 0.75rem;
+    }
   }
 </style>
 {% endblock %}
@@ -162,16 +382,16 @@
           <tbody>
             {% for movement in movements %}
             <tr>
-              <td>{{ loop.index }}</td>
-              <td>
+              <td data-label="#">{{ loop.index }}</td>
+              <td data-label="Article">
                 <strong>{{ movement.stock_item.name if movement.stock_item else 'N/A' }}</strong>
               </td>
-              <td>
+              <td data-label="SKU">
                 <code style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">
                   {{ movement.stock_item.sku if movement.stock_item else 'N/A' }}
                 </code>
               </td>
-              <td class="{% if movement.quantity >= 0 %}movement-quantity-positive{% else %}movement-quantity-negative{% endif %}">
+              <td data-label="Quantité" class="{% if movement.quantity >= 0 %}movement-quantity-positive{% else %}movement-quantity-negative{% endif %}">
                 {% if movement.quantity >= 0 %}
                   <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                     <i class="fas fa-arrow-up"></i>
