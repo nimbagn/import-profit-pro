@@ -88,6 +88,7 @@
 
   .type-transfer { background: rgba(0, 56, 101, 0.1); color: var(--color-primary); }
   .type-reception { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+  .type-reception_return { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
   .type-adjustment { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
   .type-inventory { background: rgba(118, 75, 162, 0.1); color: #764ba2; }
 
@@ -193,6 +194,7 @@
           <option value="">Tous les types</option>
           <option value="transfer" {% if selected_movement_type == 'transfer' %}selected{% endif %}>Transfert</option>
           <option value="reception" {% if selected_movement_type == 'reception' %}selected{% endif %}>Réception</option>
+          <option value="reception_return" {% if selected_movement_type == 'reception_return' %}selected{% endif %}>Retour Fournisseur</option>
           <option value="adjustment" {% if selected_movement_type == 'adjustment' %}selected{% endif %}>Ajustement</option>
           <option value="inventory" {% if selected_movement_type == 'inventory' %}selected{% endif %}>Inventaire</option>
         </select>
@@ -306,7 +308,13 @@
               <td>{{ movement.movement_date.strftime('%d/%m/%Y %H:%M') if movement.movement_date else '-' }}</td>
               <td>
                 <span class="badge-hl badge-type type-{{ movement.movement_type }}">
-                  {{ movement.movement_type|title }}
+                  {% if movement.movement_type == 'transfer' %}Transfert
+                  {% elif movement.movement_type == 'reception' %}Réception
+                  {% elif movement.movement_type == 'reception_return' %}Retour Fournisseur
+                  {% elif movement.movement_type == 'adjustment' %}Ajustement
+                  {% elif movement.movement_type == 'inventory' %}Inventaire
+                  {% else %}{{ movement.movement_type|title }}
+                  {% endif %}
                 </span>
               </td>
               <td>{{ movement.reference or '-' }}</td>
