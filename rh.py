@@ -1498,7 +1498,7 @@ def contracts_list():
     date_to = request.args.get('date_to', '')
     
     # Construire la requête (filtrée par région)
-    query = EmployeeContract.query.join(Employee)
+    query = EmployeeContract.query.join(Employee, EmployeeContract.employee_id == Employee.id)
     region_id = get_user_region_id()
     if region_id is not None:
         query = query.filter(Employee.region_id == region_id)
@@ -1523,7 +1523,7 @@ def contracts_list():
     contracts = query.order_by(desc(EmployeeContract.start_date)).all()
     
     # Statistiques (filtrées par région)
-    contracts_stats_query = EmployeeContract.query.join(Employee)
+    contracts_stats_query = EmployeeContract.query.join(Employee, EmployeeContract.employee_id == Employee.id)
     if region_id is not None:
         contracts_stats_query = contracts_stats_query.filter(Employee.region_id == region_id)
     total_contracts = contracts_stats_query.count()
@@ -1565,7 +1565,7 @@ def trainings_list():
     trainings = query.order_by(desc(EmployeeTraining.start_date)).all()
     
     # Statistiques (filtrées par région)
-    trainings_stats_query = EmployeeTraining.query.join(Employee)
+    trainings_stats_query = EmployeeTraining.query.join(Employee, EmployeeTraining.employee_id == Employee.id)
     if region_id is not None:
         trainings_stats_query = trainings_stats_query.filter(Employee.region_id == region_id)
     total_trainings = trainings_stats_query.count()
@@ -1669,7 +1669,7 @@ def absences_list():
     absences = query.order_by(desc(EmployeeAbsence.start_date)).all()
     
     # Statistiques (filtrées par région)
-    absences_stats_query = EmployeeAbsence.query.join(Employee)
+    absences_stats_query = EmployeeAbsence.query.join(Employee, EmployeeAbsence.employee_id == Employee.id)
     if region_id is not None:
         absences_stats_query = absences_stats_query.filter(Employee.region_id == region_id)
     total_absences = absences_stats_query.count()
