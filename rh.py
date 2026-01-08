@@ -47,6 +47,9 @@ def index():
     total_employees = employees_query.count()
     active_employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).count()
     
+    # Obtenir l'ID de la région de l'utilisateur (une seule fois au début)
+    region_id = get_user_region_id()
+    
     # Statistiques récentes (30 derniers jours)
     last_30_days = datetime.now(UTC) - timedelta(days=30)
     
@@ -76,7 +79,6 @@ def index():
         func.count(User.id).label('count')
     ).join(User)
     # Appliquer le filtre par région
-    region_id = get_user_region_id()
     if region_id is not None:
         users_by_role_query = users_by_role_query.filter(User.region_id == region_id)
     users_by_role = users_by_role_query.group_by(Role.id, Role.name, Role.code).all()
@@ -103,14 +105,12 @@ def index():
         UserActivityLog.created_at >= last_30_days
     )
     # Appliquer le filtre par région
-    region_id = get_user_region_id()
     if region_id is not None:
         top_active_users_query = top_active_users_query.filter(User.region_id == region_id)
     top_active_users = top_active_users_query.group_by(User.id, User.username, User.full_name).order_by(desc('activity_count')).limit(5).all()
     
     # Contrats actifs (filtrés par région)
     contracts_query = EmployeeContract.query.join(Employee)
-    region_id = get_user_region_id()
     if region_id is not None:
         contracts_query = contracts_query.filter(Employee.region_id == region_id)
     active_contracts = contracts_query.filter(
@@ -125,7 +125,6 @@ def index():
     
     # Formations en cours (filtrées par région)
     trainings_query = EmployeeTraining.query.join(Employee)
-    region_id = get_user_region_id()
     if region_id is not None:
         trainings_query = trainings_query.filter(Employee.region_id == region_id)
     ongoing_trainings = trainings_query.filter(
@@ -214,22 +213,30 @@ def personnel_list():
     # Trier par date de création (plus récent en premier)
     users = query.order_by(desc(User.created_at)).all()
     
-    # Statistiques
-    total_users = User.query.count()
-    active_users = User.query.filter_by(is_active=True).count()
-    inactive_users = User.query.filter_by(is_active=False).count()
+    # Statistiques (filtrées par région)
+    total_users = filter_users_by_region(User.query).count()
+    active_users = filter_users_by_region(User.query.filter_by(is_active=True)).count()
+    inactive_users = filter_users_by_region(User.query.filter_by(is_active=False)).count()
     
-    # Par rôle
-    roles_stats = db.session.query(
+    # Par rôle (filtré par région)
+    roles_stats_query = db.session.query(
         Role.name,
         func.count(User.id).label('count')
-    ).join(User).group_by(Role.id, Role.name).all()
+    ).join(User)
+    # Appliquer le filtre par région
+    region_id = get_user_region_id()
+    if region_id is not None:
+        roles_stats_query = roles_stats_query.filter(User.region_id == region_id)
+    roles_stats = roles_stats_query.group_by(Role.id, Role.name).all()
     
-    # Par région
-    regions_stats = db.session.query(
+    # Par région (filtré par région - afficher uniquement la région de l'utilisateur)
+    regions_stats_query = db.session.query(
         Region.name,
         func.count(User.id).label('count')
-    ).join(User).group_by(Region.id, Region.name).all()
+    ).join(User)
+    if region_id is not None:
+        regions_stats_query = regions_stats_query.filter(User.region_id == region_id)
+    regions_stats = regions_stats_query.group_by(Region.id, Region.name).all()
     
     roles = Role.query.order_by(Role.name).all()
     from utils_region_filter import get_user_accessible_regions
