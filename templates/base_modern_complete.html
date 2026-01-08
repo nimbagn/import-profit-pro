@@ -458,9 +458,9 @@
                 </a>
                 {% endif %}
                 
-                {% if has_permission(current_user, 'forecast.read') or has_permission(current_user, 'orders.read') %}
+                {% if has_permission(current_user, 'forecast.read') or has_permission(current_user, 'orders.read') or (current_user.role and current_user.role.code == 'commercial') %}
                 <div class="menu-group">
-                    <div class="menu-group-title {% if request.endpoint and ('forecast' in request.endpoint or 'orders' in request.endpoint) %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
+                    <div class="menu-group-title {% if request.endpoint and ('forecast' in request.endpoint or 'orders' in request.endpoint or 'commercial_clients' in request.endpoint) %}expanded{% endif %}" onclick="toggleMenuGroup(this)">
                         <span>Prévisions & Ventes</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
@@ -497,7 +497,7 @@
                             Performance
                         </a>
                         {% endif %}
-                        {% if has_permission(current_user, 'orders.read') %}
+                        {% if has_permission(current_user, 'orders.read') or (current_user.role and current_user.role.code == 'commercial') %}
                         <a href="{{ url_for('orders.orders_list') }}" class="menu-subitem {% if request.endpoint and 'orders' in request.endpoint %}active{% endif %}">
                             <i class="fas fa-shopping-cart"></i>
                             Commandes Commerciales
