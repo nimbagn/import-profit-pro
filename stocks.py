@@ -4663,10 +4663,15 @@ def stock_summary():
             # Si c'est une sortie de ce dépôt
             elif movement.from_depot_id == depot.id:
                 if qty < 0:
+                    # Sorties : ventes, transferts sortants, ajustements négatifs, retours fournisseurs
                     total_exits += abs(qty)
                     # Si c'est un transfert vers un autre dépôt
                     if movement.movement_type == 'transfer' and movement.to_depot_id is not None:
                         total_transfers_out += abs(qty)
+                    # Si c'est un retour fournisseur
+                    elif movement.movement_type == 'reception_return':
+                        # Retour fournisseur = sortie (déjà compté dans total_exits)
+                        pass
                 total_stock_depot += qty
         
         # Total des entrées = réceptions + transferts entrants

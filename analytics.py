@@ -302,7 +302,12 @@ def calculate_stock_kpis(start_date=None, end_date=None):
     
     movements = movements_query.all()
     
+    # Calculer les entrées : tous les mouvements avec quantité positive
+    # (réceptions, transferts entrants, ajustements positifs, retours clients)
     entries = sum(float(m.quantity) for m in movements if float(m.quantity) > 0)
+    
+    # Calculer les sorties : tous les mouvements avec quantité négative
+    # (sorties clients/ventes, transferts sortants, ajustements négatifs, retours fournisseurs)
     exits = sum(abs(float(m.quantity)) for m in movements if float(m.quantity) < 0)
     
     # Réceptions dans la période (filtrées par dépôt/région)
