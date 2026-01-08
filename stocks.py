@@ -5202,6 +5202,10 @@ def stock_history():
             )
         )
     
+    # Appliquer le filtrage par région aux mouvements
+    from utils_region_filter import filter_stock_movements_by_region
+    movements_query = filter_stock_movements_by_region(movements_query)
+    
     # Récupérer les mouvements avec optimisation N+1
     movements = movements_query.options(
         joinedload(StockMovement.stock_item),
@@ -5228,9 +5232,32 @@ def stock_history():
         stock_item = data['item']
         
         # Calculer le stock initial : somme de tous les mouvements AVANT la période filtrée
+        # IMPORTANT : Appliquer les mêmes filtres que les mouvements affichés (sauf la date)
         initial_stock_query = StockMovement.query.filter_by(stock_item_id=item_id)
         
-        # Calculer le stock initial : somme de tous les mouvements AVANT la période filtrée
+        # Appliquer le filtrage par région
+        initial_stock_query = filter_stock_movements_by_region(initial_stock_query)
+        
+        # Appliquer les mêmes filtres que les mouvements affichés (sauf la date)
+        if movement_type:
+            initial_stock_query = initial_stock_query.filter_by(movement_type=movement_type)
+        
+        if depot_id:
+            initial_stock_query = initial_stock_query.filter(
+                or_(
+                    StockMovement.from_depot_id == depot_id,
+                    StockMovement.to_depot_id == depot_id
+                )
+            )
+        
+        if vehicle_id:
+            initial_stock_query = initial_stock_query.filter(
+                or_(
+                    StockMovement.from_vehicle_id == vehicle_id,
+                    StockMovement.to_vehicle_id == vehicle_id
+                )
+            )
+        
         # Récupérer la date de début du filtre
         filter_start = None
         
@@ -5251,6 +5278,7 @@ def stock_history():
         
         if filter_start:
             # Stock initial = somme de tous les mouvements avant la date de début
+            # (avec les mêmes filtres de dépôt/véhicule/type)
             initial_movements = initial_stock_query.filter(
                 StockMovement.movement_date < filter_start
             ).all()
