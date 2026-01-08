@@ -5367,7 +5367,17 @@ def warehouse_dashboard():
         joinedload(CommercialOrder.region),
         joinedload(CommercialOrder.clients)
     )
+    # Filtrer par région : IMPORTANT - aucune région ne doit voir les commandes des autres régions
     validated_orders_query = filter_commercial_orders_by_region(validated_orders_query)
+    
+    # Vérification supplémentaire : s'assurer que le filtrage est bien appliqué
+    # Si l'utilisateur n'est pas admin, on doit avoir un filtre par région
+    from utils_region_filter import get_user_region_id
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Double vérification : filtrer explicitement par région
+        validated_orders_query = validated_orders_query.filter(CommercialOrder.region_id == region_id)
+    
     validated_orders_without_summary = validated_orders_query.all()
     
     urgent_orders = []
