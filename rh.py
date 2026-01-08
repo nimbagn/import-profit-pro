@@ -30,134 +30,142 @@ rh_bp = Blueprint('rh', __name__, url_prefix='/rh')
 @login_required
 def index():
     """Tableau de bord RH - Page d'accueil du module"""
-    if not has_rh_permission(current_user, 'users.read') and not is_rh_user(current_user):
-        flash('Accès refusé. Vous devez avoir un rôle RH pour accéder à cette page.', 'error')
-        return redirect(url_for('index'))
-    
-    # Statistiques générales (filtrées par région)
-    users_query = User.query
-    users_query = filter_users_by_region(users_query)
-    total_users = users_query.count()
-    active_users = filter_users_by_region(User.query.filter_by(is_active=True)).count()
-    inactive_users = filter_users_by_region(User.query.filter_by(is_active=False)).count()
-    
-    # Statistiques employés externes (filtrées par région)
-    employees_query = Employee.query
-    employees_query = filter_employees_by_region(employees_query)
-    total_employees = employees_query.count()
-    active_employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).count()
-    
-    # Obtenir l'ID de la région de l'utilisateur (une seule fois au début)
-    region_id = get_user_region_id()
-    
-    # Statistiques récentes (30 derniers jours)
-    last_30_days = datetime.now(UTC) - timedelta(days=30)
-    
-    # Activités récentes (filtrées par région)
-    recent_activities_query = UserActivityLog.query.join(User).filter(
-        UserActivityLog.created_at >= last_30_days
-    )
-    if region_id is not None:
-        recent_activities_query = recent_activities_query.filter(User.region_id == region_id)
-    recent_activities_count = recent_activities_query.count()
-    
-    # Connexions récentes (filtrées par région)
-    recent_logins_query = UserActivityLog.query.join(User).filter(
-        and_(
-            UserActivityLog.action == 'login',
+    try:
+        if not has_rh_permission(current_user, 'users.read') and not is_rh_user(current_user):
+            flash('Accès refusé. Vous devez avoir un rôle RH pour accéder à cette page.', 'error')
+            return redirect(url_for('index'))
+        
+        # Statistiques générales (filtrées par région)
+        users_query = User.query
+        users_query = filter_users_by_region(users_query)
+        total_users = users_query.count()
+        active_users = filter_users_by_region(User.query.filter_by(is_active=True)).count()
+        inactive_users = filter_users_by_region(User.query.filter_by(is_active=False)).count()
+        
+        # Statistiques employés externes (filtrées par région)
+        employees_query = Employee.query
+        employees_query = filter_employees_by_region(employees_query)
+        total_employees = employees_query.count()
+        active_employees = filter_employees_by_region(Employee.query.filter_by(employment_status='active')).count()
+        
+        # Obtenir l'ID de la région de l'utilisateur (une seule fois au début)
+        region_id = get_user_region_id()
+        
+        # Statistiques récentes (30 derniers jours)
+        last_30_days = datetime.now(UTC) - timedelta(days=30)
+        
+        # Activités récentes (filtrées par région)
+        recent_activities_query = UserActivityLog.query.join(User).filter(
             UserActivityLog.created_at >= last_30_days
         )
-    )
-    if region_id is not None:
-        recent_logins_query = recent_logins_query.filter(User.region_id == region_id)
-    recent_logins = recent_logins_query.count()
-    
-    # Utilisateurs par rôle (filtrés par région)
-    users_by_role_query = db.session.query(
-        Role.name,
-        Role.code,
-        func.count(User.id).label('count')
-    ).join(User)
-    # Appliquer le filtre par région
-    if region_id is not None:
-        users_by_role_query = users_by_role_query.filter(User.region_id == region_id)
-    users_by_role = users_by_role_query.group_by(Role.id, Role.name, Role.code).all()
-    
-    # Activités par type (30 derniers jours) - filtrées par région
-    activities_by_type_query = db.session.query(
-        UserActivityLog.action,
-        func.count(UserActivityLog.id).label('count')
-    ).join(User).filter(
-        UserActivityLog.created_at >= last_30_days
-    )
-    # Appliquer le filtre par région
-    if region_id is not None:
-        activities_by_type_query = activities_by_type_query.filter(User.region_id == region_id)
-    activities_by_type = activities_by_type_query.group_by(UserActivityLog.action).order_by(desc('count')).limit(10).all()
-    
-    # Top 5 utilisateurs les plus actifs (30 derniers jours) - filtrés par région
-    top_active_users_query = db.session.query(
-        User.id,
-        User.username,
-        User.full_name,
-        func.count(UserActivityLog.id).label('activity_count')
-    ).join(UserActivityLog).filter(
-        UserActivityLog.created_at >= last_30_days
-    )
-    # Appliquer le filtre par région
-    if region_id is not None:
-        top_active_users_query = top_active_users_query.filter(User.region_id == region_id)
-    top_active_users = top_active_users_query.group_by(User.id, User.username, User.full_name).order_by(desc('activity_count')).limit(5).all()
-    
-    # Contrats actifs (filtrés par région)
-    contracts_query = EmployeeContract.query.join(Employee)
-    if region_id is not None:
-        contracts_query = contracts_query.filter(Employee.region_id == region_id)
-    active_contracts = contracts_query.filter(
-        or_(
-            EmployeeContract.status == 'active',
+        if region_id is not None:
+            recent_activities_query = recent_activities_query.filter(User.region_id == region_id)
+        recent_activities_count = recent_activities_query.count()
+        
+        # Connexions récentes (filtrées par région)
+        recent_logins_query = UserActivityLog.query.join(User).filter(
             and_(
-                EmployeeContract.end_date.is_(None),
-                EmployeeContract.status != 'terminated'
+                UserActivityLog.action == 'login',
+                UserActivityLog.created_at >= last_30_days
             )
         )
-    ).count()
-    
-    # Formations en cours (filtrées par région)
-    trainings_query = EmployeeTraining.query.join(Employee)
-    if region_id is not None:
-        trainings_query = trainings_query.filter(Employee.region_id == region_id)
-    ongoing_trainings = trainings_query.filter(
-        and_(
-            EmployeeTraining.status == 'in_progress',
-            EmployeeTraining.start_date <= date.today(),
+        if region_id is not None:
+            recent_logins_query = recent_logins_query.filter(User.region_id == region_id)
+        recent_logins = recent_logins_query.count()
+        
+        # Utilisateurs par rôle (filtrés par région)
+        users_by_role_query = db.session.query(
+            Role.name,
+            Role.code,
+            func.count(User.id).label('count')
+        ).join(User, Role.id == User.role_id)
+        # Appliquer le filtre par région
+        if region_id is not None:
+            users_by_role_query = users_by_role_query.filter(User.region_id == region_id)
+        users_by_role = users_by_role_query.group_by(Role.id, Role.name, Role.code).all()
+        
+        # Activités par type (30 derniers jours) - filtrées par région
+        activities_by_type_query = db.session.query(
+            UserActivityLog.action,
+            func.count(UserActivityLog.id).label('count')
+        ).join(User, UserActivityLog.user_id == User.id).filter(
+            UserActivityLog.created_at >= last_30_days
+        )
+        # Appliquer le filtre par région
+        if region_id is not None:
+            activities_by_type_query = activities_by_type_query.filter(User.region_id == region_id)
+        activities_by_type = activities_by_type_query.group_by(UserActivityLog.action).order_by(desc('count')).limit(10).all()
+        
+        # Top 5 utilisateurs les plus actifs (30 derniers jours) - filtrés par région
+        top_active_users_query = db.session.query(
+            User.id,
+            User.username,
+            User.full_name,
+            func.count(UserActivityLog.id).label('activity_count')
+        ).join(UserActivityLog, User.id == UserActivityLog.user_id).filter(
+            UserActivityLog.created_at >= last_30_days
+        )
+        # Appliquer le filtre par région
+        if region_id is not None:
+            top_active_users_query = top_active_users_query.filter(User.region_id == region_id)
+        top_active_users = top_active_users_query.group_by(User.id, User.username, User.full_name).order_by(desc('activity_count')).limit(5).all()
+        
+        # Contrats actifs (filtrés par région)
+        contracts_query = EmployeeContract.query.join(Employee, EmployeeContract.employee_id == Employee.id)
+        if region_id is not None:
+            contracts_query = contracts_query.filter(Employee.region_id == region_id)
+        active_contracts = contracts_query.filter(
             or_(
-                EmployeeTraining.end_date.is_(None),
-                EmployeeTraining.end_date >= date.today()
+                EmployeeContract.status == 'active',
+                and_(
+                    EmployeeContract.end_date.is_(None),
+                    EmployeeContract.status != 'terminated'
+                )
             )
-        )
-    ).count()
-    
-    # Absences en attente (filtrées par région)
-    absences_query = EmployeeAbsence.query.join(Employee)
-    if region_id is not None:
-        absences_query = absences_query.filter(Employee.region_id == region_id)
-    pending_absences = absences_query.filter_by(status='pending').count()
-    
-    return render_template('rh/index.html',
-                         total_users=total_users,
-                         active_users=active_users,
-                         inactive_users=inactive_users,
-                         total_employees=total_employees,
-                         active_employees=active_employees,
-                         recent_activities_count=recent_activities_count,
-                         recent_logins=recent_logins,
-                         users_by_role=users_by_role,
-                         activities_by_type=activities_by_type,
-                         top_active_users=top_active_users,
-                         active_contracts=active_contracts,
-                         ongoing_trainings=ongoing_trainings,
-                         pending_absences=pending_absences)
+        ).count()
+        
+        # Formations en cours (filtrées par région)
+        trainings_query = EmployeeTraining.query.join(Employee, EmployeeTraining.employee_id == Employee.id)
+        if region_id is not None:
+            trainings_query = trainings_query.filter(Employee.region_id == region_id)
+        ongoing_trainings = trainings_query.filter(
+            and_(
+                EmployeeTraining.status == 'in_progress',
+                EmployeeTraining.start_date <= date.today(),
+                or_(
+                    EmployeeTraining.end_date.is_(None),
+                    EmployeeTraining.end_date >= date.today()
+                )
+            )
+        ).count()
+        
+        # Absences en attente (filtrées par région)
+        absences_query = EmployeeAbsence.query.join(Employee, EmployeeAbsence.employee_id == Employee.id)
+        if region_id is not None:
+            absences_query = absences_query.filter(Employee.region_id == region_id)
+        pending_absences = absences_query.filter_by(status='pending').count()
+        
+        return render_template('rh/index.html',
+                             total_users=total_users,
+                             active_users=active_users,
+                             inactive_users=inactive_users,
+                             total_employees=total_employees,
+                             active_employees=active_employees,
+                             recent_activities_count=recent_activities_count,
+                             recent_logins=recent_logins,
+                             users_by_role=users_by_role,
+                             activities_by_type=activities_by_type,
+                             top_active_users=top_active_users,
+                             active_contracts=active_contracts,
+                             ongoing_trainings=ongoing_trainings,
+                             pending_absences=pending_absences)
+    except Exception as e:
+        import traceback
+        error_msg = f"Erreur dans rh.index(): {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_msg}")
+        flash(f'Erreur lors du chargement du dashboard RH: {str(e)}', 'error')
+        db.session.rollback()
+        return redirect(url_for('index'))
 
 # =========================================================
 # GESTION DU PERSONNEL
