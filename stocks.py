@@ -925,7 +925,11 @@ def api_movement_by_reference(reference):
 @login_required
 def movement_new():
     """Créer un nouveau mouvement"""
-    if not has_permission(current_user, 'movements.create'):
+    # Vérifier la permission movements.create OU le rôle warehouse
+    has_create_permission = has_permission(current_user, 'movements.create')
+    is_warehouse = current_user.role and current_user.role.code == 'warehouse'
+    
+    if not has_create_permission and not is_warehouse:
         flash('Vous n\'avez pas la permission de créer un mouvement', 'error')
         return redirect(url_for('stocks.movements_list'))
     
