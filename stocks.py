@@ -4179,8 +4179,11 @@ def stock_summary_api():
                 total_exits += abs(qty)
                 total_stock_depot -= abs(qty)
         
-        # Ajouter les stocks depuis DepotStock
-        depot_stocks = DepotStock.query.filter_by(depot_id=depot.id).all()
+        # Ajouter les stocks depuis DepotStock (filtrés par région)
+        from utils_region_filter import filter_depot_stocks_by_region
+        depot_stocks_query = DepotStock.query.filter_by(depot_id=depot.id)
+        depot_stocks_query = filter_depot_stocks_by_region(depot_stocks_query)
+        depot_stocks = depot_stocks_query.all()
         for ds in depot_stocks:
             total_stock_depot += Decimal(str(ds.quantity))
         
