@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <style>
+  /* Page pleine largeur */
   .main-content {
     width: 100% !important;
     max-width: 100% !important;
@@ -11,19 +12,24 @@
     margin-top: 70px !important;
   }
   
-  .form-container {
-    max-width: 900px;
-    margin: var(--space-xl) auto;
-    padding: 0 var(--space-xl);
+  .page-container {
     width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 0;
+    background: var(--bg-secondary);
+    margin: 0;
   }
   
-  .form-hl {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    padding: var(--space-3xl);
-    box-shadow: var(--shadow-sm);
+  .page-header-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    padding-top: var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+  }
+  
+  .card-hl {
+    margin: 0 var(--space-xl) var(--space-xl) var(--space-xl);
+    width: calc(100% - 2 * var(--space-xl));
+    max-width: 1000px;
   }
   
   .form-row {
@@ -32,43 +38,175 @@
     gap: var(--space-md);
   }
   
+  .info-card {
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .info-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+    font-weight: 500;
+  }
+  
+  .info-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .source-destination-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+  }
+  
+  .source-card {
+    background: #fee2e2;
+    border-left: 4px solid #ef4444;
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+  }
+  
+  .destination-card {
+    background: #dcfce7;
+    border-left: 4px solid #16a34a;
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+  }
+  
+  /* Responsive - iPad (768px - 1024px) */
+  @media (max-width: 1024px) {
+    .main-content {
+      margin-left: 0 !important;
+      padding: 1rem !important;
+    }
+    
+    .page-container {
+      padding: 0;
+    }
+    
+    .page-header-hl,
+    .card-hl {
+      margin-left: 1rem;
+      margin-right: 1rem;
+      width: calc(100% - 2rem);
+    }
+    
+    .form-row {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+    }
+    
+    .source-destination-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+    
+    .form-hl-input,
+    .form-hl-select,
+    .form-hl-textarea {
+      font-size: 16px !important;
+      padding: 0.875rem 1rem !important;
+    }
+  }
+  
+  /* Responsive - Mobile (max-width: 768px) */
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0 !important;
+      padding: 0.5rem !important;
     }
     
-    .form-container {
-      padding: 0 var(--space-md);
+    .page-header-hl {
+      margin: var(--space-md);
+      padding: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
     }
     
-    .form-hl {
-      padding: var(--space-xl);
+    .page-title-hl {
+      font-size: 1.5rem;
+      margin-bottom: var(--space-md);
+    }
+    
+    .card-hl {
+      margin: var(--space-md);
+      width: calc(100% - 2 * var(--space-md));
+      padding: var(--space-lg) !important;
     }
     
     .form-row {
       grid-template-columns: 1fr;
+      gap: var(--space-sm);
+    }
+    
+    .source-destination-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+    
+    .info-card {
+      padding: var(--space-md);
+    }
+    
+    .form-hl-input,
+    .form-hl-select,
+    .form-hl-textarea {
+      font-size: 16px !important;
+      padding: 0.75rem !important;
+    }
+    
+    .btn-hl {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  
+  /* Responsive - Petit mobile (max-width: 480px) */
+  @media (max-width: 480px) {
+    .page-header-hl,
+    .card-hl {
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
+      width: calc(100% - 1rem);
+    }
+    
+    .page-title-hl {
+      font-size: 1.25rem;
     }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-  <div class="form-hl">
-    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
-      <h1 class="page-title-hl">
-        <i class="fas fa-edit me-2"></i>
-        Modifier Mouvement
-      </h1>
+<div class="page-container">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-edit me-2"></i>
+      Modifier Mouvement
+    </h1>
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
       <a href="{{ url_for('stocks.movement_detail_by_reference', reference=movement.reference) }}" class="btn-hl btn-hl-outline">
-        <i class="fas fa-arrow-left me-2"></i>Retour
+        <i class="fas fa-arrow-left me-2"></i>Retour au détail
+      </a>
+      <a href="{{ url_for('stocks.movements_list') }}" class="btn-hl btn-hl-outline">
+        <i class="fas fa-list me-2"></i>Liste des mouvements
       </a>
     </div>
+  </div>
+
+  <div class="card-hl">
+
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+          <div class="alert-hl alert-hl-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' }} me-2"></i>
             {{ message }}
           </div>
         {% endfor %}
@@ -76,31 +214,37 @@
     {% endwith %}
 
     <!-- Informations du mouvement -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl); padding: var(--space-lg); background: var(--gray-50); border-radius: var(--radius-md);">
-      <div>
-        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
-          <i class="fas fa-hashtag me-2"></i>Référence
-        </label>
-        <div style="font-size: 1.125rem; font-weight: 600; color: var(--color-primary);">
-          {{ movement.reference }}
+    <div class="info-card" style="margin-bottom: var(--space-xl);">
+      <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+        <i class="fas fa-info-circle me-2"></i>
+        Informations du mouvement
+      </h3>
+      <div class="form-row">
+        <div class="info-card">
+          <label class="info-label">
+            <i class="fas fa-hashtag me-2"></i>Référence
+          </label>
+          <div class="info-value" style="color: var(--color-primary);">
+            {{ movement.reference }}
+          </div>
         </div>
-      </div>
-      <div>
-        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
-          <i class="fas fa-tag me-2"></i>Type
-        </label>
-        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);">
-          <span class="badge-hl badge-type type-{{ movement.movement_type }}">
-            {{ movement.movement_type|title }}
-          </span>
+        <div class="info-card">
+          <label class="info-label">
+            <i class="fas fa-tag me-2"></i>Type
+          </label>
+          <div class="info-value">
+            <span class="badge-hl badge-type type-{{ movement.movement_type }}">
+              {{ movement.movement_type|title }}
+            </span>
+          </div>
         </div>
-      </div>
-      <div>
-        <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-xs); font-weight: 500;">
-          <i class="fas fa-box me-2"></i>Article
-        </label>
-        <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);">
-          {{ movement.stock_item.sku }} - {{ movement.stock_item.name }}
+        <div class="info-card">
+          <label class="info-label">
+            <i class="fas fa-box me-2"></i>Article
+          </label>
+          <div class="info-value">
+            <strong>{{ movement.stock_item.sku }}</strong> - {{ movement.stock_item.name }}
+          </div>
         </div>
       </div>
     </div>
@@ -109,70 +253,79 @@
       {% if csrf_token %}
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       {% endif %}
+      <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); font-size: 1.1rem;">
+        <i class="fas fa-edit me-2"></i>
+        Modifier les informations
+      </h3>
+      
       <div class="form-row" style="margin-bottom: var(--space-lg);">
         <div class="form-group">
-          <label for="movement_date" class="form-label">
+          <label for="movement_date" class="form-hl-label">
             <i class="fas fa-calendar me-2"></i>Date du mouvement <span style="color: #ef4444;">*</span>
           </label>
           <input type="date" 
                  id="movement_date" 
                  name="movement_date" 
-                 class="form-control" 
+                 class="form-hl-input" 
                  value="{{ movement.movement_date.strftime('%Y-%m-%d') if movement.movement_date else '' }}" 
                  required>
         </div>
         
         <div class="form-group">
-          <label for="quantity" class="form-label">
+          <label for="quantity" class="form-hl-label">
             <i class="fas fa-balance-scale me-2"></i>Quantité <span style="color: #ef4444;">*</span>
             <small style="display: block; color: var(--text-secondary); font-weight: normal; margin-top: 0.25rem;">
               {% if movement.quantity >= 0 %}
-                <span style="color: #16a34a;">Entrée (positive)</span>
+                <span style="color: #16a34a; font-weight: 600;">✓ Entrée (positive)</span>
               {% else %}
-                <span style="color: #dc2626;">Sortie (négative)</span>
+                <span style="color: #dc2626; font-weight: 600;">⚠ Sortie (négative)</span>
               {% endif %}
             </small>
           </label>
           <input type="number" 
                  id="quantity" 
                  name="quantity" 
-                 class="form-control" 
+                 class="form-hl-input" 
                  step="0.01" 
                  min="0"
                  value="{{ movement.quantity|abs }}" 
                  required>
           <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
             {% if movement.quantity < 0 %}
-              ⚠️ La quantité sera automatiquement convertie en négative (sortie)
+              <i class="fas fa-info-circle me-1"></i>La quantité sera automatiquement convertie en négative (sortie)
             {% else %}
-              ✓ Quantité positive (entrée)
+              <i class="fas fa-check-circle me-1"></i>Quantité positive (entrée)
             {% endif %}
           </small>
         </div>
       </div>
 
       <!-- Source et Destination (lecture seule) -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-lg);">
-        <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: var(--space-lg); border-radius: var(--radius-md);">
+      <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); margin-top: var(--space-xl); font-size: 1.1rem;">
+        <i class="fas fa-exchange-alt me-2"></i>
+        Source et Destination
+      </h3>
+      <div class="source-destination-grid" style="margin-bottom: var(--space-lg);">
+        <div class="source-card">
           <label style="display: block; font-size: 0.875rem; color: #991b1b; margin-bottom: var(--space-sm); font-weight: 600;">
-            <i class="fas fa-arrow-down me-2"></i>Source (Sortie)
+            <i class="fas fa-arrow-up me-2"></i>Source (Sortie)
           </label>
-          <div style="font-size: 1rem; color: #7f1d1d;">
+          <div style="font-size: 1rem; color: #7f1d1d; font-weight: 600;">
             {% if movement.from_depot %}
               <i class="fas fa-warehouse me-2"></i>{{ movement.from_depot.name }}
             {% elif movement.from_vehicle %}
               <i class="fas fa-car me-2"></i>{{ movement.from_vehicle.plate_number }}
             {% else %}
-              <span style="color: var(--text-muted);">Aucune source</span>
+              <span style="color: var(--text-muted); font-weight: normal;">Aucune source</span>
             {% endif %}
           </div>
         </div>
         
-        <div style="background: #dcfce7; border-left: 4px solid #16a34a; padding: var(--space-lg); border-radius: var(--radius-md);">
+        <div class="destination-card">
           <label style="display: block; font-size: 0.875rem; color: #166534; margin-bottom: var(--space-sm); font-weight: 600;">
-            <i class="fas fa-arrow-up me-2"></i>Destination (Entrée)
+            <i class="fas fa-arrow-down me-2"></i>Destination (Entrée)
           </label>
-          <div style="font-size: 1rem; color: #14532d;">
+          <div style="font-size: 1rem; color: #14532d; font-weight: 600;">
             {% if movement.to_depot %}
               <i class="fas fa-warehouse me-2"></i>{{ movement.to_depot.name }}
             {% elif movement.to_vehicle %}
@@ -180,62 +333,71 @@
             {% elif movement.supplier_name %}
               <i class="fas fa-truck me-2"></i>{{ movement.supplier_name }}
             {% else %}
-              <span style="color: var(--text-muted);">Aucune destination</span>
+              <span style="color: var(--text-muted); font-weight: normal;">Aucune destination</span>
             {% endif %}
           </div>
         </div>
       </div>
 
       <!-- Champs optionnels -->
+      <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); margin-top: var(--space-xl); font-size: 1.1rem;">
+        <i class="fas fa-info-circle me-2"></i>
+        Informations complémentaires
+      </h3>
       <div class="form-row" style="margin-bottom: var(--space-lg);">
         {% if movement.movement_type == 'reception' %}
         <div class="form-group">
-          <label for="supplier_name" class="form-label">
+          <label for="supplier_name" class="form-hl-label">
             <i class="fas fa-truck me-2"></i>Fournisseur
           </label>
           <input type="text" 
                  id="supplier_name" 
                  name="supplier_name" 
-                 class="form-control" 
-                 value="{{ movement.supplier_name or '' }}">
+                 class="form-hl-input" 
+                 value="{{ movement.supplier_name or '' }}"
+                 placeholder="Nom du fournisseur">
         </div>
         
         <div class="form-group">
-          <label for="bl_number" class="form-label">
+          <label for="bl_number" class="form-hl-label">
             <i class="fas fa-file-invoice me-2"></i>N° BL
           </label>
           <input type="text" 
                  id="bl_number" 
                  name="bl_number" 
-                 class="form-control" 
-                 value="{{ movement.bl_number or '' }}">
+                 class="form-hl-input" 
+                 value="{{ movement.bl_number or '' }}"
+                 placeholder="Numéro de BL">
         </div>
         {% endif %}
         
-        <div class="form-group">
-          <label for="reason" class="form-label">
+        <div class="form-group" {% if movement.movement_type == 'reception' %}style="grid-column: 1 / -1;"{% endif %}>
+          <label for="reason" class="form-hl-label">
             <i class="fas fa-comment me-2"></i>Raison / Notes
           </label>
           <textarea id="reason" 
                     name="reason" 
-                    class="form-control" 
-                    rows="3">{{ movement.reason or '' }}</textarea>
+                    class="form-hl-textarea" 
+                    rows="4"
+                    placeholder="Ajoutez des notes ou une raison pour ce mouvement...">{{ movement.reason or '' }}</textarea>
         </div>
       </div>
 
       <!-- Avertissement -->
-      <div class="alert-hl alert-hl-warning" style="margin-bottom: var(--space-xl);">
+      <div class="alert-hl alert-hl-warning" style="margin-bottom: var(--space-xl); margin-top: var(--space-xl);">
         <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>Attention :</strong> La modification de ce mouvement affectera automatiquement les stocks associés.
-        {% if movement.quantity < 0 %}
-          <br>Ce mouvement représente une <strong>sortie</strong> (quantité négative).
-        {% else %}
-          <br>Ce mouvement représente une <strong>entrée</strong> (quantité positive).
-        {% endif %}
+        <div>
+          <strong>Attention :</strong> La modification de ce mouvement affectera automatiquement les stocks associés.
+          {% if movement.quantity < 0 %}
+            <br><br>Ce mouvement représente une <strong>sortie</strong> (quantité négative). La quantité saisie sera automatiquement convertie en valeur négative.
+          {% else %}
+            <br><br>Ce mouvement représente une <strong>entrée</strong> (quantité positive).
+          {% endif %}
+        </div>
       </div>
 
       <!-- Boutons -->
-      <div style="display: flex; gap: var(--space-md); justify-content: flex-end; margin-top: var(--space-xl);">
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end; margin-top: var(--space-xl); flex-wrap: wrap;">
         <a href="{{ url_for('stocks.movement_detail_by_reference', reference=movement.reference) }}" class="btn-hl btn-hl-outline">
           <i class="fas fa-times me-2"></i>Annuler
         </a>
