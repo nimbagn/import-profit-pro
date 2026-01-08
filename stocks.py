@@ -4084,13 +4084,17 @@ def stock_summary_api():
         for movement in movements:
             qty = Decimal(str(movement.quantity))
             
+            # Entrées : réceptions et mouvements positifs
             if movement.movement_type == 'reception':
                 entries += abs(qty)
             elif movement.movement_type in ['transfer', 'adjustment', 'inventory']:
                 if qty < 0:
-                    exits += abs(qty)
+                    exits += abs(qty)  # Sorties : transferts sortants, ajustements négatifs
                 else:
-                    entries += qty
+                    entries += qty  # Entrées : transferts entrants, ajustements positifs
+            elif movement.movement_type == 'reception_return':
+                # Retours fournisseurs : sorties (quantité négative)
+                exits += abs(qty)
             
             # Calculer par dépôt
             if movement.to_depot_id:
