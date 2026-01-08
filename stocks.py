@@ -3024,10 +3024,22 @@ def return_new():
             'depot_id': int(depot_id) if depot_id else None,
             'return_date': datetime.strptime(return_date, '%Y-%m-%d') if isinstance(return_date, str) else return_date,
             'user_id': current_user.id,
-            'reason': reason,
             'notes': notes,
             'status': 'draft'
         }
+        
+        # Ajouter reason seulement si la colonne existe dans la base de données
+        # Vérifier dynamiquement si la colonne existe pour éviter les erreurs
+        try:
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('stock_returns')]
+            if 'reason' in columns:
+                return_data['reason'] = reason
+        except Exception as e:
+            # Si la vérification échoue, on omet reason pour éviter l'erreur
+            print(f"⚠️ Impossible de vérifier la colonne reason: {e}")
+            pass
         
         # Ajouter les champs spécifiques selon le type
         if return_type == 'supplier':
