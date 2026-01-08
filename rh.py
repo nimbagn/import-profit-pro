@@ -1552,7 +1552,7 @@ def trainings_list():
     training_type = request.args.get('type', '')
     
     # Construire la requête (filtrée par région)
-    query = EmployeeTraining.query.join(Employee)
+    query = EmployeeTraining.query.join(Employee, EmployeeTraining.employee_id == Employee.id)
     region_id = get_user_region_id()
     if region_id is not None:
         query = query.filter(Employee.region_id == region_id)
@@ -1644,7 +1644,7 @@ def absences_list():
     date_to = request.args.get('date_to', '')
     
     # Construire la requête (filtrée par région)
-    query = EmployeeAbsence.query.join(Employee)
+    query = EmployeeAbsence.query.join(Employee, EmployeeAbsence.employee_id == Employee.id)
     region_id = get_user_region_id()
     if region_id is not None:
         query = query.filter(Employee.region_id == region_id)
