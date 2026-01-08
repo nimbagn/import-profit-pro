@@ -457,7 +457,11 @@ def order_new():
     except: pass
     # #endregion
     
-    if not has_permission(current_user, 'orders.create'):
+    # Vérifier la permission orders.create OU le rôle commercial
+    has_create_permission = has_permission(current_user, 'orders.create')
+    is_commercial = current_user.role and current_user.role.code == 'commercial'
+    
+    if not has_create_permission and not is_commercial:
         # #region agent log
         try:
             with open('/Users/dantawi/Documents/mini_flask_import_profitability/.cursor/debug.log', 'a') as f:

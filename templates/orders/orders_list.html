@@ -1055,7 +1055,7 @@
     </p>
     {% endif %}
     <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-      {% if has_permission(current_user, 'orders.create') %}
+      {% if has_permission(current_user, 'orders.create') or (current_user.role and current_user.role.code == 'commercial') %}
       <a href="{{ url_for('orders.order_new') }}" class="btn-hl btn-hl-primary">
         <i class="fas fa-plus me-2"></i>Nouvelle Commande
       </a>
