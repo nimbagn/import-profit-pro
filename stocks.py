@@ -3040,52 +3040,57 @@ def return_new():
                 return_data['original_outgoing_id'] = int(original_outgoing_id)
         
         # Vérifier si la colonne reason existe dans la base de données
-        # Si elle n'existe pas, ne pas l'inclure dans return_data
+        reason_column_exists = False
         try:
-            from sqlalchemy import inspect, text
+            from sqlalchemy import inspect
             inspector = inspect(db.engine)
             columns = [col['name'] for col in inspector.get_columns('stock_returns')]
-            if 'reason' in columns:
-                return_data['reason'] = reason
-            else:
-                # La colonne n'existe pas, on l'omet
+            reason_column_exists = 'reason' in columns
+            if not reason_column_exists:
                 print("⚠️ Colonne 'reason' n'existe pas dans stock_returns, elle sera omise")
         except Exception as e:
-            # Si la vérification échoue, on omet reason pour éviter l'erreur
-            print(f"⚠️ Impossible de vérifier la colonne reason: {e}")
-            # Ne pas inclure reason dans return_data
+            # Si la vérification échoue, on assume que reason n'existe pas pour être sûr
+            print(f"⚠️ Impossible de vérifier la colonne reason: {e}. On assume qu'elle n'existe pas.")
+            reason_column_exists = False
+        
+        # Ajouter reason seulement si la colonne existe
+        if reason_column_exists:
+            return_data['reason'] = reason
         
         # Créer l'objet StockReturn
         return_ = StockReturn(**return_data)
         
         # Si reason n'existe pas dans la base mais est dans le modèle,
-        # le retirer de l'objet avant l'insertion
-        if 'reason' not in return_data and hasattr(return_, 'reason'):
-            # Retirer reason de l'objet pour éviter qu'il soit inclus dans l'INSERT
+        # le retirer de __dict__ avant l'insertion pour éviter qu'il soit inclus dans l'INSERT
+        if not reason_column_exists:
             try:
-                # Utiliser __dict__ pour retirer l'attribut
-                if 'reason' in return_.__dict__:
-                    delattr(return_, 'reason')
-            except:
-                pass
+                # Retirer reason de __dict__ pour éviter qu'il soit inclus dans l'INSERT SQL
+                if hasattr(return_, '__dict__') and 'reason' in return_.__dict__:
+                    del return_.__dict__['reason']
+                # Aussi retirer de _sa_instance_state si présent
+                if hasattr(return_, '_sa_instance_state'):
+                    state = return_._sa_instance_state
+                    if hasattr(state, 'unmodified') and 'reason' in state.unmodified:
+                        state.unmodified = tuple(k for k in state.unmodified if k != 'reason')
+            except Exception as e:
+                print(f"⚠️ Impossible de retirer reason de l'objet: {e}")
         
         db.session.add(return_)
         
-        # Utiliser une requête SQL directe si reason n'existe pas
+        # Gérer l'erreur si reason cause un problème lors du flush
         try:
             db.session.flush()
         except Exception as flush_error:
             # Si l'erreur est due à reason, réessayer sans reason
-            if 'reason' in str(flush_error).lower() or 'unknown column' in str(flush_error).lower():
+            error_str = str(flush_error).lower()
+            if 'reason' in error_str or 'unknown column' in error_str:
                 db.session.rollback()
                 # Retirer reason de return_data et recréer l'objet
                 return_data.pop('reason', None)
-                if hasattr(return_, 'reason'):
-                    try:
-                        delattr(return_, 'reason')
-                    except:
-                        pass
                 return_ = StockReturn(**return_data)
+                # Retirer reason de l'objet si présent
+                if hasattr(return_, '__dict__') and 'reason' in return_.__dict__:
+                    del return_.__dict__['reason']
                 db.session.add(return_)
                 db.session.flush()
             else:
