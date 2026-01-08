@@ -252,8 +252,7 @@ def movements_list():
     user_id = request.args.get('user_id', type=int)
     
     # Construire la requête avec optimisation N+1
-    # Joindre StockItem pour permettre la recherche par nom/SKU
-    query = StockMovement.query.join(StockItem, StockMovement.stock_item_id == StockItem.id).options(
+    query = StockMovement.query.options(
         joinedload(StockMovement.stock_item),
         joinedload(StockMovement.from_depot),
         joinedload(StockMovement.to_depot),
@@ -262,7 +261,7 @@ def movements_list():
         joinedload(StockMovement.user)
     )
     
-    # Filtrer par région de l'utilisateur
+    # Filtrer par région de l'utilisateur AVANT d'appliquer les autres filtres
     query = filter_stock_movements_by_region(query)
     
     # Appliquer les filtres
@@ -271,6 +270,9 @@ def movements_list():
     
     if search:
         search_pattern = f'%{search}%'
+        # Joindre StockItem uniquement pour la recherche si nécessaire
+        # Utiliser outerjoin pour ne pas exclure les mouvements sans article
+        query = query.outerjoin(StockItem, StockMovement.stock_item_id == StockItem.id)
         query = query.filter(
             or_(
                 StockMovement.reference.like(search_pattern),
