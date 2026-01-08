@@ -366,8 +366,12 @@
     <div style="margin-top: var(--space-xl);">
       <h3 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
         <i class="fas fa-list me-2"></i>
-        Articles ({{ movements|length }})
+        Articles de l'opération ({{ movements|length }} ligne{{ 's' if movements|length > 1 else '' }})
       </h3>
+      <p style="color: var(--text-secondary); margin-bottom: var(--space-md); font-size: 0.875rem;">
+        <i class="fas fa-info-circle me-2"></i>
+        Cette opération contient <strong>{{ movements|length }}</strong> article{{ 's' if movements|length > 1 else '' }}. Tous les articles enregistrés lors de cette opération sont affichés ci-dessous.
+      </p>
       
       <div class="table-hl">
         <table style="width: 100%;">
