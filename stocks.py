@@ -5271,7 +5271,8 @@ def stock_history():
         data['total_exits'] = exits
         data['net'] = entries - exits
         
-        # Les mouvements restent triés par date croissante pour l'affichage hiérarchique (du plus ancien au plus récent)
+        # Inverser l'ordre pour l'affichage : du plus récent au plus ancien
+        data['movements'].reverse()
     
     # Récupérer les données pour les filtres
     stock_items = StockItem.query.filter_by(is_active=True).order_by(StockItem.name).all()

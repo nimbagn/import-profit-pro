@@ -92,11 +92,30 @@
   .type-inventory { background: rgba(118, 75, 162, 0.1); color: #764ba2; }
 
   .movement-row {
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
   }
 
   .movement-row:hover {
     background: var(--bg-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Styles pour le tri */
+  th {
+    transition: background 0.2s;
+  }
+  
+  th:hover {
+    background: var(--bg-secondary);
+  }
+  
+  th.sort-asc,
+  th.sort-desc {
+    background: var(--bg-tertiary);
+  }
+  
+  .sort-icon {
+    transition: opacity 0.2s;
   }
   
   /* Classes pour l'affichage conditionnel des champs de date */
@@ -282,20 +301,6 @@
             </tr>
           </thead>
           <tbody>
-            {% if data.movements %}
-            <!-- Ligne du stock initial -->
-            <tr style="background: var(--bg-tertiary); font-weight: 600;">
-              <td colspan="3" style="text-align: right; padding-right: var(--space-md);">
-                <i class="fas fa-arrow-right me-1" style="color: var(--text-muted);"></i>
-                <span style="color: var(--text-muted);">Stock Initial</span>
-              </td>
-              <td style="text-align: center; color: var(--text-muted);">-</td>
-              <td style="font-weight: 700; color: var(--color-primary); text-align: center;">
-                {{ "{:,.2f}".format(data.initial_stock)|replace(',', ' ') }}
-              </td>
-              <td colspan="3"></td>
-            </tr>
-            {% endif %}
             {% for movement in data.movements %}
             <tr class="movement-row">
               <td>{{ movement.movement_date.strftime('%d/%m/%Y %H:%M') if movement.movement_date else '-' }}</td>
@@ -332,6 +337,20 @@
               <td>{{ movement.user.username if movement.user else '-' }}</td>
             </tr>
             {% endfor %}
+            {% if data.movements %}
+            <!-- Ligne du stock final -->
+            <tr style="background: var(--bg-tertiary); font-weight: 600; border-top: 2px solid var(--gray-300);">
+              <td colspan="3" style="text-align: right; padding-right: var(--space-md);">
+                <i class="fas fa-arrow-left me-1" style="color: var(--text-muted);"></i>
+                <span style="color: var(--text-muted);">Stock Final</span>
+              </td>
+              <td style="text-align: center; color: var(--text-muted);">-</td>
+              <td style="font-weight: 700; color: var(--color-primary); text-align: center;">
+                {{ "{:,.2f}".format(data.final_stock)|replace(',', ' ') }}
+              </td>
+              <td colspan="3"></td>
+            </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
@@ -349,20 +368,118 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Gestion des filtres de période
   const periodSelect = document.querySelector('select[name="period"]');
   const customDates = document.getElementById('custom-dates');
   const customDatesEnd = document.getElementById('custom-dates-end');
   
-  periodSelect.addEventListener('change', function() {
-    const isCustom = this.value === 'custom';
-    if (customDates) {
-      customDates.classList.remove('custom-period-visible', 'custom-period-hidden');
-      customDates.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
-    }
-    if (customDatesEnd) {
-      customDatesEnd.classList.remove('custom-period-visible', 'custom-period-hidden');
-      customDatesEnd.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
-    }
+  if (periodSelect) {
+    periodSelect.addEventListener('change', function() {
+      const isCustom = this.value === 'custom';
+      if (customDates) {
+        customDates.classList.remove('custom-period-visible', 'custom-period-hidden');
+        customDates.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
+      }
+      if (customDatesEnd) {
+        customDatesEnd.classList.remove('custom-period-visible', 'custom-period-hidden');
+        customDatesEnd.classList.add(isCustom ? 'custom-period-visible' : 'custom-period-hidden');
+      }
+    });
+  }
+  
+  // Tri dynamique des tableaux
+  const tables = document.querySelectorAll('.table-hl table');
+  tables.forEach(function(table) {
+    const thead = table.querySelector('thead');
+    if (!thead) return;
+    
+    const headers = thead.querySelectorAll('th');
+    headers.forEach(function(header, index) {
+      // Ajouter un indicateur de tri
+      header.style.cursor = 'pointer';
+      header.style.userSelect = 'none';
+      header.style.position = 'relative';
+      
+      // Ajouter une icône de tri
+      const sortIcon = document.createElement('i');
+      sortIcon.className = 'fas fa-sort sort-icon';
+      sortIcon.style.marginLeft = '0.5rem';
+      sortIcon.style.opacity = '0.5';
+      sortIcon.style.fontSize = '0.75rem';
+      header.appendChild(sortIcon);
+      
+      header.addEventListener('click', function() {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
+        const rows = Array.from(tbody.querySelectorAll('tr:not([style*="background"])'));
+        if (rows.length === 0) return;
+        
+        // Déterminer le type de tri (ascendant ou descendant)
+        const isAscending = !header.classList.contains('sort-asc');
+        
+        // Retirer les classes de tri de tous les headers
+        headers.forEach(h => {
+          h.classList.remove('sort-asc', 'sort-desc');
+          const icon = h.querySelector('.sort-icon');
+          if (icon) {
+            icon.className = 'fas fa-sort sort-icon';
+            icon.style.opacity = '0.5';
+          }
+        });
+        
+        // Ajouter la classe de tri au header actuel
+        header.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
+        const icon = header.querySelector('.sort-icon');
+        if (icon) {
+          icon.className = isAscending ? 'fas fa-sort-up sort-icon' : 'fas fa-sort-down sort-icon';
+          icon.style.opacity = '1';
+        }
+        
+        // Trier les lignes
+        rows.sort(function(a, b) {
+          const aCell = a.cells[index];
+          const bCell = b.cells[index];
+          
+          if (!aCell || !bCell) return 0;
+          
+          let aValue = aCell.textContent.trim();
+          let bValue = bCell.textContent.trim();
+          
+          // Essayer de convertir en nombre si possible
+          const aNum = parseFloat(aValue.replace(/[^\d.-]/g, ''));
+          const bNum = parseFloat(bValue.replace(/[^\d.-]/g, ''));
+          
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return isAscending ? aNum - bNum : bNum - aNum;
+          }
+          
+          // Tri alphabétique
+          if (isAscending) {
+            return aValue.localeCompare(bValue);
+          } else {
+            return bValue.localeCompare(aValue);
+          }
+        });
+        
+        // Réorganiser les lignes dans le DOM
+        rows.forEach(function(row) {
+          tbody.appendChild(row);
+        });
+      });
+    });
+  });
+  
+  // Animation au survol des lignes
+  const movementRows = document.querySelectorAll('.movement-row');
+  movementRows.forEach(function(row) {
+    row.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.01)';
+      this.style.transition = 'transform 0.2s';
+    });
+    row.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+    });
   });
 });
 </script>
