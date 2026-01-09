@@ -2191,9 +2191,11 @@ def outgoings_export_excel():
 @login_required
 def outgoing_new():
     """Créer une nouvelle sortie de stock"""
-    if not has_permission(current_user, 'outgoings.create'):
-        flash('Vous n\'avez pas la permission de créer une sortie', 'error')
-        return redirect(url_for('stocks.outgoings_list'))
+    # Admin et magasinier ont toujours accès
+    if not (current_user.role and current_user.role.code in ['admin', 'superadmin', 'warehouse']):
+        if not has_permission(current_user, 'outgoings.create'):
+            flash('Vous n\'avez pas la permission de créer une sortie', 'error')
+            return redirect(url_for('stocks.outgoings_list'))
     
     if request.method == 'POST':
         client_name = request.form.get('client_name')
