@@ -9,22 +9,22 @@ from sqlalchemy import or_
 def get_user_region_id():
     """
     Retourne l'ID de la région de l'utilisateur connecté
-    Retourne None si l'utilisateur n'a pas de région ou est admin
+    Retourne None si l'utilisateur n'a pas de région ou est admin/magasinier
     
-    IMPORTANT: Les admins voient TOUT (pas de filtre par région).
-    Cette fonction retourne None pour les admins, ce qui désactive tous les filtres de région.
+    IMPORTANT: Les admins et magasiniers voient TOUT (pas de filtre par région).
+    Cette fonction retourne None pour les admins et magasiniers, ce qui désactive tous les filtres de région.
     """
     if not current_user or not current_user.is_authenticated:
         return None
     
-    # ⚠️ RÈGLE FONDAMENTALE : Les admins voient TOUT (pas de filtre par région)
-    # Retourner None désactive tous les filtres de région pour l'admin
+    # ⚠️ RÈGLE FONDAMENTALE : Les admins et magasiniers voient TOUT (pas de filtre par région)
+    # Retourner None désactive tous les filtres de région pour l'admin et le magasinier
     # Vérifier le rôle avec gestion d'erreur
     try:
         if hasattr(current_user, 'role') and current_user.role:
             role_code = getattr(current_user.role, 'code', None)
-            if role_code in ['admin', 'superadmin']:
-                return None  # Admin voit toutes les régions - aucun filtre appliqué
+            if role_code in ['admin', 'superadmin', 'warehouse']:
+                return None  # Admin et magasinier voient toutes les régions - aucun filtre appliqué
     except Exception as e:
         # En cas d'erreur, continuer avec le filtrage par région
         print(f"⚠️ Erreur lors de la vérification du rôle: {e}")
@@ -32,8 +32,14 @@ def get_user_region_id():
     # Retourner la région de l'utilisateur
     region_id = getattr(current_user, 'region_id', None)
     if region_id is None:
-        # Debug : afficher un avertissement si l'utilisateur n'a pas de région
-        print(f"⚠️ Utilisateur {current_user.id} ({current_user.username}) n'a pas de région assignée")
+        # Debug : afficher un avertissement si l'utilisateur n'a pas de région (sauf magasinier/admin)
+        try:
+            if hasattr(current_user, 'role') and current_user.role:
+                role_code = getattr(current_user.role, 'code', None)
+                if role_code not in ['admin', 'superadmin', 'warehouse']:
+                    print(f"⚠️ Utilisateur {current_user.id} ({current_user.username}) n'a pas de région assignée")
+        except:
+            pass
     
     return region_id
 
@@ -262,15 +268,20 @@ def can_access_depot(depot_id):
 def can_access_vehicle(vehicle_id):
     """
     Vérifie si l'utilisateur connecté peut accéder à un véhicule spécifique
-    Les admins peuvent accéder à tous les véhicules
+    Les admins et magasiniers peuvent accéder à tous les véhicules
     """
     if not current_user or not current_user.is_authenticated:
         return False
     
-    # Les admins peuvent accéder à tous les véhicules
+    # Les admins et magasiniers peuvent accéder à tous les véhicules
     if hasattr(current_user, 'role') and current_user.role:
-        if current_user.role.code in ['admin', 'superadmin']:
+        role_code = getattr(current_user.role, 'code', None)
+        if role_code in ['admin', 'superadmin', 'warehouse']:
             return True
+    
+    # Si l'utilisateur n'a pas de région assignée, lui permettre l'accès (cas des magasiniers)
+    if not hasattr(current_user, 'region_id') or current_user.region_id is None:
+        return True
     
     # Vérifier si le véhicule appartient à la région de l'utilisateur (via le conducteur)
     vehicle = Vehicle.query.get(vehicle_id)
