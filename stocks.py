@@ -1883,13 +1883,12 @@ def reception_pdf(id):
 @stocks_bp.route('/outgoings')
 @login_required
 def outgoings_list():
-    """Liste des sorties de stock"""
+    """Liste des sorties avec pagination et filtres"""
     # Admin et magasinier ont toujours accès
     if not (current_user.role and current_user.role.code in ['admin', 'superadmin', 'warehouse']):
         if not has_permission(current_user, 'outgoings.read'):
             flash('Vous n\'avez pas la permission d\'accéder aux sorties', 'error')
             return redirect(url_for('index'))
-    """Liste des sorties avec pagination et filtres"""
     if not has_permission(current_user, 'outgoings.read'):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
