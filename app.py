@@ -260,15 +260,27 @@ app.register_blueprint(sales_confirmation_bp)
 from sales_objectives import sales_objectives_bp
 app.register_blueprint(sales_objectives_bp)
 
+from routes_notifications import notifications_bp
+app.register_blueprint(notifications_bp)
+
 # Initialiser le gestionnaire de rapports automatiques
 try:
-    from scheduled_reports import scheduled_reports_manager
-    scheduled_reports_manager.init_app(app)
-    with app.app_context():
-        scheduled_reports_manager.load_all_scheduled_reports()
-        print("✅ Rapports automatiques chargés et planifiés")
+from scheduled_reports import scheduled_reports_manager
+scheduled_reports_manager.init_app(app)
+with app.app_context():
+    scheduled_reports_manager.load_all_scheduled_reports()
+    print("✅ Rapports automatiques chargés et planifiés")
 except Exception as e:
     print(f"⚠️  Erreur lors de l'initialisation des rapports automatiques: {e}")
+    import traceback
+    traceback.print_exc()
+
+# Initialiser le système de notifications automatiques
+try:
+    from notifications_automatiques import notifications_automatiques
+    print("✅ Système de notifications automatiques initialisé")
+except Exception as e:
+    print(f"⚠️  Erreur lors de l'initialisation des notifications automatiques: {e}")
     import traceback
     traceback.print_exc()
 

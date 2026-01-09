@@ -287,6 +287,12 @@
           Documents Expirant Bientôt (≤15 jours)
         </div>
         <span class="alert-count" style="background: var(--color-warning);">{{ expiring_soon_documents|length }}</span>
+        <form method="POST" action="{{ url_for('notifications.envoyer_rappels_vehicules') }}" style="display: inline; margin-left: var(--space-md);">
+          <button type="submit" class="btn-hl btn-hl-sm btn-hl-success" onclick="return confirm('Envoyer les rappels par WhatsApp ?');" style="background: #25D366; border-color: #25D366;">
+            <i class="fab fa-whatsapp me-1"></i>
+            Envoyer rappels
+          </button>
+        </form>
       </div>
       <ul class="alert-list">
           {% for doc in expiring_soon_documents[:5] %}

@@ -333,6 +333,23 @@ class ScheduledReportsManager:
             logger.error(f"Erreur lors de la désactivation du rapport {report_id}: {e}")
             return False
     
+    def schedule_vehicle_reminders(self):
+        """Planifie les rappels automatiques pour les véhicules"""
+        try:
+            from flotte_notifications import envoyer_rappels_vehicules
+            
+            # Planifier l'exécution quotidienne à 8h00
+            self.scheduler.add_job(
+                func=envoyer_rappels_vehicules,
+                trigger=CronTrigger(hour=8, minute=0),
+                id='vehicle_reminders_daily',
+                name='Rappels documents véhicules',
+                replace_existing=True
+            )
+            logger.info("✅ Rappels véhicules planifiés (quotidien à 8h00)")
+        except Exception as e:
+            logger.error(f"Erreur lors de la planification des rappels véhicules: {e}")
+    
     def load_all_scheduled_reports(self):
         """Charge tous les rapports planifiés actifs"""
         from models import ScheduledReport
@@ -342,6 +359,12 @@ class ScheduledReportsManager:
             for report in active_reports:
                 self.schedule_report(report)
             logger.info(f"{len(active_reports)} rapports planifiés chargés")
+            
+            # Planifier les rappels automatiques véhicules
+            try:
+                self.schedule_vehicle_reminders()
+            except Exception as e:
+                logger.error(f"Erreur lors de la planification des rappels véhicules: {e}")
 
 # Instance globale
 scheduled_reports_manager = ScheduledReportsManager()

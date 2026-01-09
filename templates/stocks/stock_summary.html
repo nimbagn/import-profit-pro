@@ -681,6 +681,14 @@
           <i class="fas fa-file-pdf me-2"></i>
           Exporter PDF
         </a>
+        <form method="POST" action="{{ url_for('notifications.envoyer_situation_stock') }}" style="display: inline;">
+          <input type="hidden" name="depot_id" value="{{ selected_depot_id or '' }}">
+          <input type="hidden" name="period" value="{{ period }}">
+          <button type="submit" class="btn-hl btn-hl-success" onclick="return confirm('Envoyer la situation de stock par WhatsApp ?');" style="background: #25D366; border-color: #25D366;">
+            <i class="fab fa-whatsapp me-2"></i>
+            Envoyer par WhatsApp
+          </button>
+        </form>
       </div>
     </div>
     <div class="table-hl">

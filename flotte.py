@@ -44,6 +44,16 @@ def dashboard():
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
+    # Envoyer automatiquement les rappels pour les documents expirant bientôt
+    try:
+        from flotte_notifications import envoyer_rappels_vehicules
+        with current_app.app_context():
+            nb_rappels = envoyer_rappels_vehicules()
+            if nb_rappels > 0:
+                flash(f'{nb_rappels} rappel(s) de documents véhicules envoyé(s)', 'info')
+    except Exception as e:
+        print(f"⚠️ Erreur lors de l'envoi des rappels véhicules: {e}")
+    
     try:
         cache = current_app.cache if hasattr(current_app, 'cache') and current_app.cache else None
         today = date.today()

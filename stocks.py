@@ -3896,6 +3896,20 @@ def stock_summary_pdf():
         pdf_gen = PDFGenerator()
         pdf_buffer = pdf_gen.generate_stock_summary_pdf(stock_data, currency=currency, exchange_rate=exchange_rate)
         
+        # Envoyer notification automatique si demandé
+        send_notification = request.args.get('send_notification', 'false').lower() == 'true'
+        if send_notification:
+            try:
+                from notifications_automatiques import notifications_automatiques
+                notifications_automatiques.notifier_situation_stock_periode(
+                    depot_id=depot_id,
+                    period=period,
+                    recipients=None  # Utilisera les superviseurs par défaut
+                )
+                flash('PDF généré et notification envoyée avec succès', 'success')
+            except Exception as e:
+                print(f"⚠️ Erreur lors de l'envoi de notification: {e}")
+        
         # Retourner le PDF
         filename = f'stock_summary_{datetime.now(UTC).strftime("%Y%m%d_%H%M%S")}.pdf'
         

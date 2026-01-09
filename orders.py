@@ -704,6 +704,13 @@ def order_new():
             return redirect(url_for('orders.order_new'))
         
         flash(f'Commande "{reference}" créée avec succès et soumise à validation', 'success')
+        
+        # Envoyer notification au superviseur
+        try:
+            from notifications_automatiques import notifications_automatiques
+            notifications_automatiques.notifier_creation_commande(order)
+        except Exception as e:
+            print(f"⚠️ Erreur lors de l'envoi de notification de création: {e}")
         return redirect(url_for('orders.order_detail', id=order.id))
     
     # GET : Afficher le formulaire
@@ -919,6 +926,13 @@ def order_validate(id):
         db.session.commit()
         
         flash(f'Commande "{order.reference}" validée avec succès. Récapitulatif de chargement généré.', 'success')
+        
+        # Envoyer notification au commercial
+        try:
+            from notifications_automatiques import notifications_automatiques
+            notifications_automatiques.notifier_validation_commande(order)
+        except Exception as e:
+            print(f"⚠️ Erreur lors de l'envoi de notification de validation: {e}")
     except Exception as e:
         print(f"⚠️ Erreur lors de la génération du récapitulatif de chargement: {e}")
         import traceback
