@@ -1,0 +1,109 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if team %}Modifier{% else %}Nouvelle{% endif %} Équipe {{ team_type|title }} - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-{% if team %}edit{% else %}plus{% endif %} me-2"></i>
+      {% if team %}Modifier l'Équipe{% else %}Nouvelle Équipe{% endif %} {{ team_type|title }}
+    </h1>
+    {% if team_type == 'promotion' %}
+    <a href="{{ url_for('promotion.teams_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    {% elif team_type == 'lockiste' %}
+    <a href="{{ url_for('commercial_teams.lockiste_teams_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    {% elif team_type == 'vendeur' %}
+    <a href="{{ url_for('commercial_teams.vendeur_teams_list') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label">Nom de l'Équipe <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" value="{{ team.name if team else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="3">{{ team.description if team else '' }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="region_id" class="form-label">Région</label>
+          <select class="form-select" id="region_id" name="region_id">
+            <option value="">Sélectionner une région...</option>
+            {% for region in regions %}
+            <option value="{{ region.id }}" {% if team and team.region_id == region.id %}selected{% endif %}>
+              {{ region.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="team_leader_id" class="form-label">Responsable de l'Équipe <span class="text-danger">*</span></label>
+          <select class="form-select" id="team_leader_id" name="team_leader_id" required>
+            <option value="">Sélectionner un responsable...</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if team and team.team_leader_id == user.id %}selected{% endif %}>
+              {{ user.full_name or user.username }} ({{ user.email }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="supervisor_id" class="form-label">Superviseur</label>
+          <select class="form-select" id="supervisor_id" name="supervisor_id">
+            <option value="">Sélectionner un superviseur...</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if team and team.supervisor_id == user.id %}selected{% endif %}>
+              {{ user.full_name or user.username }} ({{ user.email }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if team %}
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if team.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">
+              Équipe active
+            </label>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          {% if team_type == 'promotion' %}
+          <a href="{{ url_for('promotion.teams_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          {% elif team_type == 'lockiste' %}
+          <a href="{{ url_for('commercial_teams.lockiste_teams_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          {% elif team_type == 'vendeur' %}
+          <a href="{{ url_for('commercial_teams.vendeur_teams_list') }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

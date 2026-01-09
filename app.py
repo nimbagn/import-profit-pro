@@ -251,6 +251,15 @@ app.register_blueprint(messaging_bp)
 from automated_reports import automated_reports_bp
 app.register_blueprint(automated_reports_bp)
 
+from commercial_teams import commercial_teams_bp
+app.register_blueprint(commercial_teams_bp)
+
+from sales_confirmation import sales_confirmation_bp
+app.register_blueprint(sales_confirmation_bp)
+
+from sales_objectives import sales_objectives_bp
+app.register_blueprint(sales_objectives_bp)
+
 # Initialiser le gestionnaire de rapports automatiques
 try:
     from scheduled_reports import scheduled_reports_manager
@@ -339,7 +348,10 @@ with app.app_context():
                         'promotion': ['read', 'write'],
                         'orders': ['read', 'validate', 'update'],
                         'price_lists': ['view', 'create', 'edit', 'delete'],
-                        'messaging': ['read', 'update', 'send_sms', 'send_whatsapp', 'send_otp', 'manage_contacts']
+                        'messaging': ['read', 'update', 'send_sms', 'send_whatsapp', 'send_otp', 'manage_contacts'],
+                        'commercial_teams': ['read', 'write'],
+                        'sales': ['confirm', 'view_confirmed'],
+                        'objectives': ['read', 'write']
                     }
                 },
                 {

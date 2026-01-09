@@ -170,6 +170,8 @@ class User(db.Model, UserMixin):
     phone = db.Column(db.String(20), nullable=True)
     role_id = FK("roles.id", onupdate="CASCADE", ondelete="RESTRICT")
     region_id = FK("regions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    supervised_team_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # ID de l'équipe supervisée (auto-référence pour flexibilité)
+    supervised_team_type = db.Column(db.String(20), nullable=True)  # Type d'équipe: 'promotion', 'lockiste', 'vendeur', 'magasinier', 'general'
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     last_login = db.Column(db.DateTime, nullable=True)
     additional_permissions = db.Column(db.JSON, nullable=True)  # Permissions supplémentaires (ex: stocks.read pour RH)
@@ -184,6 +186,7 @@ class User(db.Model, UserMixin):
         db.Index("idx_user_email", "email"),
         db.Index("idx_user_role", "role_id"),
         db.Index("idx_user_region", "region_id"),
+        db.Index("idx_user_supervised_team", "supervised_team_id"),
     )
     
     def __repr__(self):
@@ -929,12 +932,16 @@ class CommercialOrder(db.Model):
     validated_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Hiérarchie qui valide
     validated_at = db.Column(db.DateTime, nullable=True)
     rejection_reason = db.Column(db.Text, nullable=True)  # Raison du rejet
+    sale_confirmed = db.Column(db.Boolean, nullable=False, default=False)  # Vente confirmée par superviseur
+    sale_confirmed_at = db.Column(db.DateTime, nullable=True)  # Date de confirmation
+    sale_confirmed_by_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Superviseur qui a confirmé
     user_id = FK("users.id", onupdate="CASCADE", ondelete="SET NULL")  # Utilisateur qui a créé
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
     
     commercial = db.relationship("User", foreign_keys=[commercial_id], lazy="joined")
     validator = db.relationship("User", foreign_keys=[validated_by_id], lazy="joined")
+    sale_confirmed_by = db.relationship("User", foreign_keys=[sale_confirmed_by_id], lazy="joined")
     user = db.relationship("User", foreign_keys=[user_id], lazy="joined")
     region = db.relationship("Region", lazy="joined")
     clients = db.relationship("CommercialOrderClient", backref="order", lazy="select", cascade="all, delete-orphan", order_by="CommercialOrderClient.id")
@@ -944,6 +951,8 @@ class CommercialOrder(db.Model):
         db.Index("idx_order_reference", "reference"),
         db.Index("idx_order_commercial", "commercial_id"),
         db.Index("idx_order_status", "status"),
+        db.Index("idx_order_sale_confirmed", "sale_confirmed"),
+        db.Index("idx_order_sale_confirmed_by", "sale_confirmed_by_id"),
     )
     
     def __repr__(self):
@@ -1641,18 +1650,23 @@ class PromotionTeam(db.Model):
     id = PK()
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = db.Column(db.Text, nullable=True)
-    region = db.Column(db.String(100), nullable=True, index=True)  # Région d'activité de l'équipe
+    region = db.Column(db.String(100), nullable=True, index=True)  # Région d'activité de l'équipe (ancien champ, conservé pour compatibilité)
+    region_id = FK("regions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Nouveau champ FK vers regions
     team_leader_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")  # Responsable de groupe
+    supervisor_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Superviseur de l'équipe
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
     
-    team_leader = db.relationship("User", backref=db.backref("led_promotion_teams", lazy="select"))
+    team_leader = db.relationship("User", foreign_keys=[team_leader_id], backref=db.backref("led_promotion_teams", lazy="select"))
+    supervisor = db.relationship("User", foreign_keys=[supervisor_id], backref=db.backref("supervised_promotion_teams", lazy="select"))
     members = db.relationship("PromotionMember", backref="team", lazy="select", cascade="all, delete-orphan")
     
     __table_args__ = (
         db.Index("idx_promoteam_name", "name"),
         db.Index("idx_promoteam_leader", "team_leader_id"),
+        db.Index("idx_promoteam_supervisor", "supervisor_id"),
+        db.Index("idx_promoteam_region_id", "region_id"),
         db.Index("idx_promoteam_active", "is_active"),
     )
     
@@ -1967,6 +1981,266 @@ class PromotionMemberLocation(db.Model):
     
     def __repr__(self):
         return f"<PromotionMemberLocation Member:{self.member_id} Lat:{self.latitude} Lon:{self.longitude} At:{self.recorded_at}>"
+
+# =========================================================
+# ÉQUIPES COMMERCIALES (LOCKISTES ET VANDEURS)
+# =========================================================
+
+class LockisteTeam(db.Model):
+    """Équipes de lockistes avec leur responsable"""
+    __tablename__ = "lockiste_teams"
+    id = PK()
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    region_id = FK("regions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    team_leader_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    supervisor_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    region = db.relationship("Region", lazy="joined")
+    team_leader = db.relationship("User", foreign_keys=[team_leader_id], backref=db.backref("led_lockiste_teams", lazy="select"))
+    supervisor = db.relationship("User", foreign_keys=[supervisor_id], backref=db.backref("supervised_lockiste_teams", lazy="select"))
+    members = db.relationship("LockisteMember", backref="team", lazy="select", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        db.Index("idx_lockiste_team_name", "name"),
+        db.Index("idx_lockiste_team_leader", "team_leader_id"),
+        db.Index("idx_lockiste_team_supervisor", "supervisor_id"),
+        db.Index("idx_lockiste_team_region", "region_id"),
+        db.Index("idx_lockiste_team_active", "is_active"),
+    )
+    
+    def __repr__(self):
+        return f"<LockisteTeam {self.name} - Leader: {self.team_leader_id}>"
+    
+    @property
+    def members_count(self):
+        """Nombre de membres actifs dans l'équipe"""
+        return self.members.filter_by(is_active=True).count() if hasattr(self.members, 'filter_by') else len([m for m in self.members if m.is_active])
+
+class LockisteMember(db.Model):
+    """Membres de l'équipe de lockistes"""
+    __tablename__ = "lockiste_members"
+    id = PK()
+    team_id = FK("lockiste_teams.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE")
+    user_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    full_name = db.Column(db.String(200), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(120), nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    joined_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    left_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    user = db.relationship("User", backref=db.backref("lockiste_memberships", lazy="select"))
+    
+    __table_args__ = (
+        db.Index("idx_lockiste_member_team", "team_id"),
+        db.Index("idx_lockiste_member_user", "user_id"),
+        db.Index("idx_lockiste_member_name", "full_name"),
+        db.Index("idx_lockiste_member_phone", "phone"),
+        db.Index("idx_lockiste_member_active", "is_active"),
+    )
+    
+    def __repr__(self):
+        return f"<LockisteMember {self.full_name} - Team: {self.team_id}>"
+
+class VendeurTeam(db.Model):
+    """Équipes de vendeurs avec leur responsable"""
+    __tablename__ = "vendeur_teams"
+    id = PK()
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    region_id = FK("regions.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    team_leader_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    supervisor_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    region = db.relationship("Region", lazy="joined")
+    team_leader = db.relationship("User", foreign_keys=[team_leader_id], backref=db.backref("led_vendeur_teams", lazy="select"))
+    supervisor = db.relationship("User", foreign_keys=[supervisor_id], backref=db.backref("supervised_vendeur_teams", lazy="select"))
+    members = db.relationship("VendeurMember", backref="team", lazy="select", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        db.Index("idx_vendeur_team_name", "name"),
+        db.Index("idx_vendeur_team_leader", "team_leader_id"),
+        db.Index("idx_vendeur_team_supervisor", "supervisor_id"),
+        db.Index("idx_vendeur_team_region", "region_id"),
+        db.Index("idx_vendeur_team_active", "is_active"),
+    )
+    
+    def __repr__(self):
+        return f"<VendeurTeam {self.name} - Leader: {self.team_leader_id}>"
+    
+    @property
+    def members_count(self):
+        """Nombre de membres actifs dans l'équipe"""
+        return self.members.filter_by(is_active=True).count() if hasattr(self.members, 'filter_by') else len([m for m in self.members if m.is_active])
+
+class VendeurMember(db.Model):
+    """Membres de l'équipe de vendeurs"""
+    __tablename__ = "vendeur_members"
+    id = PK()
+    team_id = FK("vendeur_teams.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE")
+    user_id = FK("users.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    full_name = db.Column(db.String(200), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(120), nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    joined_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    left_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    user = db.relationship("User", backref=db.backref("vendeur_memberships", lazy="select"))
+    
+    __table_args__ = (
+        db.Index("idx_vendeur_member_team", "team_id"),
+        db.Index("idx_vendeur_member_user", "user_id"),
+        db.Index("idx_vendeur_member_name", "full_name"),
+        db.Index("idx_vendeur_member_phone", "phone"),
+        db.Index("idx_vendeur_member_active", "is_active"),
+    )
+    
+    def __repr__(self):
+        return f"<VendeurMember {self.full_name} - Team: {self.team_id}>"
+
+# =========================================================
+# VENTES COMMERCIALES CONFIRMÉES
+# =========================================================
+
+class CommercialSale(db.Model):
+    """Ventes finales confirmées par les superviseurs"""
+    __tablename__ = "commercial_sales"
+    id = PK()
+    order_id = FK("commercial_orders.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    order_client_id = FK("commercial_order_clients.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")
+    commercial_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    supervisor_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    invoice_number = db.Column(db.String(50), nullable=False, index=True)
+    invoice_date = db.Column(db.Date, nullable=False)
+    sale_date = db.Column(db.Date, nullable=False, index=True)
+    total_amount_gnf = db.Column(N18_2, nullable=False)
+    payment_method = db.Column(db.Enum("cash", "credit", "check", "transfer", name="payment_method"), nullable=False, default="cash")
+    payment_status = db.Column(db.Enum("pending", "partial", "paid", "overdue", name="payment_status"), nullable=False, default="pending", index=True)
+    payment_due_date = db.Column(db.Date, nullable=True)
+    confirmed_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    notes = db.Column(db.Text, nullable=True)
+    status = db.Column(db.Enum("confirmed", "cancelled", name="sale_status"), nullable=False, default="confirmed", index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    order = db.relationship("CommercialOrder", backref="confirmed_sale", lazy="joined")
+    order_client = db.relationship("CommercialOrderClient", backref="confirmed_sales", lazy="joined")
+    commercial = db.relationship("User", foreign_keys=[commercial_id], backref="confirmed_commercial_sales", lazy="joined")
+    supervisor = db.relationship("User", foreign_keys=[supervisor_id], backref="supervised_sales", lazy="joined")
+    items = db.relationship("CommercialSaleItem", backref="sale", lazy="select", cascade="all, delete-orphan", order_by="CommercialSaleItem.id")
+    
+    __table_args__ = (
+        db.Index("idx_commercial_sale_order", "order_id"),
+        db.Index("idx_commercial_sale_commercial", "commercial_id"),
+        db.Index("idx_commercial_sale_supervisor", "supervisor_id"),
+        db.Index("idx_commercial_sale_date", "sale_date"),
+        db.Index("idx_commercial_sale_invoice", "invoice_number"),
+        db.Index("idx_commercial_sale_status", "status"),
+        db.Index("idx_commercial_sale_payment_status", "payment_status"),
+    )
+    
+    def __repr__(self):
+        return f"<CommercialSale {self.invoice_number} - Commercial: {self.commercial_id} - Amount: {self.total_amount_gnf}>"
+
+class CommercialSaleItem(db.Model):
+    """Détails des ventes confirmées"""
+    __tablename__ = "commercial_sale_items"
+    id = PK()
+    sale_id = FK("commercial_sales.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE")
+    stock_item_id = FK("stock_items.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    quantity = db.Column(N18_4, nullable=False)
+    unit_price_gnf = db.Column(N18_2, nullable=False)
+    total_price_gnf = db.Column(N18_2, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    
+    stock_item = db.relationship("StockItem", lazy="joined")
+    
+    __table_args__ = (
+        db.Index("idx_sale_item_sale", "sale_id"),
+        db.Index("idx_sale_item_stock", "stock_item_id"),
+    )
+    
+    def __repr__(self):
+        return f"<CommercialSaleItem sale={self.sale_id} item={self.stock_item_id} qty={self.quantity}>"
+
+# =========================================================
+# OBJECTIFS DE VENTE
+# =========================================================
+
+class SalesObjective(db.Model):
+    """Objectifs de vente pour les commerciaux"""
+    __tablename__ = "sales_objectives"
+    id = PK()
+    commercial_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    supervisor_id = FK("users.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    forecast_id = FK("forecasts.id", nullable=True, onupdate="CASCADE", ondelete="SET NULL")  # Liaison avec Forecast
+    period_start = db.Column(db.Date, nullable=False)
+    period_end = db.Column(db.Date, nullable=False)
+    target_amount_gnf = db.Column(N18_2, nullable=False)
+    target_quantity = db.Column(N18_4, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    commercial = db.relationship("User", foreign_keys=[commercial_id], backref="sales_objectives", lazy="joined")
+    supervisor = db.relationship("User", foreign_keys=[supervisor_id], backref="supervised_objectives", lazy="joined")
+    forecast = db.relationship("Forecast", backref="sales_objectives", lazy="joined")
+    items = db.relationship("SalesObjectiveItem", backref="objective", cascade="all, delete-orphan", lazy="selectin")
+    
+    __table_args__ = (
+        db.Index("idx_objective_commercial", "commercial_id"),
+        db.Index("idx_objective_supervisor", "supervisor_id"),
+        db.Index("idx_objective_forecast", "forecast_id"),
+        db.Index("idx_objective_period", "period_start", "period_end"),
+    )
+    
+    @property
+    def total_target_value(self):
+        """Calcule la valeur totale de l'objectif depuis les items"""
+        if self.items:
+            return sum(item.target_value for item in self.items)
+        return self.target_amount_gnf
+    
+    def __repr__(self):
+        return f"<SalesObjective Commercial: {self.commercial_id} Period: {self.period_start} to {self.period_end} Target: {self.target_amount_gnf}>"
+
+class SalesObjectiveItem(db.Model):
+    """Articles d'un objectif de vente avec quantité et prix"""
+    __tablename__ = "sales_objective_items"
+    id = PK()
+    objective_id = FK("sales_objectives.id", nullable=False, onupdate="CASCADE", ondelete="CASCADE")
+    stock_item_id = FK("stock_items.id", nullable=False, onupdate="CASCADE", ondelete="RESTRICT")
+    target_quantity = db.Column(N18_4, nullable=False, default=Decimal("0.0000"))  # Quantité cible
+    selling_price_gnf = db.Column(N18_2, nullable=False, default=Decimal("0.00"))  # Prix de vente en gros
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(UTC))
+    
+    stock_item = db.relationship("StockItem", lazy="joined")
+    
+    __table_args__ = (
+        db.UniqueConstraint("objective_id", "stock_item_id", name="uq_objective_item"),
+        db.Index("idx_objectiveitem_objective", "objective_id"),
+        db.Index("idx_objectiveitem_stock", "stock_item_id"),
+    )
+    
+    @property
+    def target_value(self):
+        """Valeur cible (PRIX × QUANTITÉ)"""
+        return float(self.selling_price_gnf) * float(self.target_quantity)
+    
+    def __repr__(self):
+        return f"<SalesObjectiveItem objective={self.objective_id} item={self.stock_item_id} qty={self.target_quantity}>"
 
 # =========================================================
 # RAPPORTS AUTOMATIQUES

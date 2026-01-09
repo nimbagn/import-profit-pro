@@ -1,0 +1,308 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Dashboard Superviseur - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-chart-line me-2"></i>
+      Dashboard Superviseur
+    </h1>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label">Date début</label>
+          <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Date fin</label>
+          <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button type="submit" class="btn-hl btn-hl-primary w-100">
+            <i class="fas fa-filter me-2"></i>Filtrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Statistiques principales -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <h3 class="text-warning">{{ orders_to_confirm }}</h3>
+          <p class="text-muted mb-0">Commandes à Confirmer</p>
+          <a href="{{ url_for('sales_confirmation.orders_to_confirm') }}" class="btn btn-sm btn-outline-primary mt-2">
+            Voir
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <h3 class="text-success">{{ "{:,.0f}".format(total_sales_amount) }} GNF</h3>
+          <p class="text-muted mb-0">Montant Total Ventes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <h3 class="text-primary">{{ total_sales_count }}</h3>
+          <p class="text-muted mb-0">Nombre de Ventes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <h3 class="text-info">{{ objectives_progress|length }}</h3>
+          <p class="text-muted mb-0">Objectifs Actifs</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Ventes récentes -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-clock me-2"></i>Ventes Récentes</h5>
+        </div>
+        <div class="card-body">
+          {% if recent_sales %}
+          <div class="list-group">
+            {% for sale in recent_sales %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ sale.invoice_number }}</strong><br>
+                  <small class="text-muted">{{ sale.commercial.full_name or sale.commercial.username }} - {{ sale.sale_date.strftime('%d/%m/%Y') }}</small>
+                </div>
+                <div class="text-end">
+                  <strong>{{ "{:,.0f}".format(sale.total_amount_gnf) }} GNF</strong><br>
+                  <span class="badge bg-{% if sale.payment_status == 'paid' %}success{% elif sale.payment_status == 'partial' %}warning{% else %}secondary{% endif %}">
+                    {{ sale.payment_status|title }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="mt-3 text-center">
+            <a href="{{ url_for('sales_confirmation.confirmed_sales') }}" class="btn btn-outline-primary">
+              Voir toutes les ventes
+            </a>
+          </div>
+          {% else %}
+          <p class="text-muted">Aucune vente récente.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Top commerciaux -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-trophy me-2"></i>Top Commerciaux</h5>
+        </div>
+        <div class="card-body">
+          {% if top_commercials %}
+          <div class="list-group">
+            {% for commercial in top_commercials %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ commercial.full_name or 'Commercial #' + commercial.commercial_id|string }}</strong><br>
+                  <small class="text-muted">{{ commercial.sale_count }} vente(s)</small>
+                </div>
+                <div class="text-end">
+                  <strong class="text-success">{{ "{:,.0f}".format(commercial.total_amount) }} GNF</strong>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted">Aucune donnée disponible.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Objectif Global du Superviseur -->
+  {% if global_progress_by_item %}
+  <div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+      <h5><i class="fas fa-chart-pie me-2"></i>Objectif Global du Superviseur (Agrégation par Article)</h5>
+    </div>
+    <div class="card-body">
+      <!-- Résumé global -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="text-center p-3 bg-light rounded">
+            <h4 class="text-primary mb-1">{{ "{:,.0f}".format(total_global_target_amount) }} GNF</h4>
+            <small class="text-muted">Objectif Total</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-center p-3 bg-light rounded">
+            <h4 class="text-success mb-1">{{ "{:,.0f}".format(total_global_sold_amount) }} GNF</h4>
+            <small class="text-muted">Ventes Réalisées</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-center p-3 bg-light rounded">
+            <h4 class="text-info mb-1">{{ "{:,.2f}".format(total_global_target_quantity) }}</h4>
+            <small class="text-muted">Quantité Objectif</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-center p-3 bg-light rounded">
+            <h4 class="text-success mb-1">{{ "{:,.2f}".format(total_global_sold_quantity) }}</h4>
+            <small class="text-muted">Quantité Vendue</small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Barre de progression globale -->
+      <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong>Progression Globale</strong>
+          <span class="badge bg-{% if total_global_progress_pct >= 100 %}success{% elif total_global_progress_pct >= 75 %}warning{% else %}danger{% endif %}">
+            {{ "{:.1f}".format(total_global_progress_pct) }}%
+          </span>
+        </div>
+        <div class="progress" style="height: 30px;">
+          <div class="progress-bar {% if total_global_progress_pct >= 100 %}bg-success{% elif total_global_progress_pct >= 75 %}bg-warning{% else %}bg-danger{% endif %}" 
+               role="progressbar" style="width: {{ min(total_global_progress_pct, 100) }}%">
+            <strong>{{ "{:.1f}".format(total_global_progress_pct) }}%</strong>
+          </div>
+        </div>
+        <div class="mt-2 text-muted">
+          <small>
+            Reste à réaliser: <strong>{{ "{:,.0f}".format(total_global_target_amount - total_global_sold_amount) }} GNF</strong>
+            ({{ "{:,.2f}".format(total_global_target_quantity - total_global_sold_quantity) }} unités)
+          </small>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <!-- Détail par article -->
+      <h6 class="mb-3"><i class="fas fa-list me-2"></i>Détail par Article</h6>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th class="text-end">Objectif Qty</th>
+              <th class="text-end">Vendu Qty</th>
+              <th class="text-end">Reste Qty</th>
+              <th class="text-end">Objectif Montant</th>
+              <th class="text-end">Vendu Montant</th>
+              <th class="text-end">Reste Montant</th>
+              <th class="text-center">Progression</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in global_progress_by_item %}
+            <tr>
+              <td><strong>{{ item.stock_item.name }}</strong><br><small class="text-muted">{{ item.stock_item.sku }}</small></td>
+              <td class="text-end">{{ "{:,.2f}".format(item.target_quantity) }}</td>
+              <td class="text-end {% if item.sold_quantity >= item.target_quantity %}text-success{% elif item.sold_quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
+                <strong>{{ "{:,.2f}".format(item.sold_quantity) }}</strong>
+              </td>
+              <td class="text-end {% if item.remaining_quantity <= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ "{:,.2f}".format(item.remaining_quantity) }}
+              </td>
+              <td class="text-end">{{ "{:,.0f}".format(item.target_value) }} GNF</td>
+              <td class="text-end {% if item.sold_value >= item.target_value %}text-success{% elif item.sold_value > 0 %}text-warning{% else %}text-danger{% endif %}">
+                <strong>{{ "{:,.0f}".format(item.sold_value) }} GNF</strong>
+              </td>
+              <td class="text-end {% if item.remaining_value <= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ "{:,.0f}".format(item.remaining_value) }} GNF
+              </td>
+              <td class="text-center">
+                <div class="progress" style="height: 20px; width: 100px; margin: 0 auto;">
+                  <div class="progress-bar {% if item.progress_pct_value >= 100 %}bg-success{% elif item.progress_pct_value >= 75 %}bg-warning{% else %}bg-danger{% endif %}" 
+                       role="progressbar" style="width: {{ min(item.progress_pct_value, 100) }}%">
+                    <small>{{ "{:.0f}".format(item.progress_pct_value) }}%</small>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light">
+            <tr>
+              <th>TOTAL</th>
+              <th class="text-end">{{ "{:,.2f}".format(total_global_target_quantity) }}</th>
+              <th class="text-end">{{ "{:,.2f}".format(total_global_sold_quantity) }}</th>
+              <th class="text-end">{{ "{:,.2f}".format(total_global_target_quantity - total_global_sold_quantity) }}</th>
+              <th class="text-end">{{ "{:,.0f}".format(total_global_target_amount) }} GNF</th>
+              <th class="text-end">{{ "{:,.0f}".format(total_global_sold_amount) }} GNF</th>
+              <th class="text-end">{{ "{:,.0f}".format(total_global_target_amount - total_global_sold_amount) }} GNF</th>
+              <th class="text-center">
+                <span class="badge bg-{% if total_global_progress_pct >= 100 %}success{% elif total_global_progress_pct >= 75 %}warning{% else %}danger{% endif %}">
+                  {{ "{:.1f}".format(total_global_progress_pct) }}%
+                </span>
+              </th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Progression objectifs individuels -->
+  {% if objectives_progress %}
+  <div class="card mt-4">
+    <div class="card-header">
+      <h5><i class="fas fa-bullseye me-2"></i>Progression des Objectifs par Commercial</h5>
+    </div>
+    <div class="card-body">
+      {% for progress in objectives_progress %}
+      <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <strong>{{ progress.objective.commercial.full_name or progress.objective.commercial.username }}</strong><br>
+            <small class="text-muted">{{ progress.objective.period_start.strftime('%d/%m/%Y') }} - {{ progress.objective.period_end.strftime('%d/%m/%Y') }}</small>
+          </div>
+          <div class="text-end">
+            <strong>{{ "{:,.0f}".format(progress.achieved_amount) }} / {{ "{:,.0f}".format(progress.objective.target_amount_gnf) }} GNF</strong><br>
+            <span class="badge bg-{% if progress.progress_pct >= 100 %}success{% elif progress.progress_pct >= 75 %}warning{% else %}danger{% endif %}">
+              {{ "{:.1f}".format(progress.progress_pct) }}%
+            </span>
+          </div>
+        </div>
+        <div class="progress">
+          <div class="progress-bar {% if progress.progress_pct >= 100 %}bg-success{% elif progress.progress_pct >= 75 %}bg-warning{% else %}bg-danger{% endif %}" 
+               role="progressbar" style="width: {{ min(progress.progress_pct, 100) }}%">
+          </div>
+        </div>
+        <div class="mt-2 text-end">
+          <a href="{{ url_for('sales_objectives.objective_progress', id=progress.objective.id) }}" class="btn btn-sm btn-outline-primary">
+            Voir détails
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

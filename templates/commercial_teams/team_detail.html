@@ -1,0 +1,131 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Détails Équipe {{ team_type|title }} - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <h1 class="page-title-hl">
+        <i class="fas fa-users me-2"></i>
+        {{ team.name }}
+      </h1>
+      <div class="d-flex gap-2">
+        {% if has_permission(current_user, 'commercial_teams.write') %}
+          {% if team_type == 'promotion' %}
+          <a href="{{ url_for('promotion.team_edit', id=team.id) }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-edit me-2"></i>Modifier
+          </a>
+          {% elif team_type == 'lockiste' %}
+          <a href="{{ url_for('commercial_teams.lockiste_team_edit', id=team.id) }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-edit me-2"></i>Modifier
+          </a>
+          {% elif team_type == 'vendeur' %}
+          <a href="{{ url_for('commercial_teams.vendeur_team_edit', id=team.id) }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-edit me-2"></i>Modifier
+          </a>
+          {% endif %}
+        {% endif %}
+        {% if team_type == 'promotion' %}
+        <a href="{{ url_for('promotion.teams_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+        {% elif team_type == 'lockiste' %}
+        <a href="{{ url_for('commercial_teams.lockiste_teams_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+        {% elif team_type == 'vendeur' %}
+        <a href="{{ url_for('commercial_teams.vendeur_teams_list') }}" class="btn-hl btn-hl-outline">
+          <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-info-circle me-2"></i>Informations</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Description:</strong> {{ team.description or '-' }}</p>
+          <p><strong>Région:</strong> {{ team.region.name if team.region else team.region or '-' }}</p>
+          <p><strong>Responsable:</strong> {{ team.team_leader.full_name or team.team_leader.username }}</p>
+          <p><strong>Superviseur:</strong> {{ team.supervisor.full_name or team.supervisor.username if team.supervisor else '-' }}</p>
+          <p><strong>Statut:</strong> 
+            {% if team.is_active %}
+            <span class="badge bg-success">Active</span>
+            {% else %}
+            <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5><i class="fas fa-user-friends me-2"></i>Membres ({{ team.members|length }})</h5>
+          {% if has_permission(current_user, 'commercial_teams.write') %}
+            {% if team_type == 'promotion' %}
+            <a href="{{ url_for('promotion.member_new', team_id=team.id) }}" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus me-2"></i>Ajouter
+            </a>
+            {% elif team_type == 'lockiste' %}
+            <a href="{{ url_for('commercial_teams.lockiste_member_new', team_id=team.id) }}" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus me-2"></i>Ajouter
+            </a>
+            {% elif team_type == 'vendeur' %}
+            <a href="{{ url_for('commercial_teams.vendeur_member_new', team_id=team.id) }}" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus me-2"></i>Ajouter
+            </a>
+            {% endif %}
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {% if team.members %}
+          <div class="list-group">
+            {% for member in team.members %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ member.full_name }}</strong>
+                {% if member.phone %}<br><small class="text-muted">{{ member.phone }}</small>{% endif %}
+                {% if member.email %}<br><small class="text-muted">{{ member.email }}</small>{% endif %}
+              </div>
+              <div>
+                {% if member.is_active %}
+                <span class="badge bg-success">Actif</span>
+                {% else %}
+                <span class="badge bg-secondary">Inactif</span>
+                {% endif %}
+                {% if has_permission(current_user, 'commercial_teams.write') %}
+                  {% if team_type == 'promotion' %}
+                  <a href="{{ url_for('promotion.member_edit', id=member.id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% elif team_type == 'lockiste' %}
+                  <a href="{{ url_for('commercial_teams.lockiste_member_edit', id=member.id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% elif team_type == 'vendeur' %}
+                  <a href="{{ url_for('commercial_teams.vendeur_member_edit', id=member.id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted">Aucun membre dans cette équipe.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

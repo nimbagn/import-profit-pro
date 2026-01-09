@@ -1,0 +1,124 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}{% if member %}Modifier{% else %}Nouveau{% endif %} Membre - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-{% if member %}edit{% else %}plus{% endif %} me-2"></i>
+      {% if member %}Modifier le Membre{% else %}Nouveau Membre{% endif %}
+    </h1>
+    {% if team_type == 'promotion' %}
+    <a href="{{ url_for('promotion.members_list', team_id=team.id) }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    {% elif team_type == 'lockiste' %}
+    <a href="{{ url_for('commercial_teams.lockiste_members_list', team_id=team.id) }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    {% elif team_type == 'vendeur' %}
+    <a href="{{ url_for('commercial_teams.vendeur_members_list', team_id=team.id) }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label for="user_id" class="form-label">Utilisateur Commercial <span class="text-danger">*</span></label>
+          <select class="form-select" id="user_id" name="user_id" required>
+            <option value="">-- Sélectionner un utilisateur commercial --</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if member and member.user_id == user.id %}selected{% endif %} 
+                    data-full-name="{{ user.full_name or user.username }}"
+                    data-phone="{{ user.phone or '' }}"
+                    data-email="{{ user.email or '' }}">
+              {{ user.full_name or user.username }} ({{ user.email }})
+            </option>
+            {% endfor %}
+          </select>
+          <small class="form-text text-muted">Les membres des équipes doivent être des utilisateurs commerciaux de la plateforme.</small>
+        </div>
+
+        <div class="mb-3">
+          <label for="full_name" class="form-label">Nom Complet</label>
+          <input type="text" class="form-control" id="full_name" name="full_name" value="{{ member.full_name if member else '' }}" readonly>
+          <small class="form-text text-muted">Rempli automatiquement depuis l'utilisateur sélectionné.</small>
+        </div>
+
+        <div class="mb-3">
+          <label for="phone" class="form-label">Téléphone</label>
+          <input type="text" class="form-control" id="phone" name="phone" value="{{ member.phone if member else '' }}" readonly>
+          <small class="form-text text-muted">Rempli automatiquement depuis l'utilisateur sélectionné.</small>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email" value="{{ member.email if member else '' }}" readonly>
+          <small class="form-text text-muted">Rempli automatiquement depuis l'utilisateur sélectionné.</small>
+        </div>
+
+        {% if member %}
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if member.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">
+              Membre actif
+            </label>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-hl btn-hl-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          {% if team_type == 'promotion' %}
+          <a href="{{ url_for('promotion.members_list', team_id=team.id) }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          {% elif team_type == 'lockiste' %}
+          <a href="{{ url_for('commercial_teams.lockiste_members_list', team_id=team.id) }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          {% elif team_type == 'vendeur' %}
+          <a href="{{ url_for('commercial_teams.vendeur_members_list', team_id=team.id) }}" class="btn-hl btn-hl-outline">
+            <i class="fas fa-times me-2"></i>Annuler
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userSelect = document.getElementById('user_id');
+    const fullNameInput = document.getElementById('full_name');
+    const phoneInput = document.getElementById('phone');
+    const emailInput = document.getElementById('email');
+    
+    userSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            fullNameInput.value = selectedOption.getAttribute('data-full-name') || '';
+            phoneInput.value = selectedOption.getAttribute('data-phone') || '';
+            emailInput.value = selectedOption.getAttribute('data-email') || '';
+        } else {
+            fullNameInput.value = '';
+            phoneInput.value = '';
+            emailInput.value = '';
+        }
+    });
+    
+    // Initialiser les valeurs si un membre existe déjà
+    if (userSelect.value) {
+        userSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}
+

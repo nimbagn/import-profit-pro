@@ -1301,3 +1301,68 @@ def order_generate_outgoing(id):
     else:
         return redirect(url_for('orders.order_detail', id=id))
 
+@orders_bp.route('/<int:id>/ready-for-sale', methods=['POST'])
+@login_required
+def order_ready_for_sale(id):
+    """Marquer une commande comme prête pour confirmation de vente"""
+    order = CommercialOrder.query.get_or_404(id)
+    
+    # Vérifier les permissions
+    if not has_permission(current_user, 'orders.update'):
+        flash('Vous n\'avez pas la permission de modifier cette commande', 'error')
+        return redirect(url_for('orders.order_detail', id=id))
+    
+    # Vérifier que la commande est validée
+    if order.status != 'validated':
+        flash('Seules les commandes validées peuvent être marquées comme prêtes pour vente', 'error')
+        return redirect(url_for('orders.order_detail', id=id))
+    
+    # Vérifier que la vente n'est pas déjà confirmée
+    if order.sale_confirmed:
+        flash('Cette commande a déjà été confirmée comme vente', 'error')
+        return redirect(url_for('orders.order_detail', id=id))
+    
+    # La commande est déjà validée, donc elle est prête pour confirmation
+    # Cette route peut être utilisée pour ajouter des notes ou marquer un statut intermédiaire si nécessaire
+    flash('La commande est prête pour confirmation de vente par le superviseur', 'info')
+    return redirect(url_for('orders.order_detail', id=id))
+
+@orders_bp.route('/<int:id>/sale-status')
+@login_required
+def order_sale_status(id):
+    """Voir le statut de vente d'une commande"""
+    order = CommercialOrder.query.options(
+        joinedload(CommercialOrder.confirmed_sale).joinedload(CommercialSale.supervisor)
+    ).get_or_404(id)
+    
+    # Vérifier les permissions
+    if not has_permission(current_user, 'orders.read'):
+        flash('Vous n\'avez pas la permission de voir cette commande', 'error')
+        return redirect(url_for('orders.orders_list'))
+    
+    # Récupérer la vente confirmée si elle existe
+    confirmed_sale = None
+    if order.sale_confirmed and order.confirmed_sale:
+        from models import CommercialSaleItem
+        confirmed_sale = CommercialSale.query.options(
+            joinedload(CommercialSale.commercial),
+            joinedload(CommercialSale.supervisor),
+            joinedload(CommercialSale.items).joinedload(CommercialSaleItem.stock_item)
+        ).filter_by(order_id=order.id).first()
+    
+    return jsonify({
+        'order_id': order.id,
+        'order_reference': order.reference,
+        'sale_confirmed': order.sale_confirmed,
+        'sale_confirmed_at': order.sale_confirmed_at.isoformat() if order.sale_confirmed_at else None,
+        'sale_confirmed_by': order.sale_confirmed_by.full_name if order.sale_confirmed_by else None,
+        'confirmed_sale': {
+            'id': confirmed_sale.id,
+            'invoice_number': confirmed_sale.invoice_number,
+            'sale_date': confirmed_sale.sale_date.isoformat(),
+            'total_amount_gnf': float(confirmed_sale.total_amount_gnf),
+            'payment_status': confirmed_sale.payment_status,
+            'status': confirmed_sale.status
+        } if confirmed_sale else None
+    })
+

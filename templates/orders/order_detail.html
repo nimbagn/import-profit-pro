@@ -1249,6 +1249,68 @@ function scrollToClient(clientId) {
   </div>
   {% endif %}
 
+    <!-- Confirmation de Vente par Superviseur -->
+    {% if order.status == 'validated' and has_permission(current_user, 'sales.confirm') %}
+      {% if order.sale_confirmed %}
+      <div class="card-hl" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); border: 2px solid #10b981;">
+        <div class="card-header-order">
+          <h3 class="card-title-order" style="color: #059669;">
+            <i class="fas fa-check-double"></i>
+            Vente Confirmée
+          </h3>
+        </div>
+        <div style="padding: var(--space-lg);">
+          <p style="margin-bottom: var(--space-md); color: var(--text-secondary);">
+            <i class="fas fa-info-circle"></i> 
+            Cette commande a été confirmée comme vente le <strong>{{ order.sale_confirmed_at.strftime('%d/%m/%Y à %H:%M') if order.sale_confirmed_at else '' }}</strong>
+            {% if order.sale_confirmed_by %}
+            par <strong>{{ order.sale_confirmed_by.full_name or order.sale_confirmed_by.username }}</strong>.
+            {% endif %}
+          </p>
+          {% set confirmed_sales_list = [] %}
+          {% if order.sale_confirmed %}
+            {% for sale in order.confirmed_sale %}
+              {% if sale.status == 'confirmed' %}
+                {% set _ = confirmed_sales_list.append(sale) %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {% if confirmed_sales_list %}
+          <div style="display: flex; gap: var(--space-md); flex-wrap: wrap;">
+            <a href="{{ url_for('sales_confirmation.sale_detail', id=confirmed_sales_list[0].id) }}" class="btn-hl" style="background: #10b981; color: white; border-color: #10b981;">
+              <i class="fas fa-eye me-2"></i>Voir les Détails de la Vente
+            </a>
+            {% if confirmed_sales_list|length > 1 %}
+            <a href="{{ url_for('sales_confirmation.confirmed_sales') }}?order_id={{ order.id }}" class="btn-hl btn-hl-outline">
+              <i class="fas fa-list me-2"></i>Voir toutes les ventes ({{ confirmed_sales_list|length }})
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="card-hl" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%); border: 2px solid #3b82f6;">
+        <div class="card-header-order">
+          <h3 class="card-title-order" style="color: #3b82f6;">
+            <i class="fas fa-check-circle"></i>
+            Confirmation de Vente
+          </h3>
+        </div>
+        <p style="margin-bottom: var(--space-md); color: var(--text-secondary); padding: 0 var(--space-lg);">
+          <i class="fas fa-info-circle"></i> 
+          Cette commande est validée et prête pour confirmation de vente. 
+          Veuillez saisir les informations de la facture manuelle réalisée par le commercial.
+        </p>
+        <div style="padding: 0 var(--space-lg) var(--space-lg);">
+          <a href="{{ url_for('sales_confirmation.confirm_sale', order_id=order.id) }}" class="btn-hl" style="background: #3b82f6; color: white; border-color: #3b82f6; width: 100%;">
+            <i class="fas fa-check me-2"></i>Confirmer la Vente
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    {% endif %}
+
     <!-- Aperçu des Clients -->
     <div class="card-hl">
       <div class="card-header-order">

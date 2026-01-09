@@ -509,6 +509,24 @@
                             Mes Clients
                         </a>
                         {% endif %}
+                        {% if has_permission(current_user, 'commercial_teams.read') %}
+                        <a href="{{ url_for('commercial_teams.index') }}" class="menu-subitem {% if request.endpoint and 'commercial_teams' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-users-cog"></i>
+                            Équipes Commerciales
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'sales.confirm') or has_permission(current_user, 'sales.view_confirmed') %}
+                        <a href="{{ url_for('sales_confirmation.supervisor_dashboard') }}" class="menu-subitem {% if request.endpoint and 'sales_confirmation' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-check-circle"></i>
+                            Confirmation Ventes
+                        </a>
+                        {% endif %}
+                        {% if has_permission(current_user, 'objectives.read') %}
+                        <a href="{{ url_for('sales_objectives.objectives_list') }}" class="menu-subitem {% if request.endpoint and 'sales_objectives' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-bullseye"></i>
+                            Objectifs de Vente
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}

@@ -1,0 +1,512 @@
+{% extends "base_modern_complete.html" %}
+
+{% block title %}{% if objective %}Modifier{% else %}Nouvel{% endif %} Objectif - Import Profit Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Page pleine largeur */
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin-left: 280px !important;
+    margin-top: 70px !important;
+  }
+  
+  .form-container {
+    max-width: 900px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-xl);
+    width: 100%;
+  }
+  
+  .form-hl {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
+    .form-container {
+      padding: 0 var(--space-md);
+    }
+    
+    .form-hl {
+      padding: var(--space-xl);
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-hl">
+    <div class="page-header-hl" style="border-bottom: 2px solid var(--gray-200); padding-bottom: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h1 class="page-title-hl">
+        <i class="fas fa-{% if objective %}edit{% else %}plus{% endif %} me-2"></i>
+        {% if objective %}Modifier l'Objectif{% else %}Nouvel Objectif{% endif %}
+      </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: var(--space-lg);">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group" style="margin-bottom: var(--space-lg);">
+        <label for="commercial_id" class="form-hl-label">
+          Commercial <span style="color: var(--color-danger);">*</span>
+        </label>
+        <select id="commercial_id" name="commercial_id" class="form-hl-input" required>
+          <option value="">Sélectionner un commercial...</option>
+          {% for commercial in commercials %}
+          <option value="{{ commercial.id }}" {% if objective and objective.commercial_id == commercial.id %}selected{% endif %}>
+            {{ commercial.full_name or commercial.username }} ({{ commercial.email }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="forecast_id" class="form-hl-label">
+            Forecast (optionnel)
+          </label>
+          <select id="forecast_id" name="forecast_id" class="form-hl-input">
+            <option value="">Aucun forecast</option>
+            {% for forecast in forecasts %}
+            <option value="{{ forecast.id }}" {% if objective and objective.forecast_id == forecast.id %}selected{% endif %}>
+              {{ forecast.name }} ({{ forecast.start_date.strftime('%d/%m/%Y') }} - {{ forecast.end_date.strftime('%d/%m/%Y') }})
+            </option>
+            {% endfor %}
+          </select>
+          <small class="form-text text-muted">Lier cet objectif à un forecast existant</small>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="period_start" class="form-hl-label">
+            Date de Début <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="period_start" name="period_start" class="form-hl-input" 
+                 value="{{ objective.period_start.strftime('%Y-%m-%d') if objective else '' }}" required>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label for="period_end" class="form-hl-label">
+            Date de Fin <span style="color: var(--color-danger);">*</span>
+          </label>
+          <input type="date" id="period_end" name="period_end" class="form-hl-input" 
+                 value="{{ objective.period_end.strftime('%Y-%m-%d') if objective else '' }}" required>
+        </div>
+      </div>
+      
+      <!-- Section Articles -->
+      <div style="margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 2px solid var(--gray-200);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+          <h3 style="color: var(--color-primary);">
+            <i class="fas fa-boxes me-2"></i>Articles de l'Objectif
+          </h3>
+          <button type="button" onclick="showArticleSelector()" class="btn-hl btn-hl-primary">
+            <i class="fas fa-plus me-2"></i>Ajouter Article
+          </button>
+        </div>
+        
+        <!-- Tableau des articles -->
+        <div style="overflow-x: auto;">
+          <table id="articlesTable" class="table-hl" style="display: none; width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th>Prix Vente Gros (GNF)</th>
+                <th>Quantité Cible</th>
+                <th>Valeur Cible (GNF)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="articlesTableBody">
+            </tbody>
+            <tfoot id="articlesTableFooter" style="display: none;">
+              <tr style="background: var(--bg-tertiary); font-weight: 700;">
+                <td colspan="3"><strong>TOTAL</strong></td>
+                <td id="totalTargetValue"><strong>0 GNF</strong></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div id="noArticlesMessage" style="text-align: center; padding: var(--space-2xl); color: var(--text-muted);">
+            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.3;"></i>
+            <p>Aucun article ajouté. Cliquez sur "Ajouter Article" pour commencer.</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Champ caché pour le montant total -->
+      <input type="hidden" id="target_amount_gnf" name="target_amount_gnf" value="{{ objective.target_amount_gnf if objective else '0' }}">
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+        <a href="{{ url_for('sales_objectives.objectives_list') }}" class="btn-hl btn-hl-outline" style="flex: 1;">
+          <i class="fas fa-arrow-left me-2"></i>Annuler
+        </a>
+        <button type="submit" class="btn-hl btn-hl-primary" style="flex: 1;">
+          <i class="fas fa-save me-2"></i>{% if objective %}Modifier{% else %}Créer{% endif %} l'Objectif
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de sélection d'articles -->
+<div id="articleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div style="background: var(--white); border-radius: var(--radius-lg); padding: var(--space-xl); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+      <h3 style="color: var(--color-primary);">Sélectionner un Article</h3>
+      <button onclick="closeArticleSelector()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+    </div>
+    <input type="text" id="articleSearch" placeholder="Rechercher un article..." 
+           style="width: 100%; padding: var(--space-md); margin-bottom: var(--space-md); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+    <div id="articleList" style="max-height: 400px; overflow-y: auto;">
+      {% for item in stock_items %}
+      <div class="article-item" 
+           data-id="{{ item.id }}" 
+           data-name="{{ item.name|tojson }}" 
+           data-price="{{ item.purchase_price_gnf|default(0) }}"
+           onclick="selectArticleFromElement(this)"
+           style="padding: var(--space-md); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: var(--space-sm); cursor: pointer; transition: var(--transition-normal);"
+           onmouseover="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--color-primary)'"
+           onmouseout="this.style.background='var(--white)'; this.style.borderColor='var(--gray-200)'">
+        <strong>{{ item.name }}</strong>
+        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+          Prix: {{ "{:,.0f}".format(item.purchase_price_gnf|default(0))|replace(',', ' ') }} GNF
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="articles-data">
+{{ (stock_items|map(attribute='id')|list if stock_items else [])|tojson }}
+</script>
+<script type="application/json" id="available-stock-data">
+{{ available_stock|tojson }}
+</script>
+<script>
+  var selectedArticles = [];
+  var availableStock = {};
+  var currentCommercialId = null;
+  
+  // Charger le stock disponible depuis le serveur
+  try {
+    var stockScript = document.getElementById('available-stock-data');
+    if (stockScript) {
+      availableStock = JSON.parse(stockScript.textContent);
+      // Convertir les clés en nombres
+      var convertedStock = {};
+      for (var key in availableStock) {
+        convertedStock[parseInt(key)] = parseFloat(availableStock[key]);
+      }
+      availableStock = convertedStock;
+    }
+  } catch (e) {
+    console.error('Error parsing available stock data:', e);
+    availableStock = {};
+  }
+  
+  {% if objective and objective.items %}
+  {% for item in objective.items %}
+  selectedArticles.push({
+    id: {{ item.stock_item_id }},
+    name: {{ item.stock_item.name|tojson }},
+    price: {{ item.selling_price_gnf }},
+    quantity: {{ item.target_quantity }},
+    available: {{ available_stock.get(item.stock_item_id, 0) }}
+  });
+  {% endfor %}
+  {% endif %}
+  
+  // Écouter le changement de commercial pour charger le stock disponible
+  document.getElementById('commercial_id').addEventListener('change', function() {
+    var commercialId = this.value;
+    if (!commercialId) {
+      availableStock = {};
+      filterArticlesByStock();
+      return;
+    }
+    
+    currentCommercialId = commercialId;
+    
+    // Charger le stock disponible via API
+    fetch('/objectives/api/stock/' + commercialId)
+      .then(response => response.json())
+      .then(data => {
+        availableStock = {};
+        if (data.available_stock) {
+          for (var key in data.available_stock) {
+            availableStock[parseInt(key)] = parseFloat(data.available_stock[key]);
+          }
+        }
+        filterArticlesByStock();
+        updateArticleAvailability();
+      })
+      .catch(error => {
+        console.error('Error loading stock:', error);
+        availableStock = {};
+        filterArticlesByStock();
+      });
+  });
+  
+  function filterArticlesByStock() {
+    // Filtrer les articles dans la modal pour ne montrer que ceux avec du stock
+    var items = document.querySelectorAll('.article-item');
+    items.forEach(function(item) {
+      var itemId = parseInt(item.getAttribute('data-id'));
+      var available = availableStock[itemId] || 0;
+      
+      if (available > 0 || !currentCommercialId) {
+        item.style.display = 'block';
+        // Ajouter un badge avec la quantité disponible
+        var badge = item.querySelector('.stock-badge');
+        if (!badge && currentCommercialId) {
+          badge = document.createElement('span');
+          badge.className = 'stock-badge';
+          badge.style.cssText = 'background: var(--color-success); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;';
+          badge.textContent = 'Stock: ' + formatNumber(available);
+          item.querySelector('strong').appendChild(badge);
+        } else if (badge && currentCommercialId) {
+          badge.textContent = 'Stock: ' + formatNumber(available);
+        }
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  function updateArticleAvailability() {
+    // Mettre à jour la disponibilité dans le tableau des articles sélectionnés
+    selectedArticles.forEach(function(article) {
+      article.available = availableStock[article.id] || 0;
+    });
+    renderArticlesTable();
+  }
+  
+  function showArticleSelector() {
+    document.getElementById('articleModal').style.display = 'flex';
+  }
+  
+  function closeArticleSelector() {
+    document.getElementById('articleModal').style.display = 'none';
+    document.getElementById('articleSearch').value = '';
+    filterArticles();
+  }
+  
+  function filterArticles() {
+    var search = document.getElementById('articleSearch').value.toLowerCase();
+    var items = document.querySelectorAll('.article-item');
+    items.forEach(function(item) {
+      var nameAttr = item.getAttribute('data-name');
+      var name = '';
+      try {
+        name = JSON.parse(nameAttr).toLowerCase();
+      } catch (e) {
+        name = nameAttr.toLowerCase();
+      }
+      
+      // Vérifier à la fois la recherche et le stock disponible
+      var matchesSearch = name.includes(search);
+      var itemId = parseInt(item.getAttribute('data-id'));
+      var hasStock = !currentCommercialId || (availableStock[itemId] || 0) > 0;
+      
+      if (matchesSearch && hasStock) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  document.getElementById('articleSearch').addEventListener('input', filterArticles);
+  
+  function selectArticleFromElement(element) {
+    var id = parseInt(element.getAttribute('data-id'));
+    var nameAttr = element.getAttribute('data-name');
+    var name = '';
+    try {
+      name = JSON.parse(nameAttr);
+    } catch (e) {
+      name = nameAttr;
+    }
+    var price = parseFloat(element.getAttribute('data-price')) || 0;
+    selectArticle(id, name, price);
+  }
+  
+  function selectArticle(id, name, price) {
+    // Vérifier si l'article n'est pas déjà ajouté
+    if (selectedArticles.find(a => a.id === id)) {
+      alert('Cet article est déjà ajouté');
+      return;
+    }
+    
+    // Vérifier le stock disponible
+    var available = availableStock[id] || 0;
+    if (currentCommercialId && available <= 0) {
+      alert('Cet article n\'a pas de stock disponible pour ce commercial');
+      return;
+    }
+    
+    selectedArticles.push({
+      id: id,
+      name: name,
+      price: price || 0,
+      quantity: 0,
+      available: available
+    });
+    
+    renderArticlesTable();
+    closeArticleSelector();
+  }
+  
+  function removeArticle(index) {
+    selectedArticles.splice(index, 1);
+    renderArticlesTable();
+  }
+  
+  function renderArticlesTable() {
+    var tbody = document.getElementById('articlesTableBody');
+    var table = document.getElementById('articlesTable');
+    var footer = document.getElementById('articlesTableFooter');
+    var noArticles = document.getElementById('noArticlesMessage');
+    
+    if (!tbody) return;
+    
+    if (selectedArticles.length === 0) {
+      table.style.display = 'none';
+      footer.style.display = 'none';
+      noArticles.style.display = 'block';
+      document.getElementById('target_amount_gnf').value = '0';
+      return;
+    }
+    
+    table.style.display = 'table';
+    footer.style.display = 'table-footer-group';
+    noArticles.style.display = 'none';
+    
+    var html = '';
+    var totalValue = 0;
+    
+    selectedArticles.forEach(function(article, index) {
+      var value = parseFloat(article.price) * parseFloat(article.quantity || 0);
+      totalValue += value;
+      var available = article.available || 0;
+      var maxQuantity = currentCommercialId ? available : null;
+      
+      html += '<tr>';
+      html += '<td><strong>' + article.name;
+      if (currentCommercialId && available > 0) {
+        html += '<br><small style="color: var(--color-success);">Stock disponible: ' + formatNumber(available) + '</small>';
+      } else if (currentCommercialId && available === 0) {
+        html += '<br><small style="color: var(--color-danger);">Stock indisponible</small>';
+      }
+      html += '</strong></td>';
+      html += '<td><input type="number" name="prices[]" value="' + article.price + '" step="0.01" min="0" required onchange="updateArticlePrice(' + index + ', this.value)" style="width: 100%; padding: var(--space-xs); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);"></td>';
+      html += '<td><input type="number" name="quantities[]" value="' + (article.quantity || 0) + '" step="0.0001" min="0" ' + (maxQuantity !== null ? 'max="' + maxQuantity + '"' : '') + ' required onchange="updateArticleQuantity(' + index + ', this.value)" style="width: 100%; padding: var(--space-xs); border: 1px solid var(--gray-300); border-radius: var(--radius-sm);"';
+      if (maxQuantity !== null && parseFloat(article.quantity || 0) > maxQuantity) {
+        html += ' style="border-color: var(--color-danger);"';
+      }
+      html += '></td>';
+      html += '<td><strong>' + formatNumber(value) + ' GNF</strong></td>';
+      html += '<td><button type="button" onclick="removeArticle(' + index + ')" class="btn-hl btn-hl-danger" style="padding: var(--space-xs) var(--space-sm);"><i class="fas fa-trash"></i></button></td>';
+      html += '</tr>';
+    });
+    
+    tbody.innerHTML = html;
+    document.getElementById('totalTargetValue').innerHTML = '<strong>' + formatNumber(totalValue) + ' GNF</strong>';
+    document.getElementById('target_amount_gnf').value = totalValue.toFixed(2);
+  }
+  
+  function updateArticlePrice(index, price) {
+    if (selectedArticles[index]) {
+      selectedArticles[index].price = parseFloat(price) || 0;
+      renderArticlesTable();
+    }
+  }
+  
+  function updateArticleQuantity(index, quantity) {
+    if (selectedArticles[index]) {
+      var qty = parseFloat(quantity) || 0;
+      var available = selectedArticles[index].available || 0;
+      
+      // Vérifier que la quantité ne dépasse pas le stock disponible
+      if (currentCommercialId && available > 0 && qty > available) {
+        alert('La quantité ne peut pas dépasser le stock disponible (' + formatNumber(available) + ')');
+        qty = available;
+        // Réinitialiser le champ
+        var input = document.querySelectorAll('input[name="quantities[]"]')[index];
+        if (input) input.value = qty;
+      }
+      
+      selectedArticles[index].quantity = qty;
+      renderArticlesTable();
+    }
+  }
+  
+  // Initialiser le filtre au chargement si un commercial est déjà sélectionné
+  document.addEventListener('DOMContentLoaded', function() {
+    var commercialSelect = document.getElementById('commercial_id');
+    if (commercialSelect && commercialSelect.value) {
+      commercialSelect.dispatchEvent(new Event('change'));
+    } else {
+      filterArticlesByStock();
+    }
+  });
+  
+  function formatNumber(num) {
+    return new Intl.NumberFormat('fr-FR').format(Math.round(num));
+  }
+  
+  // Initialiser le tableau si des articles existent déjà
+  if (selectedArticles.length > 0) {
+    renderArticlesTable();
+  }
+  
+  // Ajouter les champs cachés au formulaire avant soumission
+  document.querySelector('form').addEventListener('submit', function(e) {
+    if (selectedArticles.length === 0) {
+      e.preventDefault();
+      alert('Veuillez ajouter au moins un article');
+      return;
+    }
+    
+    // Ajouter les champs cachés pour les IDs
+    selectedArticles.forEach(function(article) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'article_ids[]';
+      input.value = article.id;
+      this.appendChild(input);
+    }, this);
+  });
+</script>
+{% endblock %}

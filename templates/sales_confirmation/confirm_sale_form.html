@@ -1,0 +1,219 @@
+{% extends "base_modern_complete.html" %}
+{% block title %}Confirmer la Vente - Import Profit Pro{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="page-header-hl">
+    <h1 class="page-title-hl">
+      <i class="fas fa-check-circle me-2"></i>
+      Confirmer la Vente - {{ order.reference }}
+    </h1>
+    <a href="{{ url_for('sales_confirmation.orders_to_confirm') }}" class="btn-hl btn-hl-outline">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </div>
+
+  {% if missing_items %}
+  <div class="alert alert-danger" role="alert">
+    <h5><i class="fas fa-exclamation-triangle me-2"></i>Stock Insuffisant</h5>
+    <p>Le stock disponible n'est pas suffisant pour confirmer cette vente :</p>
+    <ul class="mb-0">
+      {% for missing in missing_items %}
+      <li>
+        <strong>{{ missing.item.name }}</strong> : 
+        Requis {{ "{:,.2f}".format(missing.required) }}, 
+        Disponible {{ "{:,.2f}".format(missing.available) }}, 
+        <span class="text-danger">Manquant {{ "{:,.2f}".format(missing.missing) }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="mt-2 mb-0"><small>Veuillez vérifier le stock avant de confirmer la vente.</small></p>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-file-invoice me-2"></i>Informations de Facture</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" id="confirmSaleForm">
+            <div class="mb-3">
+              <label for="invoice_number" class="form-label">Numéro de Facture <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="invoice_number" name="invoice_number" required>
+              <small class="form-text text-muted">Numéro de la facture manuelle réalisée par le commercial</small>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="invoice_date" class="form-label">Date de Facture <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ today.strftime('%Y-%m-%d') if today else '' }}" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="sale_date" class="form-label">Date de Vente Réelle <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="sale_date" name="sale_date" value="{{ today.strftime('%Y-%m-%d') if today else '' }}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="total_amount_gnf" class="form-label">Montant Total (GNF) <span class="text-danger">*</span></label>
+              <input type="number" step="0.01" class="form-control" id="total_amount_gnf" name="total_amount_gnf" 
+                     value="{% set total = 0 %}{% for client in order.clients %}{% for item in client.items %}{% set total = total + (item.quantity * (item.unit_price_gnf or 0)) %}{% endfor %}{% endfor %}{{ total }}" required>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="payment_method" class="form-label">Mode de Paiement <span class="text-danger">*</span></label>
+                  <select class="form-select" id="payment_method" name="payment_method" required>
+                    <option value="cash">Espèces</option>
+                    <option value="credit">Crédit</option>
+                    <option value="check">Chèque</option>
+                    <option value="transfer">Virement</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="payment_status" class="form-label">Statut Paiement <span class="text-danger">*</span></label>
+                  <select class="form-select" id="payment_status" name="payment_status" required>
+                    <option value="pending">En attente</option>
+                    <option value="partial">Partiel</option>
+                    <option value="paid">Payé</option>
+                    <option value="overdue">En retard</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="payment_due_date" class="form-label">Date d'Échéance (si crédit)</label>
+              <input type="date" class="form-control" id="payment_due_date" name="payment_due_date">
+            </div>
+
+            <div class="mb-3">
+              <label for="notes" class="form-label">Observations</label>
+              <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+            </div>
+
+            {% if missing_items %}
+            <div class="alert alert-warning">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Attention :</strong> Le stock est insuffisant. La confirmation sera bloquée.
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn-hl btn-hl-primary" {% if missing_items %}disabled title="Stock insuffisant - Impossible de confirmer"{% endif %}>
+                <i class="fas fa-check me-2"></i>Confirmer la Vente
+              </button>
+              <a href="{{ url_for('sales_confirmation.orders_to_confirm') }}" class="btn-hl btn-hl-outline">
+                <i class="fas fa-times me-2"></i>Annuler
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-info-circle me-2"></i>Détails de la Commande</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Référence:</strong> {{ order.reference }}</p>
+          <p><strong>Date:</strong> {{ order.order_date.strftime('%d/%m/%Y') }}</p>
+          <p><strong>Commercial:</strong> {{ order.commercial.full_name or order.commercial.username }}</p>
+          <p><strong>Clients:</strong> {{ order.clients|length }}</p>
+          <hr>
+          <h6><i class="fas fa-boxes me-2"></i>Articles commandés:</h6>
+          {% for client in order.clients %}
+          <div class="mb-3">
+            <strong>{{ client.client_name }}</strong>
+            <ul class="list-unstyled ms-3 mt-2">
+              {% for item in client.items %}
+              {% set available_qty = available_stock.get(item.stock_item_id, 0) %}
+              {% set required_qty = item.quantity %}
+              {% set is_sufficient = available_qty >= required_qty %}
+              <li class="mb-2 p-2 {% if not is_sufficient %}bg-danger bg-opacity-10 border border-danger rounded{% else %}bg-success bg-opacity-10 border border-success rounded{% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>{{ item.stock_item.name }}</strong><br>
+                    <small class="text-muted">
+                      Quantité commandée: <strong>{{ "{:,.2f}".format(required_qty) }}</strong><br>
+                      Stock disponible: 
+                      <span class="{% if is_sufficient %}text-success{% else %}text-danger{% endif %}">
+                        <strong>{{ "{:,.2f}".format(available_qty) }}</strong>
+                      </span>
+                      {% if not is_sufficient %}
+                      <br><span class="text-danger"><i class="fas fa-exclamation-circle"></i> Manquant: {{ "{:,.2f}".format(required_qty - available_qty) }}</span>
+                      {% endif %}
+                    </small>
+                  </div>
+                  <div class="text-end">
+                    {% if is_sufficient %}
+                    <span class="badge bg-success"><i class="fas fa-check"></i> OK</span>
+                    {% else %}
+                    <span class="badge bg-danger"><i class="fas fa-times"></i> Insuffisant</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="mt-1">
+                  <small>Prix unitaire: {{ "{:,.0f}".format(item.unit_price_gnf or 0) }} GNF</small>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+          
+          {% if available_stock %}
+          <hr>
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              <strong>Note :</strong> Les quantités affichées correspondent au stock réel disponible dans les dépôts et véhicules de la région du commercial.
+            </small>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('confirmSaleForm');
+    var submitButton = form.querySelector('button[type="submit"]');
+    
+    {% if missing_items %}
+    // Empêcher la soumission si le stock est insuffisant
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Impossible de confirmer la vente : Stock insuffisant pour certains articles.\n\nVeuillez vérifier le stock disponible avant de confirmer.');
+        return false;
+    });
+    {% endif %}
+    
+    // Afficher un message de confirmation avant soumission
+    {% if not missing_items %}
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Êtes-vous sûr de vouloir confirmer cette vente ?\n\nCette action confirmera définitivement la vente et mettra à jour le stock.')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
+
