@@ -5842,7 +5842,7 @@ def warehouse_dashboard():
 def loading_summary_detail(id):
     """Détail d'un récapitulatif de chargement"""
     # Le magasinier peut accéder même sans permission stocks.read
-    if not has_permission(current_user, 'stocks.read') and not (current_user.role and current_user.role.code == 'warehouse'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.warehouse_dashboard'))
     
@@ -5895,7 +5895,7 @@ def loading_summary_detail(id):
 def loading_verify_pre(id):
     """Vérifier le stock avant chargement"""
     # Le magasinier peut vérifier le stock même sans permission stocks.update
-    if not has_permission(current_user, 'stocks.update') and not (current_user.role and current_user.role.code == 'warehouse'):
+    if not can_create_stocks(current_user):
         flash('Vous n\'avez pas la permission de vérifier le stock', 'error')
         return redirect(url_for('stocks.loading_summary_detail', id=id))
     
@@ -5967,7 +5967,7 @@ def loading_execute(id):
     print(f"DEBUG loading_execute: Début - ID: {id}, User: {current_user.username}")
     
     # Le magasinier peut exécuter le chargement même sans permission movements.create
-    if not has_permission(current_user, 'movements.create') and not (current_user.role and current_user.role.code == 'warehouse'):
+    if not can_create_movements(current_user):
         flash('Vous n\'avez pas la permission de créer des mouvements', 'error')
         return redirect(url_for('stocks.loading_summary_detail', id=id))
     
