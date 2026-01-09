@@ -281,6 +281,14 @@ def edit_report(report_id):
         logger.error(f"Erreur lors de la récupération des comptes WhatsApp: {e}")
         accounts = []
     
+    # Déterminer le compte WhatsApp par défaut
+    default_account_id = None
+    if report.whatsapp_account_id:
+        default_account_id = report.whatsapp_account_id
+    elif accounts:
+        # Si aucun compte n'est sélectionné, prendre le premier disponible
+        default_account_id = accounts[0].get('id') if isinstance(accounts[0], dict) else None
+    
     # Récupérer les contacts pour la sélection
     contacts = []
     try:
