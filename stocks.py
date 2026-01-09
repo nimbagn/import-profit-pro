@@ -24,6 +24,150 @@ from sqlalchemy import or_, and_
 # Créer le blueprint
 stocks_bp = Blueprint('stocks', __name__, url_prefix='/stocks')
 
+def can_access_stocks(user):
+    """
+    Vérifier si l'utilisateur peut accéder aux fonctionnalités STOCKS.
+    Le magasinier (warehouse) a toujours accès complet à toutes les fonctionnalités STOCKS.
+    """
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    # Vérifier les permissions pour les autres rôles
+    return has_permission(user, 'stocks.read')
+
+def can_create_stocks(user):
+    """Vérifier si l'utilisateur peut créer/modifier des stocks"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'stocks.create') or has_permission(user, 'stocks.update')
+
+def can_access_movements(user):
+    """Vérifier si l'utilisateur peut accéder aux mouvements"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'movements.read')
+
+def can_create_movements(user):
+    """Vérifier si l'utilisateur peut créer des mouvements"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'movements.create')
+
+def can_access_receptions(user):
+    """Vérifier si l'utilisateur peut accéder aux réceptions"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'receptions.read')
+
+def can_create_receptions(user):
+    """Vérifier si l'utilisateur peut créer des réceptions"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'receptions.create')
+
+def can_access_outgoings(user):
+    """Vérifier si l'utilisateur peut accéder aux sorties"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'outgoings.read')
+
+def can_create_outgoings(user):
+    """Vérifier si l'utilisateur peut créer des sorties"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'outgoings.create')
+
+def can_access_returns(user):
+    """Vérifier si l'utilisateur peut accéder aux retours"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'returns.read')
+
+def can_create_returns(user):
+    """Vérifier si l'utilisateur peut créer des retours"""
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        return False
+    
+    if not hasattr(user, 'role') or not user.role:
+        return False
+    
+    # Admin et magasinier ont toujours accès complet
+    if user.role.code in ['admin', 'superadmin', 'warehouse']:
+        return True
+    
+    return has_permission(user, 'returns.create')
+
 def generate_movement_reference(movement_type='transfer', existing_references=None):
     """Génère une référence unique pour un mouvement de stock"""
     from datetime import datetime, UTC
@@ -107,7 +251,7 @@ def get_movement_form_data():
 @login_required
 def depot_stock(depot_id):
     """Stock d'un dépôt avec vérification d'accès par région"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -142,7 +286,7 @@ def depot_stock(depot_id):
 @login_required
 def depot_low_stock(depot_id):
     """Alertes mini-stock d'un dépôt avec vérification d'accès par région"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -173,7 +317,7 @@ def depot_low_stock(depot_id):
 @login_required
 def vehicle_stock(vehicle_id):
     """Stock d'un véhicule avec vérification d'accès par région"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -208,7 +352,7 @@ def vehicle_stock(vehicle_id):
 @login_required
 def vehicle_low_stock(vehicle_id):
     """Alertes mini-stock d'un véhicule"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -229,7 +373,7 @@ def vehicle_low_stock(vehicle_id):
 @login_required
 def movements_list():
     """Liste des mouvements de stock avec pagination et filtres"""
-    if not has_permission(current_user, 'movements.read'):
+    if not can_access_movements(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -402,7 +546,7 @@ def movements_list():
 @login_required
 def movements_export_excel():
     """Export Excel des mouvements avec filtres appliqués"""
-    if not has_permission(current_user, 'movements.read'):
+    if not can_access_movements(current_user):
         flash("Vous n'avez pas la permission d'exporter les données.", "error")
         return redirect(url_for('stocks.movements_list'))
     
@@ -566,7 +710,7 @@ def movements_export_excel():
 @login_required
 def movement_detail_by_reference(reference):
     """Détail d'un mouvement par sa référence"""
-    if not has_permission(current_user, 'movements.read'):
+    if not can_access_movements(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.movements_list'))
     
@@ -926,7 +1070,7 @@ def api_movement_by_reference(reference):
 def movement_new():
     """Créer un nouveau mouvement"""
     # Vérifier la permission movements.create OU le rôle warehouse
-    has_create_permission = has_permission(current_user, 'movements.create')
+    has_create_permission = can_create_movements(current_user)
     is_warehouse = current_user.role and current_user.role.code == 'warehouse'
     
     if not has_create_permission and not is_warehouse:
@@ -1445,7 +1589,7 @@ def movement_new():
 @login_required
 def receptions_list():
     """Liste des réceptions avec pagination et filtres"""
-    if not has_permission(current_user, 'receptions.read'):
+    if not can_access_receptions(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -1539,7 +1683,7 @@ def receptions_list():
 @login_required
 def receptions_export_excel():
     """Export Excel des réceptions avec filtres appliqués"""
-    if not has_permission(current_user, 'receptions.read'):
+    if not can_access_receptions(current_user):
         flash("Vous n'avez pas la permission d'exporter les données.", "error")
         return redirect(url_for('stocks.receptions_list'))
     
@@ -1688,7 +1832,7 @@ def receptions_export_excel():
 @login_required
 def reception_new():
     """Créer une nouvelle réception avec plusieurs articles"""
-    if not has_permission(current_user, 'receptions.create'):
+    if not can_create_receptions(current_user):
         flash('Vous n\'avez pas la permission de créer une réception', 'error')
         return redirect(url_for('stocks.receptions_list'))
     
@@ -1830,7 +1974,7 @@ def reception_new():
 @login_required
 def reception_detail(id):
     """Détails d'une réception"""
-    if not has_permission(current_user, 'receptions.read'):
+    if not can_access_receptions(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.receptions_list'))
     
@@ -1841,7 +1985,7 @@ def reception_detail(id):
 @login_required
 def reception_preview(id):
     """Prévisualisation d'une réception avant export PDF"""
-    if not has_permission(current_user, 'receptions.read'):
+    if not can_access_receptions(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.receptions_list'))
     
@@ -1852,7 +1996,7 @@ def reception_preview(id):
 @login_required
 def reception_pdf(id):
     """Générer un PDF pour une réception"""
-    if not has_permission(current_user, 'receptions.read'):
+    if not can_access_receptions(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.receptions_list'))
     
@@ -1886,10 +2030,10 @@ def outgoings_list():
     """Liste des sorties avec pagination et filtres"""
     # Admin et magasinier ont toujours accès
     if not (current_user.role and current_user.role.code in ['admin', 'superadmin', 'warehouse']):
-        if not has_permission(current_user, 'outgoings.read'):
+        if not can_access_outgoings(current_user):
             flash('Vous n\'avez pas la permission d\'accéder aux sorties', 'error')
             return redirect(url_for('index'))
-    if not has_permission(current_user, 'outgoings.read'):
+    if not can_access_outgoings(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -2011,7 +2155,7 @@ def outgoings_list():
 @login_required
 def outgoings_export_excel():
     """Export Excel des sorties avec filtres appliqués"""
-    if not has_permission(current_user, 'outgoings.read'):
+    if not can_access_outgoings(current_user):
         flash("Vous n'avez pas la permission d'exporter les données.", "error")
         return redirect(url_for('stocks.outgoings_list'))
     
@@ -2191,8 +2335,7 @@ def outgoings_export_excel():
 def outgoing_new():
     """Créer une nouvelle sortie de stock"""
     # Admin et magasinier ont toujours accès
-    if not (current_user.role and current_user.role.code in ['admin', 'superadmin', 'warehouse']):
-        if not has_permission(current_user, 'outgoings.create'):
+    if not can_create_outgoings(current_user):
             flash('Vous n\'avez pas la permission de créer une sortie', 'error')
             return redirect(url_for('stocks.outgoings_list'))
     
@@ -2354,7 +2497,7 @@ def get_outgoing_form_data():
 @login_required
 def outgoing_detail(id):
     """Détails d'une sortie"""
-    if not has_permission(current_user, 'outgoings.read'):
+    if not can_access_outgoings(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.outgoings_list'))
     
@@ -2387,7 +2530,7 @@ def outgoing_detail(id):
 @login_required
 def outgoing_preview(id):
     """Prévisualisation d'une sortie avant export PDF"""
-    if not has_permission(current_user, 'outgoings.read'):
+    if not can_access_outgoings(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.outgoings_list'))
     
@@ -2415,7 +2558,7 @@ def outgoing_preview(id):
 @login_required
 def outgoing_pdf(id):
     """Générer un PDF pour une sortie"""
-    if not has_permission(current_user, 'outgoings.read'):
+    if not can_access_outgoings(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.outgoings_list'))
     
@@ -2465,7 +2608,7 @@ def outgoing_pdf(id):
 @login_required
 def returns_list():
     """Liste des retours avec pagination et filtres"""
-    if not has_permission(current_user, 'returns.read'):
+    if not can_access_returns(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -2778,7 +2921,7 @@ def returns_list():
 @login_required
 def returns_export_excel():
     """Export Excel des retours avec filtres appliqués"""
-    if not has_permission(current_user, 'returns.read'):
+    if not can_access_returns(current_user):
         flash("Vous n'avez pas la permission d'exporter les données.", "error")
         return redirect(url_for('stocks.returns_list'))
     
@@ -2965,7 +3108,7 @@ def returns_export_excel():
 @login_required
 def return_new():
     """Créer un nouveau retour de stock (client ou fournisseur)"""
-    if not has_permission(current_user, 'returns.create'):
+    if not can_create_returns(current_user):
         flash('Vous n\'avez pas la permission de créer un retour', 'error')
         return redirect(url_for('stocks.returns_list'))
     
@@ -3248,7 +3391,7 @@ def get_return_form_data():
 @login_required
 def return_detail(id):
     """Détails d'un retour"""
-    if not has_permission(current_user, 'returns.read'):
+    if not can_access_returns(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.returns_list'))
     
@@ -3335,7 +3478,7 @@ def return_detail(id):
 @login_required
 def return_preview(id):
     """Prévisualisation d'un retour avant export PDF"""
-    if not has_permission(current_user, 'returns.read'):
+    if not can_access_returns(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.returns_list'))
     
@@ -3363,7 +3506,7 @@ def return_preview(id):
 @login_required
 def return_pdf(id):
     """Générer un PDF pour un retour"""
-    if not has_permission(current_user, 'returns.read'):
+    if not can_access_returns(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.returns_list'))
     
@@ -3411,7 +3554,7 @@ def return_pdf(id):
 @login_required
 def stock_summary_preview():
     """Prévisualisation avant export PDF/Excel avec quantités restantes"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -3827,7 +3970,7 @@ def generate_stock_summary_pdf_data(depot_id=None, period='all', currency='GNF',
 @login_required
 def stock_summary_pdf():
     """Générer un PDF pour le récapitulatif de stock avec quantités restantes"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -3937,7 +4080,7 @@ def stock_summary_pdf():
 @login_required
 def stock_summary_excel():
     """Générer un Excel pour le récapitulatif de stock"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -4091,7 +4234,7 @@ def stock_summary_excel():
 @login_required
 def stock_summary_api():
     """API JSON pour le récapitulatif du stock (pour mise à jour en temps réel)"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         return jsonify({'error': 'Permission refusée'}), 403
     
     from datetime import datetime, UTC, timedelta
@@ -4385,7 +4528,7 @@ def stock_summary_api():
 @login_required
 def stock_summary():
     """Récapitulatif du stock restant avec filtres par période"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -5207,7 +5350,7 @@ def update_movements_signs():
 @login_required
 def stock_history():
     """Historique des mouvements de stock par article et par période"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
@@ -5425,7 +5568,7 @@ def stock_history():
 @login_required
 def warehouse_dashboard():
     """Dashboard magasinier avec récapitulatifs de chargement"""
-    if not has_permission(current_user, 'stocks.read'):
+    if not can_access_stocks(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
