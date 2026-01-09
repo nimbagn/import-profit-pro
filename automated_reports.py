@@ -232,7 +232,8 @@ def edit_report(report_id):
                 report.start_date = None
                 report.end_date = None
             
-            report.whatsapp_account_id = request.form.get('whatsapp_account_id', '').strip()
+            whatsapp_account_id = request.form.get('whatsapp_account_id', '').strip()
+            report.whatsapp_account_id = whatsapp_account_id if whatsapp_account_id else None = request.form.get('whatsapp_account_id', '').strip()
             report.recipients = request.form.get('recipients', '').strip()
             report.group_ids = request.form.get('group_ids', '').strip()
             report.message = request.form.get('message', '').strip()
@@ -309,7 +310,8 @@ def edit_report(report_id):
                          depots=depots, 
                          accounts=accounts,
                          contacts=contacts,
-                         groups=groups)
+                         groups=groups,
+                         default_account_id=default_account_id)
 
 @automated_reports_bp.route('/<int:report_id>/toggle', methods=['POST'])
 @login_required
