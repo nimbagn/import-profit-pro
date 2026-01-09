@@ -308,7 +308,7 @@ with app.app_context():
                         'receptions': ['read', 'create', 'update'],
                         'outgoings': ['read', 'create', 'update'],
                         'returns': ['read', 'create', 'update'],
-                        'vehicles': ['read', 'update'],  # Ajout de 'update' pour permettre la saisie de l'odomètre
+                        'vehicles': ['read', 'create', 'update'],  # Accès complet à la flotte pour gestion des véhicules
                         'regions': ['read'],
                         'depots': ['read'],
                         'families': ['read'],
