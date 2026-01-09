@@ -179,9 +179,11 @@ def create_report():
 @login_required
 def edit_report(report_id):
     """Modifier un rapport automatique"""
-    if not has_permission(current_user, 'messaging.read'):
-        flash('Vous n\'avez pas la permission de modifier des rapports automatiques', 'error')
-        return redirect(url_for('automated_reports.reports_list'))
+    # Admin a toujours accès, vérifier les permissions pour les autres
+    if not (current_user.role and current_user.role.code in ['admin', 'superadmin']):
+        if not has_permission(current_user, 'messaging.read'):
+            flash('Vous n\'avez pas la permission de modifier des rapports automatiques', 'error')
+            return redirect(url_for('automated_reports.reports_list'))
     
     report = ScheduledReport.query.get_or_404(report_id)
     
