@@ -233,7 +233,7 @@ def edit_report(report_id):
                 report.end_date = None
             
             whatsapp_account_id = request.form.get('whatsapp_account_id', '').strip()
-            report.whatsapp_account_id = whatsapp_account_id if whatsapp_account_id else None = request.form.get('whatsapp_account_id', '').strip()
+            report.whatsapp_account_id = whatsapp_account_id if whatsapp_account_id else None
             report.recipients = request.form.get('recipients', '').strip()
             report.group_ids = request.form.get('group_ids', '').strip()
             report.message = request.form.get('message', '').strip()
