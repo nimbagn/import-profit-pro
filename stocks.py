@@ -1113,8 +1113,8 @@ def movement_edit(id):
                 
                 # Ajuster le stock si nécessaire
                 if quantity_diff != 0:
-                # Vérifier le stock disponible avant modification
-                if movement.from_depot_id:
+                    # Vérifier le stock disponible avant modification
+                    if movement.from_depot_id:
                     depot_stock = DepotStock.query.filter_by(
                         depot_id=movement.from_depot_id,
                         stock_item_id=movement.stock_item_id
@@ -1126,9 +1126,14 @@ def movement_edit(id):
                             if new_quantity < 0:
                                 flash(f'Stock insuffisant après modification pour {movement.stock_item.name if movement.stock_item else "l\'article"}', 'error')
                                 form_data = get_movement_form_data()
-                                return render_template('stocks/movement_edit.html', movement=movement, **form_data)
-                
-                if movement.from_vehicle_id:
+                                return render_template('stocks/movement_edit.html', 
+                                                     movement=movement, 
+                                                     all_movements=all_movements,
+                                                     movements_by_item=movements_by_item,
+                                                     base_reference=base_ref,
+                                                     **form_data)
+                    
+                    if movement.from_vehicle_id:
                     vehicle_stock = VehicleStock.query.filter_by(
                         vehicle_id=movement.from_vehicle_id,
                         stock_item_id=movement.stock_item_id
@@ -1140,10 +1145,15 @@ def movement_edit(id):
                             if new_quantity < 0:
                                 flash(f'Stock insuffisant après modification pour {movement.stock_item.name if movement.stock_item else "l\'article"}', 'error')
                                 form_data = get_movement_form_data()
-                                return render_template('stocks/movement_edit.html', movement=movement, **form_data)
-                
-                # Si le mouvement a une destination (entrée)
-                if movement.to_depot_id:
+                                return render_template('stocks/movement_edit.html', 
+                                                     movement=movement, 
+                                                     all_movements=all_movements,
+                                                     movements_by_item=movements_by_item,
+                                                     base_reference=base_ref,
+                                                     **form_data)
+                    
+                    # Si le mouvement a une destination (entrée)
+                    if movement.to_depot_id:
                     depot_stock = DepotStock.query.filter_by(
                         depot_id=movement.to_depot_id,
                         stock_item_id=movement.stock_item_id
@@ -1169,40 +1179,40 @@ def movement_edit(id):
                             quantity=Decimal('0')
                         )
                         db.session.add(vehicle_stock)
-                    vehicle_stock.quantity += quantity_diff
-                
-                # Si le mouvement a une source (sortie)
-                if movement.from_depot_id:
-                    depot_stock = DepotStock.query.filter_by(
-                        depot_id=movement.from_depot_id,
-                        stock_item_id=movement.stock_item_id
-                    ).first()
-                    if not depot_stock:
-                        depot_stock = DepotStock(
+                        vehicle_stock.quantity += quantity_diff
+                    
+                    # Si le mouvement a une source (sortie)
+                    if movement.from_depot_id:
+                        depot_stock = DepotStock.query.filter_by(
                             depot_id=movement.from_depot_id,
-                            stock_item_id=movement.stock_item_id,
-                            quantity=Decimal('0')
-                        )
-                        db.session.add(depot_stock)
-                    depot_stock.quantity -= quantity_diff  # Inverser car c'est une sortie
-                
-                if movement.from_vehicle_id:
-                    vehicle_stock = VehicleStock.query.filter_by(
-                        vehicle_id=movement.from_vehicle_id,
-                        stock_item_id=movement.stock_item_id
-                    ).first()
-                    if not vehicle_stock:
-                        vehicle_stock = VehicleStock(
+                            stock_item_id=movement.stock_item_id
+                        ).first()
+                        if not depot_stock:
+                            depot_stock = DepotStock(
+                                depot_id=movement.from_depot_id,
+                                stock_item_id=movement.stock_item_id,
+                                quantity=Decimal('0')
+                            )
+                            db.session.add(depot_stock)
+                        depot_stock.quantity -= quantity_diff  # Inverser car c'est une sortie
+                    
+                    if movement.from_vehicle_id:
+                        vehicle_stock = VehicleStock.query.filter_by(
                             vehicle_id=movement.from_vehicle_id,
-                            stock_item_id=movement.stock_item_id,
-                            quantity=Decimal('0')
-                        )
-                        db.session.add(vehicle_stock)
-                    vehicle_stock.quantity -= quantity_diff  # Inverser car c'est une sortie
-            
-                    db.session.commit()
-                    flash('Mouvement modifié avec succès', 'success')
-                    return redirect(url_for('stocks.movement_detail_by_reference', reference=movement.reference))
+                            stock_item_id=movement.stock_item_id
+                        ).first()
+                        if not vehicle_stock:
+                            vehicle_stock = VehicleStock(
+                                vehicle_id=movement.from_vehicle_id,
+                                stock_item_id=movement.stock_item_id,
+                                quantity=Decimal('0')
+                            )
+                            db.session.add(vehicle_stock)
+                        vehicle_stock.quantity -= quantity_diff  # Inverser car c'est une sortie
+                
+                db.session.commit()
+                flash('Mouvement modifié avec succès', 'success')
+                return redirect(url_for('stocks.movement_detail_by_reference', reference=base_ref if base_ref else movement.reference))
             
         except Exception as e:
             db.session.rollback()
