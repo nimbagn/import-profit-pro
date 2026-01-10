@@ -288,23 +288,44 @@ document.addEventListener('DOMContentLoaded', function() {
   const pilesTotal = document.getElementById('pilesTotal');
   
   // Initialiser Select2 pour le select d'articles (uniquement en mode création)
-  var isEditMode = form.getAttribute('data-is-edit') === 'true';
-  if (!isEditMode) {
-    $(stockItemSelect).select2({
-      theme: 'bootstrap-5',
-      placeholder: 'Rechercher un article par SKU ou nom...',
-      allowClear: true,
-      language: {
-        noResults: function() {
-          return "Aucun article trouvé";
+  waitForJQuery(function() {
+    var isEditMode = form.getAttribute('data-is-edit') === 'true';
+    if (!isEditMode && typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+      jQuery(stockItemSelect).select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Rechercher un article par SKU ou nom...',
+        allowClear: true,
+        language: {
+          noResults: function() {
+            return "Aucun article trouvé";
+          },
+          searching: function() {
+            return "Recherche en cours...";
+          }
         },
-        searching: function() {
-          return "Recherche en cours...";
+        width: '100%'
+      });
+      
+      // Écouter les changements de sélection d'article (compatible avec Select2)
+      jQuery(stockItemSelect).on('change', function() {
+        const selectedItemId = this.value;
+        if (selectedItemId) {
+          loadSystemQuantity(selectedItemId);
         }
-      },
-      width: '100%'
-    });
-  }
+      });
+    } else {
+      // Fallback : utiliser le select standard
+      console.warn('Select2 non disponible, utilisation du select standard');
+      if (stockItemSelect && !isEditMode) {
+        stockItemSelect.addEventListener('change', function() {
+          const selectedItemId = this.value;
+          if (selectedItemId) {
+            loadSystemQuantity(selectedItemId);
+          }
+        });
+      }
+    }
+  });
   
   // Fonction pour charger la quantité système depuis le serveur via API
   function loadSystemQuantity(stockItemId) {
