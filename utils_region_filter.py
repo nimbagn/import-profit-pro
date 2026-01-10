@@ -2,42 +2,50 @@
 # Utilitaires pour filtrer les données par région selon l'utilisateur connecté
 
 from flask_login import current_user
-from models import Depot, Vehicle, User, Region, DepotStock, VehicleStock, StockMovement, PromotionTeam, PromotionMember, CommercialOrder
+from models import (
+    Depot, Vehicle, User, Region, DepotStock, VehicleStock, StockMovement, 
+    PromotionTeam, PromotionMember, CommercialOrder, CommercialSale, 
+    SalesObjective, LockisteTeam, VendeurTeam
+)
 from sqlalchemy import or_
 
 
 def get_user_region_id():
     """
     Retourne l'ID de la région de l'utilisateur connecté
-    Retourne None si l'utilisateur n'a pas de région ou est admin/magasinier
+    Retourne None si l'utilisateur n'a pas de région ou est admin/superviseur
     
-    IMPORTANT: Les admins et magasiniers voient TOUT (pas de filtre par région).
-    Cette fonction retourne None pour les admins et magasiniers, ce qui désactive tous les filtres de région.
+    IMPORTANT: 
+    - Les admins et superviseurs voient TOUT (pas de filtre par région)
+    - TOUS les autres utilisateurs (magasiniers, commerciaux, etc.) voient uniquement leur région
+    - Cette fonction retourne None pour les admins/superviseurs, ce qui désactive tous les filtres
     """
     if not current_user or not current_user.is_authenticated:
         return None
     
-    # ⚠️ RÈGLE FONDAMENTALE : Les admins et magasiniers voient TOUT (pas de filtre par région)
-    # Retourner None désactive tous les filtres de région pour l'admin et le magasinier
+    # ⚠️ RÈGLE FONDAMENTALE : Seuls les admins et superviseurs voient TOUT (pas de filtre par région)
+    # Retourner None désactive tous les filtres de région pour l'admin et le superviseur
     # Vérifier le rôle avec gestion d'erreur
     try:
         if hasattr(current_user, 'role') and current_user.role:
             role_code = getattr(current_user.role, 'code', None)
-            if role_code in ['admin', 'superadmin', 'warehouse']:
-                return None  # Admin et magasinier voient toutes les régions - aucun filtre appliqué
+            # Seuls admin et supervisor voient toutes les régions
+            if role_code in ['admin', 'superadmin', 'supervisor']:
+                return None  # Admin et superviseur voient toutes les régions - aucun filtre appliqué
     except Exception as e:
         # En cas d'erreur, continuer avec le filtrage par région
         print(f"⚠️ Erreur lors de la vérification du rôle: {e}")
     
     # Retourner la région de l'utilisateur
+    # TOUS les autres utilisateurs (magasiniers, commerciaux, etc.) sont filtrés par leur région
     region_id = getattr(current_user, 'region_id', None)
     if region_id is None:
-        # Debug : afficher un avertissement si l'utilisateur n'a pas de région (sauf magasinier/admin)
+        # Debug : afficher un avertissement si l'utilisateur n'a pas de région (sauf admin/supervisor)
         try:
             if hasattr(current_user, 'role') and current_user.role:
                 role_code = getattr(current_user.role, 'code', None)
-                if role_code not in ['admin', 'superadmin', 'warehouse']:
-                    print(f"⚠️ Utilisateur {current_user.id} ({current_user.username}) n'a pas de région assignée")
+                if role_code not in ['admin', 'superadmin', 'supervisor']:
+                    print(f"⚠️ Utilisateur {current_user.id} ({current_user.username}) n'a pas de région assignée - filtrage désactivé")
         except:
             pass
     
@@ -230,14 +238,14 @@ def filter_vehicle_stocks_by_region(query):
 def can_access_region(region_id):
     """
     Vérifie si l'utilisateur connecté peut accéder à une région spécifique
-    Les admins peuvent accéder à toutes les régions
+    Les admins et superviseurs peuvent accéder à toutes les régions
     """
     if not current_user or not current_user.is_authenticated:
         return False
     
-    # Les admins peuvent accéder à toutes les régions
+    # Les admins et superviseurs peuvent accéder à toutes les régions
     if hasattr(current_user, 'role') and current_user.role:
-        if current_user.role.code in ['admin', 'superadmin']:
+        if current_user.role.code in ['admin', 'superadmin', 'supervisor']:
             return True
     
     # Vérifier si l'utilisateur appartient à cette région
@@ -247,14 +255,14 @@ def can_access_region(region_id):
 def can_access_depot(depot_id):
     """
     Vérifie si l'utilisateur connecté peut accéder à un dépôt spécifique
-    Les admins peuvent accéder à tous les dépôts
+    Les admins et superviseurs peuvent accéder à tous les dépôts
     """
     if not current_user or not current_user.is_authenticated:
         return False
     
-    # Les admins peuvent accéder à tous les dépôts
+    # Les admins et superviseurs peuvent accéder à tous les dépôts
     if hasattr(current_user, 'role') and current_user.role:
-        if current_user.role.code in ['admin', 'superadmin']:
+        if current_user.role.code in ['admin', 'superadmin', 'supervisor']:
             return True
     
     # Vérifier si le dépôt appartient à la région de l'utilisateur
@@ -268,20 +276,17 @@ def can_access_depot(depot_id):
 def can_access_vehicle(vehicle_id):
     """
     Vérifie si l'utilisateur connecté peut accéder à un véhicule spécifique
-    Les admins et magasiniers peuvent accéder à tous les véhicules
+    Les admins et superviseurs peuvent accéder à tous les véhicules
+    Les magasiniers peuvent accéder à tous les véhicules (pour gestion de flotte)
     """
     if not current_user or not current_user.is_authenticated:
         return False
     
-    # Les admins et magasiniers peuvent accéder à tous les véhicules
+    # Les admins, superviseurs et magasiniers peuvent accéder à tous les véhicules
     if hasattr(current_user, 'role') and current_user.role:
         role_code = getattr(current_user.role, 'code', None)
-        if role_code in ['admin', 'superadmin', 'warehouse']:
+        if role_code in ['admin', 'superadmin', 'supervisor', 'warehouse']:
             return True
-    
-    # Si l'utilisateur n'a pas de région assignée, lui permettre l'accès (cas des magasiniers)
-    if not hasattr(current_user, 'region_id') or current_user.region_id is None:
-        return True
     
     # Vérifier si le véhicule appartient à la région de l'utilisateur (via le conducteur)
     vehicle = Vehicle.query.get(vehicle_id)
@@ -298,14 +303,14 @@ def can_access_vehicle(vehicle_id):
 def get_user_accessible_regions():
     """
     Retourne la liste des régions accessibles par l'utilisateur connecté
-    Les admins voient toutes les régions
+    Les admins et superviseurs voient toutes les régions
     """
     if not current_user or not current_user.is_authenticated:
         return []
     
-    # Les admins voient toutes les régions
+    # Les admins et superviseurs voient toutes les régions
     if hasattr(current_user, 'role') and current_user.role:
-        if current_user.role.code in ['admin', 'superadmin']:
+        if current_user.role.code in ['admin', 'superadmin', 'supervisor']:
             return Region.query.order_by(Region.name).all()
     
     # Sinon, retourner uniquement la région de l'utilisateur
@@ -319,14 +324,14 @@ def get_user_accessible_regions():
 def get_user_accessible_depots():
     """
     Retourne la liste des dépôts accessibles par l'utilisateur connecté
-    Les admins voient tous les dépôts
+    Les admins et superviseurs voient tous les dépôts
     """
     if not current_user or not current_user.is_authenticated:
         return []
     
-    # Les admins voient tous les dépôts
+    # Les admins et superviseurs voient tous les dépôts
     if hasattr(current_user, 'role') and current_user.role:
-        if current_user.role.code in ['admin', 'superadmin']:
+        if current_user.role.code in ['admin', 'superadmin', 'supervisor']:
             return Depot.query.order_by(Depot.name).all()
     
     # Sinon, retourner uniquement les dépôts de la région de l'utilisateur
@@ -387,7 +392,7 @@ def filter_inventory_sessions_by_region(query):
     """
     Filtre les sessions d'inventaire selon la région de l'utilisateur connecté
     Une session appartient à une région si le dépôt appartient à cette région
-    Les admins voient toutes les sessions
+    Les admins et superviseurs voient toutes les sessions
     """
     from models import InventorySession
     region_id = get_user_region_id()
@@ -399,6 +404,122 @@ def filter_inventory_sessions_by_region(query):
             query = query.filter(InventorySession.depot_id.in_(depot_ids))
         else:
             # Aucun dépôt dans la région, retourner une requête vide
+            query = query.filter(False)
+    
+    return query
+
+
+def filter_commercial_sales_by_region(query):
+    """
+    Filtre les ventes commerciales selon la région de l'utilisateur connecté
+    Une vente appartient à une région si la commande appartient à cette région
+    Les admins et superviseurs voient toutes les ventes
+    """
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Filtrer les ventes par région via la commande
+        query = query.join(CommercialOrder, CommercialSale.order_id == CommercialOrder.id).filter(
+            CommercialOrder.region_id == region_id
+        )
+    return query
+
+
+def filter_sales_objectives_by_region(query):
+    """
+    Filtre les objectifs de vente selon la région de l'utilisateur connecté
+    Un objectif appartient à une région si le commercial appartient à cette région
+    Les admins et superviseurs voient tous les objectifs
+    """
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Filtrer les objectifs par région via le commercial
+        query = query.join(User, SalesObjective.commercial_id == User.id).filter(
+            User.region_id == region_id
+        )
+    return query
+
+
+def filter_lockiste_teams_by_region(query):
+    """
+    Filtre les équipes lockistes selon la région de l'utilisateur connecté
+    Les admins et superviseurs voient toutes les équipes
+    """
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(LockisteTeam.region_id == region_id)
+    return query
+
+
+def filter_vendeur_teams_by_region(query):
+    """
+    Filtre les équipes vendeurs selon la région de l'utilisateur connecté
+    Les admins et superviseurs voient toutes les équipes
+    """
+    region_id = get_user_region_id()
+    if region_id is not None:
+        query = query.filter(VendeurTeam.region_id == region_id)
+    return query
+
+
+def filter_outgoings_by_region(query):
+    """
+    Filtre les sorties de stock selon la région de l'utilisateur connecté
+    Une sortie appartient à une région si le dépôt ou le véhicule appartient à cette région
+    Les admins et superviseurs voient toutes les sorties
+    """
+    from models import StockOutgoing
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Récupérer les IDs des dépôts de la région
+        depot_ids = [d.id for d in Depot.query.filter_by(region_id=region_id).all()]
+        
+        # Récupérer les IDs des véhicules de la région
+        vehicle_ids = [
+            v.id for v in Vehicle.query.join(User, Vehicle.current_user_id == User.id)
+            .filter(User.region_id == region_id).all()
+        ]
+        
+        conditions = []
+        if depot_ids:
+            conditions.append(StockOutgoing.depot_id.in_(depot_ids))
+        if vehicle_ids:
+            conditions.append(StockOutgoing.vehicle_id.in_(vehicle_ids))
+        
+        if conditions:
+            query = query.filter(or_(*conditions))
+        else:
+            query = query.filter(False)
+    
+    return query
+
+
+def filter_returns_by_region(query):
+    """
+    Filtre les retours de stock selon la région de l'utilisateur connecté
+    Un retour appartient à une région si le dépôt ou le véhicule appartient à cette région
+    Les admins et superviseurs voient tous les retours
+    """
+    from models import StockReturn
+    region_id = get_user_region_id()
+    if region_id is not None:
+        # Récupérer les IDs des dépôts de la région
+        depot_ids = [d.id for d in Depot.query.filter_by(region_id=region_id).all()]
+        
+        # Récupérer les IDs des véhicules de la région
+        vehicle_ids = [
+            v.id for v in Vehicle.query.join(User, Vehicle.current_user_id == User.id)
+            .filter(User.region_id == region_id).all()
+        ]
+        
+        conditions = []
+        if depot_ids:
+            conditions.append(StockReturn.depot_id.in_(depot_ids))
+        if vehicle_ids:
+            conditions.append(StockReturn.vehicle_id.in_(vehicle_ids))
+        
+        if conditions:
+            query = query.filter(or_(*conditions))
+        else:
             query = query.filter(False)
     
     return query
