@@ -155,6 +155,9 @@
         <div class="help-text">Quantité directement saisie</div>
       </div>
       
+      <!-- Champ caché pour stocker la quantité calculée depuis les piles -->
+      <input type="hidden" id="calculated_quantity" name="calculated_quantity" value="">
+      
       <!-- Champ Dimensions Piles -->
       <div class="form-group" id="pilesGroup" style="margin-bottom: var(--space-lg); display: none;">
         <label for="pile_dimensions" class="form-hl-label">
@@ -197,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const systemQuantityValue = document.getElementById('systemQuantityValue');
   const countedQuantityInput = document.getElementById('counted_quantity');
   const pileDimensionsInput = document.getElementById('pile_dimensions');
+  const calculatedQuantityInput = document.getElementById('calculated_quantity');
   const form = document.getElementById('detailForm');
   const methodQuantity = document.getElementById('method_quantity');
   const methodPiles = document.getElementById('method_piles');
@@ -305,13 +309,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Gérer le basculement entre les méthodes
+      // Gérer le basculement entre les méthodes
   function updateMethodDisplay() {
     if (methodQuantity.checked) {
       quantityGroup.style.display = 'block';
       pilesGroup.style.display = 'none';
       countedQuantityInput.setAttribute('required', 'required');
       pileDimensionsInput.removeAttribute('required');
+      // Réinitialiser le champ caché
+      document.getElementById('calculated_quantity').value = '';
       // Mettre à jour le style des radio buttons
       methodQuantity.closest('label').style.borderColor = 'var(--color-primary)';
       methodQuantity.closest('label').style.backgroundColor = 'var(--bg-secondary)';
@@ -353,8 +359,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (pileDimensions && total > 0) {
       pilesTotal.textContent = total;
       pilesPreview.style.display = 'block';
+      // Mettre à jour le champ caché et le champ counted_quantity
+      document.getElementById('calculated_quantity').value = total;
+      countedQuantityInput.value = total;
     } else {
       pilesPreview.style.display = 'none';
+      document.getElementById('calculated_quantity').value = '';
+      countedQuantityInput.value = '';
     }
   });
   
@@ -408,8 +419,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
       }
       
-      // Mettre à jour le champ hidden pour envoyer la quantité calculée
+      // Mettre à jour le champ counted_quantity et le champ caché pour envoyer la quantité calculée
       countedQuantityInput.value = total;
+      document.getElementById('calculated_quantity').value = total;
+      
+      // S'assurer que le champ counted_quantity est visible pour l'envoi (même s'il est caché visuellement)
+      countedQuantityInput.style.display = 'block';
+      countedQuantityInput.style.position = 'absolute';
+      countedQuantityInput.style.left = '-9999px';
     }
   });
   
