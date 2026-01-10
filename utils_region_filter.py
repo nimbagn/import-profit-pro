@@ -4,7 +4,7 @@
 from flask_login import current_user
 from models import (
     Depot, Vehicle, User, Region, DepotStock, VehicleStock, StockMovement, 
-    PromotionTeam, PromotionMember, CommercialOrder, CommercialSale, 
+    PromotionTeam, PromotionMember, PromotionSale, CommercialOrder, CommercialSale, 
     SalesObjective, LockisteTeam, VendeurTeam
 )
 from sqlalchemy import or_
