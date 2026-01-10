@@ -1141,8 +1141,8 @@ def movement_edit(id):
                         if vehicle_stock:
                             # Si on augmente la sortie (quantity_diff négatif), vérifier le stock
                             if quantity_diff < 0:
-                            new_quantity = vehicle_stock.quantity - quantity_diff  # quantity_diff est négatif, donc soustraction
-                            if new_quantity < 0:
+                                new_quantity = vehicle_stock.quantity - quantity_diff  # quantity_diff est négatif, donc soustraction
+                                if new_quantity < 0:
                                 flash(f'Stock insuffisant après modification pour {movement.stock_item.name if movement.stock_item else "l\'article"}', 'error')
                                 form_data = get_movement_form_data()
                                 return render_template('stocks/movement_edit.html', 
