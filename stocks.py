@@ -1115,26 +1115,26 @@ def movement_edit(id):
                 if quantity_diff != 0:
                     # Vérifier le stock disponible avant modification
                     if movement.from_depot_id:
-                    depot_stock = DepotStock.query.filter_by(
-                        depot_id=movement.from_depot_id,
-                        stock_item_id=movement.stock_item_id
-                    ).first()
-                    if depot_stock:
-                        # Si on augmente la sortie (quantity_diff négatif), vérifier le stock
-                        if quantity_diff < 0:
-                            new_quantity = depot_stock.quantity - quantity_diff  # quantity_diff est négatif, donc soustraction
-                            if new_quantity < 0:
-                                flash(f'Stock insuffisant après modification pour {movement.stock_item.name if movement.stock_item else "l\'article"}', 'error')
-                                form_data = get_movement_form_data()
-                                return render_template('stocks/movement_edit.html', 
-                                                     movement=movement, 
-                                                     all_movements=all_movements,
-                                                     movements_by_item=movements_by_item,
-                                                     base_reference=base_ref,
-                                                     **form_data)
+                        depot_stock = DepotStock.query.filter_by(
+                            depot_id=movement.from_depot_id,
+                            stock_item_id=movement.stock_item_id
+                        ).first()
+                        if depot_stock:
+                            # Si on augmente la sortie (quantity_diff négatif), vérifier le stock
+                            if quantity_diff < 0:
+                                new_quantity = depot_stock.quantity - quantity_diff  # quantity_diff est négatif, donc soustraction
+                                if new_quantity < 0:
+                                    flash(f'Stock insuffisant après modification pour {movement.stock_item.name if movement.stock_item else "l\'article"}', 'error')
+                                    form_data = get_movement_form_data()
+                                    return render_template('stocks/movement_edit.html', 
+                                                         movement=movement, 
+                                                         all_movements=all_movements,
+                                                         movements_by_item=movements_by_item,
+                                                         base_reference=base_ref,
+                                                         **form_data)
                     
                     if movement.from_vehicle_id:
-                    vehicle_stock = VehicleStock.query.filter_by(
+                        vehicle_stock = VehicleStock.query.filter_by(
                         vehicle_id=movement.from_vehicle_id,
                         stock_item_id=movement.stock_item_id
                     ).first()
@@ -1154,31 +1154,31 @@ def movement_edit(id):
                     
                     # Si le mouvement a une destination (entrée)
                     if movement.to_depot_id:
-                    depot_stock = DepotStock.query.filter_by(
-                        depot_id=movement.to_depot_id,
-                        stock_item_id=movement.stock_item_id
-                    ).first()
-                    if not depot_stock:
-                        depot_stock = DepotStock(
+                        depot_stock = DepotStock.query.filter_by(
                             depot_id=movement.to_depot_id,
-                            stock_item_id=movement.stock_item_id,
-                            quantity=Decimal('0')
-                        )
-                        db.session.add(depot_stock)
-                    depot_stock.quantity += quantity_diff
-                
-                if movement.to_vehicle_id:
-                    vehicle_stock = VehicleStock.query.filter_by(
-                        vehicle_id=movement.to_vehicle_id,
-                        stock_item_id=movement.stock_item_id
-                    ).first()
-                    if not vehicle_stock:
-                        vehicle_stock = VehicleStock(
+                            stock_item_id=movement.stock_item_id
+                        ).first()
+                        if not depot_stock:
+                            depot_stock = DepotStock(
+                                depot_id=movement.to_depot_id,
+                                stock_item_id=movement.stock_item_id,
+                                quantity=Decimal('0')
+                            )
+                            db.session.add(depot_stock)
+                        depot_stock.quantity += quantity_diff
+                    
+                    if movement.to_vehicle_id:
+                        vehicle_stock = VehicleStock.query.filter_by(
                             vehicle_id=movement.to_vehicle_id,
-                            stock_item_id=movement.stock_item_id,
-                            quantity=Decimal('0')
-                        )
-                        db.session.add(vehicle_stock)
+                            stock_item_id=movement.stock_item_id
+                        ).first()
+                        if not vehicle_stock:
+                            vehicle_stock = VehicleStock(
+                                vehicle_id=movement.to_vehicle_id,
+                                stock_item_id=movement.stock_item_id,
+                                quantity=Decimal('0')
+                            )
+                            db.session.add(vehicle_stock)
                         vehicle_stock.quantity += quantity_diff
                     
                     # Si le mouvement a une source (sortie)
