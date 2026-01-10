@@ -865,7 +865,7 @@ def movement_detail_by_reference(reference):
 @stocks_bp.route('/movements/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def movement_edit(id):
-    """Modifier un mouvement (admin et magasinier)"""
+    """Modifier un mouvement ou un bon de transfert complet (admin et magasinier)"""
     # Permettre aux admins et aux magasiniers de modifier les mouvements
     from auth import is_admin
     can_edit = is_admin(current_user) or (hasattr(current_user, 'role') and current_user.role and current_user.role.code == 'warehouse')
@@ -875,49 +875,244 @@ def movement_edit(id):
     
     movement = StockMovement.query.get_or_404(id)
     
+    # Pour les transferts, vérifier s'il y a plusieurs articles dans le même bon
+    base_ref = extract_base_reference(movement.reference) if movement.reference else None
+    all_movements = []
+    movements_by_item = {}
+    
+    if movement.movement_type == 'transfer' and base_ref:
+        # Récupérer tous les mouvements du même transfert
+        all_movements = StockMovement.query.filter(
+            or_(
+                StockMovement.reference == movement.reference,
+                StockMovement.reference.like(f'{base_ref}%')
+            )
+        ).options(
+            joinedload(StockMovement.stock_item),
+            joinedload(StockMovement.from_depot),
+            joinedload(StockMovement.to_depot),
+            joinedload(StockMovement.from_vehicle),
+            joinedload(StockMovement.to_vehicle)
+        ).order_by(StockMovement.id).all()
+        
+        # Grouper par article (en prenant les quantités positives pour les transferts)
+        for mov in all_movements:
+            item_id = mov.stock_item_id
+            if item_id not in movements_by_item:
+                movements_by_item[item_id] = {
+                    'item': mov.stock_item,
+                    'movements': [],
+                    'total_quantity': Decimal('0')
+                }
+            movements_by_item[item_id]['movements'].append(mov)
+            # Pour les transferts, prendre la quantité positive (entrée)
+            if mov.quantity > 0:
+                movements_by_item[item_id]['total_quantity'] += mov.quantity
+    else:
+        # Pour les autres types de mouvements, un seul article
+        all_movements = [movement]
+        movements_by_item[movement.stock_item_id] = {
+            'item': movement.stock_item,
+            'movements': [movement],
+            'total_quantity': abs(movement.quantity)
+        }
+    
     if request.method == 'POST':
         try:
-            # Récupérer les données du formulaire
+            # Récupérer la date commune (pour les transferts)
             movement_date_str = request.form.get('movement_date')
-            quantity_str = request.form.get('quantity')
             reason = request.form.get('reason')
             supplier_name = request.form.get('supplier_name')
             bl_number = request.form.get('bl_number')
             
-            # Validation
-            if not movement_date_str or not quantity_str:
-                flash('Veuillez remplir tous les champs obligatoires', 'error')
+            # Validation de la date
+            if not movement_date_str:
+                flash('Veuillez remplir la date', 'error')
                 form_data = get_movement_form_data()
-                return render_template('stocks/movement_edit.html', movement=movement, **form_data)
+                return render_template('stocks/movement_edit.html', 
+                                     movement=movement, 
+                                     all_movements=all_movements,
+                                     movements_by_item=movements_by_item,
+                                     base_reference=base_ref,
+                                     **form_data)
             
             try:
                 movement_date = datetime.strptime(movement_date_str, '%Y-%m-%d')
-                quantity = Decimal(quantity_str)
+                if movement_date.tzinfo is None:
+                    movement_date = movement_date.replace(tzinfo=UTC)
             except (ValueError, TypeError):
-                flash('Date ou quantité invalide', 'error')
+                flash('Date invalide', 'error')
                 form_data = get_movement_form_data()
-                return render_template('stocks/movement_edit.html', movement=movement, **form_data)
+                return render_template('stocks/movement_edit.html', 
+                                     movement=movement, 
+                                     all_movements=all_movements,
+                                     movements_by_item=movements_by_item,
+                                     base_reference=base_ref,
+                                     **form_data)
             
-            # Préserver le signe de la quantité selon le type de mouvement
-            # Si c'était une sortie (négative), garder le signe négatif
-            if movement.quantity < 0:
-                signed_quantity = -abs(quantity)
+            # Si c'est un transfert avec plusieurs articles
+            if movement.movement_type == 'transfer' and len(movements_by_item) > 1:
+                # Traiter chaque article du transfert
+                errors = []
+                for item_id, item_data in movements_by_item.items():
+                    # Récupérer la quantité pour cet article
+                    quantity_str = request.form.get(f'quantity_{item_id}')
+                    if not quantity_str:
+                        errors.append(f"Quantité manquante pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
+                        continue
+                    
+                    try:
+                        new_quantity = Decimal(quantity_str)
+                        if new_quantity <= 0:
+                            errors.append(f"Quantité invalide pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
+                            continue
+                    except (ValueError, TypeError, InvalidOperation):
+                        errors.append(f"Quantité invalide pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
+                        continue
+                    
+                    # Mettre à jour tous les mouvements de cet article (OUT et IN)
+                    for mov in item_data['movements']:
+                        old_quantity = mov.quantity
+                        
+                        # Déterminer le signe selon le type de mouvement
+                        if mov.quantity < 0:
+                            # C'est une sortie (OUT)
+                            signed_quantity = -new_quantity
+                        else:
+                            # C'est une entrée (IN)
+                            signed_quantity = new_quantity
+                        
+                        quantity_diff = signed_quantity - old_quantity
+                        
+                        # Mettre à jour le mouvement
+                        mov.movement_date = movement_date
+                        mov.quantity = signed_quantity
+                        if reason:
+                            mov.reason = reason
+                        if supplier_name:
+                            mov.supplier_name = supplier_name
+                        if bl_number:
+                            mov.bl_number = bl_number
+                        
+                        # Ajuster le stock si nécessaire
+                        if quantity_diff != 0:
+                            # Pour les sorties (négatif)
+                            if mov.from_depot_id:
+                                depot_stock = DepotStock.query.filter_by(
+                                    depot_id=mov.from_depot_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if depot_stock:
+                                    # Si on augmente la sortie (quantity_diff négatif), vérifier le stock
+                                    if quantity_diff < 0:
+                                        new_stock_qty = depot_stock.quantity - quantity_diff  # quantity_diff est négatif
+                                        if new_stock_qty < 0:
+                                            errors.append(f"Stock insuffisant pour {item_data['item'].name if item_data['item'] else 'article'} dans le dépôt source")
+                                            continue
+                                    depot_stock.quantity -= quantity_diff  # Inverser car c'est une sortie
+                            
+                            if mov.from_vehicle_id:
+                                vehicle_stock = VehicleStock.query.filter_by(
+                                    vehicle_id=mov.from_vehicle_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if vehicle_stock:
+                                    if quantity_diff < 0:
+                                        new_stock_qty = vehicle_stock.quantity - quantity_diff
+                                        if new_stock_qty < 0:
+                                            errors.append(f"Stock insuffisant pour {item_data['item'].name if item_data['item'] else 'article'} dans le véhicule source")
+                                            continue
+                                    vehicle_stock.quantity -= quantity_diff
+                            
+                            # Pour les entrées (positif)
+                            if mov.to_depot_id:
+                                depot_stock = DepotStock.query.filter_by(
+                                    depot_id=mov.to_depot_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if not depot_stock:
+                                    depot_stock = DepotStock(
+                                        depot_id=mov.to_depot_id,
+                                        stock_item_id=item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(depot_stock)
+                                depot_stock.quantity += quantity_diff
+                            
+                            if mov.to_vehicle_id:
+                                vehicle_stock = VehicleStock.query.filter_by(
+                                    vehicle_id=mov.to_vehicle_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if not vehicle_stock:
+                                    vehicle_stock = VehicleStock(
+                                        vehicle_id=mov.to_vehicle_id,
+                                        stock_item_id=item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(vehicle_stock)
+                                vehicle_stock.quantity += quantity_diff
+                
+                if errors:
+                    db.session.rollback()
+                    flash(f'Erreurs: {"; ".join(errors)}', 'error')
+                    form_data = get_movement_form_data()
+                    return render_template('stocks/movement_edit.html', 
+                                         movement=movement, 
+                                         all_movements=all_movements,
+                                         movements_by_item=movements_by_item,
+                                         base_reference=base_ref,
+                                         **form_data)
+                
+                db.session.commit()
+                flash(f'Bon de transfert modifié avec succès ({len(movements_by_item)} article{"s" if len(movements_by_item) > 1 else ""})', 'success')
+                return redirect(url_for('stocks.movement_detail_by_reference', reference=base_ref))
+            
             else:
-                signed_quantity = abs(quantity)
-            
-            # Calculer l'ancienne quantité pour ajuster le stock
-            old_quantity = movement.quantity
-            quantity_diff = signed_quantity - old_quantity
-            
-            # Mettre à jour le mouvement
-            movement.movement_date = movement_date
-            movement.quantity = signed_quantity
-            movement.reason = reason if reason else movement.reason
-            movement.supplier_name = supplier_name if supplier_name else movement.supplier_name
-            movement.bl_number = bl_number if bl_number else movement.bl_number
-            
-            # Ajuster le stock si nécessaire
-            if quantity_diff != 0:
+                # Traitement pour un seul mouvement (logique originale)
+                quantity_str = request.form.get('quantity')
+                
+                if not quantity_str:
+                    flash('Veuillez remplir tous les champs obligatoires', 'error')
+                    form_data = get_movement_form_data()
+                    return render_template('stocks/movement_edit.html', 
+                                         movement=movement, 
+                                         all_movements=all_movements,
+                                         movements_by_item=movements_by_item,
+                                         base_reference=base_ref,
+                                         **form_data)
+                
+                try:
+                    quantity = Decimal(quantity_str)
+                except (ValueError, TypeError, InvalidOperation):
+                    flash('Quantité invalide', 'error')
+                    form_data = get_movement_form_data()
+                    return render_template('stocks/movement_edit.html', 
+                                         movement=movement, 
+                                         all_movements=all_movements,
+                                         movements_by_item=movements_by_item,
+                                         base_reference=base_ref,
+                                         **form_data)
+                
+                # Préserver le signe de la quantité selon le type de mouvement
+                if movement.quantity < 0:
+                    signed_quantity = -abs(quantity)
+                else:
+                    signed_quantity = abs(quantity)
+                
+                # Calculer l'ancienne quantité pour ajuster le stock
+                old_quantity = movement.quantity
+                quantity_diff = signed_quantity - old_quantity
+                
+                # Mettre à jour le mouvement
+                movement.movement_date = movement_date
+                movement.quantity = signed_quantity
+                movement.reason = reason if reason else movement.reason
+                movement.supplier_name = supplier_name if supplier_name else movement.supplier_name
+                movement.bl_number = bl_number if bl_number else movement.bl_number
+                
+                # Ajuster le stock si nécessaire
+                if quantity_diff != 0:
                 # Vérifier le stock disponible avant modification
                 if movement.from_depot_id:
                     depot_stock = DepotStock.query.filter_by(
@@ -1005,18 +1200,30 @@ def movement_edit(id):
                         db.session.add(vehicle_stock)
                     vehicle_stock.quantity -= quantity_diff  # Inverser car c'est une sortie
             
-            db.session.commit()
-            flash('Mouvement modifié avec succès', 'success')
-            return redirect(url_for('stocks.movement_detail_by_reference', reference=movement.reference))
+                    db.session.commit()
+                    flash('Mouvement modifié avec succès', 'success')
+                    return redirect(url_for('stocks.movement_detail_by_reference', reference=movement.reference))
             
         except Exception as e:
             db.session.rollback()
             flash(f'Erreur lors de la modification: {str(e)}', 'error')
+            import traceback
+            traceback.print_exc()
             form_data = get_movement_form_data()
-            return render_template('stocks/movement_edit.html', movement=movement, **form_data)
+            return render_template('stocks/movement_edit.html', 
+                                 movement=movement, 
+                                 all_movements=all_movements,
+                                 movements_by_item=movements_by_item,
+                                 base_reference=base_ref,
+                                 **form_data)
     
     form_data = get_movement_form_data()
-    return render_template('stocks/movement_edit.html', movement=movement, **form_data)
+    return render_template('stocks/movement_edit.html', 
+                         movement=movement, 
+                         all_movements=all_movements,
+                         movements_by_item=movements_by_item,
+                         base_reference=base_ref,
+                         **form_data)
 
 @stocks_bp.route('/movements/<int:id>/delete', methods=['POST'])
 @login_required
