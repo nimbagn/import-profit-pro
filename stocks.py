@@ -1032,7 +1032,10 @@ def movement_edit(id):
                                     if quantity_diff_out > 0:
                                         new_stock_qty = depot_stock.quantity - quantity_diff_out
                                         if new_stock_qty < 0:
-                                            errors.append(f"Stock insuffisant pour {item_data['item'].name if item_data['item'] else 'article'} dans le dépôt source ({depot_stock.depot.name if depot_stock.depot else 'N/A'})")
+                                            from models import Depot
+                                            depot = Depot.query.get(mov_out.from_depot_id)
+                                            depot_name = depot.name if depot else 'N/A'
+                                            errors.append(f"Stock insuffisant pour {item_data['item'].name if item_data['item'] else 'article'} dans le dépôt source ({depot_name})")
                                             continue
                                     depot_stock.quantity -= quantity_diff_out
                             
