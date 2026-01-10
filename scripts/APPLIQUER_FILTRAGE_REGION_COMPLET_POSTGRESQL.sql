@@ -36,7 +36,7 @@ ORDER BY r.name, u.username;
 
 -- Exemple : Assigner la première région disponible aux utilisateurs sans région
 -- UPDATE users u
--- SET region_id = (SELECT id FROM regions WHERE is_active = TRUE ORDER BY id LIMIT 1)
+-- SET region_id = (SELECT id FROM regions ORDER BY id LIMIT 1)
 -- WHERE u.region_id IS NULL
 --   AND u.role_id IN (
 --       SELECT id FROM roles WHERE code NOT IN ('admin', 'superadmin', 'supervisor')
@@ -50,10 +50,8 @@ SELECT
     id,
     name,
     code,
-    is_active,
     created_at
 FROM regions
-WHERE is_active = TRUE
 ORDER BY name;
 
 -- =========================================================
@@ -70,7 +68,6 @@ SELECT
 FROM regions r
 LEFT JOIN users u ON u.region_id = r.id
 LEFT JOIN roles ro ON u.role_id = ro.id
-WHERE r.is_active = TRUE
 GROUP BY r.id, r.name, r.code
 ORDER BY r.name;
 
