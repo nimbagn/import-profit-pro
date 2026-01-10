@@ -1469,10 +1469,15 @@ def movement_new():
                         else:
                             # Format date seulement: YYYY-MM-DD
                             movement_date = datetime.strptime(movement_date_str, '%Y-%m-%d')
-                    except:
-                        movement_date = datetime.now()
+                        # S'assurer que la date est en UTC
+                        if movement_date.tzinfo is None:
+                            movement_date = movement_date.replace(tzinfo=UTC)
+                    except (ValueError, TypeError) as e:
+                        print(f"⚠️ Erreur parsing date mouvement: {e}, utilisation date actuelle")
+                        movement_date = datetime.now(UTC)
                 else:
-                    movement_date = datetime.now()
+                    # Si aucune date n'est fournie, utiliser la date actuelle
+                    movement_date = datetime.now(UTC)
                 
                 # Déterminer le signe de la quantité selon le type de mouvement
                 if movement_type == 'reception':
@@ -1840,7 +1845,18 @@ def reception_new():
         depot_id = int(request.form.get('depot_id'))
         supplier_name = request.form.get('supplier_name')
         bl_number = request.form.get('bl_number')
-        reception_date = request.form.get('reception_date') or datetime.now(UTC)
+        # Récupérer la date de réception depuis le formulaire
+        reception_date_str = request.form.get('reception_date')
+        if reception_date_str:
+            try:
+                reception_date = datetime.strptime(reception_date_str, '%Y-%m-%d')
+                # S'assurer que la date est en UTC
+                if reception_date.tzinfo is None:
+                    reception_date = reception_date.replace(tzinfo=UTC)
+            except (ValueError, TypeError):
+                reception_date = datetime.now(UTC)
+        else:
+            reception_date = datetime.now(UTC)
         notes = request.form.get('notes')
         
         if not depot_id or not supplier_name or not bl_number:
@@ -1936,18 +1952,24 @@ def reception_new():
                     # LOGIQUE MÉTIER : RÉCEPTION = Augmentation du stock (entrée externe)
                     # Créer le mouvement de stock (ENTRÉE = quantité POSITIVE)
                     movement_ref = generate_movement_reference('reception')
-                    # Convertir reception_date si c'est une string
-                    reception_date = reception.reception_date
-                    if isinstance(reception_date, str):
+                    # Utiliser la date de réception déjà parsée
+                    movement_date = reception.reception_date
+                    # S'assurer que la date est en UTC
+                    if isinstance(movement_date, str):
                         try:
-                            reception_date = datetime.strptime(reception_date, '%Y-%m-%d')
-                        except:
-                            reception_date = datetime.now()
+                            movement_date = datetime.strptime(movement_date, '%Y-%m-%d')
+                            movement_date = movement_date.replace(tzinfo=UTC)
+                        except (ValueError, TypeError):
+                            movement_date = datetime.now(UTC)
+                    elif movement_date and movement_date.tzinfo is None:
+                        movement_date = movement_date.replace(tzinfo=UTC)
+                    elif not movement_date:
+                        movement_date = datetime.now(UTC)
                     
                     movement = StockMovement(
                         reference=movement_ref,
                         movement_type='reception',
-                        movement_date=reception_date,
+                        movement_date=movement_date,
                         stock_item_id=item_id,
                         quantity=qty,  # POSITIF pour entrée
                         user_id=current_user.id,
