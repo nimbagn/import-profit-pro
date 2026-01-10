@@ -367,11 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
   
-  // Écouter les changements de sélection d'article (compatible avec Select2)
-  $(stockItemSelect).on('change', function() {
-    const selectedItemId = $(this).val();
-    loadSystemQuantity(selectedItemId);
-  });
+  // Note: L'écoute des changements est déjà gérée dans waitForJQuery ci-dessus
   
   // Fonction pour calculer le total des dimensions de piles
   function calculatePilesTotal(pileDimensions) {
