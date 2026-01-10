@@ -895,19 +895,43 @@ def movement_edit(id):
             joinedload(StockMovement.to_vehicle)
         ).order_by(StockMovement.id).all()
         
-        # Grouper par article (en prenant les quantités positives pour les transferts)
+        # Grouper par article et séparer les mouvements OUT et IN
         for mov in all_movements:
             item_id = mov.stock_item_id
             if item_id not in movements_by_item:
                 movements_by_item[item_id] = {
                     'item': mov.stock_item,
                     'movements': [],
-                    'total_quantity': Decimal('0')
+                    'movement_out': None,  # Mouvement de sortie (négatif)
+                    'movement_in': None,   # Mouvement d'entrée (positif)
+                    'quantity_out': Decimal('0'),  # Quantité sortie (absolue)
+                    'quantity_in': Decimal('0'),   # Quantité entrée
+                    'from_depot': None,
+                    'from_vehicle': None,
+                    'to_depot': None,
+                    'to_vehicle': None
                 }
             movements_by_item[item_id]['movements'].append(mov)
-            # Pour les transferts, prendre la quantité positive (entrée)
-            if mov.quantity > 0:
-                movements_by_item[item_id]['total_quantity'] += mov.quantity
+            
+            # Séparer les mouvements OUT (négatif) et IN (positif)
+            if mov.quantity < 0:
+                # C'est une sortie (OUT)
+                movements_by_item[item_id]['movement_out'] = mov
+                movements_by_item[item_id]['quantity_out'] = abs(mov.quantity)
+                # Récupérer la source
+                if mov.from_depot:
+                    movements_by_item[item_id]['from_depot'] = mov.from_depot
+                elif mov.from_vehicle:
+                    movements_by_item[item_id]['from_vehicle'] = mov.from_vehicle
+            else:
+                # C'est une entrée (IN)
+                movements_by_item[item_id]['movement_in'] = mov
+                movements_by_item[item_id]['quantity_in'] = mov.quantity
+                # Récupérer la destination
+                if mov.to_depot:
+                    movements_by_item[item_id]['to_depot'] = mov.to_depot
+                elif mov.to_vehicle:
+                    movements_by_item[item_id]['to_vehicle'] = mov.to_vehicle
     else:
         # Pour les autres types de mouvements, un seul article
         all_movements = [movement]
@@ -955,34 +979,121 @@ def movement_edit(id):
                 # Traiter chaque article du transfert
                 errors = []
                 for item_id, item_data in movements_by_item.items():
-                    # Récupérer la quantité pour cet article
-                    quantity_str = request.form.get(f'quantity_{item_id}')
-                    if not quantity_str:
-                        errors.append(f"Quantité manquante pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
+                    # Récupérer les quantités OUT et IN séparément
+                    quantity_out_str = request.form.get(f'quantity_out_{item_id}')
+                    quantity_in_str = request.form.get(f'quantity_in_{item_id}')
+                    
+                    # Si les champs séparés ne sont pas fournis, utiliser le champ unique
+                    if not quantity_out_str and not quantity_in_str:
+                        quantity_str = request.form.get(f'quantity_{item_id}')
+                        if quantity_str:
+                            quantity_out_str = quantity_str
+                            quantity_in_str = quantity_str
+                    
+                    if not quantity_out_str or not quantity_in_str:
+                        errors.append(f"Quantités manquantes pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
                         continue
                     
                     try:
-                        new_quantity = Decimal(quantity_str)
-                        if new_quantity <= 0:
-                            errors.append(f"Quantité invalide pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
+                        new_quantity_out = Decimal(quantity_out_str)
+                        new_quantity_in = Decimal(quantity_in_str)
+                        if new_quantity_out <= 0 or new_quantity_in <= 0:
+                            errors.append(f"Quantités invalides pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
                             continue
                     except (ValueError, TypeError, InvalidOperation):
-                        errors.append(f"Quantité invalide pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
+                        errors.append(f"Quantités invalides pour {item_data['item'].name if item_data['item'] else 'article inconnu'}")
                         continue
                     
-                    # Mettre à jour tous les mouvements de cet article (OUT et IN)
-                    for mov in item_data['movements']:
-                        old_quantity = mov.quantity
+                    # Mettre à jour le mouvement OUT (sortie)
+                    if item_data['movement_out']:
+                        mov_out = item_data['movement_out']
+                        old_quantity_out = abs(mov_out.quantity)
+                        quantity_diff_out = new_quantity_out - old_quantity_out
                         
-                        # Déterminer le signe selon le type de mouvement
-                        if mov.quantity < 0:
-                            # C'est une sortie (OUT)
-                            signed_quantity = -new_quantity
-                        else:
-                            # C'est une entrée (IN)
-                            signed_quantity = new_quantity
+                        # Mettre à jour le mouvement OUT
+                        mov_out.movement_date = movement_date
+                        mov_out.quantity = -new_quantity_out  # Négatif pour sortie
+                        if reason:
+                            mov_out.reason = reason
+                        if supplier_name:
+                            mov_out.supplier_name = supplier_name
+                        if bl_number:
+                            mov_out.bl_number = bl_number
                         
-                        quantity_diff = signed_quantity - old_quantity
+                        # Ajuster le stock source si nécessaire
+                        if quantity_diff_out != 0:
+                            if mov_out.from_depot_id:
+                                depot_stock = DepotStock.query.filter_by(
+                                    depot_id=mov_out.from_depot_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if depot_stock:
+                                    # Si on augmente la sortie, vérifier le stock
+                                    if quantity_diff_out > 0:
+                                        new_stock_qty = depot_stock.quantity - quantity_diff_out
+                                        if new_stock_qty < 0:
+                                            errors.append(f"Stock insuffisant pour {item_data['item'].name if item_data['item'] else 'article'} dans le dépôt source ({depot_stock.depot.name if depot_stock.depot else 'N/A'})")
+                                            continue
+                                    depot_stock.quantity -= quantity_diff_out
+                            
+                            if mov_out.from_vehicle_id:
+                                vehicle_stock = VehicleStock.query.filter_by(
+                                    vehicle_id=mov_out.from_vehicle_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if vehicle_stock:
+                                    if quantity_diff_out > 0:
+                                        new_stock_qty = vehicle_stock.quantity - quantity_diff_out
+                                        if new_stock_qty < 0:
+                                            errors.append(f"Stock insuffisant pour {item_data['item'].name if item_data['item'] else 'article'} dans le véhicule source")
+                                            continue
+                                    vehicle_stock.quantity -= quantity_diff_out
+                    
+                    # Mettre à jour le mouvement IN (entrée)
+                    if item_data['movement_in']:
+                        mov_in = item_data['movement_in']
+                        old_quantity_in = mov_in.quantity
+                        quantity_diff_in = new_quantity_in - old_quantity_in
+                        
+                        # Mettre à jour le mouvement IN
+                        mov_in.movement_date = movement_date
+                        mov_in.quantity = new_quantity_in  # Positif pour entrée
+                        if reason:
+                            mov_in.reason = reason
+                        if supplier_name:
+                            mov_in.supplier_name = supplier_name
+                        if bl_number:
+                            mov_in.bl_number = bl_number
+                        
+                        # Ajuster le stock destination si nécessaire
+                        if quantity_diff_in != 0:
+                            if mov_in.to_depot_id:
+                                depot_stock = DepotStock.query.filter_by(
+                                    depot_id=mov_in.to_depot_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if not depot_stock:
+                                    depot_stock = DepotStock(
+                                        depot_id=mov_in.to_depot_id,
+                                        stock_item_id=item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(depot_stock)
+                                depot_stock.quantity += quantity_diff_in
+                            
+                            if mov_in.to_vehicle_id:
+                                vehicle_stock = VehicleStock.query.filter_by(
+                                    vehicle_id=mov_in.to_vehicle_id,
+                                    stock_item_id=item_id
+                                ).first()
+                                if not vehicle_stock:
+                                    vehicle_stock = VehicleStock(
+                                        vehicle_id=mov_in.to_vehicle_id,
+                                        stock_item_id=item_id,
+                                        quantity=Decimal('0')
+                                    )
+                                    db.session.add(vehicle_stock)
+                                vehicle_stock.quantity += quantity_diff_in
                         
                         # Mettre à jour le mouvement
                         mov.movement_date = movement_date

@@ -300,10 +300,10 @@
       </div>
       
       {% if movements_by_item and movements_by_item|length > 1 %}
-        <!-- Formulaire pour plusieurs articles -->
+        <!-- Formulaire pour plusieurs articles avec mouvements OUT et IN séparés -->
         <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); margin-top: var(--space-xl); font-size: 1.1rem;">
           <i class="fas fa-boxes me-2"></i>
-          Articles du transfert
+          Articles du transfert - Détails des mouvements
         </h3>
         <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-lg);">
           <table style="width: 100%; border-collapse: collapse;">
@@ -312,42 +312,101 @@
                 <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">#</th>
                 <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Article</th>
                 <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">SKU</th>
-                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Quantité actuelle</th>
-                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Nouvelle quantité <span style="color: #ef4444;">*</span></th>
+                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Source<br><small style="font-weight: normal; color: var(--text-muted);">(Sortie)</small></th>
+                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Destination<br><small style="font-weight: normal; color: var(--text-muted);">(Entrée)</small></th>
+                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Qté OUT<br><small style="font-weight: normal; color: #dc2626;">(Sortie)</small></th>
+                <th style="padding: var(--space-md); text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Qté IN<br><small style="font-weight: normal; color: #16a34a;">(Entrée)</small></th>
               </tr>
             </thead>
             <tbody>
               {% for item_id, item_data in movements_by_item.items() %}
-              <tr style="border-bottom: 1px solid var(--gray-200);">
-                <td style="padding: var(--space-md);">{{ loop.index }}</td>
-                <td style="padding: var(--space-md);">
+              <tr style="border-bottom: 1px solid var(--gray-200); background: {% if loop.index % 2 == 0 %}var(--gray-50){% else %}var(--white){% endif %};">
+                <td style="padding: var(--space-md); vertical-align: top;">{{ loop.index }}</td>
+                <td style="padding: var(--space-md); vertical-align: top;">
                   <strong>{{ item_data.item.name if item_data.item else 'N/A' }}</strong>
                 </td>
-                <td style="padding: var(--space-md);">
+                <td style="padding: var(--space-md); vertical-align: top;">
                   <code style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.875rem;">
                     {{ item_data.item.sku if item_data.item else 'N/A' }}
                   </code>
                 </td>
-                <td style="padding: var(--space-md);">
-                  <span style="color: var(--text-secondary); font-weight: 600;">
-                    {{ "{:,.2f}".format(item_data.total_quantity)|replace(',', ' ') }}
-                  </span>
+                <td style="padding: var(--space-md); vertical-align: top;">
+                  {% if item_data.from_depot %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #dc2626;">
+                      <i class="fas fa-warehouse"></i>
+                      <span style="font-weight: 600;">{{ item_data.from_depot.name }}</span>
+                    </div>
+                  {% elif item_data.from_vehicle %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #dc2626;">
+                      <i class="fas fa-car"></i>
+                      <span style="font-weight: 600;">{{ item_data.from_vehicle.plate_number }}</span>
+                    </div>
+                  {% else %}
+                    <span style="color: var(--text-muted); font-style: italic;">-</span>
+                  {% endif %}
                 </td>
-                <td style="padding: var(--space-md);">
-                  <input type="number" 
-                         id="quantity_{{ item_id }}" 
-                         name="quantity_{{ item_id }}" 
-                         class="form-hl-input" 
-                         step="0.01" 
-                         min="0.01"
-                         value="{{ "{:.2f}".format(item_data.total_quantity) }}" 
-                         required
-                         style="width: 150px;">
+                <td style="padding: var(--space-md); vertical-align: top;">
+                  {% if item_data.to_depot %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #16a34a;">
+                      <i class="fas fa-warehouse"></i>
+                      <span style="font-weight: 600;">{{ item_data.to_depot.name }}</span>
+                    </div>
+                  {% elif item_data.to_vehicle %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #16a34a;">
+                      <i class="fas fa-car"></i>
+                      <span style="font-weight: 600;">{{ item_data.to_vehicle.plate_number }}</span>
+                    </div>
+                  {% else %}
+                    <span style="color: var(--text-muted); font-style: italic;">-</span>
+                  {% endif %}
+                </td>
+                <td style="padding: var(--space-md); vertical-align: top;">
+                  <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">
+                      Actuelle: <strong style="color: #dc2626;">{{ "{:,.2f}".format(item_data.quantity_out)|replace(',', ' ') }}</strong>
+                    </small>
+                    <input type="number" 
+                           id="quantity_out_{{ item_id }}" 
+                           name="quantity_out_{{ item_id }}" 
+                           class="form-hl-input" 
+                           step="0.01" 
+                           min="0.01"
+                           value="{{ "{:.2f}".format(item_data.quantity_out) }}" 
+                           required
+                           style="width: 120px; border-color: #dc2626;">
+                  </div>
+                </td>
+                <td style="padding: var(--space-md); vertical-align: top;">
+                  <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">
+                      Actuelle: <strong style="color: #16a34a;">{{ "{:,.2f}".format(item_data.quantity_in)|replace(',', ' ') }}</strong>
+                    </small>
+                    <input type="number" 
+                           id="quantity_in_{{ item_id }}" 
+                           name="quantity_in_{{ item_id }}" 
+                           class="form-hl-input" 
+                           step="0.01" 
+                           min="0.01"
+                           value="{{ "{:.2f}".format(item_data.quantity_in) }}" 
+                           required
+                           style="width: 120px; border-color: #16a34a;">
+                  </div>
                 </td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
+        </div>
+        <div class="alert-hl alert-hl-info" style="margin-bottom: var(--space-lg);">
+          <i class="fas fa-info-circle me-2"></i>
+          <div>
+            <strong>Information :</strong> Pour chaque article, vous pouvez modifier séparément :
+            <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+              <li><strong>Qté OUT</strong> : Quantité sortie du dépôt/véhicule source (en rouge)</li>
+              <li><strong>Qté IN</strong> : Quantité entrée dans le dépôt/véhicule destination (en vert)</li>
+            </ul>
+            Les quantités OUT et IN doivent normalement être identiques pour un transfert complet.
+          </div>
         </div>
       {% else %}
         <!-- Formulaire pour un seul article -->
@@ -382,7 +441,8 @@
         </div>
       {% endif %}
 
-      <!-- Source et Destination (lecture seule) -->
+      {% if not (movements_by_item and movements_by_item|length > 1) %}
+      <!-- Source et Destination (lecture seule) - Uniquement pour les mouvements simples -->
       <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); margin-top: var(--space-xl); font-size: 1.1rem;">
         <i class="fas fa-exchange-alt me-2"></i>
         Source et Destination
@@ -420,6 +480,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
       <!-- Champs optionnels -->
       <h3 style="color: var(--text-primary); margin-bottom: var(--space-md); margin-top: var(--space-xl); font-size: 1.1rem;">
@@ -471,7 +532,12 @@
         <div>
           <strong>Attention :</strong> La modification {% if movements_by_item and movements_by_item|length > 1 %}de ce bon de transfert{% else %}de ce mouvement{% endif %} affectera automatiquement les stocks associés.
           {% if movements_by_item and movements_by_item|length > 1 %}
-            <br><br>Vous modifiez un <strong>bon de transfert</strong> contenant {{ movements_by_item|length }} article{{ 's' if movements_by_item|length > 1 else '' }}. Les quantités modifiées seront appliquées aux mouvements de sortie (OUT) et d'entrée (IN) pour chaque article.
+            <br><br>Vous modifiez un <strong>bon de transfert</strong> contenant {{ movements_by_item|length }} article{{ 's' if movements_by_item|length > 1 else '' }}.
+            <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+              <li>Les quantités <strong>OUT</strong> (sortie) modifient le stock du dépôt/véhicule <strong>source</strong></li>
+              <li>Les quantités <strong>IN</strong> (entrée) modifient le stock du dépôt/véhicule <strong>destination</strong></li>
+              <li>Les quantités OUT et IN doivent normalement être identiques pour un transfert complet</li>
+            </ul>
           {% elif movement.quantity < 0 %}
             <br><br>Ce mouvement représente une <strong>sortie</strong> (quantité négative). La quantité saisie sera automatiquement convertie en valeur négative.
           {% else %}
