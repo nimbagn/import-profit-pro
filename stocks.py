@@ -1135,9 +1135,9 @@ def movement_edit(id):
                     
                     if movement.from_vehicle_id:
                         vehicle_stock = VehicleStock.query.filter_by(
-                        vehicle_id=movement.from_vehicle_id,
-                        stock_item_id=movement.stock_item_id
-                    ).first()
+                            vehicle_id=movement.from_vehicle_id,
+                            stock_item_id=movement.stock_item_id
+                        ).first()
                     if vehicle_stock:
                         # Si on augmente la sortie (quantity_diff négatif), vérifier le stock
                         if quantity_diff < 0:
