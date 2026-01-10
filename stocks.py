@@ -168,6 +168,24 @@ def can_create_returns(user):
     
     return has_permission(user, 'returns.create')
 
+def extract_base_reference(reference):
+    """
+    Extrait la référence de base d'un mouvement (sans -OUT, -IN, etc.)
+    Exemples:
+    - TRANS-20250110-1-OUT -> TRANS-20250110-1
+    - TRANS-20250110-1-IN -> TRANS-20250110-1
+    - TRANS-20250110-1-OUT-2 -> TRANS-20250110-1
+    - REC-20250110-1 -> REC-20250110-1
+    """
+    if not reference:
+        return None
+    
+    # Enlever les suffixes -OUT, -IN et leurs variantes numérotées
+    import re
+    # Pattern pour enlever -OUT, -IN, -OUT-1, -IN-2, etc.
+    base_ref = re.sub(r'-(OUT|IN)(-\d+)?$', '', reference)
+    return base_ref
+
 def generate_movement_reference(movement_type='transfer', existing_references=None):
     """Génère une référence unique pour un mouvement de stock"""
     from datetime import datetime, UTC
@@ -190,10 +208,16 @@ def generate_movement_reference(movement_type='transfer', existing_references=No
     
     # Déterminer le numéro de départ
     if last_movement and last_movement.reference:
-        # Extraire le numéro séquentiel
+        # Extraire la référence de base pour obtenir le numéro séquentiel
+        base_ref = extract_base_reference(last_movement.reference)
         try:
-            last_num = int(last_movement.reference.split('-')[-1])
-            next_num = last_num + 1
+            # Extraire le numéro séquentiel de la référence de base
+            parts = base_ref.split('-')
+            if len(parts) >= 3:
+                last_num = int(parts[-1])
+                next_num = last_num + 1
+            else:
+                next_num = 1
         except (ValueError, IndexError):
             next_num = 1
     else:
@@ -377,7 +401,7 @@ def movements_list():
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('index'))
     
-    from sqlalchemy import or_, and_
+    from sqlalchemy import or_, and_, func
     from datetime import datetime, timedelta
     from utils_region_filter import filter_stock_movements_by_region
     
@@ -394,6 +418,8 @@ def movements_list():
     depot_id = request.args.get('depot_id', type=int)
     vehicle_id = request.args.get('vehicle_id', type=int)
     user_id = request.args.get('user_id', type=int)
+    items_count = request.args.get('items_count', type=int)  # Nombre d'articles dans un transfert
+    base_reference = request.args.get('base_reference', '').strip()  # Recherche par référence de base
     
     # Construire la requête avec optimisation N+1
     query = StockMovement.query.options(
@@ -463,11 +489,70 @@ def movements_list():
     if user_id:
         query = query.filter(StockMovement.user_id == user_id)
     
+    # Recherche par référence de base (pour regrouper les transferts)
+    if base_reference:
+        # Rechercher toutes les références qui commencent par la référence de base
+        query = query.filter(
+            or_(
+                StockMovement.reference.like(f'{base_reference}%'),
+                StockMovement.reference.like(f'{base_reference}-OUT%'),
+                StockMovement.reference.like(f'{base_reference}-IN%')
+            )
+        )
+    
+    # Recherche par nombre d'articles dans un transfert
+    # Note: Cette recherche est complexe car elle nécessite de grouper par référence de base
+    # Pour l'instant, on va filtrer après la requête principale pour simplifier
+    # (optimisation possible avec une sous-requête SQL si nécessaire)
+    
     # Pagination
     pagination = query.order_by(StockMovement.movement_date.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     movements = pagination.items
+    
+    # Grouper les mouvements par référence de base pour l'affichage
+    movements_by_base_ref = {}
+    for movement in movements:
+        base_ref = extract_base_reference(movement.reference) if movement.reference else None
+        if base_ref:
+            if base_ref not in movements_by_base_ref:
+                movements_by_base_ref[base_ref] = {
+                    'base_reference': base_ref,
+                    'movements': [],
+                    'items_count': 0,
+                    'unique_items': set(),
+                    'from_depot': None,
+                    'to_depot': None,
+                    'from_vehicle': None,
+                    'to_vehicle': None,
+                    'movement_date': None,
+                    'user': None
+                }
+            movements_by_base_ref[base_ref]['movements'].append(movement)
+            movements_by_base_ref[base_ref]['unique_items'].add(movement.stock_item_id)
+            # Récupérer les infos communes du premier mouvement
+            if not movements_by_base_ref[base_ref]['from_depot']:
+                movements_by_base_ref[base_ref]['from_depot'] = movement.from_depot
+                movements_by_base_ref[base_ref]['to_depot'] = movement.to_depot
+                movements_by_base_ref[base_ref]['from_vehicle'] = movement.from_vehicle
+                movements_by_base_ref[base_ref]['to_vehicle'] = movement.to_vehicle
+                movements_by_base_ref[base_ref]['movement_date'] = movement.movement_date
+                movements_by_base_ref[base_ref]['user'] = movement.user
+    
+    # Calculer le nombre d'articles uniques pour chaque groupe
+    for base_ref in movements_by_base_ref:
+        movements_by_base_ref[base_ref]['items_count'] = len(movements_by_base_ref[base_ref]['unique_items'])
+    
+    # Filtrer par nombre d'articles si demandé
+    if items_count:
+        filtered_base_refs = {
+            base_ref: data for base_ref, data in movements_by_base_ref.items()
+            if data['items_count'] == items_count
+        }
+        # Filtrer les mouvements pour ne garder que ceux des références de base correspondantes
+        movements = [m for m in movements if extract_base_reference(m.reference) in filtered_base_refs]
+        movements_by_base_ref = filtered_base_refs
     
     # Statistiques globales
     total_movements = StockMovement.query.count()
@@ -519,6 +604,7 @@ def movements_list():
     
     return render_template('stocks/movements_list.html', 
                          movements=movements,
+                         movements_by_base_ref=movements_by_base_ref,
                          pagination=pagination,
                          movement_type=movement_type,
                          search=search,
@@ -528,6 +614,8 @@ def movements_list():
                          depot_id=depot_id,
                          vehicle_id=vehicle_id,
                          user_id=user_id,
+                         items_count=items_count,
+                         base_reference=base_reference,
                          per_page=per_page,
                          total_movements=total_movements,
                          movements_by_type=movements_by_type,
@@ -709,23 +797,61 @@ def movements_export_excel():
 @stocks_bp.route('/movements/<reference>')
 @login_required
 def movement_detail_by_reference(reference):
-    """Détail d'un mouvement par sa référence"""
+    """Détail d'un mouvement par sa référence (peut être une référence complète ou de base)"""
     if not can_access_movements(current_user):
         flash('Vous n\'avez pas la permission d\'accéder à cette page', 'error')
         return redirect(url_for('stocks.movements_list'))
     
-    movements = StockMovement.query.filter_by(reference=reference).order_by(StockMovement.id).all()
+    # Extraire la référence de base pour regrouper tous les mouvements du même transfert
+    base_ref = extract_base_reference(reference)
+    
+    # Rechercher tous les mouvements avec cette référence de base
+    # Utiliser une requête qui cherche la référence exacte OU les références qui commencent par la base
+    movements = StockMovement.query.filter(
+        or_(
+            StockMovement.reference == reference,
+            StockMovement.reference.like(f'{base_ref}%')
+        )
+    ).options(
+        joinedload(StockMovement.stock_item),
+        joinedload(StockMovement.from_depot),
+        joinedload(StockMovement.to_depot),
+        joinedload(StockMovement.from_vehicle),
+        joinedload(StockMovement.to_vehicle),
+        joinedload(StockMovement.user)
+    ).order_by(StockMovement.id).all()
     
     if not movements:
         flash(f'Aucun mouvement trouvé avec la référence {reference}', 'error')
         return redirect(url_for('stocks.movements_list'))
     
+    # Grouper les mouvements par article (pour les transferts avec plusieurs articles)
+    movements_by_item = {}
+    for movement in movements:
+        item_id = movement.stock_item_id
+        if item_id not in movements_by_item:
+            movements_by_item[item_id] = {
+                'item': movement.stock_item,
+                'movements': [],
+                'total_quantity': Decimal('0')
+            }
+        movements_by_item[item_id]['movements'].append(movement)
+        # Pour les transferts, prendre la quantité positive (entrée)
+        if movement.quantity > 0:
+            movements_by_item[item_id]['total_quantity'] += movement.quantity
+    
     # Le premier mouvement contient les infos principales (source/destination communes)
     main_movement = movements[0]
     
+    # Compter le nombre d'articles uniques
+    unique_items_count = len(movements_by_item)
+    
     return render_template('stocks/movement_detail.html',
                          reference=reference,
+                         base_reference=base_ref,
                          movements=movements,
+                         movements_by_item=movements_by_item,
+                         unique_items_count=unique_items_count,
                          main_movement=main_movement)
 
 @stocks_bp.route('/movements/<int:id>/edit', methods=['GET', 'POST'])
