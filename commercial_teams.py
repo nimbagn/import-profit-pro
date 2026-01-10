@@ -299,10 +299,8 @@ def vendeur_teams_list():
         flash("Vous n'avez pas la permission d'accéder à cette page.", "error")
         return redirect(url_for('index'))
     
-    # Filtrer par région
-    region_id = get_user_region_id()
-    teams_query = VendeurTeam.query.filter_by(is_active=True)
     # Filtrer par région (sauf admin/supervisor)
+    teams_query = VendeurTeam.query.filter_by(is_active=True)
     teams_query = filter_vendeur_teams_by_region(teams_query)
     
     teams = teams_query.options(
