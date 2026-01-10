@@ -2367,7 +2367,18 @@ def outgoing_new():
         commercial_id = request.form.get('commercial_id') or None
         vehicle_id = request.form.get('vehicle_id') or None
         depot_id = request.form.get('depot_id') or None
-        outgoing_date = request.form.get('outgoing_date') or datetime.now(UTC)
+        # Récupérer la date de sortie depuis le formulaire
+        outgoing_date_str = request.form.get('outgoing_date')
+        if outgoing_date_str:
+            try:
+                outgoing_date = datetime.strptime(outgoing_date_str, '%Y-%m-%d')
+                # S'assurer que la date est en UTC
+                if outgoing_date.tzinfo is None:
+                    outgoing_date = outgoing_date.replace(tzinfo=UTC)
+            except (ValueError, TypeError):
+                outgoing_date = datetime.now(UTC)
+        else:
+            outgoing_date = datetime.now(UTC)
         notes = request.form.get('notes')
         
         if not client_name:
@@ -2394,7 +2405,7 @@ def outgoing_new():
             commercial_id=int(commercial_id) if commercial_id else None,
             vehicle_id=int(vehicle_id) if vehicle_id else None,
             depot_id=int(depot_id) if depot_id else None,
-            outgoing_date=datetime.strptime(outgoing_date, '%Y-%m-%d') if isinstance(outgoing_date, str) else outgoing_date,
+            outgoing_date=outgoing_date,
             user_id=current_user.id,
             notes=notes,
             status='draft'
@@ -3139,7 +3150,18 @@ def return_new():
         return_type = request.form.get('return_type', 'client')  # 'client' ou 'supplier'
         
         # Champs communs
-        return_date = request.form.get('return_date') or datetime.now(UTC)
+        # Récupérer la date de retour depuis le formulaire
+        return_date_str = request.form.get('return_date')
+        if return_date_str:
+            try:
+                return_date = datetime.strptime(return_date_str, '%Y-%m-%d')
+                # S'assurer que la date est en UTC
+                if return_date.tzinfo is None:
+                    return_date = return_date.replace(tzinfo=UTC)
+            except (ValueError, TypeError):
+                return_date = datetime.now(UTC)
+        else:
+            return_date = datetime.now(UTC)
         reason = request.form.get('reason')
         notes = request.form.get('notes')
         commercial_id = request.form.get('commercial_id') or None
