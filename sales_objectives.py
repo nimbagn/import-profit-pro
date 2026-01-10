@@ -17,7 +17,10 @@ from models import (
     DepotStock, VehicleStock, Depot, Vehicle
 )
 from auth import has_permission
-from utils_region_filter import get_user_region_id, filter_depots_by_region, filter_vehicles_by_region
+from utils_region_filter import (
+    get_user_region_id, filter_depots_by_region, filter_vehicles_by_region,
+    filter_sales_objectives_by_region
+)
 
 # Créer le blueprint
 sales_objectives_bp = Blueprint('sales_objectives', __name__, url_prefix='/objectives')
@@ -145,6 +148,9 @@ def objectives_list():
     period_end = request.args.get('period_end')
     
     query = SalesObjective.query
+    
+    # Filtrer par région (sauf admin/supervisor)
+    query = filter_sales_objectives_by_region(query)
     
     # Filtrer par commerciaux supervisés
     supervised_commercials = get_supervised_commercials(current_user)

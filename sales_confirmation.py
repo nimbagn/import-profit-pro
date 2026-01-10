@@ -17,7 +17,10 @@ from models import (
     PromotionTeam, LockisteTeam, VendeurTeam, DepotStock, VehicleStock, Depot, Vehicle
 )
 from auth import has_permission
-from utils_region_filter import get_user_region_id, filter_commercial_orders_by_region
+from utils_region_filter import (
+    get_user_region_id, filter_commercial_orders_by_region,
+    filter_commercial_sales_by_region
+)
 
 # Créer le blueprint
 sales_confirmation_bp = Blueprint('sales_confirmation', __name__, url_prefix='/sales')
@@ -381,6 +384,8 @@ def confirmed_sales():
     order_id = request.args.get('order_id', type=int)
     
     query = CommercialSale.query.filter_by(status='confirmed')
+    # Filtrer par région (sauf admin/supervisor)
+    query = filter_commercial_sales_by_region(query)
     
     # Filtrer par commerciaux supervisés
     supervised_commercials = get_supervised_commercials(current_user)

@@ -14,7 +14,10 @@ from models import (
 )
 from auth import has_permission
 from sqlalchemy.orm import joinedload
-from utils_region_filter import get_user_region_id, get_user_accessible_regions, filter_teams_by_region
+from utils_region_filter import (
+    get_user_region_id, get_user_accessible_regions, filter_teams_by_region,
+    filter_lockiste_teams_by_region, filter_vendeur_teams_by_region
+)
 
 def get_commercial_users():
     """Retourne la liste des utilisateurs commerciaux actifs de la plateforme"""
@@ -75,12 +78,9 @@ def lockiste_teams_list():
         flash("Vous n'avez pas la permission d'accéder à cette page.", "error")
         return redirect(url_for('index'))
     
-    # Filtrer par région
-    region_id = get_user_region_id()
+    # Filtrer par région (sauf admin/supervisor)
     teams_query = LockisteTeam.query.filter_by(is_active=True)
-    
-    if region_id and not has_permission(current_user, 'admin'):
-        teams_query = teams_query.filter_by(region_id=region_id)
+    teams_query = filter_lockiste_teams_by_region(teams_query)
     
     teams = teams_query.options(
         joinedload(LockisteTeam.team_leader),
@@ -302,9 +302,8 @@ def vendeur_teams_list():
     # Filtrer par région
     region_id = get_user_region_id()
     teams_query = VendeurTeam.query.filter_by(is_active=True)
-    
-    if region_id and not has_permission(current_user, 'admin'):
-        teams_query = teams_query.filter_by(region_id=region_id)
+    # Filtrer par région (sauf admin/supervisor)
+    teams_query = filter_vendeur_teams_by_region(teams_query)
     
     teams = teams_query.options(
         joinedload(VendeurTeam.team_leader),
