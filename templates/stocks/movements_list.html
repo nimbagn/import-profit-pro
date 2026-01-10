@@ -665,21 +665,14 @@
           <td data-label="Date">{{ movement.movement_date.strftime('%d/%m/%Y %H:%M') if movement.movement_date else '-' }}</td>
           <td data-label="Référence">
             {% if movement.reference %}
-              {% set base_ref = movement.reference|replace('-OUT', '')|replace('-IN', '')|replace('-OUT-1', '')|replace('-IN-1', '')|replace('-OUT-2', '')|replace('-IN-2', '') %}
-              {% if movement.movement_type == 'transfer' %}
-                {% set base_ref_parts = base_ref.split('-') %}
-                {% if base_ref_parts|length >= 3 %}
-                  {% set base_ref_clean = base_ref_parts[0] + '-' + base_ref_parts[1] + '-' + base_ref_parts[2] %}
-                {% else %}
-                  {% set base_ref_clean = base_ref %}
-                {% endif %}
-                <a href="{{ url_for('stocks.movement_detail_by_reference', reference=base_ref_clean) }}" 
+              {% if movement.movement_type == 'transfer' and movement.base_reference %}
+                <a href="{{ url_for('stocks.movement_detail_by_reference', reference=movement.base_reference) }}" 
                    style="color: var(--color-primary); font-weight: 600; text-decoration: none;"
                    title="Voir tous les articles de ce transfert">
-                  <i class="fas fa-file-invoice me-1"></i>{{ base_ref_clean }}
-                  {% if movements_by_base_ref and movements_by_base_ref.get(base_ref_clean) %}
+                  <i class="fas fa-file-invoice me-1"></i>{{ movement.base_reference }}
+                  {% if movements_by_base_ref and movements_by_base_ref.get(movement.base_reference) %}
                     <span class="badge-hl" style="background: rgba(0, 56, 101, 0.1); color: var(--hl-blue); font-size: 0.75rem; margin-left: 0.25rem;">
-                      {{ movements_by_base_ref[base_ref_clean].items_count }} article{{ 's' if movements_by_base_ref[base_ref_clean].items_count > 1 else '' }}
+                      {{ movements_by_base_ref[movement.base_reference].items_count }} article{{ 's' if movements_by_base_ref[movement.base_reference].items_count > 1 else '' }}
                     </span>
                   {% endif %}
                 </a>

@@ -602,6 +602,14 @@ def movements_list():
     vehicles = vehicles_query.order_by(Vehicle.plate_number).all()
     users = User.query.order_by(User.username).all()
     
+    # Préparer un dictionnaire pour faciliter l'accès aux données groupées dans le template
+    # Ajouter la référence de base à chaque mouvement pour faciliter l'affichage
+    for movement in movements:
+        if movement.reference:
+            movement.base_reference = extract_base_reference(movement.reference)
+        else:
+            movement.base_reference = None
+    
     return render_template('stocks/movements_list.html', 
                          movements=movements,
                          movements_by_base_ref=movements_by_base_ref,
