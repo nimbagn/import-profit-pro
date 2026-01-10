@@ -3216,7 +3216,7 @@ def return_new():
             'commercial_id': int(commercial_id) if commercial_id else None,
             'vehicle_id': int(vehicle_id) if vehicle_id else None,
             'depot_id': int(depot_id) if depot_id else None,
-            'return_date': datetime.strptime(return_date, '%Y-%m-%d') if isinstance(return_date, str) else return_date,
+            'return_date': return_date,
             'user_id': current_user.id,
             'notes': notes,
             'status': 'draft'
