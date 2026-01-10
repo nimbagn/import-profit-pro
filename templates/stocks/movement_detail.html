@@ -268,10 +268,10 @@
         {% endif %}
       </h1>
     <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-      {% if current_user.is_authenticated and current_user.role and current_user.role.code == 'admin' %}
+      {% if current_user.is_authenticated and current_user.role and (current_user.role.code == 'admin' or current_user.role.code == 'warehouse') %}
         {% if movements|length > 0 %}
         <a href="{{ url_for('stocks.movement_edit', id=movements[0].id) }}" class="btn-hl" style="background: #3b82f6; color: white; border-color: #3b82f6;">
-          <i class="fas fa-edit me-2"></i>Modifier
+          <i class="fas fa-edit me-2"></i>Modifier{% if movements_by_item and movements_by_item|length > 1 %} tous les articles{% endif %}
         </a>
         <form method="POST" action="{{ url_for('stocks.movement_delete', id=movements[0].id) }}" 
               style="display: inline;"
