@@ -41,14 +41,30 @@ class NotificationsAutomatiques:
     def _get_whatsapp_account(self) -> Optional[str]:
         """Récupère le compte WhatsApp par défaut"""
         if not self.messagepro_api:
+            logger.warning("MessageProAPI non disponible pour récupérer le compte WhatsApp")
             return None
         
         try:
-            accounts = self.messagepro_api.get_whatsapp_accounts(limit=1)
+            accounts = self.messagepro_api.get_whatsapp_accounts(limit=10)
+            logger.info(f"Résultat get_whatsapp_accounts: {accounts}")
+            
             if accounts.get('status') == 200 and accounts.get('data'):
-                return accounts['data'][0].get('id')
+                accounts_list = accounts['data']
+                if isinstance(accounts_list, list) and len(accounts_list) > 0:
+                    account_id = accounts_list[0].get('id') if isinstance(accounts_list[0], dict) else None
+                    if account_id:
+                        logger.info(f"Compte WhatsApp sélectionné: {account_id}")
+                        return account_id
+                    else:
+                        logger.warning(f"Structure de compte invalide: {accounts_list[0]}")
+                else:
+                    logger.warning("Aucun compte WhatsApp disponible dans la liste")
+            else:
+                logger.warning(f"Erreur API ou données invalides: status={accounts.get('status')}, data={accounts.get('data')}")
         except Exception as e:
             logger.error(f"Erreur lors de la récupération du compte WhatsApp: {e}")
+            import traceback
+            traceback.print_exc()
         
         return None
     
@@ -64,7 +80,20 @@ class NotificationsAutomatiques:
             return False
         
         try:
+            logger.info(f"Envoi WhatsApp à {recipient} via compte {account_id}")
+            
             if pdf_file:
+                # Vérifier que le PDF n'est pas vide
+                pdf_size = len(pdf_file.getvalue()) if pdf_file else 0
+                logger.info(f"Taille du PDF: {pdf_size} bytes")
+                
+                if pdf_size == 0:
+                    logger.error("Le PDF est vide, impossible d'envoyer")
+                    return False
+                
+                # Réinitialiser la position du fichier
+                pdf_file.seek(0)
+                
                 result = self.messagepro_api.send_whatsapp(
                     account=account_id,
                     recipient=recipient,
@@ -75,6 +104,8 @@ class NotificationsAutomatiques:
                     document_type='pdf',
                     priority=2
                 )
+                
+                logger.info(f"Résultat envoi document WhatsApp: {result}")
             else:
                 result = self.messagepro_api.send_whatsapp(
                     account=account_id,
@@ -83,15 +114,20 @@ class NotificationsAutomatiques:
                     message_type='text',
                     priority=2
                 )
+                
+                logger.info(f"Résultat envoi texte WhatsApp: {result}")
             
             if result.get('status') == 200:
-                logger.info(f"Notification envoyée avec succès à {recipient}")
+                logger.info(f"✅ Notification envoyée avec succès à {recipient}")
                 return True
             else:
-                logger.error(f"Erreur lors de l'envoi à {recipient}: {result.get('message')}")
+                error_msg = result.get('message') or result.get('error') or 'Erreur inconnue'
+                logger.error(f"❌ Erreur lors de l'envoi à {recipient}: {error_msg} (status: {result.get('status')})")
                 return False
         except Exception as e:
-            logger.error(f"Erreur lors de l'envoi de notification: {e}")
+            logger.error(f"❌ Exception lors de l'envoi de notification: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def _send_sms_notification(self, recipient: str, message: str) -> bool:
@@ -417,25 +453,34 @@ Veuillez trouver ci-joint le rapport d'inventaire de stock.
             traceback.print_exc()
             return False
     
-    def notifier_situation_stock_periode(self, depot_id: Optional[int] = None, period: str = 'month', recipients: Optional[List[str]] = None) -> bool:
+    def notifier_situation_stock_periode(self, depot_id: Optional[int] = None, period: str = 'month', recipients: Optional[List[str]] = None, start_date: Optional[str] = None, end_date: Optional[str] = None, vehicle_id: Optional[int] = None, stock_item_id: Optional[int] = None) -> bool:
         """Génère et envoie le PDF de situation de stock par période"""
         try:
             if not self.pdf_generator:
                 logger.warning("PDFGenerator non disponible")
                 return False
             
-            # Calculer les dates selon la période
-            end_date = datetime.now(UTC).date()
-            if period == 'week':
-                start_date = end_date - timedelta(days=7)
-            elif period == 'month':
-                start_date = end_date - timedelta(days=30)
-            elif period == 'quarter':
-                start_date = end_date - timedelta(days=90)
-            elif period == 'year':
-                start_date = end_date - timedelta(days=365)
+            # Calculer les dates selon la période si non fournies
+            if not end_date:
+                end_date_obj = datetime.now(UTC).date()
             else:
-                start_date = None
+                from datetime import datetime as dt
+                end_date_obj = dt.strptime(end_date, '%Y-%m-%d').date() if isinstance(end_date, str) else end_date
+            
+            if not start_date:
+                if period == 'week':
+                    start_date_obj = end_date_obj - timedelta(days=7)
+                elif period == 'month':
+                    start_date_obj = end_date_obj - timedelta(days=30)
+                elif period == 'quarter':
+                    start_date_obj = end_date_obj - timedelta(days=90)
+                elif period == 'year':
+                    start_date_obj = end_date_obj - timedelta(days=365)
+                else:
+                    start_date_obj = None
+            else:
+                from datetime import datetime as dt
+                start_date_obj = dt.strptime(start_date, '%Y-%m-%d').date() if isinstance(start_date, str) else start_date
             
             # Utiliser la fonction utilitaire pour générer les données
             from stocks import generate_stock_summary_pdf_data
@@ -443,13 +488,17 @@ Veuillez trouver ci-joint le rapport d'inventaire de stock.
                 depot_id=depot_id,
                 period=period,
                 currency='GNF',
-                start_date=start_date.strftime('%Y-%m-%d') if start_date else None,
-                end_date=end_date.strftime('%Y-%m-%d') if end_date else None
+                start_date=start_date_obj.strftime('%Y-%m-%d') if start_date_obj else None,
+                end_date=end_date_obj.strftime('%Y-%m-%d') if end_date_obj else None,
+                vehicle_id=vehicle_id,
+                stock_item_id=stock_item_id
             )
             
             if not stock_data:
-                logger.error("Erreur lors de la génération des données de situation")
+                logger.error("❌ Erreur lors de la génération des données de situation")
                 return False
+            
+            logger.info(f"✅ Données de situation générées: {len(stock_data.get('items', []))} articles")
             
             # Générer le PDF de situation de stock
             pdf_buffer = self.pdf_generator.generate_stock_summary_pdf(
@@ -459,7 +508,14 @@ Veuillez trouver ci-joint le rapport d'inventaire de stock.
             )
             
             if not pdf_buffer:
-                logger.error("Erreur lors de la génération du PDF de situation")
+                logger.error("❌ Erreur lors de la génération du PDF de situation")
+                return False
+            
+            pdf_size = len(pdf_buffer.getvalue()) if pdf_buffer else 0
+            logger.info(f"✅ PDF généré: {pdf_size} bytes")
+            
+            if pdf_size == 0:
+                logger.error("❌ Le PDF généré est vide")
                 return False
             
             # Déterminer les destinataires
@@ -471,14 +527,21 @@ Veuillez trouver ci-joint le rapport d'inventaire de stock.
                     User.is_active == True
                 ).all()
                 
+                logger.info(f"Superviseurs trouvés: {len(supervisors)}")
+                
                 for supervisor in supervisors:
                     supervisor_phone = self._get_user_phone(supervisor)
                     if supervisor_phone:
                         recipients.append(supervisor_phone)
+                        logger.info(f"Destinataire ajouté: {supervisor.username} ({supervisor_phone})")
+                    else:
+                        logger.warning(f"Superviseur {supervisor.username} n'a pas de numéro de téléphone")
             
             if not recipients:
-                logger.warning("Aucun destinataire trouvé pour la situation de stock")
+                logger.error("❌ Aucun destinataire trouvé pour la situation de stock")
                 return False
+            
+            logger.info(f"📤 Envoi de la situation de stock à {len(recipients)} destinataire(s)")
             
             # Message
             depot_name = "Tous les dépôts"
@@ -492,14 +555,19 @@ Veuillez trouver ci-joint le rapport d'inventaire de stock.
                 'week': 'Semaine',
                 'month': 'Mois',
                 'quarter': 'Trimestre',
-                'year': 'Année'
+                'year': 'Année',
+                'all': 'Toutes périodes'
             }
             period_name = period_names.get(period, period)
+            
+            # Formater les dates pour le message
+            start_date_str = start_date_obj.strftime('%d/%m/%Y') if start_date_obj else 'Tout'
+            end_date_str = end_date_obj.strftime('%d/%m/%d') if end_date_obj else datetime.now(UTC).strftime('%d/%m/%Y')
             
             message = f"""📈 SITUATION DE STOCK - {period_name.upper()}
 
 Dépôt: {depot_name}
-Période: {start_date.strftime('%d/%m/%Y') if start_date else 'Tout'} au {end_date.strftime('%d/%m/%Y')}
+Période: {start_date_str} au {end_date_str}
 Date: {datetime.now(UTC).strftime('%d/%m/%Y %H:%M')}
 
 Veuillez trouver ci-joint le rapport de situation de stock.

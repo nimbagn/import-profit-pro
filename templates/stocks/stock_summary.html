@@ -684,6 +684,18 @@
         <form method="POST" action="{{ url_for('notifications.envoyer_situation_stock') }}" style="display: inline;">
           <input type="hidden" name="depot_id" value="{{ selected_depot_id or '' }}">
           <input type="hidden" name="period" value="{{ period }}">
+          {% if start_date %}
+          <input type="hidden" name="start_date" value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}">
+          {% endif %}
+          {% if end_date %}
+          <input type="hidden" name="end_date" value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}">
+          {% endif %}
+          {% if selected_vehicle_id %}
+          <input type="hidden" name="vehicle_id" value="{{ selected_vehicle_id }}">
+          {% endif %}
+          {% if selected_stock_item_id %}
+          <input type="hidden" name="stock_item_id" value="{{ selected_stock_item_id }}">
+          {% endif %}
           <button type="submit" class="btn-hl btn-hl-success" onclick="return confirm('Envoyer la situation de stock par WhatsApp ?');" style="background: #25D366; border-color: #25D366;">
             <i class="fab fa-whatsapp me-2"></i>
             Envoyer par WhatsApp
