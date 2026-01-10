@@ -189,12 +189,90 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- jQuery (requis pour Select2) -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- jQuery (requis pour Select2) - CDN avec fallback -->
+<script>
+  // Charger jQuery avec fallback en cas d'échec
+  (function() {
+    var jqueryLoaded = false;
+    
+    // Essayer le CDN principal
+    var script1 = document.createElement('script');
+    script1.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+    script1.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
+    script1.crossOrigin = 'anonymous';
+    script1.onload = function() {
+      jqueryLoaded = true;
+      console.log('jQuery chargé depuis code.jquery.com');
+    };
+    script1.onerror = function() {
+      console.warn('Échec chargement jQuery depuis code.jquery.com, tentative CDN alternatif...');
+      // Fallback : CDN alternatif
+      var script2 = document.createElement('script');
+      script2.src = 'https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js';
+      script2.onload = function() {
+        jqueryLoaded = true;
+        console.log('jQuery chargé depuis cdn.jsdelivr.net');
+      };
+      script2.onerror = function() {
+        console.error('Échec chargement jQuery depuis tous les CDN');
+        // Dernier recours : CDN Google
+        var script3 = document.createElement('script');
+        script3.src = 'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js';
+        script3.onload = function() {
+          jqueryLoaded = true;
+          console.log('jQuery chargé depuis ajax.googleapis.com');
+        };
+        script3.onerror = function() {
+          console.error('Impossible de charger jQuery depuis tous les CDN');
+        };
+        document.head.appendChild(script3);
+      };
+      document.head.appendChild(script2);
+    };
+    document.head.appendChild(script1);
+  })();
+</script>
+
+<!-- Select2 JS - Chargé après vérification de jQuery -->
+<script>
+  // Attendre que jQuery soit chargé avant de charger Select2
+  function loadSelect2() {
+    if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js';
+      script.onload = function() {
+        console.log('Select2 chargé avec succès');
+        // Initialiser Select2 si nécessaire
+        if (typeof initSelect2 === 'function') {
+          initSelect2();
+        }
+      };
+      script.onerror = function() {
+        console.error('Échec chargement Select2');
+      };
+      document.head.appendChild(script);
+    } else {
+      // Réessayer après un court délai
+      setTimeout(loadSelect2, 100);
+    }
+  }
+  
+  // Démarrer le chargement de Select2
+  loadSelect2();
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Vérifier que jQuery est disponible avant d'utiliser Select2
+  function waitForJQuery(callback) {
+    if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+      callback();
+    } else {
+      setTimeout(function() {
+        waitForJQuery(callback);
+      }, 100);
+    }
+  }
   const stockItemSelect = document.getElementById('stock_item_id');
   const systemQuantityInfo = document.getElementById('systemQuantityInfo');
   const systemQuantityValue = document.getElementById('systemQuantityValue');
